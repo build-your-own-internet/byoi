@@ -1,3 +1,5 @@
+TODO: modify all /bin/sh to /bin/bash
+
 # Getting Started
 
 ## Running your docker container
@@ -5,13 +7,14 @@
 We got this magic Dockerfile that gets everything set up! Neat! To run it,
 
 1. `docker build .`
-1. Grab the image ID from the output
-1. `docker run -d --cap-add=NET_ADMIN <image_id>`
+1. Grab the image ID from the output and assign that ID to an environment variable (i.e. `export DOCKER_IMAGE=<image_id>`)
+1. set two new environment variables for our container names: `export CONTAINER_1=pippin` and `export CONTAINER_2=boudi`
+1. `docker run -d --cap-add=NET_ADMIN --name=$CONTAINER_1 $DOCKER_IMAGE`
+1. `docker run -d --cap-add=NET_ADMIN --name=$CONTAINER_2 $DOCKER_IMAGE`
+
+We will be using these env variables throughout the rest of this document
 
 > NOTE: What is this `--cap-add=NET_ADMIN` all about, you ask? Check the "Problem Solving" section at the bottom for more information! Also see [this stackOverflow article](https://stackoverflow.com/questions/27708376/why-am-i-getting-an-rtnetlink-operation-not-permitted-when-using-pipework-with-d) for more details.
-
-1. Grab the container ID from the output
-1. `docker exec -it <container_id> /bin/sh`
 
 ## Simple Network
 
@@ -26,32 +29,13 @@ What is an internetwork?
 Building our initial network using [docker's bridge network](https://docs.docker.com/network/bridge/):
 
 ```bash
-export NETWORK_NAME=sqasheeba
+export NETWORK_NAME=squasheeba
 docker network create $NETWORK_NAME
 ```
 
 ### Move our two containers from the default bridge to our network
 
 Sooooo, it turns out, when you create a new docker container, it is automatically assigned to a default bridge network. Neat! Except, that's not what we want for this project. First thing! Let's disconnect that shit from the default bridge network. We're gonna use some docker commands:
-
-#### Find the docker container IDs and create env variables
-
-command: `docker ps`
-
-```bash
-CONTAINER ID   IMAGE          COMMAND       CREATED          STATUS          PORTS     NAMES
-72e335c56014   fc0281291e4a   "/sleep.sh"   28 minutes ago   Up 28 minutes             youthful_meninsky
-5f1f255bf7c1   fc0281291e4a   "/sleep.sh"   28 minutes ago   Up 28 minutes             elastic_pascal
-```
-
-set your environment variables for `$CONTAINER_1` and `$CONTAINER_2`
-
-```bash
-export CONTAINER_1=72e335c56014
-export CONTAINER_2=5f1f255bf7c1
-```
-
-We will be using these env variables throughout the rest of this document
 
 #### Find the network ID of your default bridge network
 
@@ -69,9 +53,11 @@ cac4377cf367   none           null      local
 export DEFAULT_BRIDGE=25e6144d0a17
 ```
 
-#### inspect each container to find what network they are connected to
+#### inspect each container to find network they are connected to
 
 command: `docker inspect $CONTAINER_1 -f "{{json .NetworkSettings.Networks }}" | jq .`
+
+> TODO: modify this to be a `jq` command
 
 ```bash
 {
@@ -100,7 +86,7 @@ docker network disconnect $DEFAULT_BRIDGE $CONTAINER_1
 docker network disconnect $DEFAULT_BRIDGE $CONTAINER_2 
 ```
 
-Now, we wanna connect our containers to our happy little `squasheeba`   bridge network that we are building
+Now, we wanna connect our containers to our happy little `squasheeba` bridge network that we are building
 
 #### connect that shit to OUR bridge network
 
@@ -109,59 +95,30 @@ docker network connect $NETWORK_NAME $CONTAINER_1
 docker network connect $NETWORK_NAME $CONTAINER_2
 ```
 
-you can see the state of our network with:
+you can see the state of our network:
 
-command: `docker network inspect $NETWORK_NAME`
+command: `docker network inspect $NETWORK_NAME | jq ".[].Containers"`
 
 ```bash
-[
-    {
-        "Name": "sqasheeba",
-        "Id": "2e7d94c63310e11a831b13c6eece56b7caa8c0031a8b77f670389e367022ae5d",
-        "Created": "2022-12-02T19:45:00.877455616Z",
-        "Scope": "local",
-        "Driver": "bridge",
-        "EnableIPv6": false,
-        "IPAM": {
-            "Driver": "default",
-            "Options": {},
-            "Config": [
-                {
-                    "Subnet": "172.27.0.0/16",
-                    "Gateway": "172.27.0.1"
-                }
-            ]
-        },
-        "Internal": false,
-        "Attachable": false,
-        "Ingress": false,
-        "ConfigFrom": {
-            "Network": ""
-        },
-        "ConfigOnly": false,
-        "Containers": {
-            "5f1f255bf7c1e37289ac11c1da959644ecb157760e9dcc54b7dcd894814656c2": {
-                "Name": "elastic_pascal",
-                "EndpointID": "12381efd1f7ff548881209f5dc61983ebcdbec34ce8e2ff013574551068f28be",
-                "MacAddress": "02:42:ac:1b:00:02",
-                "IPv4Address": "172.27.0.2/16",
-                "IPv6Address": ""
-            },
-            "72e335c560145b6f836b31da4c3cc7cf68e7256d9449453ee325132153681c1e": {
-                "Name": "youthful_meninsky",
-                "EndpointID": "6f68be645ff22924a57238db22fbd77c492cc8759fe46368f384ee30ca997f4a",
-                "MacAddress": "02:42:ac:1b:00:03",
-                "IPv4Address": "172.27.0.3/16",
-                "IPv6Address": ""
-            }
-        },
-        "Options": {},
-        "Labels": {}
-    }
-]
+{
+  "77fe9c3490c57478ee24af7a2690ad50b982788cea22ad0068196be596384140": {
+    "Name": "pippin",
+    "EndpointID": "57fefce7ccf959bb61aae6d2e9faa7f30479dd4d98fb6ffa7ed4292128a3e9f0",
+    "MacAddress": "02:42:ac:15:00:02",
+    "IPv4Address": "172.21.0.2/16",
+    "IPv6Address": ""
+  },
+  "d3c564cacb698f8cfaa310f6d35e18d50b040d2b43a91b850ae883676771f585": {
+    "Name": "boudi",
+    "EndpointID": "3afb5192f5fb5c6743876fafd8d4d4855627e082f58bfb0403138f16bdfc60e4",
+    "MacAddress": "02:42:ac:15:00:03",
+    "IPv4Address": "172.21.0.3/16",
+    "IPv6Address": ""
+  }
+}
 ```
 
-## What is going on here so far?
+### Interlude: What is going on here so far?
 
 Okay, so we have two containers that we've started up and put onto a new docker-defined network. You'll notice that these containers have IP addresses already (the above `network inspect` command shows them; also, on the bash session with each container, if you type `ip addr`, it will show you the addresses on the machines).
 
@@ -169,9 +126,16 @@ You might be asking yourself: "how did these machines get and IP address?" The a
 
 Actually, it would appear that this busybox machine does not have any DHCP client stuff going for it. What seems to be the most likely situation is that docker itself just contfigured the machine on its own for us without employing the DCHP protocol.
 
+## Set up and test our new containers
+
+We now need to interact with these two containers directly. To do that, you'll want to open two distinct terminal windows: one for each container. Then, in each window, start an interactive session with your container.
+
+1. in window 1, run `docker exec -it $CONTAINER_1 /bin/sh`
+1. in window 2, run `docker exec -it $CONTAINER_2 /bin/sh`
+
 ### Remove default IP address configuration
 
-But, we can configure the network ourselves if we want to using the `ip` command on the system. First, we should remove the IP addresses that docker configured on each container. To do that, you'll first need to see what IP address docker configured on each container using the `ip addr` command, as follows:
+Next, configure the network ourselves using the `ip` command on the container. First, we should remove the IP addresses that docker configured on each container. To do that, you'll first need to see what IP address docker configured on each container using the `ip addr` command, as follows:
 
 ```bash
 / # ip addr
@@ -213,17 +177,62 @@ You'll want to repeat this process on the other container (but in this case the 
 
 ### Test the network connection
 
-Now it's time to verify that the two containers can reach each other, so let's use the `ping` command. On the container with the ip address of `10.1.1.1`, use:
+On the CONTAINER_1 machine, run `tcpdump -n -i eth1`. This will run a program which "sniffs" ethernet frames on the same network interface that we just added the 10.1.1.1 address to. The `-n` flag to `tcpdump` tells that program not to try to resolve hostnames via DNS. The `-i eth1` flag tells `tcpdump` which interface to use.
 
-`ping 10.1.1.2`
-
-and you should see:
+The initial output of this command should be:
 
 ```bash
-
+tcpdump: listening on eth1, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 ```
 
-## Problem solving:
+This command should not output anything else until we ping that container, at which time you'll see each packet detected on the eth1 network interface shown on its own line.
+
+Now it's time to verify that the two containers can reach each other, so let's use the `ping` command. On the CONTAINER_2 machine, run:
+
+`ping -c 5 10.1.1.1`
+
+and you should see on CONTAINER_2:
+
+```bash
+PING 10.1.1.1 (10.1.1.1) 56(84) bytes of data.
+64 bytes from 10.1.1.1: icmp_seq=1 ttl=64 time=0.341 ms
+64 bytes from 10.1.1.1: icmp_seq=2 ttl=64 time=0.223 ms
+64 bytes from 10.1.1.1: icmp_seq=3 ttl=64 time=0.240 ms
+64 bytes from 10.1.1.1: icmp_seq=4 ttl=64 time=0.091 ms
+64 bytes from 10.1.1.1: icmp_seq=5 ttl=64 time=0.199 ms
+
+--- 10.1.1.1 ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 4096ms
+rtt min/avg/max/mdev = 0.091/0.218/0.341/0.080 ms
+```
+
+And, you should see the following on CONTAINER 1:
+
+```bash
+19:52:30.295932 ARP, Request who-has 10.1.1.2 tell 10.1.1.1, length 28
+19:52:30.296116 ARP, Request who-has 10.1.1.1 tell 10.1.1.2, length 28
+19:52:30.297091 ARP, Reply 10.1.1.1 is-at 02:42:ac:16:00:02, length 28
+19:52:30.297112 ARP, Reply 10.1.1.2 is-at 02:42:ac:16:00:03, length 28
+19:52:24.811978 IP 10.1.1.2 > 10.1.1.1: ICMP echo request, id 5, seq 1, length 64
+19:52:24.812031 IP 10.1.1.1 > 10.1.1.2: ICMP echo reply, id 5, seq 1, length 64
+19:52:25.820736 IP 10.1.1.2 > 10.1.1.1: ICMP echo request, id 5, seq 2, length 64
+19:52:25.820799 IP 10.1.1.1 > 10.1.1.2: ICMP echo reply, id 5, seq 2, length 64
+19:52:26.826028 IP 10.1.1.2 > 10.1.1.1: ICMP echo request, id 5, seq 3, length 64
+19:52:26.826081 IP 10.1.1.1 > 10.1.1.2: ICMP echo reply, id 5, seq 3, length 64
+19:52:27.865467 IP 10.1.1.2 > 10.1.1.1: ICMP echo request, id 5, seq 4, length 64
+19:52:27.865502 IP 10.1.1.1 > 10.1.1.2: ICMP echo reply, id 5, seq 4, length 64
+19:52:28.887895 IP 10.1.1.2 > 10.1.1.1: ICMP echo request, id 5, seq 5, length 64
+19:52:28.887926 IP 10.1.1.1 > 10.1.1.2: ICMP echo reply, id 5, seq 5, length 64
+```
+
+### Interlude: how to read tcpdump and ping output
+
+* WE LEFT OFF HERE!
+
+what is that ARP stuff?
+
+
+## Problem solving
 
 It doesn't seem like it's possible to manually configure the IP address settings for a container. For example,
 
@@ -241,6 +250,11 @@ ip: RTNETLINK answers: Operation not permitted
 
 The solution for this was adding the permission `--cap-add=NET_ADMIN` when running `docker run`.
 
+## TODOS For this section
+
+1. Switch our base OS to something-that-lets-you-install-stuff from busybox
+2. ping with tcpdump to see ARP and ICMP echo-request/echo-response (aka "ping")
+
 ## Next session
 
 1. How can we manually configure our networks? Must we rely on Docker to do everything for us? Maybe that's okay and we shouldn't worry so much about manually configuring the machines.
@@ -249,3 +263,12 @@ The solution for this was adding the permission `--cap-add=NET_ADMIN` when runni
 1. Set up routing tables
 1. Setting up tcpdump
 1. Talk about ARP
+
+## Pre-requisites
+
+- understand a little bit about docker (Course link)
+- understand a little bit about terminals and environment variables (course link)
+- optional: understand how `jq` works (if you feel motivated)
+- get some software installed
+  - docker desktop for mac™ (hopefully something else)
+  - `jq` by whatever means necessary
