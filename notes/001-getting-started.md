@@ -227,10 +227,17 @@ And, you should see the following on CONTAINER 1:
 
 ### Interlude: how to read tcpdump and ping output
 
-* WE LEFT OFF HERE!
+From `CONTAINER_2`, we see some ping output like this:
 
-what is that ARP stuff?
+```bash
+64 bytes from 10.1.1.1: icmp_seq=3 ttl=64 time=0.240 ms
+```
 
+basically, all you need to know about this is that "ping" is a program that sends packets across the network using a protocol called ICMP (which stands for Internet Control Message Protocol): "echo request" and "echo reply" are two types of ICMP message [read more about them here](https://docs.netapp.com/us-en/e-series-santricity/sm-hardware/what-are-icmp-ping-responses.html). What we see here in this ping message is that it has both sent a packet to the destination, and the destination has replied. The `icmp_seq=3` designation marks each individual request/response pair. If the ping did not go through, you might see various error messages, but the most common is that the `ping` command replies with `Request timeout for icmp_seq 0` type messages.
+
+On the container that is being pinged (`CONTAINER_1`), we see quite a bit more information from tcpdump. First, we see a series of messages that have `ARP` in them. ARP is a protocol that you can learn all about on the internet, but here is [a link](https://www.fortinet.com/resources/cyberglossary/what-is-arp). Basically, it allows a machine that is connected locally on one network to talk to another machine that is also connected to that same network (as opposed to a machine that wants to communicate over multiple networks).
+
+We then, after seeing the ARP packets go back and forth (which establish the ability for those two containers to talk to each other on the local network), we see the ICMP echo-request and echo-reply packets go back and forth.
 
 ## Problem solving
 
