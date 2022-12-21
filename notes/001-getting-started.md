@@ -257,6 +257,8 @@ Now you can repeat the tests we did above by connecting to each container (this 
 
 ## Appendix: Problem solving
 
+tl;dr We initially could not edit our IP addresses for the containers within the network. The solution for the problem was adding the permission `--cap-add=NET_ADMIN` when running `docker run` to allow us to be able to edit them.
+
 It doesn't seem like it's possible to manually configure the IP address settings for a container. For example,
 
 ```bash
@@ -271,7 +273,6 @@ ip: RTNETLINK answers: Operation not permitted
 - Is this an issue with the busybox image?
 - Is this an issue with docker in general, and if so what other virtualization platforms might we look at instead?
 
-The solution for this was adding the permission `--cap-add=NET_ADMIN` when running `docker run`.
 
 ## TODOs
 
