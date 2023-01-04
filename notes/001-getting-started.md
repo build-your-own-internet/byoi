@@ -273,7 +273,6 @@ ip: RTNETLINK answers: Operation not permitted
 - Is this an issue with the busybox image?
 - Is this an issue with docker in general, and if so what other virtualization platforms might we look at instead?
 
-
 ## TODOs
 
 * WE LEFT OFF HERE!
