@@ -11,6 +11,12 @@ services:
       squasheeba:
         ipv4_address: 10.1.1.2
 
+  tara:
+    build: .
+    networks:
+      doggonet:
+        ipv4_address: 10.1.2.2
+
 networks:
   squasheeba:
     driver: bridge
@@ -18,3 +24,9 @@ networks:
       driver: default
       config:
         - subnet: 10.1.1.0/24
+  doggonet:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.1.2.0/24
