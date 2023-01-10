@@ -1,7 +1,7 @@
 # build-your-own-internet
 
 ## How to approach this repo
-The intention behind this project is discovery and understanding. The idea is to explore how the internet is put together and use the common tools the industry uses to see and understand how servers are communicating with each other. 
+The intention behind this project is discovery and understanding. The idea is to explore how the internet is put together and use common industry tools to see and understand all the communications necessary to make the services and apps we use work.
 
 We decided to take notes that creates a reproducable experience. We document our questions, discovery, and our processes so other people who may want to take a similar journey can have a path to follow. The `notes` folder is the home of this documentation. There is, at least as of yet, very little actual software to run from this repo. Instead, the intent is to guide the experience and the learning process.
 
