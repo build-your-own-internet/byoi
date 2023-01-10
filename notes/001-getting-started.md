@@ -2,6 +2,9 @@ TODO: modify all /bin/sh to /bin/bash
 
 # Getting Started
 
+## Goals for this section:
+We want to build a simple network where two machines can ping each other. To keep this simple and remote pairing friendly, we want to use docker containers to simulate machines on this network. We will use some simple common networking tools to understand the shape of our network and how and when successful communication is occurring.
+
 ## Running your docker container
 
 We got this magic Dockerfile that gets everything set up! Neat! To run it,
