@@ -15,8 +15,6 @@ What if we build a little internet?
 
 Documenting our process for our future friends
 How to build the internet blog
-Can we build fastly in there? Fastly Anywhere
-What about the Fastly control-plane? Heavenly/Northstar/Cypress/Tinia/Spotless, etc etc
 
 ### What concepts are involved
 
