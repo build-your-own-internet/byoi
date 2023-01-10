@@ -1,5 +1,11 @@
 # build-your-own-internet
 
+## How to approach this repo
+The intention behind this project is discovery and understanding. The idea is to explore how the internet is put together and use the common tools the industry uses to see and understand how servers are communicating with each other. 
+
+We decided to take notes that creates a reproducable experience. We document our questions, discovery, and our processes so other people who may want to take a similar journey can have a path to follow. The `notes` folder is the home of this documentation. There is, at least as of yet, very little actual software to run from this repo. Instead, the intent is to guide the experience and the learning process.
+
+To see our full process of discovery, follow through the commits on our branches. Read and explore along with us!
 
 ## General thoughts
 
@@ -11,10 +17,6 @@ Documenting our process for our future friends
 How to build the internet blog
 Can we build fastly in there? Fastly Anywhere
 What about the Fastly control-plane? Heavenly/Northstar/Cypress/Tinia/Spotless, etc etc
-
-### What do we do NEXT?
-
-Turn this google doc into a readme, create a … 
 
 ### What concepts are involved
 
