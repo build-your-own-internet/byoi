@@ -107,5 +107,171 @@ tcpdump because the ARP cache needs to periodically be refreshed.
 
 ## Make those networks communicate with each other!
 
-TODO:
-1. network our networks together
+How do machines communicate across networks? Well, first they need to have a
+router. Sure, docker has its own built in router, but we want to build our own.
+What is a router, but just another machine on the network. The router just has 2
+special properties:
+
+* it has an interface on more than one network
+* it has the ability to forward packets that are not destined for itself to other machines
+
+The containers we've been building and using on our networks are machines on our
+network! Instead of adding a new machine to be our router, let's just repurpose
+`boudi`. We will need to give `boudi` those special properties.
+
+Let's go back to our `docker-compose.yml` and give `boudi` an additional network
+interface.  All we need to do to achieve this is add the `doggonet` network to
+`boudi`, which should now look like:
+
+```
+  boudi:
+    build: .
+    networks:
+      squasheeba:
+        ipv4_address: 10.1.1.3
+      doggonet:
+        ipv4_address: 10.1.2.3
+```
+
+Now, let's re-build our containers and re-run our `tcpdump` and `ping` experiments from earlier. 
+
+```
+docker compose down
+docker system prune
+docker compose up
+docker exec -it build-your-own-internet-boudi-1 /bin/bash
+```
+
+Before we run our experiment, let's check our ip interface table on `boudi`:
+
+```
+root@6f9a282e02ad:/# ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+2: tunl0@NONE: <NOARP> mtu 1480 qdisc noop state DOWN group default qlen 1000
+    link/ipip 0.0.0.0 brd 0.0.0.0
+3: ip6tnl0@NONE: <NOARP> mtu 1452 qdisc noop state DOWN group default qlen 1000
+    link/tunnel6 :: brd :: permaddr f2e0:ad7c:997e::
+36: eth1@if37: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:0a:01:01:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.1.1.3/24 brd 10.1.1.255 scope global eth1
+       valid_lft forever preferred_lft forever
+38: eth0@if39: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:0a:01:02:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.1.2.3/24 brd 10.1.2.255 scope global eth0
+       valid_lft forever preferred_lft forever
+```
+
+Look at that! There are 2 eth interfaces! `10.1.1.3/24` and `10.1.2.3/24`. Now
+let's check our routing table:
+
+```
+root@6f9a282e02ad:/# ip route
+default via 10.1.2.1 dev eth0
+10.1.1.0/24 dev eth1 proto kernel scope link src 10.1.1.3
+10.1.2.0/24 dev eth0 proto kernel scope link src 10.1.2.3
+```
+
+BOOM! There are routes for both the `squasheeba` and `doggonet` networks! Notice
+that `tara` still only knows about `doggonet`:
+
+```
+root@292b896a965e:/# ip route
+default via 10.1.2.1 dev eth0
+10.1.2.0/24 dev eth0 proto kernel scope link src 10.1.2.2
+```
+
+It looks like we should be able to ping `tara` from `boudi`! Let's check it out!
+
+We're going to open 3 terminal windows, just like before.
+
+1. `docker exec -it build-your-own-internet-boudi-1 /bin/bash` will run `ping 10.1.2.2`
+2. `docker exec -it build-your-own-internet-boudi-1 /bin/bash` will run `tcpdump -ni eth0`
+3. `docker exec -it build-your-own-internet-tara-1 /bin/bash` will run `tcpdump -n`
+
+> *In terminal window 1 (boudi's ping), you should see:*
+
+```bash
+root@6f9a282e02ad:/# ping 10.1.2.2
+PING 10.1.2.2 (10.1.2.2) 56(84) bytes of data.
+64 bytes from 10.1.2.2: icmp_seq=1 ttl=64 time=0.155 ms
+64 bytes from 10.1.2.2: icmp_seq=2 ttl=64 time=0.089 ms
+64 bytes from 10.1.2.2: icmp_seq=3 ttl=64 time=0.069 ms
+64 bytes from 10.1.2.2: icmp_seq=4 ttl=64 time=0.070 ms
+^C
+--- 10.1.2.2 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 3082ms
+rtt min/avg/max/mdev = 0.069/0.095/0.155/0.035 ms
+```
+
+It was successful! Huzzah! We were able to ping to `tara` from `boudi`!
+
+> *In terminal window 2 (boudi's tcpdump):*
+
+```bash
+root@6f9a282e02ad:/# tcpdump -ni eth0
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+19:57:13.285276 IP 10.1.2.3 > 10.1.2.2: ICMP echo request, id 4, seq 1, length 64
+19:57:13.285400 IP 10.1.2.2 > 10.1.2.3: ICMP echo reply, id 4, seq 1, length 64
+19:57:14.321653 IP 10.1.2.3 > 10.1.2.2: ICMP echo request, id 4, seq 2, length 64
+19:57:14.321705 IP 10.1.2.2 > 10.1.2.3: ICMP echo reply, id 4, seq 2, length 64
+19:57:15.342813 IP 10.1.2.3 > 10.1.2.2: ICMP echo request, id 4, seq 3, length 64
+19:57:15.342855 IP 10.1.2.2 > 10.1.2.3: ICMP echo reply, id 4, seq 3, length 64
+19:57:16.366989 IP 10.1.2.3 > 10.1.2.2: ICMP echo request, id 4, seq 4, length 64
+19:57:16.367032 IP 10.1.2.2 > 10.1.2.3: ICMP echo reply, id 4, seq 4, length 64
+^C
+8 packets captured
+8 packets received by filter
+0 packets dropped by kernel
+```
+
+Sweet! We can see both the request and the reply from the connection to `tara`!
+
+A note on the command here; `tcpdump -ni eth0`. We passed the `-i eth0` flag
+because we saw above in the `ip route` output that `boudi`'s default network
+interface was `squasheeba`:
+
+```bash
+root@6f9a282e02ad:/# ip route
+default via 10.1.2.1 dev eth0
+10.1.1.0/24 dev eth1 proto kernel scope link src 10.1.1.3
+10.1.2.0/24 dev eth0 proto kernel scope link src 10.1.2.3
+```
+
+If we just run `tcpdump` without telling it which network interface to listen
+on, we'll see the network traffic on `squasheeba`, which isn't where the ping is
+going. We have to explicitly tell `tcpdump` to listen on `eth0` in order to see
+the network traffic heading to `doggonet`.
+
+> *In terminal window 3 (tara):*
+
+```bash
+root@292b896a965e:/# tcpdump -n
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+19:57:13.285340 IP 10.1.2.3 > 10.1.2.2: ICMP echo request, id 4, seq 1, length 64
+19:57:13.285392 IP 10.1.2.2 > 10.1.2.3: ICMP echo reply, id 4, seq 1, length 64
+19:57:14.321680 IP 10.1.2.3 > 10.1.2.2: ICMP echo request, id 4, seq 2, length 64
+19:57:14.321698 IP 10.1.2.2 > 10.1.2.3: ICMP echo reply, id 4, seq 2, length 64
+19:57:15.342833 IP 10.1.2.3 > 10.1.2.2: ICMP echo request, id 4, seq 3, length 64
+19:57:15.342849 IP 10.1.2.2 > 10.1.2.3: ICMP echo reply, id 4, seq 3, length 64
+19:57:16.367010 IP 10.1.2.3 > 10.1.2.2: ICMP echo request, id 4, seq 4, length 64
+19:57:16.367026 IP 10.1.2.2 > 10.1.2.3: ICMP echo reply, id 4, seq 4, length 64
+^C
+8 packets captured
+8 packets received by filter
+0 packets dropped by kernel
+```
+
+We can see that the ping from `boudi` made it to `tara`! Huzzah!
+
+
+
+
+Next time, on gotime:
+1. see tara ping boudi - shoudl work
+2. see tara ping to pippin - shoudl fail
+3. make boudi do it has the ability to forward packets that are not destined for itself onto other machines
