@@ -115,6 +115,8 @@ special properties:
 * it has an interface on more than one network
 * it has the ability to forward packets that are not destined for itself to other machines
 
+### Make `boudi` ping `tara`
+
 The containers we've been building and using on our networks are machines on our
 network! Instead of adding a new machine to be our router, let's just repurpose
 `boudi`. We will need to give `boudi` those special properties.
@@ -268,10 +270,62 @@ listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 
 We can see that the ping from `boudi` made it to `tara`! Huzzah!
 
+### Can `tara` ping `boudi`?
 
+Now... let's see if `tara` is able to ping `boudi`. We're going to do the same 3
+window setup, but this time `tara` will be running both `ping` and `tcpdump`.
 
+The interesting thing with `tara` pinging `boudi` is that `boudi` has 2 network
+IP addresses we can ping. Which one should we use? Well, 10.1.1.3 is the IP
+that's on the `squasheeba` network. `tara`, unfortunately, doesn't know anything
+about how to reach this network, which means, if we try to ping it, `boudi`
+won't receive the ping and `tara` is just screaming into the void. If instead,
+we use `boudi`'s IP on `doggonet`, 10.1.2.3, we should have a successful result.
+
+1. `docker exec -it build-your-own-internet-tara-1 /bin/bash` will run `ping 10.1.2.3` 
+2. `docker exec -it build-your-own-internet-tara-1 /bin/bash` will run `tcpdump -ne`
+3. `docker exec -it build-your-own-internet-boudi-1 /bin/bash` will run `tcpdump -ni eth0`
+
+**NOTICE** We added the `-e` flag to our `tcpdump` command for `tara`. Why? That
+*flag reveals information about ethernet headers in each packet. If we look at
+*the network interface information for `boudi`, we can see the mac address for
+*its connection on `doggonet`: 02:42:0a:01:02:03.
+
+```bash
+root@6f9a282e02ad:/# ip addr
+...
+46: eth0@if47: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:0a:01:02:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.1.2.3/24 brd 10.1.2.255 scope global eth0
+       valid_lft forever preferred_lft forever
+```
+
+Looking at the `tcpdump` from `tara`, we can see the flow of packets from `tara`
+to `boudi`. This is particularly useful when pings aren't being responded to by
+the expected host so you can determine where the packets ARE being sent. Here,
+we can definitely tell the packets are being sent to the correct host because we
+see the mac address for `boudi`. 
+
+```bash
+root@292b896a965e:/# tcpdump -ne
+...
+19:30:10.124776 02:42:0a:01:02:02 > 02:42:0a:01:02:03, ethertype IPv4 (0x0800), length 98: 10.1.2.2 > 10.1.2.3: ICMP echo request, id 12, seq 1, length 64
+```
+
+If you have `tara` ping `boudi`'s `squasheeba` address, 10.1.1.3, you'll see the
+ping fail, and in the `tcpdump`, you'll see a mac address destination you
+probably won't recognize. This is `tara`'s default gateway, and that gateway
+won't forward the packets to `boudi`.
+
+### Make `tara` ping hosts on the `squasheeba` network
+
+So let's see if we can get `tara` to ping `boudi`, or `pippin` for that matter,
+on the `squasheeba` network without using the default gateway router.
 
 Next time, on gotime:
-1. see tara ping boudi - shoudl work
-2. see tara ping to pippin - shoudl fail
-3. make boudi do it has the ability to forward packets that are not destined for itself onto other machines
+1. address /etc/hosts (allow `ping boudi` and show `root@boudi` instead of jibberish)
+2. can we delete the default gateway? and then re-write all of our docs?
+3. Restructure repo to have folders for 001 - n that each contain exactly what they need in the state they need it for the notes to be followed successfully
+4. see tara ping to pippin - shoudl fail
+5. make boudi do it has the ability to forward packets that are not destined for itself onto other machines
+6. Explore what is DHCP and how?
