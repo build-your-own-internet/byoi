@@ -1,7 +1,8 @@
-version: "0.1"
+version: "3.0"
 services:
   boudi:
     build: .
+    hostname: boudi
     networks:
       squasheeba:
         ipv4_address: 10.1.1.3
@@ -11,6 +12,7 @@ services:
       - NET_ADMIN
   pippin:
     build: .
+    hostname: pippin
     networks:
       squasheeba:
         ipv4_address: 10.1.1.2
@@ -19,6 +21,7 @@ services:
 
   tara:
     build: .
+    hostname: tara
     networks:
       doggonet:
         ipv4_address: 10.1.2.2
