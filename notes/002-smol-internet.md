@@ -322,10 +322,31 @@ won't forward the packets to `boudi`.
 So let's see if we can get `tara` to ping `boudi`, or `pippin` for that matter,
 on the `squasheeba` network without using the default gateway router.
 
+**Quick Question Break**
+_Wait... what's the difference between `ip addr` and `ip route`?_
+
+`ip addr` gives us view into the network interfaces available on a host.
+`ip route` shows us the routing table on that host.
+
+But it looks like there's routing information in our `ip addr` output? What is
+the difference between a network interface and a routing table?
+
+Looking at the output of `ip route`, we see a default gateway identified,
+`default via 10.1.2.1 dev eth0`. This default gateway is what will be used for
+any outgoing packets that are not on the otherwise defined routes. `ip route`
+shows routes on active interfaces. `ip addr` displays all available interfaces
+on a host, even ones that are not currently active. 
+
+`ip route` deals entirely with layer 3 information; whereas `ip addr` has
+information about both layer 2 and layer 3.
+
 Next time, on gotime:
-1. address /etc/hosts (allow `ping boudi` and show `root@boudi` instead of jibberish)
+1. address /etc/hosts (allow `ping boudi` and show `root@boudi` instead of jibberish) [DONE]
 2. can we delete the default gateway? and then re-write all of our docs?
-3. Restructure repo to have folders for 001 - n that each contain exactly what they need in the state they need it for the notes to be followed successfully
+3. Cleanup [squee]
+  a. Restructure repo to have folders for 001 - n that each contain exactly what they need in the state they need it for the notes to be followed successfully
+  b. Read through 001-getting-started.md to ensure it has a narrative flow
+  c. Introduce `hostname` concept in 001 with explanation
 4. see tara ping to pippin - shoudl fail
 5. make boudi do it has the ability to forward packets that are not destined for itself onto other machines
 6. Explore what is DHCP and how?
