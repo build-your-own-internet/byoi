@@ -1,0 +1,4 @@
+#!/bin/sh
+
+CONTAINER_NAME="build-your-own-internet-$1-1"
+docker exec -it $CONTAINER_NAME /bin/bash

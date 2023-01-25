@@ -1,0 +1,8 @@
+#!/bin/sh
+
+docker compose down
+
+# docker images delete all 3
+docker images | grep build-your-own-internet | awk '{ print $1 }' | xargs docker image rm
+
+docker compose up -d

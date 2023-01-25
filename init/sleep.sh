@@ -1,3 +1,7 @@
 #!/bin/sh
 
-while /bin/sleep 999999; do echo ""; done
+/usr/sbin/ip route delete default
+
+while /bin/sleep 9999999
+  do echo "hey y'all"
+done
