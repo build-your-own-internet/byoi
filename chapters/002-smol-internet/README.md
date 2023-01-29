@@ -124,7 +124,7 @@ Here, we can see that the `request` is being sent for `10.1.1.3`, but we
 don't see a corresponding `reply`. Sweet! Our networks exist, but they cannot
 communicate with each other. YET!
 
-> **NOTE** 
+> **What's with thoes ARP requests?**
 There are some random ARP requests in the tcpdump. 10.1.2.1 is the
 *address for the default gateway, e.g.:
 
@@ -137,6 +137,25 @@ default via 10.1.2.1 dev eth0
 In the output from `ip route`, we can see `default via 10.1.2.1 dev eth0`, which
 identifies that as the default gateway. We're seeing these requests in our
 tcpdump because the ARP cache needs to periodically be refreshed.
+
+> **Wait... what's the difference between `ip addr` and `ip route`?**
+
+There's some similar output between the `ip addr` and `ip route` commands. `ip addr` gives us view into the network interfaces available on a host.
+`ip route` shows us the routing table on that host.
+
+But it looks like there's routing information in our `ip addr` output? What is
+the difference between a network interface and a routing table?
+
+Looking at the output of `ip route`, we see a default gateway identified,
+`default via 10.1.2.1 dev eth0`. This default gateway is what will be used for
+any outgoing packets that are not on the otherwise defined routes. `ip route`
+shows routes on active interfaces. `ip addr` displays all available interfaces
+on a host, even ones that are not currently active. 
+
+`ip route` deals entirely with layer 3 information; whereas `ip addr` has
+information about both layer 2 and layer 3.
+
+Now back to our regularly scheduled exploration!
 
 ## Make those networks communicate with each other!
 
@@ -352,24 +371,6 @@ won't forward the packets to `boudi`.
 
 So let's see if we can get `tara` to ping `boudi`, or `pippin` for that matter,
 on the `squasheeba` network without using the default gateway router.
-
-**Quick Question Break**
-_Wait... what's the difference between `ip addr` and `ip route`?_
-
-`ip addr` gives us view into the network interfaces available on a host.
-`ip route` shows us the routing table on that host.
-
-But it looks like there's routing information in our `ip addr` output? What is
-the difference between a network interface and a routing table?
-
-Looking at the output of `ip route`, we see a default gateway identified,
-`default via 10.1.2.1 dev eth0`. This default gateway is what will be used for
-any outgoing packets that are not on the otherwise defined routes. `ip route`
-shows routes on active interfaces. `ip addr` displays all available interfaces
-on a host, even ones that are not currently active. 
-
-`ip route` deals entirely with layer 3 information; whereas `ip addr` has
-information about both layer 2 and layer 3.
 
 Next time, on gotime:
 1. address /etc/hosts (allow `ping boudi` and show `root@boudi` instead of jibberish) [DONE]
