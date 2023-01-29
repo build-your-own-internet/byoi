@@ -1,11 +1,41 @@
 # Let's make an Internet!
 
-## We need a second network
+## Goals for this section:
+
+In the previous chapter, we build a small network of 2 machines that could ping each other. Now, we want to build on that structure to add a second network. Once we have another network, we'll need to start building routes for machines on each network to be able to communicate with each other. 
+
+### ASIDE: Efficiencies
+
+#### Naming of the Containers
+
+You may have noticed in chapter 1 that, while we named our containers `boudi` and `pippin`, what appeared in the terminal when we jumped on those containers was a sha that doesn't have much meaning for us, e.g. `root@0c3ce9be81e7:/#`. Because that sha doesn't have meaning for us, it was hard to track which window was a terminal for which container.
+
+Also, as we started working on this chapter and were working with 3 machines on 2 networks, we also started getting our IP addresses jumbled. We wanted a solution that gave us a prettier prompt in our terminal, e.g. `root@boudi:/#`, and we wanted to be able to ping a container with the container name, e.g. `ping pippin`.
+
+The first solution we employed was to modify the `/etc/hosts` on each machine, e.g. `10.1.1.2	pippin` on `pippin`. This was great, except it's a continued manual effort every time we have to rebuild the containers. Turns out... adding a `hostname` to the container definition in `docker-compose.yml` did the trick!
+
+#### Scripts
+
+Before we get started, let's look at a couple scripts we added. On the root level of this repo, there's a `bin` folder. We've started adding simple scripts there to make our lives easier. Here's the scripts we've added thus far:
+
+* `hopon`: in order to jump on a container, we had to type a long-ish command `docker exec -it 002-smol-internet-boudi-1 /bin/bash`. This allows us to simply type `hopon boudi`.
+* `restart`: in experimenting with various setups in both our `Dockerfile` and `docker-compose.yml`, we needed to cleanup the images our containers were build from regularly. Now, we can simply type `restart` instead of finding and removing each container.
+
+Because the scripts are dependant on a version of `docker-compose.yml` that exists in each chapter subfolder, we need to add the scripts to our `PATH` from the root of this directory:
+
+```
+export PATH="$PATH:`pwd`/bin"
+```
+
+Now, onward! To the building of the internet!
+
+## Create a second network
+
 What we have created so far is a single network and our goal is to build an
 internet(work). Towards that goal, we want to create a second network (doggonet)
 that cannot directly talk to the previously created network (squasheeba).
 
-Towards that end, we created doggonet in our docker compose:
+If you check the `docker-compose.yml` file for this chapter, you'll see that we added a new network: `doggonet`.
 
 ```
   doggonet:
@@ -16,7 +46,7 @@ Towards that end, we created doggonet in our docker compose:
         - subnet: 10.1.2.0/24
 ```
 
-What's a network without a container right? So we have a lone tara reigning over
+What's a network without a container right? So we have a lone `tara` reigning over
 the doggonet:
 
 ```
