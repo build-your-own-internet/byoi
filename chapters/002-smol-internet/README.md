@@ -18,7 +18,7 @@ The first solution we employed was to modify the `/etc/hosts` on each machine, e
 
 Before we get started, let's look at a couple scripts we added. On the root level of this repo, there's a `bin` folder. We've started adding simple scripts there to make our lives easier. Here's the scripts we've added thus far:
 
-* `hopon`: in order to jump on a container, we had to type a long-ish command `docker exec -it 002-smol-internet-boudi-1 /bin/bash`. This allows us to simply type `hopon boudi`.
+* `hopon`: in order to jump on a container, we had to type a long-ish command `docker exec -it 002-smol-internet-boudi-1 /bin/bash`. This allows us to simply type `hopon boudi`, which we will be using for the rest of our exploration.
 * `restart`: in experimenting with various setups in both our `Dockerfile` and `docker-compose.yml`, we needed to cleanup the images our containers were build from regularly. Now, we can simply type `restart` instead of finding and removing each container.
 
 Because the scripts are dependant on a version of `docker-compose.yml` that exists in each chapter subfolder, we need to add the scripts to our `PATH` from the root of this directory:
@@ -52,9 +52,12 @@ the doggonet:
 ```
   tara:
     build: .
+    hostname: tara
     networks:
       doggonet:
         ipv4_address: 10.1.2.2
+    cap_add:
+      - NET_ADMIN
 ```
 
 ### Can our networks communicate with each other?
@@ -68,7 +71,7 @@ the same tricks we did in part 001.
 First, let's jump onto one of the containers on our `squasheeba` network:
 
 ```
-docker exec -it build-your-own-internet-boudi-1 /bin/bash
+hopon boudi
 ```
 
 We're going to try to ping this container from `tara` on the `doggonet` network.
@@ -79,7 +82,7 @@ Then, we need to open 2 new terminal windows and jump on a container on the
 `doggonet` network on both of them:
 
 ```
-docker exec -it build-your-own-internet-tara-1 /bin/bash
+hopon tara
 ```
 
 In the first window, run `tcpdump -n` so we can see the network traffic that's
@@ -168,10 +171,8 @@ interface.  All we need to do to achieve this is add the `doggonet` network to
 Now, let's re-build our containers and re-run our `tcpdump` and `ping` experiments from earlier. 
 
 ```
-docker compose down
-docker system prune
-docker compose up
-docker exec -it build-your-own-internet-boudi-1 /bin/bash
+restart
+hopon tara
 ```
 
 Before we run our experiment, let's check our ip interface table on `boudi`:
@@ -219,9 +220,9 @@ It looks like we should be able to ping `tara` from `boudi`! Let's check it out!
 
 We're going to open 3 terminal windows, just like before.
 
-1. `docker exec -it build-your-own-internet-boudi-1 /bin/bash` will run `ping 10.1.2.2`
-2. `docker exec -it build-your-own-internet-boudi-1 /bin/bash` will run `tcpdump -ni eth0`
-3. `docker exec -it build-your-own-internet-tara-1 /bin/bash` will run `tcpdump -n`
+1. `hopon boudi` will run `ping 10.1.2.2`
+2. `hopon boudi` will run `tcpdump -ni eth0`
+3. `hopon tara` will run `tcpdump -n`
 
 > *In terminal window 1 (boudi's ping), you should see:*
 
@@ -312,9 +313,9 @@ about how to reach this network, which means, if we try to ping it, `boudi`
 won't receive the ping and `tara` is just screaming into the void. If instead,
 we use `boudi`'s IP on `doggonet`, 10.1.2.3, we should have a successful result.
 
-1. `docker exec -it build-your-own-internet-tara-1 /bin/bash` will run `ping 10.1.2.3` 
-2. `docker exec -it build-your-own-internet-tara-1 /bin/bash` will run `tcpdump -ne`
-3. `docker exec -it build-your-own-internet-boudi-1 /bin/bash` will run `tcpdump -ni eth0`
+1. `hopon tara` will run `ping 10.1.2.3` 
+2. `hopon tara` will run `tcpdump -ne`
+3. `hopon boudi` will run `tcpdump -ni eth0`
 
 **NOTICE** We added the `-e` flag to our `tcpdump` command for `tara`. Why? That
 *flag reveals information about ethernet headers in each packet. If we look at
