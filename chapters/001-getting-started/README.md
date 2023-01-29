@@ -8,15 +8,6 @@ to simulate machines on this network. We will use some simple common networking
 tools to understand the shape of our network and how and when successful
 communication is occurring.
 
-## Pre-requisites
-
-- a basic undestanding of docker [Course link](https://www.linkedin.com/learning/learning-docker-2018/why-create-containers-using-docker)
-- a basic understanding of terminals and [bash](https://www.linkedin.com/learning/learning-bash-scripting-17063287/learning-bash-scripting)
-- optional: understand how `jq` works (if you feel motivated)
-- get some software installed:
-  - [docker desktop](https://www.docker.com/products/docker-desktop/) for mac™ (hopefully something else)
-  - `jq` by whatever means necessary (e.g. `brew install jq`)
-
 ## Vocabulary
 
 - `container`: a running instance of a docker image. Each container we create in building out our internet will be one machine on that internet.

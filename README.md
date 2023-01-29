@@ -7,6 +7,16 @@ We decided to take notes that creates a reproducable experience. We document our
 
 To see our full process of discovery, follow through the commits on our branches. Read and explore along with us!
 
+## Pre-requisites
+
+- a basic undestanding of docker [Course link](https://www.linkedin.com/learning/learning-docker-2018/why-create-containers-using-docker)
+- a basic understanding of terminals and [bash](https://www.linkedin.com/learning/learning-bash-scripting-17063287/learning-bash-scripting)
+- a basic understanding of [IPv4 and subnets](https://www.linkedin.com/learning/cisco-ccna-200-301-cert-prep-1-network-fundamentals-and-access/ipv4-addressing-and-subnetting)
+- optional: understand how `jq` works (if you feel motivated)
+- get some software installed:
+  - [docker desktop](https://www.docker.com/products/docker-desktop/) for mac™ (hopefully something else)
+  - `jq` by whatever means necessary (e.g. `brew install jq`)
+
 ## General thoughts
 
 What if we build a little internet?
