@@ -1,11 +1,60 @@
 # Let's make an Internet!
 
-## We need a second network
+## Goals for this section:
+
+In the previous chapter, we build a small network of 2 machines that could ping
+each other. Now, we want to build on that structure to add a second network.
+Once we have another network, we'll need to start building routes for machines
+on each network to be able to communicate with each other. 
+
+### ASIDE: Efficiencies
+
+#### Naming of the Containers
+
+You may have noticed in chapter 1 that, while we named our containers `boudi`
+and `pippin`, what appeared in the terminal when we jumped on those containers
+was a sha that doesn't have much meaning for us, e.g. `root@0c3ce9be81e7:/#`.
+Because that sha doesn't have meaning for us, it was hard to track which window
+was a terminal for which container.
+
+Also, as we started working on this chapter and were working with 3 machines on
+2 networks, we also started getting our IP addresses jumbled. We wanted a
+solution that gave us a prettier prompt in our terminal, e.g. `root@boudi:/#`,
+and we wanted to be able to ping a container with the container name, e.g. `ping
+pippin`.
+
+The first solution we employed was to modify the `/etc/hosts` on each machine,
+e.g. `10.1.1.2	pippin` on `pippin`. This was great, except it's a continued
+manual effort every time we have to rebuild the containers. Turns out... adding
+a `hostname` to the container definition in `docker-compose.yml` did the trick!
+
+#### Scripts
+
+Before we get started, let's look at a couple scripts we added. On the root
+level of this repo, there's a `bin` folder. We've started adding simple scripts
+there to make our lives easier. Here's the scripts we've added thus far:
+
+* `hopon`: in order to jump on a container, we had to type a long-ish command `docker exec -it 002-smol-internet-boudi-1 /bin/bash`. This allows us to simply type `hopon boudi`, which we will be using for the rest of our exploration.
+* `restart`: in experimenting with various setups in both our `Dockerfile` and `docker-compose.yml`, we needed to cleanup the images our containers were built from regularly. Now, we can simply type `restart` instead of finding and removing each container.
+
+Because the scripts are dependant on a version of `docker-compose.yml` that
+exists in each chapter subfolder, we need to add the scripts to our `PATH` from
+the root of this directory:
+
+```
+# Make sure to run this command in the root of this repository, or it won't work!
+export PATH="$PATH:`pwd`/bin"
+```
+
+Now, onward! To the building of the internet!
+
+## Create a second network
+
 What we have created so far is a single network and our goal is to build an
 internet(work). Towards that goal, we want to create a second network (doggonet)
 that cannot directly talk to the previously created network (squasheeba).
 
-Towards that end, we created doggonet in our docker compose:
+If you check the `docker-compose.yml` file for this chapter, you'll see that we added a new network: `doggonet`.
 
 ```
   doggonet:
@@ -16,15 +65,18 @@ Towards that end, we created doggonet in our docker compose:
         - subnet: 10.1.2.0/24
 ```
 
-What's a network without a container right? So we have a lone tara reigning over
+What's a network without a container right? So we have a lone `tara` reigning over
 the doggonet:
 
 ```
   tara:
     build: .
+    hostname: tara
     networks:
       doggonet:
         ipv4_address: 10.1.2.2
+    cap_add:
+      - NET_ADMIN
 ```
 
 ### Can our networks communicate with each other?
@@ -38,7 +90,7 @@ the same tricks we did in part 001.
 First, let's jump onto one of the containers on our `squasheeba` network:
 
 ```
-docker exec -it build-your-own-internet-boudi-1 /bin/bash
+hopon boudi
 ```
 
 We're going to try to ping this container from `tara` on the `doggonet` network.
@@ -49,7 +101,7 @@ Then, we need to open 2 new terminal windows and jump on a container on the
 `doggonet` network on both of them:
 
 ```
-docker exec -it build-your-own-internet-tara-1 /bin/bash
+hopon tara
 ```
 
 In the first window, run `tcpdump -n` so we can see the network traffic that's
@@ -91,7 +143,7 @@ Here, we can see that the `request` is being sent for `10.1.1.3`, but we
 don't see a corresponding `reply`. Sweet! Our networks exist, but they cannot
 communicate with each other. YET!
 
-> **NOTE** 
+> **What's with thoes ARP requests?**
 There are some random ARP requests in the tcpdump. 10.1.2.1 is the
 *address for the default gateway, e.g.:
 
@@ -104,6 +156,26 @@ default via 10.1.2.1 dev eth0
 In the output from `ip route`, we can see `default via 10.1.2.1 dev eth0`, which
 identifies that as the default gateway. We're seeing these requests in our
 tcpdump because the ARP cache needs to periodically be refreshed.
+
+> **Wait... what's the difference between `ip addr` and `ip route`?**
+
+There's some similar output between the `ip addr` and `ip route` commands. `ip
+addr` gives us view into the network interfaces available on a machine.  `ip
+route` shows us the routing table on that machine.
+
+But it looks like there's routing information in our `ip addr` output? What is
+the difference between a network interface and a routing table?
+
+Looking at the output of `ip route`, we see a default gateway identified,
+`default via 10.1.2.1 dev eth0`. This default gateway is what will be used for
+any outgoing packets that are not on the otherwise defined routes. `ip route`
+shows routes on active interfaces. `ip addr` displays all available interfaces
+on a machine, even ones that are not currently active. 
+
+`ip route` deals entirely with layer 3 information; whereas `ip addr` has
+information about both layer 2 and layer 3.
+
+Now back to our regularly scheduled exploration!
 
 ## Make those networks communicate with each other!
 
@@ -138,10 +210,8 @@ interface.  All we need to do to achieve this is add the `doggonet` network to
 Now, let's re-build our containers and re-run our `tcpdump` and `ping` experiments from earlier. 
 
 ```
-docker compose down
-docker system prune
-docker compose up
-docker exec -it build-your-own-internet-boudi-1 /bin/bash
+restart
+hopon tara
 ```
 
 Before we run our experiment, let's check our ip interface table on `boudi`:
@@ -189,9 +259,9 @@ It looks like we should be able to ping `tara` from `boudi`! Let's check it out!
 
 We're going to open 3 terminal windows, just like before.
 
-1. `docker exec -it build-your-own-internet-boudi-1 /bin/bash` will run `ping 10.1.2.2`
-2. `docker exec -it build-your-own-internet-boudi-1 /bin/bash` will run `tcpdump -ni eth0`
-3. `docker exec -it build-your-own-internet-tara-1 /bin/bash` will run `tcpdump -n`
+1. `hopon boudi` will run `ping 10.1.2.2`
+2. `hopon boudi` will run `tcpdump -ni eth0`
+3. `hopon tara` will run `tcpdump -n`
 
 > *In terminal window 1 (boudi's ping), you should see:*
 
@@ -282,9 +352,9 @@ about how to reach this network, which means, if we try to ping it, `boudi`
 won't receive the ping and `tara` is just screaming into the void. If instead,
 we use `boudi`'s IP on `doggonet`, 10.1.2.3, we should have a successful result.
 
-1. `docker exec -it build-your-own-internet-tara-1 /bin/bash` will run `ping 10.1.2.3` 
-2. `docker exec -it build-your-own-internet-tara-1 /bin/bash` will run `tcpdump -ne`
-3. `docker exec -it build-your-own-internet-boudi-1 /bin/bash` will run `tcpdump -ni eth0`
+1. `hopon tara` will run `ping 10.1.2.3` 
+2. `hopon tara` will run `tcpdump -ne`
+3. `hopon boudi` will run `tcpdump -ni eth0`
 
 **NOTICE** We added the `-e` flag to our `tcpdump` command for `tara`. Why? That
 *flag reveals information about ethernet headers in each packet. If we look at
@@ -321,24 +391,6 @@ won't forward the packets to `boudi`.
 
 So let's see if we can get `tara` to ping `boudi`, or `pippin` for that matter,
 on the `squasheeba` network without using the default gateway router.
-
-**Quick Question Break**
-_Wait... what's the difference between `ip addr` and `ip route`?_
-
-`ip addr` gives us view into the network interfaces available on a host.
-`ip route` shows us the routing table on that host.
-
-But it looks like there's routing information in our `ip addr` output? What is
-the difference between a network interface and a routing table?
-
-Looking at the output of `ip route`, we see a default gateway identified,
-`default via 10.1.2.1 dev eth0`. This default gateway is what will be used for
-any outgoing packets that are not on the otherwise defined routes. `ip route`
-shows routes on active interfaces. `ip addr` displays all available interfaces
-on a host, even ones that are not currently active. 
-
-`ip route` deals entirely with layer 3 information; whereas `ip addr` has
-information about both layer 2 and layer 3.
 
 Next time, on gotime:
 1. address /etc/hosts (allow `ping boudi` and show `root@boudi` instead of jibberish) [DONE]
