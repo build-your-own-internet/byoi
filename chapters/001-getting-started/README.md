@@ -12,7 +12,8 @@ communication is occurring.
 
 - `container`: a running instance of a docker image. Each container we create in building out our internet will be one machine on that internet.
 - `machine`: any computer. Could be a server, a router, a client...
-- `host`: see `machine`.
+- `gateway`: a `machine` on the internet that has the ability to route.
+- `host`: a `machine` on the internet that does NOT have any routing capabilities.
 
 ## Running your docker container
 
@@ -37,12 +38,14 @@ containers, we're going to give them names. To do so:
 
 ## Simple Network
 
-What is a network?
+> What is a network?
 2 or more machines that can communicate directly with each other over a physical
 medium (think actual wires or actual radio signals).
 
-What is an internetwork?
-2 or more machines on different networks that can communicate with each other. There are special devices (routers) that are used to fascilitate communication between each machine.
+> What is an internetwork?
+2 or more machines on different networks that can communicate with each other.
+There are special devices (routers) that are used to fascilitate communication
+between each machine.
 
 ### Wait... There's a default network?!
 
@@ -142,20 +145,33 @@ command: `docker network inspect $NETWORK_NAME | jq ".[].Containers"`
 
 ### Interlude: What is going on here so far?
 
-Okay, so we have two containers that we've started up and put onto a new docker-defined network. You'll notice that these containers have IP addresses already. The above `network inspect` command shows them; also, on the bash session with each container, if you run the `ip addr` command, it will show you the addresses on the machines (shown in a few paragraphs).
+Okay, so we have two containers that we've started up and put onto a new
+docker-defined network. You'll notice that these containers have IP addresses
+already. The above `network inspect` command shows them; also, on the bash
+session with each container, if you run the `ip addr` command, it will show you
+the addresses on the machines (shown in a few paragraphs).
 
-You might be asking yourself: "how did these machines get and IP address?" The answer is, Docker has set up a DHCP server as well as a default-gateway and a DNS server on the network that you asked it to create for you. Since we're trying to do all of these things by hand, we really don't want this. Let's look at how we can manage these configurations ourselves.
+You might be asking yourself: "how did these machines get an IP address?" The
+answer is, Docker has set up a DHCP server as well as a default-gateway and a
+DNS server on the network that you asked it to create for you. Since we're
+trying to do all of these things by hand, we really don't want this. Let's look
+at how we can manage these configurations ourselves.
 
 ## Set up and test our new containers
 
-We now need to interact with these two containers directly. To do that, we need to open two distinct terminal windows: one for each container. Then, in each window, start an interactive session with your container.
+We now need to interact with these two containers directly. To do that, we need
+to open two distinct terminal windows: one for each container. Then, in each
+window, start an interactive session with your container.
 
 1. in window 1, run `docker exec -it pippin /bin/bash`
 1. in window 2, run `docker exec -it boudi /bin/bash`
 
 ### Remove default IP address configuration
 
-Next, let's configure the network ourselves using the `ip` command on the container. First, we should remove the IP addresses that docker configured on each container. To do that, first we need to see what IP address docker configured on each container using the `ip addr` command, as follows:
+Next, let's configure the network ourselves using the `ip` command on the
+container. First, we should remove the IP addresses that docker configured on
+each container. To do that, first we need to see what IP address docker
+configured on each container using the `ip addr` command, as follows:
 
 ```bash
 / # ip addr
@@ -173,11 +189,19 @@ Next, let's configure the network ourselves using the `ip` command on the contai
        valid_lft forever preferred_lft forever
 ```
 
-You can see that on this host, `eth1` is associated with the IP address `172.19.0.3/16`. We can remove this IP address using the `ip addr del` command:
+You can see that on this host, `eth1` is associated with the IP address
+`172.19.0.3/16`. We can remove this IP address using the `ip addr del` command:
 
 `ip addr del 172.19.0.3 dev eth1`
 
-You'll want to repeat this process on the other container (using `ip addr` to show the IP and `ip addr del` to remove it).
+You'll want to repeat this process on the other container (using `ip addr` to
+show the IP and `ip addr del` to remove it).
+
+> **NOTE** `ip addr` is an abbreviation for the actual command, `ip address`
+
+There is a bit of a tradition within networking CLIs to allow users to
+abbreviate commands (cisco CLIs are famous for this), and the `ip` command
+carries this forward.
 
 ### Add our own IP address configuration
 
@@ -197,7 +221,11 @@ You'll want to repeat this process on the other container (but in this case the 
 
 ### Test the network connection
 
-On the `pippin` machine, run `tcpdump -n -i eth1`. This will run a program which "sniffs" ethernet frames on the same network interface that we just added the 10.1.1.3 address to. The `-n` flag to `tcpdump` tells that program not to try to resolve hostnames via DNS. The `-i eth1` flag tells `tcpdump` which interface to use.
+On the `pippin` machine, run `tcpdump -n -i eth1`. This will run a program which
+"sniffs" ethernet frames on the same network interface that we just added the
+10.1.1.3 address to. The `-n` flag to `tcpdump` tells that program not to try to
+resolve hostnames via DNS. The `-i eth1` flag tells `tcpdump` which network
+interface to use.
 
 The initial output of this command should be:
 
@@ -205,9 +233,12 @@ The initial output of this command should be:
 tcpdump: listening on eth1, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 ```
 
-This command should not output anything else until we ping that container, at which time you'll see each packet detected on the eth1 network interface shown on its own line.
+This command should not output anything else until we ping that container, at
+which time you'll see each packet detected on the eth1 network interface shown
+on its own line.
 
-Now it's time to verify that the two containers can reach each other, so let's use the `ping` command. On the boudi machine, run:
+Now it's time to verify that the two containers can reach each other, so let's
+use the `ping` command. On the boudi machine, run:
 
 `ping -c 5 10.1.1.3`
 
@@ -253,33 +284,65 @@ From `boudi`, we see some ping output like this:
 64 bytes from 10.1.1.3: icmp_seq=3 ttl=64 time=0.240 ms
 ```
 
-basically, all you need to know about this is that "ping" is a program that sends packets across the network using a protocol called ICMP (which stands for Internet Control Message Protocol): "echo request" and "echo reply" are two types of ICMP message [read more about them here](https://docs.netapp.com/us-en/e-series-santricity/sm-hardware/what-are-icmp-ping-responses.html). What we see here in this ping message is that it has both sent a packet to the destination, and the destination has replied. The `icmp_seq=3` designation marks each individual request/response pair. If the ping did not go through, you might see various error messages, but the most common is that the `ping` command replies with `Request timeout for icmp_seq 0` type messages.
+basically, all you need to know about this is that "ping" is a program that
+sends packets across the network using a protocol called ICMP (which stands for
+Internet Control Message Protocol): "echo request" and "echo reply" are two
+types of ICMP message [read more about them
+here](https://docs.netapp.com/us-en/e-series-santricity/sm-hardware/what-are-icmp-ping-responses.html).
+What we see here in this ping message is that it has both sent a packet to the
+destination, and the destination has replied. The `icmp_seq=3` designation marks
+each individual request/response pair. If the ping did not go through, you might
+see various error messages, but the most common is that the `ping` command
+replies with `Request timeout for icmp_seq 0` type messages.
 
-On the container that is being pinged (`pippin`), we see quite a bit more information from tcpdump. First, we see a series of messages that have `ARP` in them. ARP is a protocol that you can learn all about on the internet, but here is [a link](https://www.fortinet.com/resources/cyberglossary/what-is-arp). Basically, it allows a machine that is connected locally on one network to talk to another machine that is also connected to that same network (as opposed to a machine that wants to communicate over multiple networks).
+On the container that is being pinged (`pippin`), we see quite a bit more
+information from tcpdump. First, we see a series of messages that have `ARP` in
+them. ARP is a protocol that you can learn all about on the internet, but here
+is [a link](https://www.fortinet.com/resources/cyberglossary/what-is-arp).
+Basically, it allows a machine that is connected locally on one network to talk
+to another machine that is also connected to that same network (as opposed to a
+machine that wants to communicate over multiple networks).
 
-We then, after seeing the ARP packets go back and forth (which establish the ability for those two containers to talk to each other on the local network), we see the ICMP echo-request and echo-reply packets go back and forth.
+We then, after seeing the ARP packets go back and forth (which establish the
+ability for those two containers to talk to each other on the local network), we
+see the ICMP echo-request and echo-reply packets go back and forth.
 
 ## Automate that shit!
 
-At this point, there are a whole bunch of manual steps to get all this going. Now that we have proven to ourselves that we know how to do this all manually, let's automate it! We have a whole bunch more containers to bring up and networks to build, and doing that all by hand will be a lot of toil.
+At this point, there are a whole bunch of manual steps to get all this going.
+Now that we have proven to ourselves that we know how to do this all manually,
+let's automate it! We have a whole bunch more containers to bring up and
+networks to build, and doing that all by hand will be a lot of toil.
 
-We are going to use the `docker compose` command which uses the `docker-compose.yml` file in this directory to build, configure, and start our two containers on our network.
+We are going to use the `docker compose` command which uses the
+`docker-compose.yml` file in this directory to build, configure, and start our
+two containers on our network.
 
-You will use the following command: `docker compose up -d` (the `-d` flag tells docker compose that you want to continue using your terminal. When you're done with this session, you'll want to run `docker compose stop` in the same directory as the `docker-compose.yml` file.
+You will use the following command: `docker compose up -d` (the `-d` flag tells
+docker compose that you want to continue using your terminal. When you're done
+with this session, you'll want to run `docker compose stop` in the same
+directory as the `docker-compose.yml` file.
 
-There are a few differences with the system that docker creates using `docker compose` as compared to when we did this manually:
+There are a few differences with the system that docker creates using `docker
+compose` as compared to when we did this manually:
 
 - the network it creates has the same name as the directory you ran this from - with the network name as defined in the `docker-compose.yml` file (i.e. `squasheeba`) appended to it (so, in our case, `build-your-own-internet_squasheeba`).
 - Similarly, each container has that same label prepended to it (e.g. `build-your-own-internet-pippin-1`).
 - Docker has added a router in this network which connects both of these containers to the Internet. That router has the IP address of `10.1.1.1`. Each container also has a default-gateway pointed to that IP address which enables you to run a command like `ping 4.2.2.2`, which will successfully ping a DNS machine on the internet.
 
-Now you can repeat the tests we did above by connecting to each container (this time with commands `docker exec -it build-your-own-internet-boudi-1 /bin/bash` and `docker exec -it build-your-own-internet-pippin-1 /bin/bash`) and run the same tcpdump and ping commands as earlier with the same results.
+Now you can repeat the tests we did above by connecting to each container (this
+time with commands `docker exec -it build-your-own-internet-boudi-1 /bin/bash`
+and `docker exec -it build-your-own-internet-pippin-1 /bin/bash`) and run the
+same tcpdump and ping commands as earlier with the same results.
 
 ## Appendix: Problem solving
 
 ### Weird container errors?
 
-Sometimes, when experimenting with our containers and trying new things with our images, we don't get the results we expect. Rather than putting together a course on troubleshooting docker, here's a few CTRL + ALT + DEL options to try to just nuke the current setup and start over:
+Sometimes, when experimenting with our containers and trying new things with our
+images, we don't get the results we expect. Rather than putting together a
+course on troubleshooting docker, here's a few CTRL + ALT + DEL options to try
+to just nuke the current setup and start over:
 
 _Kill All Containers_
 
@@ -307,16 +370,21 @@ $ docker system prune
 
 ### Cannot edit IP addresses?
 
-tl;dr We initially could not edit our IP addresses for the containers within the network. The solution for the problem was adding the permission `--cap-add=NET_ADMIN` when running `docker run` to get docker to allow us to be able to edit them.
+tl;dr We initially could not edit our IP addresses for the containers within the
+network. The solution for the problem was adding the permission
+`--cap-add=NET_ADMIN` when running `docker run` to get docker to allow us to be
+able to edit them.
 
-It doesn't seem like it's possible to manually configure the IP address settings for a container. For example,
+It doesn't seem like it's possible to manually configure the IP address settings
+for a container. For example,
 
 ```bash
 / # ip addr add 10.1.1.3/24 dev eth1
 ip: RTNETLINK answers: Operation not permitted
 ```
 
-☝️ it's not possible to add an IP address to a running machine. Similarly, `ip addr del` also fails with an `Operation not permitted` error.
+☝️ it's not possible to add an IP address to a running machine. Similarly, `ip
+addr del` also fails with an `Operation not permitted` error.
 
 - it seems that we can't modify our IP addresses. Maybe that's okay, but we WILL need to be able to modify the routing table at the very minimum. It would appear that this is also currently NOT allowed by the version of docker we're running.
 - Is this a licensing issue with docker?

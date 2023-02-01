@@ -1,20 +1,31 @@
 # build-your-own-internet
 
 ## How to approach this repo
-The intention behind this project is discovery and understanding. The idea is to explore how the internet is put together and use common industry tools to see and understand all the communications necessary to make the services and apps we use work.
+The intention behind this project is discovery and understanding. The idea is to
+explore how the internet is put together and use common industry tools to see
+and understand all the communications necessary to make the services and apps we
+use work.
 
-We decided to take notes that creates a reproducable experience. We document our questions, discovery, and our processes so other people who may want to take a similar journey can have a path to follow. We are breaking up our exploration into chapters. Each chapter will have a README that documents our exploration and the final state for that chapter of whatever files we create in our exploration. There is, at least as of yet, very little actual software to run from this repo. Instead, the intent is to guide the experience and the learning process.
+We decided to take notes that creates a reproducable experience. We document our
+questions, discovery, and our processes so other people who may want to take a
+similar journey can have a path to follow. We have broken up our exploration
+into chapters. Each chapter has a README that documents our exploration and the
+final state for that chapter of whatever files we create in our exploration.
+There is, at least as of yet, very little actual software to run from this repo.
+Instead, the intent is to guide the experience and the learning process.
 
-To see our full process of discovery, follow through the commits on our branches. Read and explore along with us!
+To see our full process of discovery, follow through the commits on our
+branches. Read and explore along with us!
 
 ## Pre-requisites
 
 - a basic undestanding of docker [Course link](https://www.linkedin.com/learning/learning-docker-2018/why-create-containers-using-docker)
 - a basic understanding of terminals and [bash](https://www.linkedin.com/learning/learning-bash-scripting-17063287/learning-bash-scripting)
 - a basic understanding of [IPv4 and subnets](https://www.linkedin.com/learning/cisco-ccna-200-301-cert-prep-1-network-fundamentals-and-access/ipv4-addressing-and-subnetting)
-- optional: understand how `jq` works (if you feel motivated)
+- optional: understand how [`jq` works](https://stedolan.github.io/jq/tutorial/) (if you feel motivated)
+- optional for the super motivated: understand the [communication protocol layers](https://datatracker.ietf.org/doc/rfc1122/) we'll be working with
 - get some software installed:
-  - [docker desktop](https://www.docker.com/products/docker-desktop/) for mac™ (hopefully something else)
+  - [colima](https://smallsharpsoftwaretools.com/tutorials/use-colima-to-run-docker-containers-on-macos/) or [docker desktop](https://www.docker.com/products/docker-desktop/) for mac™
   - `jq` by whatever means necessary (e.g. `brew install jq`)
 
 ## General thoughts

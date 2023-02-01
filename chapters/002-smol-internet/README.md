@@ -2,28 +2,47 @@
 
 ## Goals for this section:
 
-In the previous chapter, we build a small network of 2 machines that could ping each other. Now, we want to build on that structure to add a second network. Once we have another network, we'll need to start building routes for machines on each network to be able to communicate with each other. 
+In the previous chapter, we build a small network of 2 machines that could ping
+each other. Now, we want to build on that structure to add a second network.
+Once we have another network, we'll need to start building routes for machines
+on each network to be able to communicate with each other. 
 
 ### ASIDE: Efficiencies
 
 #### Naming of the Containers
 
-You may have noticed in chapter 1 that, while we named our containers `boudi` and `pippin`, what appeared in the terminal when we jumped on those containers was a sha that doesn't have much meaning for us, e.g. `root@0c3ce9be81e7:/#`. Because that sha doesn't have meaning for us, it was hard to track which window was a terminal for which container.
+You may have noticed in chapter 1 that, while we named our containers `boudi`
+and `pippin`, what appeared in the terminal when we jumped on those containers
+was a sha that doesn't have much meaning for us, e.g. `root@0c3ce9be81e7:/#`.
+Because that sha doesn't have meaning for us, it was hard to track which window
+was a terminal for which container.
 
-Also, as we started working on this chapter and were working with 3 machines on 2 networks, we also started getting our IP addresses jumbled. We wanted a solution that gave us a prettier prompt in our terminal, e.g. `root@boudi:/#`, and we wanted to be able to ping a container with the container name, e.g. `ping pippin`.
+Also, as we started working on this chapter and were working with 3 machines on
+2 networks, we also started getting our IP addresses jumbled. We wanted a
+solution that gave us a prettier prompt in our terminal, e.g. `root@boudi:/#`,
+and we wanted to be able to ping a container with the container name, e.g. `ping
+pippin`.
 
-The first solution we employed was to modify the `/etc/hosts` on each machine, e.g. `10.1.1.2	pippin` on `pippin`. This was great, except it's a continued manual effort every time we have to rebuild the containers. Turns out... adding a `hostname` to the container definition in `docker-compose.yml` did the trick!
+The first solution we employed was to modify the `/etc/hosts` on each machine,
+e.g. `10.1.1.2	pippin` on `pippin`. This was great, except it's a continued
+manual effort every time we have to rebuild the containers. Turns out... adding
+a `hostname` to the container definition in `docker-compose.yml` did the trick!
 
 #### Scripts
 
-Before we get started, let's look at a couple scripts we added. On the root level of this repo, there's a `bin` folder. We've started adding simple scripts there to make our lives easier. Here's the scripts we've added thus far:
+Before we get started, let's look at a couple scripts we added. On the root
+level of this repo, there's a `bin` folder. We've started adding simple scripts
+there to make our lives easier. Here's the scripts we've added thus far:
 
 * `hopon`: in order to jump on a container, we had to type a long-ish command `docker exec -it 002-smol-internet-boudi-1 /bin/bash`. This allows us to simply type `hopon boudi`, which we will be using for the rest of our exploration.
-* `restart`: in experimenting with various setups in both our `Dockerfile` and `docker-compose.yml`, we needed to cleanup the images our containers were build from regularly. Now, we can simply type `restart` instead of finding and removing each container.
+* `restart`: in experimenting with various setups in both our `Dockerfile` and `docker-compose.yml`, we needed to cleanup the images our containers were built from regularly. Now, we can simply type `restart` instead of finding and removing each container.
 
-Because the scripts are dependant on a version of `docker-compose.yml` that exists in each chapter subfolder, we need to add the scripts to our `PATH` from the root of this directory:
+Because the scripts are dependant on a version of `docker-compose.yml` that
+exists in each chapter subfolder, we need to add the scripts to our `PATH` from
+the root of this directory:
 
 ```
+# Make sure to run this command in the root of this repository, or it won't work!
 export PATH="$PATH:`pwd`/bin"
 ```
 
@@ -140,8 +159,9 @@ tcpdump because the ARP cache needs to periodically be refreshed.
 
 > **Wait... what's the difference between `ip addr` and `ip route`?**
 
-There's some similar output between the `ip addr` and `ip route` commands. `ip addr` gives us view into the network interfaces available on a host.
-`ip route` shows us the routing table on that host.
+There's some similar output between the `ip addr` and `ip route` commands. `ip
+addr` gives us view into the network interfaces available on a machine.  `ip
+route` shows us the routing table on that machine.
 
 But it looks like there's routing information in our `ip addr` output? What is
 the difference between a network interface and a routing table?
@@ -150,7 +170,7 @@ Looking at the output of `ip route`, we see a default gateway identified,
 `default via 10.1.2.1 dev eth0`. This default gateway is what will be used for
 any outgoing packets that are not on the otherwise defined routes. `ip route`
 shows routes on active interfaces. `ip addr` displays all available interfaces
-on a host, even ones that are not currently active. 
+on a machine, even ones that are not currently active. 
 
 `ip route` deals entirely with layer 3 information; whereas `ip addr` has
 information about both layer 2 and layer 3.

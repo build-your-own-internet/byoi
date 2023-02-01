@@ -3,7 +3,7 @@
 docker compose down
 
 # kill all running containers
-docker ps| grep `basename $(pwd)` | awk '{ print $1 }' |  xargs docker container kill
+docker ps | grep `basename $(pwd)` | awk '{ print $1 }' |  xargs docker container kill
 
 # remove all networks
 docker network ls | grep `basename $(pwd)` | awk '{ print $1 }' | xargs docker network rm
