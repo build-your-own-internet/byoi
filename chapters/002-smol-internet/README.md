@@ -385,20 +385,168 @@ root@292b896a965e:/# tcpdump -ne
 If you have `tara` ping `boudi`'s `squasheeba` address, 10.1.1.3, you'll see the
 ping fail, and in the `tcpdump`, you'll see a mac address destination you
 probably won't recognize. This is `tara`'s default gateway, and that gateway
-won't forward the packets to `boudi`.
+won't forward the packets to `boudi` on `squasheeba`.
+
+We're getting tired of hitting `CTRL c` to exit out of our `ping` when we're
+done... Let's check `ping --help` and find some flags that will allow us to:
+* only send 1 ping 
+* exit the program after a specific amount of time
+
+```
+root@tara:/# ping -c 1 -w 1 10.1.1.3
+PING 10.1.1.3 (10.1.1.3) 56(84) bytes of data.
+
+--- 10.1.1.3 ping statistics ---
+1 packets transmitted, 0 received, 100% packet loss, time 0ms
+```
+
+```
+root@tara:/# tcpdump -ne
+18:29:45.268130 02:42:0a:01:02:02 > 02:42:a9:f7:9e:4f, ethertype IPv4 (0x0800), length 98: 10.1.2.2 > 10.1.1.3: ICMP echo request, id 30, seq 1, length 64
+18:29:50.570491 02:42:0a:01:02:02 > 02:42:a9:f7:9e:4f, ethertype ARP (0x0806), length 42: Request who-has 10.1.2.1 tell 10.1.2.2, length 28
+18:29:50.570543 02:42:a9:f7:9e:4f > 02:42:0a:01:02:02, ethertype ARP (0x0806), length 42: Reply 10.1.2.1 is-at 02:42:a9:f7:9e:4f, length 28
+```
+
+From this `tcpdump`, we can see `tara`'s mac address, `02:42:0a:01:02:02`
+attempting to reach `02:42:a9:f7:9e:4f`. But, if we check `boudi`'s mac address,
+it's `02:42:0a:01:01:03`:
+
+```
+root@boudi:/# ip addr
+...
+3065: eth0@if3066: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:0a:01:02:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.1.2.3/24 brd 10.1.2.255 scope global eth0
+       valid_lft forever preferred_lft forever
+3069: eth1@if3070: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:0a:01:01:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.1.1.3/24 brd 10.1.1.255 scope global eth1
+       valid_lft forever preferred_lft forever
+```
+
+This tells us that `tara` is making a hail mary to reach `10.1.1.3` via the
+default gateway that docker configured for us automatically.
+
+But wait! That's not the behavior we want... Let's get rid of that default
+gateway. To do it manually, we can `hopon tara` and run 
+
+```
+root@tara:/# ip route del default
+```
+
+Now, when we try to ping `boudi` on the `squasheeba` network, we get the failure we expect:
+
+```
+root@tara:/# ping 10.1.1.3
+ping: connect: Network is unreachable
+```
+
+And, watching carefully, we see that the `tcpdump` on `tara` no longer has any output.
+
+BOOM! Good job, team.
 
 ### Make `tara` ping hosts on the `squasheeba` network
 
 So let's see if we can get `tara` to ping `boudi`, or `pippin` for that matter,
-on the `squasheeba` network without using the default gateway router.
+on the `squasheeba` network without using the default gateway router. The first
+thing we need to do is add a route from `tara` to the `squasheeba` network via
+`boudi`. Because `boudi` has routes to both `doggonet` and `squasheeba`, `boudi`
+can act as the gateway between the two.
+
+```
+root@tara:/# ip route add 10.1.1.0/24 via 10.1.2.3
+root@tara:/# ip route
+10.1.1.0/24 via 10.1.2.3 dev eth0
+10.1.2.0/24 dev eth0 proto kernel scope link src 10.1.2.2
+```
+
+Now, let's try that `ping` again!
+
+> `tara` running `ping 10.1.1.3 -c 2 -w 2`
+
+```
+root@tara:/# ping 10.1.1.3 -c 2 -w 2
+PING 10.1.1.3 (10.1.1.3) 56(84) bytes of data.
+64 bytes from 10.1.1.3: icmp_seq=1 ttl=64 time=0.264 ms
+64 bytes from 10.1.1.3: icmp_seq=2 ttl=64 time=0.080 ms
+
+--- 10.1.1.3 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1040ms
+rtt min/avg/max/mdev = 0.080/0.172/0.264/0.092 ms
+```
+
+> `tara` running `tcpdump -ne`
+
+```
+18:55:02.338267 02:42:0a:01:02:02 > 02:42:0a:01:02:03, ethertype IPv4 (0x0800), length 98: 10.1.2.2 > 10.1.1.3: ICMP echo request, id 35, seq 1, length 64
+18:55:02.338436 02:42:0a:01:02:03 > 02:42:0a:01:02:02, ethertype IPv4 (0x0800), length 98: 10.1.1.3 > 10.1.2.2: ICMP echo reply, id 35, seq 1, length 64
+18:55:03.378606 02:42:0a:01:02:02 > 02:42:0a:01:02:03, ethertype IPv4 (0x0800), length 98: 10.1.2.2 > 10.1.1.3: ICMP echo request, id 35, seq 2, length 64
+18:55:03.378653 02:42:0a:01:02:03 > 02:42:0a:01:02:02, ethertype IPv4 (0x0800), length 98: 10.1.1.3 > 10.1.2.2: ICMP echo reply, id 35, seq 2, length 64
+```
+
+>`boudi` running `tcpdump -ni eth0` <= `doggonet` interface
+
+```
+18:55:02.338352 IP 10.1.2.2 > 10.1.1.3: ICMP echo request, id 35, seq 1, length 64
+18:55:02.338420 IP 10.1.1.3 > 10.1.2.2: ICMP echo reply, id 35, seq 1, length 64
+18:55:03.378631 IP 10.1.2.2 > 10.1.1.3: ICMP echo request, id 35, seq 2, length 64
+18:55:03.378649 IP 10.1.1.3 > 10.1.2.2: ICMP echo reply, id 35, seq 2, length 64
+```
+
+> `boudi` running `tcpdump -ni eth1` <= `squasheeba` interface
+
+NOTHING shows up here! Why? When the packets reach `boudi`, `boudi` recognizes
+that they have reached their destination. There's no need to send the packet
+through the `squasheeba` interface just to stay on the same machine. The work is
+done!
+
+Now, what happens when we send those packets on to `pippin`? Add a new terminal
+window and `hopon pippin` and run `tcpdump -n`. Then, from `tara`, ping
+`pippin`.
+
+```
+root@tara:/# ping 10.1.1.2 -c 2 -w 2
+PING 10.1.1.2 (10.1.1.2) 56(84) bytes of data.
+
+--- 10.1.1.2 ping statistics ---
+2 packets transmitted, 0 received, 100% packet loss, time 1028ms
+```
+
+Notice that we 100% packet loss. But, when we check `pippin`'s `tcpdump`, we can
+see that the request got to `pippin`:
+
+```
+19:01:36.666989 ARP, Request who-has 10.1.1.2 tell 10.1.1.3, length 28
+19:01:36.667005 ARP, Reply 10.1.1.2 is-at 02:42:0a:01:01:02, length 28
+19:01:36.667023 IP 10.1.2.2 > 10.1.1.2: ICMP echo request, id 37, seq 1, length 64
+19:01:37.729917 IP 10.1.2.2 > 10.1.1.2: ICMP echo request, id 37, seq 2, length 64
+```
+
+What happened here? `tara` has a route into the `squasheeba` network via
+`boudi`. `boudi` receives the requests, checks the destination IP, does an ARP
+request and finds `pippin`. `boudi` knows where the packets go and sends them on
+to `pippin`. That's the first half of the process! `pippin` has packets!
+
+But then what? `pippin` needs to reply to the ping, but `pippin` has no idea who
+`tara` is. `pippin` has no entries to tell it where to send its response
+packets. When we `^c` out of `pippin`, we're seeing `0 packets dropped by
+kernel`:
+
+```
+^C
+4 packets captured
+4 packets received by filter
+0 packets dropped by kernel
+```
+
+Each of the machines say `0 packets dropped by kernel`. Ummm… if the packets
+didn’t make it back to `tara` and the packets weren’t dropped… where did they
+go? Well, `pippin` still dropped the packets. The `0 packets dropped by kernel`
+count isn't the number of packets dropped in total; it's the number of packets
+dropped _by tcpdump_. Specifically, `tcpdump` would drop those packets [because
+of buffer overflow](https://unix.stackexchange.com/questions/144794/why-would-the-kernel-drop-packets).
+
 
 Next time, on gotime:
-1. address /etc/hosts (allow `ping boudi` and show `root@boudi` instead of jibberish) [DONE]
-2. can we delete the default gateway? and then re-write all of our docs?
-3. Cleanup [squee]
-  a. Restructure repo to have folders for 001 - n that each contain exactly what they need in the state they need it for the notes to be followed successfully
-  b. Read through 001-getting-started.md to ensure it has a narrative flow
-  c. Introduce `hostname` concept in 001 with explanation
-4. see tara ping to pippin - shoudl fail
-5. make boudi do it has the ability to forward packets that are not destined for itself onto other machines
-6. Explore what is DHCP and how?
+1. make boudi do it has the ability to forward packets that are not destined for itself onto other machines
+2. Explore what is DHCP and how? (is this part of this chapter?)

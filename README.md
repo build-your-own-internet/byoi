@@ -28,6 +28,13 @@ branches. Read and explore along with us!
   - [colima](https://smallsharpsoftwaretools.com/tutorials/use-colima-to-run-docker-containers-on-macos/) or [docker desktop](https://www.docker.com/products/docker-desktop/) for mac™
   - `jq` by whatever means necessary (e.g. `brew install jq`)
 
+## DISCLAIMERS
+
+We've put some effort into explaining the commands that we're using. Going
+forward, if we use a command with a flag that doesn't have explanation, check
+the command's `help` for more details; e.g. `ping --help`. Alternatively, check
+the command's manpage; e.g. `man ping`.
+
 ## General thoughts
 
 What if we build a little internet?
