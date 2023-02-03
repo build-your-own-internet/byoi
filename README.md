@@ -1,11 +1,39 @@
 # build-your-own-internet
 
 ## How to approach this repo
-The intention behind this project is discovery and understanding. The idea is to explore how the internet is put together and use common industry tools to see and understand all the communications necessary to make the services and apps we use work.
+The intention behind this project is discovery and understanding. The idea is to
+explore how the internet is put together and use common industry tools to see
+and understand all the communications necessary to make the services and apps we
+use work.
 
-We decided to take notes that creates a reproducable experience. We document our questions, discovery, and our processes so other people who may want to take a similar journey can have a path to follow. The `notes` folder is the home of this documentation. There is, at least as of yet, very little actual software to run from this repo. Instead, the intent is to guide the experience and the learning process.
+We decided to take notes that creates a reproducable experience. We document our
+questions, discovery, and our processes so other people who may want to take a
+similar journey can have a path to follow. We have broken up our exploration
+into chapters. Each chapter has a README that documents our exploration and the
+final state for that chapter of whatever files we create in our exploration.
+There is, at least as of yet, very little actual software to run from this repo.
+Instead, the intent is to guide the experience and the learning process.
 
-To see our full process of discovery, follow through the commits on our branches. Read and explore along with us!
+To see our full process of discovery, follow through the commits on our
+branches. Read and explore along with us!
+
+## Pre-requisites
+
+- a basic undestanding of docker [Course link](https://www.linkedin.com/learning/learning-docker-2018/why-create-containers-using-docker)
+- a basic understanding of terminals and [bash](https://www.linkedin.com/learning/learning-bash-scripting-17063287/learning-bash-scripting)
+- a basic understanding of [IPv4 and subnets](https://www.linkedin.com/learning/cisco-ccna-200-301-cert-prep-1-network-fundamentals-and-access/ipv4-addressing-and-subnetting)
+- optional: understand how [`jq` works](https://stedolan.github.io/jq/tutorial/) (if you feel motivated)
+- optional for the super motivated: understand the [communication protocol layers](https://datatracker.ietf.org/doc/rfc1122/) we'll be working with
+- get some software installed:
+  - [colima](https://smallsharpsoftwaretools.com/tutorials/use-colima-to-run-docker-containers-on-macos/) or [docker desktop](https://www.docker.com/products/docker-desktop/) for mac™
+  - `jq` by whatever means necessary (e.g. `brew install jq`)
+
+## DISCLAIMERS
+
+We've put some effort into explaining the commands that we're using. Going
+forward, if we use a command with a flag that doesn't have explanation, check
+the command's `help` for more details; e.g. `ping --help`. Alternatively, check
+the command's manpage; e.g. `man ping`.
 
 ## General thoughts
 
@@ -52,3 +80,9 @@ How to build the internet blog
 - Build our own BGP implementation?
 - Build our own VPN?
 - Build our own DNS server?
+
+### Side Quests? 
+
+Here's some interesting topics that came up in the course of our exploration that didn't fit in at the time. We may come back to these?
+- DHCP
+- Proxy ARP

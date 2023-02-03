@@ -1,0 +1,14 @@
+#!/bin/sh
+
+docker compose down
+
+# kill all running containers
+docker ps | grep `basename $(pwd)` | awk '{ print $1 }' |  xargs docker container kill
+
+# remove all networks
+docker network ls | grep `basename $(pwd)` | awk '{ print $1 }' | xargs docker network rm
+
+# docker images delete all 3
+docker images | grep build-your-own-internet | awk '{ print $1 }' | xargs docker image rm
+
+docker compose up -d
