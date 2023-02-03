@@ -80,3 +80,9 @@ How to build the internet blog
 - Build our own BGP implementation?
 - Build our own VPN?
 - Build our own DNS server?
+
+### Side Quests? 
+
+Here's some interesting topics that came up in the course of our exploration that didn't fit in at the time. We may come back to these?
+- DHCP
+- Proxy ARP

@@ -157,24 +157,6 @@ In the output from `ip route`, we can see `default via 10.1.2.1 dev eth0`, which
 identifies that as the default gateway. We're seeing these requests in our
 tcpdump because the ARP cache needs to periodically be refreshed.
 
-> **Wait... what's the difference between `ip addr` and `ip route`?**
-
-There's some similar output between the `ip addr` and `ip route` commands. `ip
-addr` gives us view into the network interfaces available on a machine.  `ip
-route` shows us the routing table on that machine.
-
-But it looks like there's routing information in our `ip addr` output? What is
-the difference between a network interface and a routing table?
-
-Looking at the output of `ip route`, we see a default gateway identified,
-`default via 10.1.2.1 dev eth0`. This default gateway is what will be used for
-any outgoing packets that are not on the otherwise defined routes. `ip route`
-shows routes on active interfaces. `ip addr` displays all available interfaces
-on a machine, even ones that are not currently active. 
-
-`ip route` deals entirely with layer 3 information; whereas `ip addr` has
-information about both layer 2 and layer 3.
-
 Now back to our regularly scheduled exploration!
 
 ## Make those networks communicate with each other!
@@ -512,8 +494,8 @@ PING 10.1.1.2 (10.1.1.2) 56(84) bytes of data.
 2 packets transmitted, 0 received, 100% packet loss, time 1028ms
 ```
 
-Notice that we 100% packet loss. But, when we check `pippin`'s `tcpdump`, we can
-see that the request got to `pippin`:
+Notice that we see 100% packet loss. But, when we check `pippin`'s `tcpdump`, we
+can see that the request got to `pippin`:
 
 ```
 19:01:36.666989 ARP, Request who-has 10.1.1.2 tell 10.1.1.3, length 28
@@ -522,15 +504,90 @@ see that the request got to `pippin`:
 19:01:37.729917 IP 10.1.2.2 > 10.1.1.2: ICMP echo request, id 37, seq 2, length 64
 ```
 
-What happened here? `tara` has a route into the `squasheeba` network via
-`boudi`. `boudi` receives the requests, checks the destination IP, does an ARP
-request and finds `pippin`. `boudi` knows where the packets go and sends them on
-to `pippin`. That's the first half of the process! `pippin` has packets!
+What happened here? 
+* `tara` has a route into the `squasheeba` network via `boudi`
+* `boudi` receives the requests and:
+  * checks the destination IP
+  * sees that the request is not for itself
+  * checks whether or not to forward the packet 
+  * finds out that it should route the packets - we'll come back to this
+  * and does an ARP request which finds `pippin`
 
-But then what? `pippin` needs to reply to the ping, but `pippin` has no idea who
-`tara` is. `pippin` has no entries to tell it where to send its response
-packets. When we `^c` out of `pippin`, we're seeing `0 packets dropped by
-kernel`:
+`boudi` knows where the packets go and sends them on to `pippin`.  That's the
+first half of the process! `pippin` has ping packets!
+
+But then what? `pippin` needs to reply to the ping, `pippin` knows the response
+needs to go to `10.1.2.2`, but `pippin` doesn't know where `10.1.2.2` is. Just
+Like `tara` didn't know before we added the route to `10.1.1.0/24`. `pippin` has
+no entries to tell it where to send its response packets, so it just drops them
+on the floor. 
+
+### Tell `pippin` how to respond to `tara`
+
+We've already seen this in action. At this point, we need to tell `pippin` how
+to find the `doggonet` network. We did this earlier in teaching `tara` how to
+find the `squasheeba` network. We're going to leave this as an exercise for the
+reader to attempt on their own. If you need some guidance, review the [Can
+`tara` ping `boudi`?](#can-tara-ping-boudi) section.
+
+## Appendix: Answering Questions
+
+### What's the difference between `ip addr` and `ip route`?
+
+There's some similar output between the `ip addr` and `ip route` commands. `ip
+addr` gives us view into the network interfaces available on a machine.  `ip
+route` shows us the routing table on that machine.
+
+But it looks like there's routing information in our `ip addr` output? What is
+the difference between a network interface and a routing table?
+
+Looking at the output of `ip route`, we see a default gateway identified,
+`default via 10.1.2.1 dev eth0`. This default gateway is what will be used for
+any outgoing packets that are not on the otherwise defined routes. `ip route`
+shows routes on active interfaces. `ip addr` displays all available interfaces
+on a machine, even ones that are not currently active. 
+
+`ip route` deals entirely with layer 3 information; whereas `ip addr` has
+information about both layer 2 and layer 3.
+
+### How does a machine know if it should forward packets?
+
+This is a linux kernel setting within the machine. You can see it like so:
+
+```
+root@boudi:/# cat /proc/sys/net/ipv4/ip_forward
+1
+```
+
+It looks like docker, by default, sets the value on every container to `1`,
+which means, "yeah, forward those packets!" Let's change that value to 0 and see
+what happens! There's a lot of permission shenanigans happening with docker...
+So, in order to turn off packet forwarding on `boudi`, we need to change our
+docker-compose.yml file. docker-compose exposes `sysctls` which allows us to
+change default kernel setting. We have explicitly added that setting to `boudi`
+and it should currently be set to `1`. Change it to `0` to disable ip
+forwarding.
+
+```
+  boudi:
+    build: .
+    hostname: boudi
+    networks:
+      squasheeba:
+        ipv4_address: 10.1.1.3
+      doggonet:
+        ipv4_address: 10.1.2.3
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+```
+
+For the sake of ensuring the rest of this chapter works as expected, we will not
+disable ip forwarding on `boudi`. HOWEVER, we are going to disable ip forwarding
+for `pippin` and `tara`.
+
+### What is happening with that `0 packets dropped by kernel` from `tcpdump` when packets were dropped?
 
 ```
 ^C
@@ -545,8 +602,3 @@ go? Well, `pippin` still dropped the packets. The `0 packets dropped by kernel`
 count isn't the number of packets dropped in total; it's the number of packets
 dropped _by tcpdump_. Specifically, `tcpdump` would drop those packets [because
 of buffer overflow](https://unix.stackexchange.com/questions/144794/why-would-the-kernel-drop-packets).
-
-
-Next time, on gotime:
-1. make boudi do it has the ability to forward packets that are not destined for itself onto other machines
-2. Explore what is DHCP and how? (is this part of this chapter?)
