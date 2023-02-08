@@ -22,8 +22,8 @@ Without going into too much detail, our Dockerfile builds our docker image on
 top of the specified OS (ubuntu), installs a bunch of networking software, and
 then copies in a script called `sleep.sh`. Because Docker containers only stay
 alive for as long as it takes to process whatever commands are given to it,
-we're using our `sleep.sh` script to tell our Docker container to continuously
-run `sleep` in the background so we can pop in and out of them as we please.
+we're using our `sleep.sh` script to tell our Docker container to `sleep` in the
+background so we can pop in and out of them as we please.
 
 To start with, we want to create 2 containers. We can use the same Docker image
 to generate both containers. To make it easy to differentiate between the
@@ -34,27 +34,43 @@ containers, we're going to give them names. To do so:
 1. `docker run -d --cap-add=NET_ADMIN --name=pippin $DOCKER_IMAGE`
 1. `docker run -d --cap-add=NET_ADMIN --name=boudi $DOCKER_IMAGE`
 
-> NOTE: What is this `--cap-add=NET_ADMIN` all about, you ask? Check the "Problem Solving" section at the bottom for more information! Also see [this stackOverflow article](https://stackoverflow.com/questions/27708376/why-am-i-getting-an-rtnetlink-operation-not-permitted-when-using-pipework-with-d) for more details.
+**NOTE:**
+What is this `--cap-add=NET_ADMIN` all about, you ask? Check the "Problem
+Solving" section at the bottom for more information! Also see [this
+stackOverflow
+article](https://stackoverflow.com/questions/27708376/why-am-i-getting-an-rtnetlink-operation-not-permitted-when-using-pipework-with-d)
+for more details.
 
 ## Simple Network
 
 > What is a network?
+
 2 or more machines that can communicate directly with each other over a physical
 medium (think actual wires or actual radio signals).
 
 > What is an internetwork?
+
 2 or more machines on different networks that can communicate with each other.
 There are special devices (routers) that are used to fascilitate communication
 between each machine.
 
 ### Wait... There's a default network?!
 
-Sooooo, it turns out, when you create a new docker container, it is
-automatically assigned to a default bridge network. Neat! Except, that's not
-what we want for this project. We want complete control over our networks! 
+When we initially started exploring building out our network, we were surprised
+to see that we could already `ping` between our containers. But that's not what
+we want. Instead, we want the experience of manually building out the network.
+Part of this is teaching the hosts on the network how to reach each other. We
+don't want our hosts to be able to `ping` each other!
 
-First thing! Let's disconnect that shit from the default bridge network. We're
-gonna use some docker commands:
+Sooooo, it turns out, when you create a new docker container, it is
+automatically assigned to a default bridge network. The first thing we need to
+do is disconnect our containers from the default bridge network. We're gonna use
+some docker commands. 
+
+_SUGGESTION_: Finish this chapter and learn about our discovery process. Then,
+clear out all the docker images and containers. Start this chapter over and see
+if you can use the tools we employed in this chapter to discover how we saw the
+containers networked together.
 
 #### Find the network ID of your default bridge network
 
@@ -62,7 +78,7 @@ command: `docker network ls`
 
 ```bash
 NETWORK ID     NAME           DRIVER    SCOPE
-25e6144d0a17   bridge         bridge    local                    <===== this one looks like the default, let's make sure it's the correct one!
+25e6144d0a17   bridge         bridge    local     <===== this one looks like the default, let's make sure it's the correct one!
 ec4b573914fe   host           host      local
 cac4377cf367   none           null      local
 ```
@@ -71,11 +87,9 @@ cac4377cf367   none           null      local
 export DEFAULT_BRIDGE=25e6144d0a17
 ```
 
-#### inspect each container to find network they are connected to
+#### Inspect each container to find network they are connected to
 
 command: `docker inspect pippin -f "{{json .NetworkSettings.Networks }}" | jq .`
-
-> TODO: modify this to be a `jq` command
 
 ```bash
 {
@@ -83,7 +97,7 @@ command: `docker inspect pippin -f "{{json .NetworkSettings.Networks }}" | jq .`
     "IPAMConfig": {},
     "Links": null,
     "Aliases": [],
-    "NetworkID": "25e6144d0a17c40a8b1d2a64289e778bdfeef18ee540974b9038eb34287cee37",                <======= Look at this network ID!
+    "NetworkID": "25e6144d0a17c40a8b1d2a64289e778bdfeef18ee540974b9038eb34287cee37",    <======= Look at this network ID!
     "EndpointID": "3d9ef1f1b79165f8eebf6a60be93e437fdc750d725ac9fa63e9fc6588f5c2b70",
     "Gateway": "172.17.0.1",
     "IPAddress": "172.17.0.2",
@@ -97,7 +111,7 @@ command: `docker inspect pippin -f "{{json .NetworkSettings.Networks }}" | jq .`
 }
 ```
 
-#### disconnect that shit from the default bridge network
+#### Disconnect that shit from the default bridge network
 
 ```bash
 docker network disconnect $DEFAULT_BRIDGE pippin
@@ -105,13 +119,16 @@ docker network disconnect $DEFAULT_BRIDGE boudi
 ```
 
 ### Create a new network
+
 Building our initial network using [docker's bridge network](https://docs.docker.com/network/bridge/):
 
 ```bash
 export NETWORK_NAME=squasheeba
 docker network create $NETWORK_NAME
+```
 
-Now, we wanna connect our containers to our happy little `squasheeba` bridge network
+Now, we wanna connect our containers to our happy little `squasheeba` bridge
+network
 
 #### connect that shit to OUR bridge network
 
@@ -168,9 +185,9 @@ window, start an interactive session with your container.
 
 ### Remove default IP address configuration
 
-Next, let's configure the network ourselves using the `ip` command on the
+Next, let's configure the network ourselves using the `ip` command on each
 container. First, we should remove the IP addresses that docker configured on
-each container. To do that, first we need to see what IP address docker
+each container. To do that, we need to see what IP address docker
 configured on each container using the `ip addr` command, as follows:
 
 ```bash
@@ -197,7 +214,7 @@ You can see that on this host, `eth1` is associated with the IP address
 You'll want to repeat this process on the other container (using `ip addr` to
 show the IP and `ip addr del` to remove it).
 
-> **NOTE** `ip addr` is an abbreviation for the actual command, `ip address`
+**NOTE** `ip addr` is an abbreviation for the actual command, `ip address`
 
 There is a bit of a tradition within networking CLIs to allow users to
 abbreviate commands (cisco CLIs are famous for this), and the `ip` command
@@ -217,11 +234,12 @@ command
 
 `ip addr add 10.1.1.3/24 dev eth1`
 
-You'll want to repeat this process on the other container (but in this case the ip address is `10.1.1.2/24`).
+You'll want to repeat this process on the other container (but in this case the
+ip address is `10.1.1.2/24`).
 
 ### Test the network connection
 
-On the `pippin` machine, run `tcpdump -n -i eth1`. This will run a program which
+On the `pippin` machine, run `tcpdump -ni eth1`. This will run a program which
 "sniffs" ethernet frames on the same network interface that we just added the
 10.1.1.3 address to. The `-n` flag to `tcpdump` tells that program not to try to
 resolve hostnames via DNS. The `-i eth1` flag tells `tcpdump` which network
@@ -257,7 +275,7 @@ PING 10.1.1.3 (10.1.1.3) 56(84) bytes of data.
 rtt min/avg/max/mdev = 0.091/0.218/0.341/0.080 ms
 ```
 
-And, you should see the following on CONTAINER 1:
+And, you should see the following on pippin:
 
 ```bash
 19:52:30.295932 ARP, Request who-has 10.1.1.2 tell 10.1.1.3, length 28
@@ -284,21 +302,19 @@ From `boudi`, we see some ping output like this:
 64 bytes from 10.1.1.3: icmp_seq=3 ttl=64 time=0.240 ms
 ```
 
-basically, all you need to know about this is that "ping" is a program that
+Basically, all you need to know about this is that "ping" is a program that
 sends packets across the network using a protocol called ICMP (which stands for
 Internet Control Message Protocol): "echo request" and "echo reply" are two
-types of ICMP message [read more about them
-here](https://docs.netapp.com/us-en/e-series-santricity/sm-hardware/what-are-icmp-ping-responses.html).
+types of ICMP message [read more about them here](https://docs.netapp.com/us-en/e-series-santricity/sm-hardware/what-are-icmp-ping-responses.html).
 What we see here in this ping message is that it has both sent a packet to the
 destination, and the destination has replied. The `icmp_seq=3` designation marks
 each individual request/response pair. If the ping did not go through, you might
 see various error messages, but the most common is that the `ping` command
 replies with `Request timeout for icmp_seq 0` type messages.
 
-On the container that is being pinged (`pippin`), we see quite a bit more
+On the container that is being pinged (pippin), we see quite a bit more
 information from tcpdump. First, we see a series of messages that have `ARP` in
-them. ARP is a protocol that you can learn all about on the internet, but here
-is [a link](https://www.fortinet.com/resources/cyberglossary/what-is-arp).
+them. ARP is a protocol that you can learn all about on [the internet](https://www.fortinet.com/resources/cyberglossary/what-is-arp).
 Basically, it allows a machine that is connected locally on one network to talk
 to another machine that is also connected to that same network (as opposed to a
 machine that wants to communicate over multiple networks).
@@ -311,8 +327,8 @@ see the ICMP echo-request and echo-reply packets go back and forth.
 
 At this point, there are a whole bunch of manual steps to get all this going.
 Now that we have proven to ourselves that we know how to do this all manually,
-let's automate it! We have a whole bunch more containers to bring up and
-networks to build, and doing that all by hand will be a lot of toil.
+let's automate it! We have more containers to bring up and networks to build,
+and doing that all by hand will be a lot of toil.
 
 We are going to use the `docker compose` command which uses the
 `docker-compose.yml` file in this directory to build, configure, and start our
@@ -386,6 +402,7 @@ ip: RTNETLINK answers: Operation not permitted
 ☝️ it's not possible to add an IP address to a running machine. Similarly, `ip
 addr del` also fails with an `Operation not permitted` error.
 
+Initial troubleshooting questions:
 - it seems that we can't modify our IP addresses. Maybe that's okay, but we WILL need to be able to modify the routing table at the very minimum. It would appear that this is also currently NOT allowed by the version of docker we're running.
 - Is this a licensing issue with docker?
 - Is this an issue with the busybox image?

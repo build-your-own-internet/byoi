@@ -46,6 +46,13 @@ the root of this directory:
 export PATH="$PATH:`pwd`/bin"
 ```
 
+Alternatively, if you don't want to have to add the path in every window you
+open, you can update your PATH in your terminal profile:
+
+```
+export PATH=$PATH:/path/to/repo/build-your-own-internet/bin
+```
+
 Now, onward! To the building of the internet!
 
 ## Create a second network
@@ -54,7 +61,8 @@ What we have created so far is a single network and our goal is to build an
 internet(work). Towards that goal, we want to create a second network (doggonet)
 that cannot directly talk to the previously created network (squasheeba).
 
-If you check the `docker-compose.yml` file for this chapter, you'll see that we added a new network: `doggonet`.
+If you check the `docker-compose.yml` file for this chapter, you'll see that we
+added a new network: `doggonet`.
 
 ```
   doggonet:
@@ -65,8 +73,8 @@ If you check the `docker-compose.yml` file for this chapter, you'll see that we 
         - subnet: 10.1.2.0/24
 ```
 
-What's a network without a container right? So we have a lone `tara` reigning over
-the doggonet:
+What's a network without a container right? We start this chapter with a lone
+`tara` reigning over the doggonet:
 
 ```
   tara:
@@ -79,9 +87,13 @@ the doggonet:
       - NET_ADMIN
 ```
 
+**NOTE** We add `boudi` to `doggonet` by the end of the chapter. To follow the
+*course of this chapter, you may wish to remove the `doggonet` network from
+`boudi`.
+
 ### Can our networks communicate with each other?
 
-Now we have 2 separate networks. Fantastic! An internet is group of hosts on
+Now we have 2 separate networks. Fantastic! An internet is a group of hosts on
 different networks that can all communicate with each other. We have the hosts,
 we have the networks, but before we go about getting them to talk to each other,
 let's make sure they can't already communicate... To do this, we're gonna reuse
@@ -113,6 +125,8 @@ docker-compose file:
 ping 10.1.1.3
 ```
 
+Alternatively, you can `ping boudi` if you wanna keep it simple.
+
 The `ping` should result in no output because we're not actually hitting a
 machine for that address. The `tcpdump` on `boudi`, likewise, will have no
 output because the `ping` from `tara` is never reaching it. The `tcpdump`
@@ -143,9 +157,10 @@ Here, we can see that the `request` is being sent for `10.1.1.3`, but we
 don't see a corresponding `reply`. Sweet! Our networks exist, but they cannot
 communicate with each other. YET!
 
-> **What's with thoes ARP requests?**
+> **What's with those ARP requests?**
+
 There are some random ARP requests in the tcpdump. 10.1.2.1 is the
-*address for the default gateway, e.g.:
+address for the default gateway on `doggonet`, e.g.:
 
 ```bash
 root@92141c63e813:/# ip route
@@ -166,8 +181,8 @@ router. Sure, docker has its own built in router, but we want to build our own.
 What is a router, but just another machine on the network. The router just has 2
 special properties:
 
-* it has an interface on more than one network
-* it has the ability to forward packets that are not destined for itself to other machines
+* an interface on more than one network
+* the ability to forward packets that are not destined for itself to other machines
 
 ### Make `boudi` ping `tara`
 
@@ -189,7 +204,8 @@ interface.  All we need to do to achieve this is add the `doggonet` network to
         ipv4_address: 10.1.2.3
 ```
 
-Now, let's re-build our containers and re-run our `tcpdump` and `ping` experiments from earlier. 
+Now, let's re-build our containers and re-run our `tcpdump` and `ping`
+experiments from earlier. 
 
 ```
 restart
@@ -199,7 +215,7 @@ hopon tara
 Before we run our experiment, let's check our ip interface table on `boudi`:
 
 ```
-root@6f9a282e02ad:/# ip addr
+root@boudi:/# ip addr
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
     inet 127.0.0.1/8 scope host lo
@@ -222,7 +238,7 @@ Look at that! There are 2 eth interfaces! `10.1.1.3/24` and `10.1.2.3/24`. Now
 let's check our routing table:
 
 ```
-root@6f9a282e02ad:/# ip route
+root@boudi:/# ip route
 default via 10.1.2.1 dev eth0
 10.1.1.0/24 dev eth1 proto kernel scope link src 10.1.1.3
 10.1.2.0/24 dev eth0 proto kernel scope link src 10.1.2.3
@@ -232,7 +248,7 @@ BOOM! There are routes for both the `squasheeba` and `doggonet` networks! Notice
 that `tara` still only knows about `doggonet`:
 
 ```
-root@292b896a965e:/# ip route
+root@tara:/# ip route
 default via 10.1.2.1 dev eth0
 10.1.2.0/24 dev eth0 proto kernel scope link src 10.1.2.2
 ```
@@ -248,7 +264,7 @@ We're going to open 3 terminal windows, just like before.
 > *In terminal window 1 (boudi's ping), you should see:*
 
 ```bash
-root@6f9a282e02ad:/# ping 10.1.2.2
+root@boudi:/# ping 10.1.2.2
 PING 10.1.2.2 (10.1.2.2) 56(84) bytes of data.
 64 bytes from 10.1.2.2: icmp_seq=1 ttl=64 time=0.155 ms
 64 bytes from 10.1.2.2: icmp_seq=2 ttl=64 time=0.089 ms
@@ -265,7 +281,7 @@ It was successful! Huzzah! We were able to ping to `tara` from `boudi`!
 > *In terminal window 2 (boudi's tcpdump):*
 
 ```bash
-root@6f9a282e02ad:/# tcpdump -ni eth0
+root@boudi:/# tcpdump -ni eth0
 tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
 listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 19:57:13.285276 IP 10.1.2.3 > 10.1.2.2: ICMP echo request, id 4, seq 1, length 64
@@ -289,8 +305,8 @@ because we saw above in the `ip route` output that `boudi`'s default network
 interface was `squasheeba`:
 
 ```bash
-root@6f9a282e02ad:/# ip route
-default via 10.1.2.1 dev eth0
+root@boudi:/# ip route
+default via 10.1.1.1 dev eth1
 10.1.1.0/24 dev eth1 proto kernel scope link src 10.1.1.3
 10.1.2.0/24 dev eth0 proto kernel scope link src 10.1.2.3
 ```
@@ -303,7 +319,7 @@ the network traffic heading to `doggonet`.
 > *In terminal window 3 (tara):*
 
 ```bash
-root@292b896a965e:/# tcpdump -n
+root@tara:/# tcpdump -n
 tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
 listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 19:57:13.285340 IP 10.1.2.3 > 10.1.2.2: ICMP echo request, id 4, seq 1, length 64
@@ -338,13 +354,14 @@ we use `boudi`'s IP on `doggonet`, 10.1.2.3, we should have a successful result.
 2. `hopon tara` will run `tcpdump -ne`
 3. `hopon boudi` will run `tcpdump -ni eth0`
 
-**NOTICE** We added the `-e` flag to our `tcpdump` command for `tara`. Why? That
-*flag reveals information about ethernet headers in each packet. If we look at
-*the network interface information for `boudi`, we can see the mac address for
-*its connection on `doggonet`: 02:42:0a:01:02:03.
+**NOTICE** 
+We added the `-e` flag to our `tcpdump` command for `tara`. Why? That flag
+reveals information about ethernet headers in each packet. If we look at the
+network interface information for `boudi`, we can see the mac address for its
+connection on `doggonet`: 02:42:0a:01:02:03.
 
 ```bash
-root@6f9a282e02ad:/# ip addr
+root@boudi:/# ip addr
 ...
 46: eth0@if47: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
     link/ether 02:42:0a:01:02:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0
@@ -359,7 +376,7 @@ we can definitely tell the packets are being sent to the correct host because we
 see the mac address for `boudi`. 
 
 ```bash
-root@292b896a965e:/# tcpdump -ne
+root@tara:/# tcpdump -ne
 ...
 19:30:10.124776 02:42:0a:01:02:02 > 02:42:0a:01:02:03, ethertype IPv4 (0x0800), length 98: 10.1.2.2 > 10.1.2.3: ICMP echo request, id 12, seq 1, length 64
 ```
@@ -390,24 +407,9 @@ root@tara:/# tcpdump -ne
 ```
 
 From this `tcpdump`, we can see `tara`'s mac address, `02:42:0a:01:02:02`
-attempting to reach `02:42:a9:f7:9e:4f`. But, if we check `boudi`'s mac address,
-it's `02:42:0a:01:01:03`:
-
-```
-root@boudi:/# ip addr
-...
-3065: eth0@if3066: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
-    link/ether 02:42:0a:01:02:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0
-    inet 10.1.2.3/24 brd 10.1.2.255 scope global eth0
-       valid_lft forever preferred_lft forever
-3069: eth1@if3070: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
-    link/ether 02:42:0a:01:01:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0
-    inet 10.1.1.3/24 brd 10.1.1.255 scope global eth1
-       valid_lft forever preferred_lft forever
-```
-
-This tells us that `tara` is making a hail mary to reach `10.1.1.3` via the
-default gateway that docker configured for us automatically.
+attempting to reach `02:42:a9:f7:9e:4f`. But remember, `boudi`'s mac address is
+`02:42:0a:01:01:03`. This tells us that `tara` is making a hail mary to reach
+`10.1.1.3` via the default gateway that docker configured for us automatically.
 
 But wait! That's not the behavior we want... Let's get rid of that default
 gateway. To do it manually, we can `hopon tara` and run 
@@ -416,14 +418,16 @@ gateway. To do it manually, we can `hopon tara` and run
 root@tara:/# ip route del default
 ```
 
-Now, when we try to ping `boudi` on the `squasheeba` network, we get the failure we expect:
+Now, when we try to ping `boudi` on the `squasheeba` network, we get the failure
+we expect:
 
 ```
 root@tara:/# ping 10.1.1.3
 ping: connect: Network is unreachable
 ```
 
-And, watching carefully, we see that the `tcpdump` on `tara` no longer has any output.
+And, watching carefully, we see that the `tcpdump` on `tara` no longer has any
+output.
 
 BOOM! Good job, team.
 
@@ -518,7 +522,7 @@ first half of the process! `pippin` has ping packets!
 
 But then what? `pippin` needs to reply to the ping, `pippin` knows the response
 needs to go to `10.1.2.2`, but `pippin` doesn't know where `10.1.2.2` is. Just
-Like `tara` didn't know before we added the route to `10.1.1.0/24`. `pippin` has
+like `tara` didn't know before we added the route to `10.1.1.0/24`. `pippin` has
 no entries to tell it where to send its response packets, so it just drops them
 on the floor. 
 
@@ -564,7 +568,7 @@ which means, "yeah, forward those packets!" Let's change that value to 0 and see
 what happens! There's a lot of permission shenanigans happening with docker...
 So, in order to turn off packet forwarding on `boudi`, we need to change our
 docker-compose.yml file. docker-compose exposes `sysctls` which allows us to
-change default kernel setting. We have explicitly added that setting to `boudi`
+change default kernel settings. We have explicitly added that setting to `boudi`
 and it should currently be set to `1`. Change it to `0` to disable ip
 forwarding.
 
