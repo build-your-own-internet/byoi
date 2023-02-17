@@ -2,26 +2,42 @@
 
 ## Goals for this section:
 
+### Vocab
+
+* `hop`: 
+
 ### Adding route to pippin on Tara
 
 `ip route add 10.1.1.0/24 via 10.1.2.3`
 
+### What tools besides `ping` can help us diagnose network problems?
+
+#### traceroute
+
+`traceroute` is a network diagnostic tool that gives a simple output to show the sequence of machines that were involved in routing a packet to its destination. The machines, as you might expect, are identified by their IP addresses. 
+
+#### mtr
+
+We're going to focus on using `traceroute` for now. However, `mtr` is another `traceroute` style tool with a bunch more options and utility. Once you have an understanding of how `traceroutre` works, we recommend going back through this chapter using `mtr` instead and deciphering its output.
+
 ### Ran Traceroute on Tara with TCPDUMP on all interfaces boudi supports
 
 ```
-traceroute 10.1.1.2
+tara@root:/# traceroute 10.1.1.2
 traceroute to 10.1.1.2 (10.1.1.2), 64 hops max
   1   10.1.2.3  0.004ms  0.003ms  0.002ms
   2   *  *  *
   3   *  *  *
 ```
 
+Hmmmm... What's with those weird `*`s? At this point, `tara` knows how to send packets to `pippin` via `boudi`. But! `pippin` doesn't yet know how to send packets back to `tara`! So the only hop that can communicate back to `tara` that it received packets is `boudi`. We need to have a route from `pippin` to `tara` to see the rest of that network. 
+
 So we are blackholing packets. The `*` in the output is representative of that. This is because tara knows how to send packets to pippin but pippin does not yet know how to send packets to tara.
 
 ### Explanation of tcpdump output
 
 ```
-tcpdump -nvi eth0
+tara@root:/# tcpdump -nvi eth0
 tcpdump: listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 18:42:45.380503 IP (tos 0x0, ttl 1, id 16407, offset 0, flags [DF], proto UDP (17), length 37)
     10.1.2.2.38188 > 10.1.1.2.33434: UDP, length 9
@@ -45,10 +61,6 @@ tcpdump: listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 
     10.1.2.2.38188 > 10.1.1.2.33435: UDP, length 9
 18:42:48.384705 IP (tos 0x0, ttl 2, id 16498, offset 0, flags [DF], proto UDP (17), length 37)
     10.1.2.2.38188 > 10.1.1.2.33435: UDP, length 9
-18:42:50.428588 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.2.2 tell 10.1.2.3, length 28
-18:42:50.428666 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.2.3 tell 10.1.2.2, length 28
-18:42:50.428668 ARP, Ethernet (len 6), IPv4 (len 4), Reply 10.1.2.3 is-at 02:42:0a:01:02:03, length 28
-18:42:50.428675 ARP, Ethernet (len 6), IPv4 (len 4), Reply 10.1.2.2 is-at 02:42:0a:01:02:02, length 28
 18:42:51.388115 IP (tos 0x0, ttl 2, id 16618, offset 0, flags [DF], proto UDP (17), length 37)
     10.1.2.2.38188 > 10.1.1.2.33435: UDP, length 9
 18:42:54.391637 IP (tos 0x0, ttl 3, id 16761, offset 0, flags [DF], proto UDP (17), length 37)
@@ -63,80 +75,6 @@ tcpdump: listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 
     10.1.2.2.38188 > 10.1.1.2.33437: UDP, length 9
 18:43:09.411658 IP (tos 0x0, ttl 4, id 17717, offset 0, flags [DF], proto UDP (17), length 37)
     10.1.2.2.38188 > 10.1.1.2.33437: UDP, length 9
-18:43:11.468600 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.2.3 tell 10.1.2.2, length 28
-18:43:11.468619 ARP, Ethernet (len 6), IPv4 (len 4), Reply 10.1.2.3 is-at 02:42:0a:01:02:03, length 28
-18:43:12.415175 IP (tos 0x0, ttl 5, id 17889, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33438: UDP, length 9
-18:43:15.418606 IP (tos 0x0, ttl 5, id 18013, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33438: UDP, length 9
-18:43:18.422125 IP (tos 0x0, ttl 5, id 18221, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33438: UDP, length 9
-18:43:21.425602 IP (tos 0x0, ttl 6, id 18268, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33439: UDP, length 9
-18:43:24.429129 IP (tos 0x0, ttl 6, id 18382, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33439: UDP, length 9
-18:43:27.434130 IP (tos 0x0, ttl 6, id 18620, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33439: UDP, length 9
-18:43:30.438890 IP (tos 0x0, ttl 7, id 18652, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33440: UDP, length 9
-18:43:32.508605 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.2.3 tell 10.1.2.2, length 28
-18:43:32.508614 ARP, Ethernet (len 6), IPv4 (len 4), Reply 10.1.2.3 is-at 02:42:0a:01:02:03, length 28
-18:43:33.442837 IP (tos 0x0, ttl 7, id 18932, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33440: UDP, length 9
-18:43:36.447193 IP (tos 0x0, ttl 7, id 19138, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33440: UDP, length 9
-18:43:39.450725 IP (tos 0x0, ttl 8, id 19268, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33441: UDP, length 9
-18:43:42.454174 IP (tos 0x0, ttl 8, id 19525, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33441: UDP, length 9
-18:43:45.458159 IP (tos 0x0, ttl 8, id 19542, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33441: UDP, length 9
-18:43:48.462242 IP (tos 0x0, ttl 9, id 19645, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33442: UDP, length 9
-18:43:51.465684 IP (tos 0x0, ttl 9, id 19760, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33442: UDP, length 9
-18:43:53.468579 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.2.3 tell 10.1.2.2, length 28
-18:43:53.468586 ARP, Ethernet (len 6), IPv4 (len 4), Reply 10.1.2.3 is-at 02:42:0a:01:02:03, length 28
-18:43:54.469039 IP (tos 0x0, ttl 9, id 19999, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33442: UDP, length 9
-18:43:57.472431 IP (tos 0x0, ttl 10, id 20291, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33443: UDP, length 9
-18:44:00.475982 IP (tos 0x0, ttl 10, id 20408, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33443: UDP, length 9
-18:44:03.479681 IP (tos 0x0, ttl 10, id 20462, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33443: UDP, length 9
-18:44:06.483191 IP (tos 0x0, ttl 11, id 20485, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33444: UDP, length 9
-18:44:09.486736 IP (tos 0x0, ttl 11, id 20750, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33444: UDP, length 9
-18:44:12.490577 IP (tos 0x0, ttl 11, id 20966, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33444: UDP, length 9
-18:44:14.509601 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.2.3 tell 10.1.2.2, length 28
-18:44:14.509612 ARP, Ethernet (len 6), IPv4 (len 4), Reply 10.1.2.3 is-at 02:42:0a:01:02:03, length 28
-18:44:15.494006 IP (tos 0x0, ttl 12, id 21129, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33445: UDP, length 9
-18:44:18.497549 IP (tos 0x0, ttl 12, id 21300, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33445: UDP, length 9
-18:44:21.501312 IP (tos 0x0, ttl 12, id 21333, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33445: UDP, length 9
-18:44:24.505751 IP (tos 0x0, ttl 13, id 21512, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33446: UDP, length 9
-18:44:27.509264 IP (tos 0x0, ttl 13, id 21700, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33446: UDP, length 9
-18:44:30.514536 IP (tos 0x0, ttl 13, id 21792, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33446: UDP, length 9
-18:44:33.519955 IP (tos 0x0, ttl 14, id 21800, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33447: UDP, length 9
-18:44:35.548898 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.2.3 tell 10.1.2.2, length 28
-18:44:35.548905 ARP, Ethernet (len 6), IPv4 (len 4), Reply 10.1.2.3 is-at 02:42:0a:01:02:03, length 28
-18:44:36.523251 IP (tos 0x0, ttl 14, id 21941, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33447: UDP, length 9
-18:44:39.526564 IP (tos 0x0, ttl 14, id 21978, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33447: UDP, length 9
-18:44:42.530213 IP (tos 0x0, ttl 15, id 22223, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33448: UDP, length 9
-18:44:45.533690 IP (tos 0x0, ttl 15, id 22503, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33448: UDP, length 9
 ```
 
 ```
@@ -170,70 +108,6 @@ tcpdump: listening on eth1, link-type EN10MB (Ethernet), snapshot length 262144 
     10.1.2.2.38188 > 10.1.1.2.33438: UDP, length 9
 18:43:18.422135 IP (tos 0x0, ttl 4, id 18221, offset 0, flags [DF], proto UDP (17), length 37)
     10.1.2.2.38188 > 10.1.1.2.33438: UDP, length 9
-18:43:21.425614 IP (tos 0x0, ttl 5, id 18268, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33439: UDP, length 9
-18:43:24.429143 IP (tos 0x0, ttl 5, id 18382, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33439: UDP, length 9
-18:43:27.434141 IP (tos 0x0, ttl 5, id 18620, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33439: UDP, length 9
-18:43:29.469015 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.2 tell 10.1.1.3, length 28
-18:43:29.469070 ARP, Ethernet (len 6), IPv4 (len 4), Reply 10.1.1.2 is-at 02:42:0a:01:01:02, length 28
-18:43:30.438902 IP (tos 0x0, ttl 6, id 18652, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33440: UDP, length 9
-18:43:33.442847 IP (tos 0x0, ttl 6, id 18932, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33440: UDP, length 9
-18:43:36.447204 IP (tos 0x0, ttl 6, id 19138, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33440: UDP, length 9
-18:43:39.450738 IP (tos 0x0, ttl 7, id 19268, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33441: UDP, length 9
-18:43:42.454184 IP (tos 0x0, ttl 7, id 19525, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33441: UDP, length 9
-18:43:45.458169 IP (tos 0x0, ttl 7, id 19542, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33441: UDP, length 9
-18:43:48.462255 IP (tos 0x0, ttl 8, id 19645, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33442: UDP, length 9
-18:43:51.465695 IP (tos 0x0, ttl 8, id 19760, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33442: UDP, length 9
-18:43:54.469053 IP (tos 0x0, ttl 8, id 19999, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33442: UDP, length 9
-18:43:57.472453 IP (tos 0x0, ttl 9, id 20291, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33443: UDP, length 9
-18:44:00.475992 IP (tos 0x0, ttl 9, id 20408, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33443: UDP, length 9
-18:44:03.479692 IP (tos 0x0, ttl 9, id 20462, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33443: UDP, length 9
-18:44:06.483202 IP (tos 0x0, ttl 10, id 20485, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33444: UDP, length 9
-18:44:08.508890 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.2 tell 10.1.1.3, length 28
-18:44:08.508927 ARP, Ethernet (len 6), IPv4 (len 4), Reply 10.1.1.2 is-at 02:42:0a:01:01:02, length 28
-18:44:09.486750 IP (tos 0x0, ttl 10, id 20750, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33444: UDP, length 9
-18:44:12.490587 IP (tos 0x0, ttl 10, id 20966, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33444: UDP, length 9
-18:44:15.494017 IP (tos 0x0, ttl 11, id 21129, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33445: UDP, length 9
-18:44:18.497558 IP (tos 0x0, ttl 11, id 21300, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33445: UDP, length 9
-18:44:21.501323 IP (tos 0x0, ttl 11, id 21333, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33445: UDP, length 9
-18:44:24.505765 IP (tos 0x0, ttl 12, id 21512, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33446: UDP, length 9
-18:44:27.509279 IP (tos 0x0, ttl 12, id 21700, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33446: UDP, length 9
-18:44:30.514555 IP (tos 0x0, ttl 12, id 21792, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33446: UDP, length 9
-18:44:33.519967 IP (tos 0x0, ttl 13, id 21800, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33447: UDP, length 9
-18:44:36.523260 IP (tos 0x0, ttl 13, id 21941, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33447: UDP, length 9
-18:44:39.526574 IP (tos 0x0, ttl 13, id 21978, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33447: UDP, length 9
-18:44:42.530227 IP (tos 0x0, ttl 14, id 22223, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33448: UDP, length 9
-18:44:45.533700 IP (tos 0x0, ttl 14, id 22503, offset 0, flags [DF], proto UDP (17), length 37)
-    10.1.2.2.38188 > 10.1.1.2.33448: UDP, length 9
-18:44:47.548556 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.2 tell 10.1.1.3, length 28
-18:44:47.548610 ARP, Ethernet (len 6), IPv4 (len 4), Reply 10.1.1.2 is-at 02:42:0a:01:01:02, length 28
 ```
 
 ### Tell pippin how to send packets to tara via boudi
@@ -291,10 +165,6 @@ tcpdump: listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 
     10.1.1.2 > 10.1.2.2: ICMP 10.1.1.2 udp port 33435 unreachable, length 45
 	IP (tos 0x0, ttl 1, id 43412, offset 0, flags [DF], proto UDP (17), length 37)
     10.1.2.2.46076 > 10.1.1.2.33435: UDP, length 9
-18:51:53.709525 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.2.2 tell 10.1.2.3, length 28
-18:51:53.709574 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.2.3 tell 10.1.2.2, length 28
-18:51:53.709576 ARP, Ethernet (len 6), IPv4 (len 4), Reply 10.1.2.3 is-at 02:42:0a:01:02:03, length 28
-18:51:53.709583 ARP, Ethernet (len 6), IPv4 (len 4), Reply 10.1.2.2 is-at 02:42:0a:01:02:02, length 28
 ```
 
 ```
@@ -318,10 +188,6 @@ tcpdump: listening on eth1, link-type EN10MB (Ethernet), snapshot length 262144 
     10.1.1.2 > 10.1.2.2: ICMP 10.1.1.2 udp port 33435 unreachable, length 45
 	IP (tos 0x0, ttl 1, id 43412, offset 0, flags [DF], proto UDP (17), length 37)
     10.1.2.2.46076 > 10.1.1.2.33435: UDP, length 9
-18:51:53.709518 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.2 tell 10.1.1.3, length 28
-18:51:53.709550 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 10.1.1.3 tell 10.1.1.2, length 28
-18:51:53.709556 ARP, Ethernet (len 6), IPv4 (len 4), Reply 10.1.1.3 is-at 02:42:0a:01:01:03, length 28
-18:51:53.709582 ARP, Ethernet (len 6), IPv4 (len 4), Reply 10.1.1.2 is-at 02:42:0a:01:01:02, length 28
 ```
 
 ```
@@ -334,12 +200,14 @@ listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 18:51:48.694178 IP 10.1.1.2 > 10.1.2.2: ICMP 10.1.1.2 udp port 33435 unreachable, length 45
 18:51:48.694299 IP 10.1.2.2.46076 > 10.1.1.2.33435: UDP, length 9
 18:51:48.694308 IP 10.1.1.2 > 10.1.2.2: ICMP 10.1.1.2 udp port 33435 unreachable, length 45
-18:51:53.709507 ARP, Request who-has 10.1.1.3 tell 10.1.1.2, length 28
-18:51:53.709566 ARP, Request who-has 10.1.1.2 tell 10.1.1.3, length 28
-18:51:53.709570 ARP, Reply 10.1.1.2 is-at 02:42:0a:01:01:02, length 28
-18:51:53.709580 ARP, Reply 10.1.1.3 is-at 02:42:0a:01:01:03, length 28
 ```
 
 TODO:
-* Add traceroute to Dockerfile
-* See if traceroute gives a better illustration of how packetes are being routed, especially between pippin & tara
+* [DONE] Add traceroute to Dockerfile
+* [DONE] See if traceroute gives a better illustration of how packetes are being routed, especially between pippin & tara
+* document the output from traceroute
+* edit docker-compose to add routes between pippin and tara
+* rearrange chapter 003 to show it working correctly first. Then remove the route and show it broken.
+* think about what chapter 004 will be (may not want the routes between pippin and tara)
+    - large internetwork using static routes? use this as a jumping off point to see the necessity of dynamic routing.
+    - route summarization?
