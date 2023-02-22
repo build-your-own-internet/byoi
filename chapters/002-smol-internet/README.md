@@ -534,6 +534,24 @@ find the `squasheeba` network. We're going to leave this as an exercise for the
 reader to attempt on their own. If you need some guidance, review the [Can
 `tara` ping `boudi`?](#can-tara-ping-boudi) section.
 
+## Now let's make this routing setup automatic
+
+We don't want to spend the time manually adding and removing routes every time
+we start our containers. Earlier, we looked at automatically removing routes by
+adding the `ip route delete` to our `sleep.sh` file that runs on the container
+start. We're gonna do something similar here, except the logic is a bit more
+complicated. Because we want to add routes depending on the `hostname`, i.e.
+`tara` or `pippin`, we need some conditional logic. Check this out!
+
+```bash
+case $HOSTNAME in
+  (pippin) ip route add 10.1.2.0/24 via 10.1.1.3;;
+  (tara) ip route add 10.1.1.0/24 via 10.1.2.3;;
+esac
+```
+
+We will add this logic to the `sleep.sh` for chapter 003.
+
 ## Appendix: Answering Questions
 
 ### What's the difference between `ip addr` and `ip route`?
