@@ -5,7 +5,27 @@
 In the previous chapter, we build a small network of 2 machines that could ping
 each other. Now, we want to build on that structure to add a second network.
 Once we have another network, we'll need to start building routes for machines
-on each network to be able to communicate with each other. 
+on each network to be able to communicate with each other.
+
+Here's what we expect our internet to look like by the end of this chapter:
+
+```
+         tara
+          │ 10.1.2.1
+          │
+ ────┬────┴────────────────────
+     │       (doggonet 10.1.2.0/24)
+     │
+     │
+     │
+     │10.1.2.3
+   boudi             pippin
+     │10.1.1.3          │10.1.1.2
+     │                  │
+     │                  │
+─────┴──────────────────┴──────
+              (squasheeba 10.1.1.0/24)
+```
 
 ### ASIDE: Efficiencies
 
@@ -533,6 +553,24 @@ to find the `doggonet` network. We did this earlier in teaching `tara` how to
 find the `squasheeba` network. We're going to leave this as an exercise for the
 reader to attempt on their own. If you need some guidance, review the [Can
 `tara` ping `boudi`?](#can-tara-ping-boudi) section.
+
+## Now let's make this routing setup automatic
+
+We don't want to spend the time manually adding and removing routes every time
+we start our containers. Earlier, we looked at automatically removing routes by
+adding the `ip route delete` to our `sleep.sh` file that runs on the container
+start. We're gonna do something similar here, except the logic is a bit more
+complicated. Because we want to add routes depending on the `hostname`, i.e.
+`tara` or `pippin`, we need some conditional logic. Check this out!
+
+```bash
+case $HOSTNAME in
+  (pippin) ip route add 10.1.2.0/24 via 10.1.1.3;;
+  (tara) ip route add 10.1.1.0/24 via 10.1.2.3;;
+esac
+```
+
+We will add this logic to the `sleep.sh` for chapter 003.
 
 ## Appendix: Answering Questions
 

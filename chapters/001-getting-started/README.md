@@ -8,6 +8,17 @@ to simulate machines on this network. We will use some simple common networking
 tools to understand the shape of our network and how and when successful
 communication is occurring.
 
+Here's what we expect our network to look like by the end of this chapter:
+
+```
+   boudi             pippin
+     │10.1.1.3          │10.1.1.2
+     │                  │
+     │                  │
+─────┴──────────────────┴──────
+              (squasheeba 10.1.1.0/24)
+```
+
 ## Vocabulary
 
 - `container`: a running instance of a docker image. Each container we create in building out our internet will be one machine on that internet.
