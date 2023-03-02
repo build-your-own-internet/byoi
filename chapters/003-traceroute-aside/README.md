@@ -195,23 +195,4 @@ listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 * `restart` everything and see what happens when you use `ip route` to remove the route `pippin` => `tara`. Where do you see changes in the output?
 * What about `tara` => `pippin`? How does the output change?
 * How else can you use `iptables` to block the connection between `tara` and `pippin`?
-
-
-
-NEXT STEPS: 
-* [DONE] Finish discecting tcpdump output
-* [DONE] remove the route `pippin` => `tara`
-* [DONE] document how traceroute "fails"
-* remove the route `tara` => `pippin`
-* show error message
-
-
-TODO:
-* [DONE] Add traceroute to Dockerfile
-* [DONE] See if traceroute gives a better illustration of how packetes are being routed, especially between pippin & tara
-* [DONE] document the output from traceroute
-* [DONE] edit docker-compose to add routes between pippin and tara
-* [DONE] rearrange chapter 003 to show it working correctly first. Then remove the route and show it broken.
-* think about what chapter 004 will be (may not want the routes between pippin and tara)
-    - large internetwork using static routes? use this as a jumping off point to see the necessity of dynamic routing.
-    - route summarization?
+* How does `mtr` function differently than `traceroute`? Use the help (`H` key when it's running) to figure out how to change the protocol that's used!

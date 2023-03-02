@@ -5,7 +5,27 @@
 In the previous chapter, we build a small network of 2 machines that could ping
 each other. Now, we want to build on that structure to add a second network.
 Once we have another network, we'll need to start building routes for machines
-on each network to be able to communicate with each other. 
+on each network to be able to communicate with each other.
+
+Here's what we expect our internet to look like by the end of this chapter:
+
+```
+         tara
+          │ 10.1.2.1
+          │
+ ────┬────┴────────────────────
+     │       (doggonet 10.1.2.0/24)
+     │
+     │
+     │
+     │10.1.2.3
+   boudi             pippin
+     │10.1.1.3          │10.1.1.2
+     │                  │
+     │                  │
+─────┴──────────────────┴──────
+              (squasheeba 10.1.1.0/24)
+```
 
 ### ASIDE: Efficiencies
 
