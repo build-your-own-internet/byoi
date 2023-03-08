@@ -1,49 +1,134 @@
 version: "3.0"
 services:
-  boudi:
+  server:
     build: .
-    hostname: boudi
+    hostname: server
     networks:
-      squasheeba:
-        ipv4_address: 10.1.1.3
-      doggonet:
-        ipv4_address: 10.1.2.3
+      five-net:
+        ipv4_address: 5.0.0.100
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  client:
+    build: .
+    hostname: client
+    networks:
+      one-net:
+        ipv4_address: 1.0.0.100
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  router1:
+    build: .
+    hostname: router1
+    networks:
+      five-net:
+        ipv4_address: 5.0.1.1
+      three-net:
+        ipv4_address: 3.0.1.1
+      p2p-eight:
+        ipv4_address: 200.1.1.10
     cap_add:
       - NET_ADMIN
     sysctls:
       - net.ipv4.ip_forward=1
-  pippin:
+  router3:
     build: .
-    hostname: pippin
+    hostname: router3
     networks:
-      squasheeba:
-        ipv4_address: 10.1.1.2
+      three-net:
+        ipv4_address: 3.0.3.1
+      one-hundo-net:
+        ipv4_address: 100.1.3.1
     cap_add:
       - NET_ADMIN
     sysctls:
-      - net.ipv4.ip_forward=0
-
-  tara:
+      - net.ipv4.ip_forward=1
+  router2:
     build: .
-    hostname: tara
+    hostname: router2
     networks:
-      doggonet:
-        ipv4_address: 10.1.2.2
+      one-hundo-net:
+        ipv4_address: 100.1.2.1
+      p2p-eight:
+        ipv4_address: 200.1.1.11
+      p2p-zero:
+        ipv4_address: 200.1.1.2
     cap_add:
       - NET_ADMIN
     sysctls:
-      - net.ipv4.ip_forward=0
+      - net.ipv4.ip_forward=1
+  router4:
+    build: .
+    hostname: router4
+    networks:
+      one-hundo-net:
+        ipv4_address: 100.1.4.1
+      p2p-sixteen:
+        ipv4_address: 200.1.1.18
+      p2p-zero:
+        ipv4_address: 200.1.1.3
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+  router5:
+    build: .
+    hostname: router5
+    networks:
+      one-hundo-net:
+        ipv4_address: 100.1.5.1
+      p2p-sixteen:
+        ipv4_address: 200.1.1.19
+      one-net:
+        ipv4_address: 1.0.5.1
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
 
 networks:
-  squasheeba:
+  five-net:
     driver: bridge
     ipam:
       driver: default
       config:
-        - subnet: 10.1.1.0/24
-  doggonet:
+        - subnet: 5.0.0.0/8
+  three-net:
     driver: bridge
     ipam:
       driver: default
       config:
-        - subnet: 10.1.2.0/24
+        - subnet: 3.0.0.0/8
+  one-net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 1.0.0.0/8
+  one-hundo-net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 100.1.0.0/16
+  p2p-eight:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 200.1.1.8/29
+  p2p-zero:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 200.1.1.0/29
+  p2p-sixteen:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 200.1.1.16/29
