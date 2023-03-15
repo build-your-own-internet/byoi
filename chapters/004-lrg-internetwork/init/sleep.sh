@@ -1,10 +1,15 @@
-#!/bin/sh
+#!/bin/bash
 
 /usr/sbin/ip route delete default
 
+function httpserver() {
+  while true; do
+    echo -e "HTTP/1.1 200 OK\r\n$(date)\r\n\r\n<h1>hello world from $(hostname) on $(date)</h1>" | nc -vl 8080; 
+  done
+}
+
 case $HOSTNAME in
-  (pippin) ip route add 10.1.2.0/24 via 10.1.1.3;;
-  (tara) ip route add 10.1.1.0/24 via 10.1.2.3;;
+  (server) httpserver
 esac
 
 /bin/sleep infinity
