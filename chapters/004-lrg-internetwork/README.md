@@ -100,7 +100,20 @@ possible without numerous routers facilitating the requests.
 
 *TODO:* describe how the network diagram above relates to the docker compose file which relates to the `ip route add` commands in the sleep.sh file. 
 
-General troubleshooting technique for why the setup in sleep-exercise.sh isn't working
+## Now let's test out our internetwork!
+
+We have a client. We have a server. Let's get that client making requests to our server!
+
+First, let's `hopon client` and make sure we can reach our server with a `ping 5.0.0.100`. 
+
+### UH OH! That shit is broken! Let's fix it.
+
+When we see our ping go out, we get no response back... When we CTRL+c our way out of our ping, we get 100% packet loss... :thumbs-down: We need to do some investigationing to figure out where our packets are going and why they aren't going to our server. 
+
+#### General troubleshooting thought process
+
+We need to define a process that will help us figure out why our ping isn't succeeding. Something about our routes defined in sleep-exercise.sh isn't working. Let's think this through...
+
 - asymetric routing makes it harder to troubleshoot (not NECESSARILY a problem)
 - what are the possible causes for the ping to not go through:
   * some router along the path doesn't know how to get to the destination
@@ -109,8 +122,13 @@ General troubleshooting technique for why the setup in sleep-exercise.sh isn't w
   * client doesn't have a route to the destination IP
   * server doesn't have a route to the source IP
 
-one strategy
-- start with all routers that are immediately adjacent to five-net and make sure they can connect properly to Server
+Here's our strategy:
+
+We're trying to get from Client to Server, and that's not working. But... that's traversing our whole internet. Let's make this a little simpler by starting with just Router1. Can Router1 ping Server? Yes? Sweet! Let's move one hop out and jump on Router3. Can Router3 ping server? It can't... So, let's use the tools we've explored in previous chapters to discover why!
+
+#### A discovery process
+
+Let's examine the `tcpdump` output from Router3 line by line:
 
 > root@router3:/# tcpdump -ni eth1
 our tcpdump command
@@ -139,7 +157,7 @@ If router3 had been the problem, we would have seen either
 - no output from our tcpdump because it was sending the request out the wrong interface
 - we wouldn't have seen the ARP Request/Reply
 
-## tcpdump from router1 listening on three-net interface
+So now, let's move on to the `tcpdump` from router1 listening on three-net interface
 
 > 18:20:55.044856 02:42:03:00:03:01 > 02:42:03:00:01:01, ethertype IPv4 (0x0800), length 98: 3.0.0.1 > 5.0.1.1: ICMP echo request, id 54, seq 1, length 64
 ping request coming in from docker router on three-net?? TF???
@@ -148,27 +166,23 @@ ping request coming in from docker router on three-net?? TF???
 router1 is asking docker router on three-net "who is?"
 we never get a response... rude.
 
-this is the problem here. it looks like somehow docker is doing :maaaaagiiiiiic: and translating our ping from router3 on three-net to the docker router IP address on three-net. Docker router never responds so router1 doesn't know how to reply. so rude.
+This is the problem here. It looks like somehow docker is doing :maaaaagiiiiiic: and translating our ping from router3 on three-net to the docker router IP address on three-net. Docker router never responds so router1 doesn't know how to reply. so rude.
 
-where is docker taking over in this process? 
+It turns out, this is yet ANOTHER thing docker does for us to make it easier to use docker in NORMAL circumstances. We wanna turn that shit off. Luckily for us, [some other numbskull out there also wanted to break docker](https://forums.docker.com/t/is-it-possible-to-disable-nat-in-docker-compose/48536/2). We're just gonna steal that solution and add the following to each network definition in our `docker-compose`:
 
-NEXT TIME: figure out where docker is stepping in on this process
-HOMEWORK: read this https://www.metricfire.com/blog/understanding-dockers-net-host-option/#:~:text=NAT%20is%20used%20to%20provide,cost%20related%20to%20using%20NAT
+```
+driver_opts:
+    com.docker.network.bridge.enable_ip_masquerade: 'false'
+```
 
-FIXED! something something something https://forums.docker.com/t/is-it-possible-to-disable-nat-in-docker-compose/48536/2
-
-
-
-NEW PROBLEM! YAY!!!!
-
-we can ping from router3 => server! huzzah!
-things break when we try to ping from client to server
+Now, we can `ping` from router3 => server! Huzzah! Progress!!! But, ummmm... things still break when we try to ping from client to server. Let's continue with our diagnostic. Following the same pattern we did before, We're going to check how far down the path Client can ping before we start losing packets:
 * ping client => router5 one-net :check:
 * ping client => router5 hundo-net :check:
 * ping client => router3 hundo-net :check:
 * ping client => router3 three-net :NOPE:
 
-next steps
+It looks like we start losing packets on the route between Client and Router3 on the three-net network:
+
 ```
 root@client:/# ping 3.0.3.1
 PING 3.0.3.1 (3.0.3.1) 56(84) bytes of data.
@@ -176,6 +190,8 @@ PING 3.0.3.1 (3.0.3.1) 56(84) bytes of data.
 --- 3.0.3.1 ping statistics ---
 7 packets transmitted, 0 received, 100% packet loss, time 6161ms
 ```
+
+So now, let's use our old friend `tcpdump` to figure out where those packets are going and why they aren't getting where we expect them to.
 
 ```
 root@router3:/# ip addr
