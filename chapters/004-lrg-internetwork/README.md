@@ -150,6 +150,69 @@ where is docker taking over in this process?
 NEXT TIME: figure out where docker is stepping in on this process
 HOMEWORK: read this https://www.metricfire.com/blog/understanding-dockers-net-host-option/#:~:text=NAT%20is%20used%20to%20provide,cost%20related%20to%20using%20NAT
 
+FIXED! something something something https://forums.docker.com/t/is-it-possible-to-disable-nat-in-docker-compose/48536/2
+
+
+
+NEW PROBLEM! YAY!!!!
+
+we can ping from router3 => server! huzzah!
+things break when we try to ping from client to server
+* ping client => router5 one-net :check:
+* ping client => router5 hundo-net :check:
+* ping client => router3 hundo-net :check:
+* ping client => router3 three-net :NOPE:
+
+next steps
+```
+root@client:/# ping 3.0.3.1
+PING 3.0.3.1 (3.0.3.1) 56(84) bytes of data.
+^C
+--- 3.0.3.1 ping statistics ---
+7 packets transmitted, 0 received, 100% packet loss, time 6161ms
+```
+
+```
+root@router3:/# ip addr
+33288: eth0@if33289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:64:01:03:01 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 100.1.3.1/16 brd 100.1.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+```
+
+`root@router3:/# tcpdump -nvi eth0`
+
+18:32:57.504868 IP (tos 0x0, ttl 63, id 61790, offset 0, flags [DF], proto ICMP (1), length 84)
+    1.0.0.100 > 3.0.3.1: ICMP echo request, id 66, seq 1, length 64
+router3 receives ping on `eth0` (hundo-net) interface! yay!
+
+18:32:57.504895 IP (tos 0x0, ttl 64, id 17711, offset 0, flags [none], proto ICMP (1), length 84)
+    3.0.3.1 > 1.0.0.100: ICMP echo reply, id 66, seq 1, length 64
+router3 replies to ping on `eth0`. yay?!
+
+18:32:58.547560 IP (tos 0x0, ttl 63, id 62284, offset 0, flags [DF], proto ICMP (1), length 84)
+    1.0.0.100 > 3.0.3.1: ICMP echo request, id 66, seq 2, length 64
+18:32:58.547624 IP (tos 0x0, ttl 64, id 18022, offset 0, flags [none], proto ICMP (1), length 84)
+    3.0.3.1 > 1.0.0.100: ICMP echo reply, id 66, seq 2, length 64
+and repeat
+
+So, this looks good... what's happening? it would probably help to have the mac address of the next hop. let's run that tcpdump again, this time with the `-e` flag to get the mac addresses:
+
+18:41:24.110439 02:42:64:01:05:01 > 02:42:64:01:03:01, ethertype IPv4 (0x0800), length 98: (tos 0x0, ttl 63, id 23157, offset 0, flags [DF], proto ICMP (1), length 84)
+    1.0.0.100 > 3.0.3.1: ICMP echo request, id 67, seq 1, length 64
+18:41:24.110501 02:42:64:01:03:01 > 02:42:64:01:02:01, ethertype IPv4 (0x0800), length 98: (tos 0x0, ttl 64, id 2178, offset 0, flags [none], proto ICMP (1), length 84)
+    3.0.3.1 > 1.0.0.100: ICMP echo reply, id 67, seq 1, length 64
+We see the request hitting router3 on one-hundo-net: `02:42:64:01:05:01 > 02:42:64:01:03:01`
+Then we see router3 responding via router2 on one-hundo-net `02:42:64:01:03:01 > 02:42:64:01:02:01` 
+
+Let's checkout what's happening on router2!
+
+18:49:43.252706 02:42:64:01:05:01 > 02:42:64:01:03:01, ethertype IPv4 (0x0800), length 98: (tos 0x0, ttl 63, id 20940, offset 0, flags [DF], proto ICMP (1), length 84)
+    1.0.0.100 > 3.0.3.1: ICMP echo request, id 68, seq 1, length 64
+18:49:43.252993 02:42:64:01:03:01 > 02:42:64:01:02:01, ethertype IPv4 (0x0800), length 98: (tos 0x0, ttl 64, id 19105, offset 0, flags [none], proto ICMP (1), length 84)
+    3.0.3.1 > 1.0.0.100: ICMP echo reply, id 68, seq 1, length 64
+
+
 
 ## TODOS
 
