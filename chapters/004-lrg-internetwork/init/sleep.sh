@@ -40,7 +40,7 @@ case $HOSTNAME in
     ;;
   (router3)
     ip route add 5.0.0.0/8 via 3.0.1.1
-    ip route add 1.0.0.0/8 via 100.1.2.1
+    ip route add 1.0.0.0/8 via 100.1.5.1
     ip route add 200.1.1.8/29 via 3.0.1.1
     ip route add 200.1.1.0/29 via 100.1.2.1
     ip route add 200.1.1.16/29 via 100.1.4.1

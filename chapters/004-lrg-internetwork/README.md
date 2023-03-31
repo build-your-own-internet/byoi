@@ -90,6 +90,11 @@ internetwork looks like and it makes decision on its own for the most efficient
 way to send the packet to its destination. Internet, as we know today, is not
 possible without numerous routers facilitating the requests.
 
+**NOTE** The way we have our routers setup right now is inconsistent with the
+*previous paragraphs assertion that a router can make decisions about which
+*route to use. Our routers have a single route defined via `ip route add` to
+*each network. There's no opportunity for choice.
+
 ### How to read an IP address; i.e. octets and subnets
 
 
@@ -211,8 +216,6 @@ Let's checkout what's happening on router2!
     1.0.0.100 > 3.0.3.1: ICMP echo request, id 68, seq 1, length 64
 18:49:43.252993 02:42:64:01:03:01 > 02:42:64:01:02:01, ethertype IPv4 (0x0800), length 98: (tos 0x0, ttl 64, id 19105, offset 0, flags [none], proto ICMP (1), length 84)
     3.0.3.1 > 1.0.0.100: ICMP echo reply, id 68, seq 1, length 64
-
-
 
 ## TODOS
 
