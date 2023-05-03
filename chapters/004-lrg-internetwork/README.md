@@ -161,8 +161,10 @@ PING 5.0.0.100 (5.0.0.100) 56(84) bytes of data.
 2 packets transmitted, 0 received, 100% packet loss, time 1005ms
 ```
 
+Here we can see that our ping has 100% packet loss. Not good... Let's resend that ping while we listen on all of router3s interfaces to see what's happening with our packets:
+
 ```
-tcpdump -nvi eth2
+root@router3:/# tcpdump -nvi eth2
 tcpdump: listening on eth2, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 ```
 
@@ -184,4 +186,16 @@ tcpdump: listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 
 	  source link-address option (1), length 8 (1): ee:1e:56:3e:ae:11
 ```
 
-Interesting!
+Interesting! Here we're seeing the ICMP ping requests going out on the one-hundo-net interface! Uh oh! We were expecting these to go out the three-net interface! Let's look at the routing table for router3 in sleep.sh:
+
+```
+  (router3)
+    ip route add 5.0.0.0/8 via 100.1.2.1
+    ip route add 1.0.0.0/8 via 100.1.2.1
+    ip route add 200.1.1.8/29 via 3.0.1.1
+    ip route add 200.1.1.0/29 via 100.1.2.1
+    ip route add 200.1.1.16/29 via 100.1.4.1
+    ;;
+```
+
+Here, we can see we have the route to five-net defined as going through the one-hundo-net interface. Let's change that to go out the three-net interface instead; `3.0.1.1`.
