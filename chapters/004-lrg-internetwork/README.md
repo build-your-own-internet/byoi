@@ -109,6 +109,16 @@ possible without numerous routers facilitating the requests.
 ### How to read a MAC address
 
 *TODO*: describe how we think Docker is assigning mac address in a specific pattern where IPV4 addresses are converted to HEX. This likely should go closer to where we first start looking at MAC addresses.
+
+## There and Back Again - a setup journey
+
+*TODO*: finish instructions on setting up the environment so they can follow our discovery process
+This needs to include an instruction to:
+
+```
+cp init/sleep-exercise.sh init/sleep.sh
+```
+
 ## Now let's test out our internetwork!
 
 We have a client. We have a server. Let's get that client making requests to our server!
@@ -136,6 +146,16 @@ Here's our strategy:
 We're trying to get from Client to Server, and that's not working. But... that's traversing our whole internet. Let's make this a little simpler by starting with just Router1. Can Router1 ping Server? Yes? Sweet! Let's move one hop out and jump on Router3. Can Router3 ping server? It can't... So, let's use the tools we've explored in previous chapters to discover why!
 
 #### A discovery process
+
+
+
+
+
+
+
+
+
+
 
 Ok, let's look at the packets carefully and how they are being routed using `tcpdump`. We expect, based on the network diagram at the beginning of this document, that router3 should have a path to the server via router1. However, typos are common in computing so we need to figure out why the expectation does not match reality.
 
@@ -198,4 +218,36 @@ Interesting! Here we're seeing the ICMP ping requests going out on the one-hundo
     ;;
 ```
 
-Here, we can see we have the route to five-net defined as going through the one-hundo-net interface. Let's change that to go out the three-net interface instead; `3.0.1.1`.
+Here, we can see we have the route to five-net defined as going through the one-hundo-net interface. Let's change that to go out the three-net interface instead; `3.0.1.1`. Once that's updated, let's `restart` our routers and `hopon router3` again to test that ping:
+
+```
+root@router3:/# ping 5.0.0.100 -w 2
+PING 5.0.0.100 (5.0.0.100) 56(84) bytes of data.
+64 bytes from 5.0.0.100: icmp_seq=1 ttl=63 time=0.087 ms
+64 bytes from 5.0.0.100: icmp_seq=2 ttl=63 time=0.199 ms
+
+--- 5.0.0.100 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1016ms
+rtt min/avg/max/mdev = 0.087/0.143/0.199/0.056 ms
+```
+
+HAHA! Victory! Can the client reach the server now? 
+
+```
+root@client:/# ping 5.0.0.100 -w 2
+PING 5.0.0.100 (5.0.0.100) 56(84) bytes of data.
+64 bytes from 5.0.0.100: icmp_seq=1 ttl=61 time=0.277 ms
+64 bytes from 5.0.0.100: icmp_seq=2 ttl=61 time=0.335 ms
+
+--- 5.0.0.100 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1057ms
+rtt min/avg/max/mdev = 0.277/0.306/0.335/0.029 ms
+```
+
+YESSSS! If this hadn't resolved the issue, we could have continued the pattern of hopon a router slightly further away from the server until we found a router where the ping was not successful. At that point, we would use the same combination of `ping`, `tcpdump`, and `ip addr` to troubleshoot where in the network the problem was coming from. Perhaps we could even make a checklist of requests that we would expect to be successful, and run through them, like so:
+
+* ping client => router5 one-net :check:
+* ping client => router5 hundo-net :check:
+* ping client => router3 hundo-net :check:
+* ping client => router3 three-net :NOPE:
+
