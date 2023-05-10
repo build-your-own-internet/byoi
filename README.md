@@ -67,7 +67,7 @@ What if we build a little internet?
 - basic software to be able to view what's happening on the networks
 - Application (HTTP servers)
 
-### STAGE 1: What makes large internetworks possible?
+### STAGE 1: How do you make the network more manageable?
 
 - BGP/IGP:Dozen nodes running BGP
 - DNS (root nodes)
@@ -81,6 +81,10 @@ What if we build a little internet?
 - Set up a Root CA (Boulder) and import root certificates to Chrome
 - Build our own BGP implementation?
 - Build our own DNS server?
+
+### STAGE 4: Let's make this internet more performant.
+
+- reverse proxy
 
 ### Side Quests? 
 

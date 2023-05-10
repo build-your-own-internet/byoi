@@ -251,3 +251,8 @@ YESSSS! If this hadn't resolved the issue, we could have continued the pattern o
 * ping client => router3 hundo-net :check:
 * ping client => router3 three-net :NOPE:
 
+
+
+*TODO*: at least define, if not explore:
+* default gateways
+* route summarization (rather than listing each small network, point to a larger subnet that covers them all)
