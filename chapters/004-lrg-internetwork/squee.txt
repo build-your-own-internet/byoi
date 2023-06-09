@@ -1,0 +1,2121 @@
+{
+  "pops": {
+    "stp": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:44:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.28.0/22"
+          ]
+        }
+      }
+    },
+    "tyo": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.108.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:1A:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "vie": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "199.232.16.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:41:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "krnt": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:5:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.20.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "cph": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:47:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.40.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "mrs": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:54:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.80.0/22"
+          ]
+        }
+      }
+    },
+    "ccu": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:59:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.100.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "phx": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:66:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.152.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "lgab": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:68:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.160.0/22"
+          ]
+        }
+      }
+    },
+    "muc": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "199.232.188.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:6F:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "cdg": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.120.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:1D:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "mel": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:13:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.80.0/22"
+          ]
+        }
+      }
+    },
+    "lfpg": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:6A:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.168.0/22"
+          ]
+        }
+      }
+    },
+    "ams": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:9:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.36.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "cpt": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:35:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.224.0/22"
+          ]
+        }
+      }
+    },
+    "eglc": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "146.75.72.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:82:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "kpao": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.200.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:2F:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "mxp": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:39:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.240.0/22"
+          ]
+        }
+      }
+    },
+    "lim": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:61:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.132.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "mci": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:52:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.72.0/22"
+          ]
+        }
+      }
+    },
+    "yul": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.136.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:20:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "dtw": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:72:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "146.75.8.0/22"
+          ]
+        }
+      }
+    },
+    "akl": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.164.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:27:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "bog": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:49:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.48.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "ftyb": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:67:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.156.0/22"
+          ]
+        }
+      }
+    },
+    "qpg": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:48:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.44.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "kteb": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:B:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.44.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "itm": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:15:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.88.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "mnl": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:75:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "146.75.20.0/22"
+          ]
+        }
+      }
+    },
+    "sbgr": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.248.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:3B:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "kbur": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:87:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "146.75.92.0/22"
+          ]
+        }
+      }
+    },
+    "syd": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.28.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:7:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "wvi": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:C:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.48.0/22"
+          ]
+        }
+      }
+    },
+    "yyz": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.124.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:1E:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "gig": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:2A:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.176.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "icn": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:7C:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "146.75.48.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "sna": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:57:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.92.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "eddf": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "146.75.116.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:8D:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "kigq": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "146.75.76.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:83:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "bne": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.96.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:17:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "bkk": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "199.232.164.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:69:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "lhrb": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:6B:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.172.0/22"
+          ]
+        }
+      }
+    },
+    "acc": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:74:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "146.75.16.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "wlg": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:37:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.232.0/22"
+          ]
+        }
+      }
+    },
+    "bma": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:14:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.84.0/22"
+          ]
+        }
+      }
+    },
+    "lck": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:58:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.96.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "cgh": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:5C:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.112.0/22"
+          ]
+        }
+      }
+    },
+    "hnl": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "146.75.96.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:88:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "kiad": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:77:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "146.75.28.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "lga": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "199.232.36.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:46:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "lis": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:86:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "146.75.88.0/22"
+          ]
+        }
+      }
+    },
+    "klot": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:84:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "146.75.80.0/22"
+          ]
+        }
+      }
+    },
+    "kul": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "146.75.24.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:76:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "den": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:10:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.68.0/22"
+          ]
+        }
+      }
+    },
+    "lax": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:6:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.24.0/22"
+          ]
+        }
+      }
+    },
+    "bom": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.152.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:24:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "amsb": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:65:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.148.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "yvr": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.212.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:32:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "cmh": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.144.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:22:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "chc": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:73:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "146.75.12.0/22"
+          ]
+        }
+      }
+    },
+    "pdk": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.204.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:30:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "for": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "146.75.4.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:71:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "scl": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.220.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:34:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "fjr": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.140.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:21:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "per": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.104.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:19:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "hkg": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:12:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.76.0/22"
+          ]
+        }
+      }
+    },
+    "adl": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:89:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "146.75.100.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "kjyo": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:78:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "146.75.32.0/22"
+          ]
+        }
+      }
+    },
+    "fco": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:7F:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "146.75.60.0/22"
+          ]
+        }
+      }
+    },
+    "rjtf": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "146.75.112.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:8C:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "paob": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "199.232.116.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:5D:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "xsp": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "199.232.12.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:40:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "kmia": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:8F:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "146.75.124.0/22"
+          ]
+        }
+      }
+    },
+    "jnb": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:29:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.172.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "hnd": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.228.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:36:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "kdfw": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "146.75.104.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:8A:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "stl": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:51:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.68.0/22"
+          ]
+        }
+      }
+    },
+    "lhr": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.60.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:F:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "sof": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "146.75.0.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:70:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "pmo": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:7E:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "146.75.56.0/22"
+          ]
+        }
+      }
+    },
+    "kcgs": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:79:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "146.75.36.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "bosb": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:6E:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.184.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "gnv": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "146.75.84.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:85:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "del": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "199.232.20.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:42:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "mad": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.132.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:1F:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "iah": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:2B:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.180.0/22"
+          ]
+        }
+      }
+    },
+    "etou": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "146.75.120.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:8E:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "labsjc": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.160.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:26:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "bos": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:1C:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.116.0/22"
+          ]
+        }
+      }
+    },
+    "lin": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "146.75.52.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:7D:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "iahb": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:E:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.56.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "maa": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.156.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:25:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "cgk": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:81:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "146.75.68.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "eze": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:33:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.216.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "ber": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "199.232.88.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:56:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "waw": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:55:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.84.0/22"
+          ]
+        }
+      }
+    },
+    "atl": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:7B:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "146.75.44.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "hyd": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "199.232.104.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:5A:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "dal": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "199.232.8.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:3F:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "dub": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:43:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.24.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "dxb": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:80:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "146.75.64.0/22"
+          ]
+        }
+      }
+    },
+    "wdc": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:50:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.64.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "yyc": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "146.75.108.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:8B:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "hel": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.244.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:3A:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "msp": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.148.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:23:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "kwhp": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:2E:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.196.0/22"
+          ]
+        }
+      }
+    },
+    "bru": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:2:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.8.0/22"
+          ]
+        }
+      }
+    },
+    "man": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "199.232.52.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:4A:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "osl": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:38:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.236.0/22"
+          ]
+        }
+      }
+    },
+    "cwb": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:3C:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.252.0/22"
+          ]
+        }
+      }
+    },
+    "lon": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:4B:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.56.0/22"
+          ]
+        }
+      }
+    },
+    "kbfi": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:7A:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "146.75.40.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "pdx": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:64:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.144.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "sjc": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.40.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:A:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "pdkb": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "199.232.120.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:5E:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "pao": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:2D:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.188.0/22"
+          ]
+        }
+      }
+    },
+    "ewr": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.208.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:31:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "fty": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:45:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.32.0/22"
+          ]
+        }
+      }
+    }
+  },
+  "anycast": {
+    "eu_http2": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:FD9:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.228.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "firebase_http1": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "199.36.158.0/24"
+          ],
+          "ipv6": [
+            "2620:0:890:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "firebase"
+    },
+    "proxyb_uscst": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:FD1:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "167.82.116.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "http1": {
+      "providers": {
+        "global": {
+          "alt": [
+            "23.235.33.0/24"
+          ],
+          "ipv6": [
+            "2A04:4E42:0:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.0.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "http3": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:400:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.128.0/22"
+          ],
+          "alt": [
+            "104.156.81.0/24"
+          ]
+        }
+      }
+    },
+    "github_http4": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2606:50C0:8003:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "185.199.111.0/24"
+          ]
+        }
+      },
+      "vipspace": "github"
+    },
+    "github_http3": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2606:50C0:8002:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "185.199.110.0/24"
+          ]
+        }
+      },
+      "vipspace": "github"
+    },
+    "http5": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:800:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "http8": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:E00:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "pantheon_http3": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2620:12A:8002:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "pantheon"
+    },
+    "amazon_http3": {
+      "vipspace": "amazon",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2606:2CC0:2:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "proxyb_usest": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:FD2:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "167.82.112.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "mbz200_http1": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:4E:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.208.0/22"
+          ]
+        }
+      }
+    },
+    "canary1": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "199.232.60.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:FFF:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "http7": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:C00:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "mbz100_http1": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:4C:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.192.0/22"
+          ]
+        }
+      }
+    },
+    "newrelic1_http1": {
+      "vipspace": "newrelic1",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "185.221.87.0/24"
+          ]
+        }
+      }
+    },
+    "amazon_http2": {
+      "vipspace": "amazon",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2606:2CC0:1:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "newrelic2_http1": {
+      "vipspace": "newrelic2",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "162.247.243.0/24"
+          ]
+        }
+      }
+    },
+    "proxyb_auaest": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:FCF:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "167.82.124.0/22"
+          ]
+        }
+      }
+    },
+    "proxyb_inist": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "167.82.108.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:FE4:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "proxyb_http1": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:FF2:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.216.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "proxyb_http2": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "199.232.240.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:FF1:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "eu_http1": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:FDA:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.224.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "sppfastly_http1": {
+      "vipspace": "sppfastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2620:11A:C004:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "23.154.64.0/24"
+          ]
+        }
+      }
+    },
+    "proxyb_http4": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:FD5:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "167.82.104.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "bytedance_http2": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "167.82.84.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:FE5:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "bytedance_http1": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:FF0:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.232.0/22"
+          ]
+        }
+      }
+    },
+    "india": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "199.232.252.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:FD3:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "twitter2_http1": {
+      "providers": {
+        "global": {
+          "ipv4": [
+            "104.244.43.0/24"
+          ]
+        }
+      },
+      "vipspace": "twitter2"
+    },
+    "http4": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:600:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.192.0/22"
+          ],
+          "alt": [
+            "104.156.85.0/24"
+          ]
+        }
+      }
+    },
+    "pivot": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "151.101.168.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:28:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "mbz100_http2": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "199.232.196.0/22"
+          ],
+          "ipv6": [
+            "2A04:4E42:4D:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "mbz200_http2": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:4F:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "199.232.212.0/22"
+          ]
+        }
+      }
+    },
+    "proxyb_uspst": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:FD0:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "167.82.120.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "pantheon_http1": {
+      "vipspace": "pantheon",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "23.185.0.0/24"
+          ],
+          "ipv6": [
+            "2620:12A:8000:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "github_http2": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2606:50C0:8001:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "185.199.109.0/24"
+          ]
+        }
+      },
+      "vipspace": "github"
+    },
+    "proxyb_jpjst": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:FED:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "167.82.88.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "pantheon_http2": {
+      "vipspace": "pantheon",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2620:12A:8001:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "amazon_http4": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2606:2CC0:3:0:0:0:0:0/48"
+          ]
+        }
+      },
+      "vipspace": "amazon"
+    },
+    "amazon_http1": {
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2606:2CC0:0:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "162.219.224.0/22"
+          ]
+        }
+      },
+      "vipspace": "amazon"
+    },
+    "http2": {
+      "providers": {
+        "global": {
+          "alt": [
+            "23.235.37.0/24"
+          ],
+          "ipv6": [
+            "2A04:4E42:200:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "151.101.64.0/22"
+          ]
+        }
+      },
+      "vipspace": "fastly"
+    },
+    "proxyb_http3": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:FD6:0:0:0:0:0/48"
+          ],
+          "ipv4": [
+            "167.82.92.0/22"
+          ]
+        }
+      }
+    },
+    "pantheon_http4": {
+      "vipspace": "pantheon",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2620:12A:8003:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "webflow_http1": {
+      "vipspace": "webflow",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "198.202.211.0/24"
+          ]
+        }
+      }
+    },
+    "http6": {
+      "vipspace": "fastly",
+      "providers": {
+        "global": {
+          "ipv6": [
+            "2A04:4E42:A00:0:0:0:0:0/48"
+          ]
+        }
+      }
+    },
+    "github_http1": {
+      "vipspace": "github",
+      "providers": {
+        "global": {
+          "ipv4": [
+            "185.199.108.0/24"
+          ],
+          "ipv6": [
+            "2606:50C0:8000:0:0:0:0:0/48"
+          ]
+        }
+      }
+    }
+  }
+}

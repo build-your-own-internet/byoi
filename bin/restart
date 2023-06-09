@@ -9,6 +9,6 @@ docker ps | grep `basename $(pwd)` | awk '{ print $1 }' |  xargs docker containe
 docker network ls | grep `basename $(pwd)` | awk '{ print $1 }' | xargs docker network rm
 
 # docker images delete all 3
-docker images | grep `basename $(pwd)` | awk '{ print $1 }' | xargs docker image rm
+docker images | grep `basename $(pwd)` | awk '{ print $1 }' | xargs docker image rm -f
 
 docker compose up -d

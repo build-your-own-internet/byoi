@@ -60,23 +60,26 @@ What if we build a little internet?
 
 ## Stages of the project
 
-### STAGE 1: What is the bare minimum it would that take?
+### [COMPLETE] STAGE 0: What is the bare minimum to make an internetwork?
+
+- machines running on 3 or more networks
+- packets between machines on different networks
+- basic software to be able to view what's happening on the networks
+- Application (HTTP servers)
+
+### STAGE 1: What makes large internetworks possible?
 
 - BGP/IGP:Dozen nodes running BGP
 - DNS (root nodes)
-- Application (HTTP servers)
 
-### STAGE 2: How do we make this cool/awesome?
+### STAGE 2: Secure that shit
 
-- Reverse Proxy / Cache
-- VPN
-- TLS: load/use basic Server/client certificates
+- TLS: load/use basic Server/client certificates (generate using openssl)
 
 ### STAGE 3: How can we replace some of these things with stuff we build
 
 - Set up a Root CA (Boulder) and import root certificates to Chrome
 - Build our own BGP implementation?
-- Build our own VPN?
 - Build our own DNS server?
 
 ### Side Quests? 
