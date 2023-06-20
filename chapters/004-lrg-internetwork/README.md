@@ -104,7 +104,7 @@ possible without numerous routers facilitating the requests.
 
 ### How to read an IP address; i.e. octets and subnets
 
-*TODO:* describe how the network diagram above relates to the docker compose file which relates to the `ip route add` commands in the sleep.sh file.
+This requires a long and detailed description to really understand. For the sake of keeping this document brief, we've moved the explanation for this to [prefixes-and-subnet-masks.md](../appendix/prefixes-and-subnet-masks.md) in the appendix. Please read that document and come back here when you feel confident you have a basic understanding of what it contains!
 
 ### How to read a MAC address
 
