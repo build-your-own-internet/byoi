@@ -5,11 +5,11 @@ What is the purpose of an IP address
 * identify a server
 * identify if a machine is on a particular network
 
-# Intro
+## Intro
 
 A “prefix” and a “subnet mask” are the 2 parts that comprise a network address, which is a span of IP addresses that belong to that network. Together, they enable us to group IP addresses. So instead of saying that Fastly owns 151.101.0.0 - 151.101.255.255, we can say Fastly owns 151.101.0.0/16. To understand why this works, we’ll have to digress and learn a bit about binary first.
 
-# Back to Basics!: Binary
+## Back to Basics!: Binary
 
 The structure of the addresses we’re looking at is numbers split into 4 chunks separated by a dot (.). Each of these chunks is referred to as an “octet”. Why an octet? Because each number is a decimal (base10) representation of an 8-bit binary number. That’s why they only go up to 255 in any one of the octets. We can convert each 8 bit binary number to a decimal value. Check this out:
 
@@ -108,7 +108,7 @@ The structure of the addresses we’re looking at is numbers split into 4 chunks
 
 What we see happening here is that each value in our 8-bit number corresponds with a decimal value. Oddly, [this children’s program](https://www.youtube.com/watch?v=VpDDPWVn5-Q) is the best explanation of binary I’ve ever found.
 
-# What’s Binary Got to do with IP addresses?
+## What’s Binary Got to do with IP addresses?
 
 It’s easy to look at an IP address and try to make it more complicated than it is. All we’re looking at here is a translation of numbers that makes it easier for humans to digest. Think about the difference between 1,000,000,000 versus 1000000000. Those commas are in there to make it easier to read so we can quickly identify the difference between 1,000,000,000 and 10,000,000,000. We’re doing something similar with our IP addresses, just adding convention to make it easier to see what’s happening.
 
@@ -120,7 +120,7 @@ So, back to binary. If we translate each octet of Fastly’s IP address range in
 
 Those octets are much harder on the human brain to comprehend and communicate. Instead, we perform a conversion on the binary values to translate each octet into decimal numbers that we are more accustomed to.
 
-# Routing
+## Routing
 
 Ultimately, we use these IP addresses to route packets over the Internet. So to understand why we use binary, we have to talk about routing packets.
 
@@ -132,7 +132,9 @@ To make this decision, a router has to take the destination IP address of the pa
 
 In a nutshell, here's the process that a router goes through to figure out where to send the packet next:
 
-## The two-step algorithm for finding out where to send a packet
+### The two-step algorithm for finding out where to send a packet
+
+This might sound like gibberish to begin with. Don't worry! We'll spell it out in detail as we go!
 
 **For each route** in the routing table, do the following until you find a match:
 
@@ -141,7 +143,7 @@ In a nutshell, here's the process that a router goes through to figure out where
     1. **If they match**: use that route 🙂
     2. **If they do not match**: go on to the next route 😞
 
-## Example
+#### Example
 
 Let's go through an example of this. We're looking at one router on the Internet, and let's say it has the following routing table:
 
@@ -156,27 +158,27 @@ Let's say this router sees a packet coming in destined for `10.2.1.4`. The route
 
 To accomplish this, it's going to go through the routing table and apply the algorithm to each route until it finds a match. Let's say it starts with the first route in the table: `10.1.0.0/24`.
 
-#### Step 1
+##### Step 1
 
 > Take the subnet-mask of the current route and perform a bitwise AND operation with the destination IP address of the packet we're routing.
 
 Okay, so the subnet mask of the first route (10.1.0.0/24) is `/24`.
 
-First, we apply the subnet mask of that route to the destination IP address of the packet using a binary AND operation. How do we do this? Well, for starters, we have to convert the subnet-mask and the destination-address to <span style="text-decoration:underline;">bits</span>.
+First, we apply the subnet mask of that route to the destination IP address of the packet using a binary AND operation. How do we do this? Well, for starters, we have to convert the subnet-mask and the destination-address to _bits_.
 
-First, the subnet mask (/24). The “/24” represents 24 bits of mask. Said another way, it has 24 "1"s turned on, starting from the left of the binary number, like this:
+The subnet mask, that "/24" on the route, represents 24 bits of mask. Said another way, it has 24 "1"s turned on, starting from the left of the binary number, like this:
 
 ```
-     11111111.11111111.11111111.00000000 <== 24 "1"s
+11111111.11111111.11111111.00000000 <== 24 "1"s
 ```
 
 Next, we convert each octet of the destination IP address to bits, so `10.2.1.4` becomes:
 
 ```
-     00001010.00000010.00000001.00000100
+00001010.00000010.00000001.00000100
 ```
 
-Next, to apply the binary AND operation between these numbers, it's simple: line them up and go bit-by-bit: if **both** bits are `1`, then the result is a `1`. Otherwise, the result is a `0`:
+To apply the binary AND operation between these numbers is simple: line them up and go bit-by-bit: if **both** bits are `1`, then the result is a `1`. Otherwise, the result is a `0`:
 
 ```
 subnet mask:         11111111.11111111.11111111.00000000
@@ -189,19 +191,19 @@ So, we started a destination address of `10.2.1.4`. We’re checking to see if i
 
 > By the way, did you notice that the result of applying the "subnet mask" to an IP address is that it just "masks out" (kinda like masking tape) part of the address? That's why it's called a "mask"! It just acts like a filter: anywhere there's a `1` in the mask, we take the value of the address. Anywhere there's a `0` in the mask, we ignore the value of the address!
 
-#### Step 2
+##### Step 2
 
 > Take the network address of the current route and compare that with the previous result
 > If they match: use that route
 > If they do not match: go on to the next route.
 
-Okay, so the network address of the current route is `10.1.0.0` and the result of step 1 was `10.2.1.0`. These two results are **not equal**. Therefore, this is <span style="text-decoration:underline;">not the right route</span>! This route is discarded 👎. Fuck this route!
+The network address, everything _before_ the "/24", of the current route is `10.1.0.0` and the result of step 1 was `10.2.1.0`. These two results are **not equal**. Therefore, this is _not the right route_! This route is discarded 👎. Fuck this route!
 
-### Continuing with the next route
+#### Continuing with the next route
 
 Okay, the first route didn’t work out. But we’re not frightened. We have more routes to check, and we are pretending to be a tireless computer! So, okay, chin up soldier: the next route is `10.2.0.0/23`. Let's go through the same two-step process that we did for the first route.
 
-#### Step 1
+##### Step 1
 
 We apply the subnet mask (`/23`) to the destination IP address (`10.2.1.4`):
 
@@ -214,13 +216,13 @@ result:              00001010.00000010.00000000.00000000
 
 ...and if we convert the octets of the result back to decimal, we get `10.2.0.0`.
 
-#### Step 2
+##### Step 2
 
 Next, we take the network address of the **current route** (10.2.0.0) and compare that with the result of step 1 (10.2.0.0).
 
 These are **the same**. We found it! This is the correct route to choose. The router will pick this route and stop searching!
 
-# How does this relate to prefixes and subnet masks?
+## How does this relate to prefixes and subnet masks?
 
 The reason we represent network addresses in this way is it makes it a lot easier to see where networks begin and end.
 
@@ -296,10 +298,17 @@ So after /16, We’re moving on to our next bit!
 
 Oooooooh! Ahhhh!!!
 
-# Why does a /16 have more addresses available than a /24?
+## Practice Time
 
-These slashes refer to the number of bits in an IP address that should be regarded as being on the same network. So, looking at the binary version of Fastly’s IP again:
+Using what you know now, see if you can figure out the answers to the following questions:
 
-10010111.01100101.00000000.00000000
+* Why does a /16 have more addresses available than a /24?
+* What is the subnet mask for a network with a single address?
+* Using the routing table below, which route would a router pick for `10.4.4.18`?
 
-With a /16 address, the first 16 bits are all machines on the same network. All the bits after the /16 are used to identify specific machines on that network. Every machine on the 151.101.0.0/16 network will have an IP address that starts with 151.101, and its individual identifier will be whatever numbers exist in that .0.0.
+```
+Route 1: 10.1.0.0/24
+Route 2: 10.2.0.0/23
+Route 3: 10.3.3.0/24
+Route 4: 10.4.4.4/24
+```
