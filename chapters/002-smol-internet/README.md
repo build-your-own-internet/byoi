@@ -148,7 +148,7 @@ ping 10.1.1.3
 Alternatively, you can `ping boudi` if you wanna keep it simple.
 
 The `ping` should result in no output because we're not actually hitting a
-machine for that address. The `tcpdump` on `boudi`, likewise, will have no
+machine for that IP address. The `tcpdump` on `boudi`, likewise, will have no
 output because the `ping` from `tara` is never reaching it. The `tcpdump`
 from `tara`, on the otherhand:
 
@@ -179,8 +179,16 @@ communicate with each other. YET!
 
 > **What's with those ARP requests?**
 
-There are some random ARP requests in the tcpdump. 10.1.2.1 is the
-address for the default gateway on `doggonet`, e.g.:
+There are some odd looking packets identified as `ARP` in the tcpdump:
+
+```bash
+19:23:01.863431 ARP, Request who-has 10.1.2.1 tell 10.1.2.2, length 28
+19:23:01.863490 ARP, Reply 10.1.2.1 is-at 02:42:e0:c7:ba:94, length 28
+```
+
+
+
+10.1.2.1 is the address for the default gateway on `doggonet`, e.g.:
 
 ```bash
 root@92141c63e813:/# ip route
@@ -188,9 +196,8 @@ default via 10.1.2.1 dev eth0
 10.1.2.0/24 dev eth0 proto kernel scope link src 10.1.2.2
 ```
 
-In the output from `ip route`, we can see `default via 10.1.2.1 dev eth0`, which
-identifies that as the default gateway. We're seeing these requests in our
-tcpdump because the ARP cache needs to periodically be refreshed.
+But what is actually happening in that request/reply? For a detailed explanation,
+checkout the [appendix on ip v. mac addresses](../appendix/ip-and-mac-addresses.md).
 
 Now back to our regularly scheduled exploration!
 

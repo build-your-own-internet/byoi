@@ -3,6 +3,8 @@
 * [ ] Start from scratch and take more thorough notes explaining the process of
   how we uncovered the issue
 * [ ] Flesh out TODOs in the old notes and incorporate them in the new README
+* [ ] Explain changes to docker-compose to make docker work correct and point to docker troubleshooting in appendix
+* [ ] Whenever we see a docker troubleshooting thing, move it to the appendix
 
 
 # Let's make that Internet MOAR BIGGER!
@@ -12,9 +14,26 @@
 Let's use the tools and processes we've already discovered to make a much larger
 internetwork! In this case, we'll want to be able to traverse several networks
 to get machines who are not directly connected to be able to communicate with
-each other. Looking at the network diagram below, we can see that the `Client` machine is connected to the `1.0.0.0/8` network. We want the `Client` machine to be able to traverse our internetwork to reach the `Server` machine connected to the `5.0.0.0/8` to request a basic HTML document. 
+each other. Looking at the network diagram below, we can see that the `Client`
+machine is connected to the `1.0.0.0/8` network. We want the `Client` machine to
+be able to traverse our internetwork to reach the `Server` machine connected to
+the `5.0.0.0/8` to request a some HTML. 
 
-**TODO: describe something about where the HTML document is and how the user can see it**
+A bit about that HTML: If you check the `init/sleep.sh` file for this chapter,
+you'll see that we added a `httpserver` function:
+
+```bash
+  while true; do
+    echo -e "HTTP/1.1 200 OK\r\n$(date)\r\n\r\n<h1>hello world from $(hostname) on $(date)</h1>" | nc -vl 8080; 
+  done
+```
+
+This function is basically using a `netcat` hack to respond to any requests that
+come in on port 8080 with the very basic HTTP response that includes a tiny
+little HTML document. It's a clever solution so we don't actually have to build
+an HTTP server. If it doesn't make sense, don't worry about it... ✨_IT JUST
+WORKS_✨ In the setup for the server in `sleep.sh`, you'll see the last item in
+the list is a call to that `httpserver` function.
 
 Here's what we expect the internet to look like at the end of this chapter:
 
@@ -44,24 +63,17 @@ Here's what we expect the internet to look like at the end of this chapter:
               5.0.0.0/8
 ```
 
-Simple, no?!
-
-## Vocab
-
-* `subnet`: 
-* `prefix`: 
-
 ## Asides
 
 ### Pets v. Cattle
 
 You might be wondering what the hell happened to our fun pets and their
-personalities. Well, we are in serious business territory now and there is no
-room for emotions and personality when it comes to serious business™. In other
-words, when you are dealing with large infrastructure, it's much easier to
-manage things when you assign roles to them that dictate how things are
-configured. Hence, we have Server(s), Client(s) and Router(s) instead of our
-lovable pets.
+personalities from the previous chapter. Well, we are in serious business
+territory now and there is no room for emotions and personality when it comes to
+serious business™. In other words, when you are dealing with large
+infrastructure, it's much easier to manage things when you assign roles to them
+that dictate how things are configured. Hence, we have Server(s), Client(s) and
+Router(s) instead of our lovable pets.
 
 There is an industry specific phrase that matches the theme here too. Within
 infrastructure industry, the popular way to see components of the infrastracture
@@ -70,7 +82,8 @@ larger system and we care less about details of individual components. Those
 components are there to serve a purpose and once they are unable to, we can
 easily replace them with other components that can serve the same role.
 
-Since we do care about the roles, let's dive a little deeper into them and understand what we mean:
+Since we do care about the roles, let's dive a little deeper into them and
+understand what we mean:
 
 ### Vocab reminders
 
@@ -84,40 +97,81 @@ definition is sufficient for our current use case.
 
 #### Server
 
-A server is any machine whose purpose is to serve a network request. If the
+A server is any machine whose purpose is to respond to a network request. If the
 server fails to serve the request, it can return an appropriate error back to
-the client. In our case, we have built a very simple HTTP server that responds
-back to any request with a simple HTML.
+the client. In our case, we have hacked together a very simple HTTP server that
+responds back to any request with a simple HTML.
 
 #### Router
 
 A router is any machine whose purpose is to connect networks together. It does
 so by forwarding packets to the next hop. Each router has a picture of what the
-internetwork looks like and it makes decision on its own for the most efficient
-way to send the packet to its destination. Internet, as we know today, is not
+internetwork looks like and it makes decisions on its own for the most efficient
+way to send the packet to its destination. The internet, as we know today, is not
 possible without numerous routers facilitating the requests.
-
-**NOTE** The way we have our routers setup right now is inconsistent with the
-*previous paragraphs assertion that a router can make decisions about which
-*route to use. Our routers have a single route defined via `ip route add` to
-*each network. There's no opportunity for choice.
 
 ### How to read an IP address; i.e. octets and subnets
 
 This requires a long and detailed description to really understand. For the sake of keeping this document brief, we've moved the explanation for this to [prefixes-and-subnet-masks.md](../appendix/prefixes-and-subnet-masks.md) in the appendix. Please read that document and come back here when you feel confident you have a basic understanding of what it contains!
 
-### How to read a MAC address
+### How docker handles MAC addresses
 
-*TODO*: describe how we think Docker is assigning mac address in a specific pattern where IPV4 addresses are converted to HEX. This likely should go closer to where we first start looking at MAC addresses.
+A MAC (media access control) address is the layer 2 address of a machine on a network. If you'd like to review what a MAC address is in detail, checkout the [appendix on ip v. mac addresses](../appendix/ip-and-mac-addresses.md).
+
+Let's look at the output for one of our interfaces shown in `ip route`:
+
+```bash
+38: eth0@if39: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:0a:01:02:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.1.2.3/24 brd 10.1.2.255 scope global eth0
+       valid_lft forever preferred_lft forever
+```
+
+Here, we can see that the IP of the machine is `10.1.2.3` on a `/24` network.
+The MAC address listed on the line above is `02:42:0a:01:02:03`. It appears to
+keep things simple, when docker creates a new machine, it has to assign it a MAC
+address for networking purposes. It takes the IP address for that machine and
+converts it into a human readable version in hexidecimal for the MAC address.
+So, the end of that MAC address, `0a:01:02:03`, converted from hexidecimal into
+decimal is `10.1.2.3`. This is great for us. It means when we look at MAC
+addresses in our tcpdump later in the chapter, it is much easier to see which
+machines our packets are being routed through.
 
 ## There and Back Again - a setup journey
 
-*TODO*: finish instructions on setting up the environment so they can follow our discovery process
-This needs to include an instruction to:
+In order for our little internet to work, we need a way for the machines on our networks to know how and where to route packets. Each router on the network will have a definition of all other networks on the internet and how it can reach machines on those networks. Think about it like this. When a driver is navigating our interstate highways to try to get from Portland to San Francisco, they're gonna see signs that direct them which lanes of traffic will take them in right direction. The driver follows those signs and ends up eventually in the right city. Our routers need those same little signs to follow. Each router will have a "routing table", which is like a list of all our little signs. These routing tables will have entries for how to send packets to each network on our internet.
 
+We want to create routing tables for each of the routers on the network we have diagramed at the top of this chapter. Each router will need to have entries on how to get to networks that the router does not already have a direct connection to. And, we need these routing tables to be defined as soon as we boot up our network. So, let's define all of the routes that are necessary for `router1` and let's add them to the `sleep.sh` file that is run when we `restart` our whole system.
+
+Based on that diagram, `router1` already has connections to:
+
+* `5.0.0.0/8`
+* `200.1.1.8/29`
+* `3.0.0.0/8`
+
+So, for `router1` to participate in this internet, it needs to know how to route packets to all the networks it's not currently connected to. We can setup our `sleep.sh` file to use a similar structure to what we used in chapter 3. So, start with something like:
+
+```bash
+case $HOSTNAME in
+  (router1)
+    ip route add 1.0.0.0/8 via 3.0.3.1
+    ip route add 100.1.0.0/16 via 3.0.3.1
+    ip route add 200.1.1.0/29 via 200.1.1.11
+    ip route add 200.1.1.16/29 via 3.0.3.1
+    ;;
+esac
 ```
-cp init/sleep-exercise.sh init/sleep.sh
-```
+
+*EXERCISE* do it yourself!
+
+The `sleep.sh` file already has some setup in it. Build out the routes for `router3` similar to how you see the routes for `router1` being done. Once you've got the routes created in `sleep.sh`, `restart` your little internet and `hopon router1`. Can you ping router3 with `ping 3.0.3.1`? What about if we try to ping `router3` with packets that originate from `router1` on `5.0.0.0/8`? Try using `ping -I 5.0.1.1 3.0.3.1` to do this.
+
+*TODO*
+- Setup sleep.sh for how we want the chapter to open
+- setup sleep-exercise.sh for how we want the chapter to close
+- tie in the `ip_masquerade` investigation to the response we got from ^^^ last ping
+
+Let's investigate what just happened there...
 
 ## Now let's test out our internetwork!
 
