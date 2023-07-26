@@ -145,9 +145,9 @@ We want to create routing tables for each of the routers on the network we have 
 
 Based on that diagram, `router1` already has connections to:
 
-* `5.0.0.0/8`
-* `200.1.1.8/29`
-* `3.0.0.0/8`
+* `5.0.0.0/8` or `five-net` as defined in the docker-compose.yml from this chapter
+* `200.1.1.8/29` or `p2p-eight`
+* `3.0.0.0/8` or `three-net`
 
 So, for `router1` to participate in this internet, it needs to know how to route packets to all the networks it's not currently connected to. We can setup our `sleep.sh` file to use a similar structure to what we used in chapter 3. So, start with something like:
 
@@ -167,9 +167,27 @@ esac
 The `sleep.sh` file already has some setup in it. Build out the routes for `router3` similar to how you see the routes for `router1` being done. Once you've got the routes created in `sleep.sh`, `restart` your little internet and `hopon router1`. Can you ping router3 with `ping 3.0.3.1`? What about if we try to ping `router3` with packets that originate from `router1` on `5.0.0.0/8`? Try using `ping -I 5.0.1.1 3.0.3.1` to do this.
 
 *TODO*
-- Setup sleep.sh for how we want the chapter to open
-- setup sleep-exercise.sh for how we want the chapter to close
-- tie in the `ip_masquerade` investigation to the response we got from ^^^ last ping
+
+add another exercise for seeing the client be able to make an http request to the server
+* tell them to use a specific broken set of routing 
+* diagnose the problem - get to use tcpdump/ping/ip stuff...
+review and clean up both readme and docker-routing-pitfalls
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Let's investigate what just happened there...
 
@@ -201,21 +219,11 @@ We're trying to get from Client to Server, and that's not working. But... that's
 
 #### A discovery process
 
-
-
-
-
-
-
-
-
-
-
 Ok, let's look at the packets carefully and how they are being routed using `tcpdump`. We expect, based on the network diagram at the beginning of this document, that router3 should have a path to the server via router1. However, typos are common in computing so we need to figure out why the expectation does not match reality.
 
 Towards that goal, let's hop on to router 1 and figure out which interface is on three-net.
 
-```
+```bash
 ip addr
 ...
 91: eth2@if92: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
@@ -227,7 +235,7 @@ ip addr
 
 `eth2` is the interface. Router3 and router1 both have interfaces listening on three-net. We would expect packets from router3 to router1 going over three-net as that is the most efficient route. So we are going to watch for those packets on router1 on it's three-net interface (`eth2`) to ensure that they are arriving where they should be. To do that, we will hop on to router1 and run `tcpdump` listening on `eth2` interface. With that running, in a separate terminal session, we will hop on to router3 and issue a ping to server. We also need to run `tcpdump` on router3 for each of it's interfaces to prove packets are leaving as expected.
 
-```
+```bash
 root@router3:/# ping 5.0.0.100 -w 2
 PING 5.0.0.100 (5.0.0.100) 56(84) bytes of data.
 
@@ -237,17 +245,17 @@ PING 5.0.0.100 (5.0.0.100) 56(84) bytes of data.
 
 Here we can see that our ping has 100% packet loss. Not good... Let's resend that ping while we listen on all of router3s interfaces to see what's happening with our packets:
 
-```
+```bash
 root@router3:/# tcpdump -nvi eth2
 tcpdump: listening on eth2, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 ```
 
-```
+```bash
 root@router3:/# tcpdump -nvi eth1
 tcpdump: listening on eth1, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 ```
 
-```
+```bash
 root@router3:/# tcpdump -nvi eth0
 tcpdump: listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 18:42:43.059083 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 100.1.2.1 tell 100.1.3.1, length 28
@@ -262,7 +270,7 @@ tcpdump: listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 
 
 Interesting! Here we're seeing the ICMP ping requests going out on the one-hundo-net interface! Uh oh! We were expecting these to go out the three-net interface! Let's look at the routing table for router3 in sleep.sh:
 
-```
+```bash
   (router3)
     ip route add 5.0.0.0/8 via 100.1.2.1
     ip route add 1.0.0.0/8 via 100.1.2.1
@@ -274,7 +282,7 @@ Interesting! Here we're seeing the ICMP ping requests going out on the one-hundo
 
 Here, we can see we have the route to five-net defined as going through the one-hundo-net interface. Let's change that to go out the three-net interface instead; `3.0.1.1`. Once that's updated, let's `restart` our routers and `hopon router3` again to test that ping:
 
-```
+```bash
 root@router3:/# ping 5.0.0.100 -w 2
 PING 5.0.0.100 (5.0.0.100) 56(84) bytes of data.
 64 bytes from 5.0.0.100: icmp_seq=1 ttl=63 time=0.087 ms
@@ -287,7 +295,7 @@ rtt min/avg/max/mdev = 0.087/0.143/0.199/0.056 ms
 
 HAHA! Victory! Can the client reach the server now? 
 
-```
+```bash
 root@client:/# ping 5.0.0.100 -w 2
 PING 5.0.0.100 (5.0.0.100) 56(84) bytes of data.
 64 bytes from 5.0.0.100: icmp_seq=1 ttl=61 time=0.277 ms
@@ -305,3 +313,28 @@ YESSSS! If this hadn't resolved the issue, we could have continued the pattern o
 * ping client => router3 hundo-net :check:
 * ping client => router3 three-net :NOPE:
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## IP Masquerade
+
+If you checked the docker-compose file that generates the machines and networks for our internetwork, you probably saw that each network definition included a `com.docker.network.bridge.enable_ip_masquerade: 'false'`. We discovered in trying to build out our initial internetwork that docker uses a default router to communicate between networks. This default router was intercepting packets that we were attempting to send between networks. This is intended behavior for docker! In most cases when you're using docker, you don't want to have to setup all the network configurations! But... in our case... we WANT to be able to configure out network at a minute level. Sooo... adding that `enable_ip_masquerade: false` line removes the default router on the network. 
+
+If you'd like to see the notes from our investigation, checkout [docker-routing-pitfalls.md](../appendix/docker-routing-pitfalls.md). Disclaimer: these notes are not the refined and beauteous things you are witnessing in the chapters. These are notes. But they do demonstrate our discovery process for identifying the problem.
