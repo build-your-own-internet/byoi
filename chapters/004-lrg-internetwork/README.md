@@ -127,15 +127,9 @@ Let's look at the output for one of our interfaces shown in `ip route`:
        valid_lft forever preferred_lft forever
 ```
 
-Here, we can see that the IP of the machine is `10.1.2.3` on a `/24` network.
-The MAC address listed on the line above is `02:42:0a:01:02:03`. It appears to
-keep things simple, when docker creates a new machine, it has to assign it a MAC
-address for networking purposes. It takes the IP address for that machine and
-converts it into a human readable version in hexidecimal for the MAC address.
-So, the end of that MAC address, `0a:01:02:03`, converted from hexidecimal into
-decimal is `10.1.2.3`. This is great for us. It means when we look at MAC
-addresses in our tcpdump later in the chapter, it is much easier to see which
-machines our packets are being routed through.
+Here, we can see that the IP of the machine is `10.1.2.3` on a `/24` network. The MAC address listed on the line above is `02:42:0a:01:02:03`. It appears to keep things simple, when docker adds a new machine to a network, it has create an interface for that machine and put it on that network. That interface will have its own unique MAC address. Docker can assign whatever it wants for that MAC address, but, to help us, the humans, it will take the IP address for that machine and convert it into a human readable version in hexidecimal. So, the end of that MAC address, `0a:01:02:03`, converted from hexidecimal into decimal is `10.1.2.3`. This is great for us. It means when we look at MAC addresses in our tcpdump later in the chapter, it is much easier to see which machines our packets are being routed through. 
+
+**NOTE** When you see ethernet packets in the wild, there is no correlation between the MAC address and the IP address. This is simply a docker convenience.
 
 ## There and Back Again - a setup journey
 
@@ -143,13 +137,15 @@ In order for our little internet to work, we need a way for the machines on our 
 
 We want to create routing tables for each of the routers on the network we have diagramed at the top of this chapter. Each router will need to have entries on how to get to networks that the router does not already have a direct connection to. And, we need these routing tables to be defined as soon as we boot up our network. So, let's define all of the routes that are necessary for `router1` and let's add them to the `sleep.sh` file that is run when we `restart` our whole system.
 
-Based on that diagram, `router1` already has connections to:
+Based on that diagram, out of the 7 networks we've built, `router1` already has interfaces on 3 of them:
 
-* `5.0.0.0/8` or `five-net` as defined in the docker-compose.yml from this chapter
+<!--**open question to ourselves** should we continue to refer to the docker-compose names for these networks if we're not using those names in the rest of the readme?-->
+
+* `5.0.0.0/8` or `five-net`
 * `200.1.1.8/29` or `p2p-eight`
 * `3.0.0.0/8` or `three-net`
 
-So, for `router1` to participate in this internet, it needs to know how to route packets to all the networks it's not currently connected to. We can setup our `sleep.sh` file to use a similar structure to what we used in chapter 3. So, start with something like:
+So, for `router1` to participate in this internet, it needs to know how to route packets to each of the 4 networks it's not currently connected to. We can add routes to each of the 4 networks in our `sleep.sh` file to use a similar structure to what we used in chapter 3. So, we'll start by defining how `router1` can reach each network through its connections with other routers. You'll see the following already defined in the `sleep.sh` file for this chapter:
 
 ```bash
 case $HOSTNAME in
@@ -162,9 +158,67 @@ case $HOSTNAME in
 esac
 ```
 
-*EXERCISE* do it yourself!
+## Exercise time
 
-The `sleep.sh` file already has some setup in it. Build out the routes for `router3` similar to how you see the routes for `router1` being done. Once you've got the routes created in `sleep.sh`, `restart` your little internet and `hopon router1`. Can you ping router3 with `ping 3.0.3.1`? What about if we try to ping `router3` with packets that originate from `router1` on `5.0.0.0/8`? Try using `ping -I 5.0.1.1 3.0.3.1` to do this.
+### EXERCISE 1: Build your routing tables.
+
+The `sleep.sh` file already has some setup in it. Build out the routes for `router3` similar to how you see the routes for `router1` being done. Once you've got the routes created in `sleep.sh`, `restart` your little internet and `hopon router3`. Can you ping `router1` with `ping 5.0.1.1 -w 4`? What about if we try to ping `router1` with packets that originate from `router3` on `100.1.0.0/16`? Try using `ping -I 100.1.3.1 5.0.1.1 -w 4` to do this.
+
+At this point, `router3` knows how to send packets into `5.0.0.0/8`, but `server` doesn't know how to respond. If we try to ping `server` before we add routes telling `server` how to reach `3.0.0.0/8`, `server` will just drop those packets. Let's see what that looks like practically.
+
+```bash
+root@router3:/# ping 5.0.0.100 -w 2
+PING 5.0.0.100 (5.0.0.100) 56(84) bytes of data.
+
+--- 5.0.0.100 ping statistics ---
+2 packets transmitted, 0 received, 100% packet loss, time 1031ms
+```
+
+Here, we can see `router3` attempting to ping `server` at `5.0.0.100`. There are no response packets received and the ping times out after 2 seconds (the `-w 2`). Now let's see what's happening on our `server`, we can watch for those incoming pings with a `tcpdump`:
+
+```bash
+root@server:/# tcpdump -ne
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+18:12:02.367255 02:42:05:00:01:01 > 02:42:05:00:00:64, ethertype IPv4 (0x0800), length 98: 3.0.3.1 > 5.0.0.100: ICMP echo request, id 25, seq 1, length 64
+18:12:03.398455 02:42:05:00:01:01 > 02:42:05:00:00:64, ethertype IPv4 (0x0800), length 98: 3.0.3.1 > 5.0.0.100: ICMP echo request, id 25, seq 2, length 64
+^C
+2 packets captured
+2 packets received by filter
+0 packets dropped by kernel
+```
+
+There are 2 `ICMP echo request`s, but we don't see any `ICMP echo reply`s. Set up the route for `server` to know how to send packets to `3.0.0.0/8` in `sleep.sh`. Once that's setup, `restart`, and can you get `router3` to ping `server`? If it's successful, you should see the `echo reply`s on the `tcpdump` in your `server`. Let's look at that `tcpdump` in a bit of detail.
+
+```bash
+root@server:/# tcpdump -ne
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+18:20:01.902137 02:42:05:00:01:01 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Request who-has 5.0.0.100 tell 5.0.1.1, length 28
+18:20:01.902154 02:42:05:00:00:64 > 02:42:05:00:01:01, ethertype ARP (0x0806), length 42: Reply 5.0.0.100 is-at 02:42:05:00:00:64, length 28
+18:20:01.902340 02:42:05:00:01:01 > 02:42:05:00:00:64, ethertype IPv4 (0x0800), length 98: 3.0.3.1 > 5.0.0.100: ICMP echo request, id 27, seq 1, length 64
+18:20:01.902384 02:42:05:00:00:64 > 02:42:05:00:01:01, ethertype IPv4 (0x0800), length 98: 5.0.0.100 > 3.0.3.1: ICMP echo reply, id 27, seq 1, length 64
+18:20:02.921575 02:42:05:00:01:01 > 02:42:05:00:00:64, ethertype IPv4 (0x0800), length 98: 3.0.3.1 > 5.0.0.100: ICMP echo request, id 27, seq 2, length 64
+18:20:02.921606 02:42:05:00:00:64 > 02:42:05:00:01:01, ethertype IPv4 (0x0800), length 98: 5.0.0.100 > 3.0.3.1: ICMP echo reply, id 27, seq 2, length 64
+6 packets captured
+6 packets received by filter
+0 packets dropped by kernel
+```
+
+The first 2 packets in our `tcpdump` are `ARP` packets, i.e. `Request who-has 5.0.0.100 tell 5.0.1.1` and `Reply 5.0.0.100 is-at 02:42:05:00:00:64`. This is a machine on our network attempting to associate a MAC address with an IP address that it has learned about from an incoming request. For more details on what's happening here, check out the [appendix doc on IP and MAC addresses](../appendix/ip-and-mac-addresses.md).
+
+Next we see 2 couplets of `ICMP echo request` and `ICMP echo reply`s. In these packets, we can see that the IP address of the machine requesting the ping is `3.0.3.1`, or `router3`'s interface on `three-net`. The destination machine is `5.0.0.100`, or `server`'s interface on `five-net`. But! This also tells us the MAC addresses that are involved in the direct communication with `server`. So, when we see `02:42:05:00:01:01 > 02:42:05:00:00:64`, we can use what we know about how docker creates MAC addresses and see that `router1`'s interface on `five-net`, `02:42:05:00:01:01`, is the interface sending the packets to `server`, `02:42:05:00:00:64`.
+
+Now that you have `router3` able to ping `server`, build out the rest of the internet! Check that things work using ping at every step of the way! We recommend building out one "hop" at a time, so from `router3`, build out `router2`'s connections. Check that `router2` can ping `server` and `router5`. Move to `router4`. Can it ping `server`, `router3`, `router5`, and `router2`? Can it ping each router on every interface that router has on any network? Check the `ping -h` help to see how you can originate your ping from a specific interface. Can you ping from a specific interface on a router to a specific interface on another router?
+
+### EXERCISE 2: Troubleshoot your internet
+
+Setup the problem - what is the exercise
+Setup the goal
+define the sleep-exercise file
+describe how to use that file in their next `restart`
+witness that ping between client and server is broken
+step by step troubleshooting
 
 *TODO*
 
