@@ -211,14 +211,171 @@ Next we see 2 couplets of `ICMP echo request` and `ICMP echo reply`s. In these p
 
 Now that you have `router3` able to ping `server`, build out the rest of the internet! Check that things work using ping at every step of the way! We recommend building out one "hop" at a time, so from `router3`, build out `router2`'s connections. Check that `router2` can ping `server` and `router5`. Move to `router4`. Can it ping `server`, `router3`, `router5`, and `router2`? Can it ping each router on every interface that router has on any network? Check the `ping -h` help to see how you can originate your ping from a specific interface. Can you ping from a specific interface on a router to a specific interface on another router?
 
+If you have problems creating your routing tables, the next exercise is going to cover troubleshooting!
+
 ### EXERCISE 2: Troubleshoot your internet
+
+#### What's the problem here
 
 Setup the problem - what is the exercise
 Setup the goal
-define the sleep-exercise file
-describe how to use that file in their next `restart`
-witness that ping between client and server is broken
-step by step troubleshooting
+
+#### Set up your environment
+
+The first thing we'll need to do is get your network set up with a break we can investigate! Lucky for you, we've already created a setup that is broken and ready to use. If you check the `/init/sleep-exercise.sh` file, you'll see a whole set of routing tables created for each of the machines on our network. We want to use this broken setup instead of the working one you created in exercise 1.
+
+If you remember from chapter 1, the way this file is loaded into our docker containers is through the container definition in our chapter's `Dockerfile`. We will want to update the line that says to use `./init/sleep.sh` to instead use `./init/sleep-exercise.sh`, so your `Dockerfile` will look like:
+
+```Dockerfile
+FROM ubuntu
+
+RUN apt-get update && apt-get install -y iproute2 tcpdump iputils-ping net-tools bind9-utils dnsutils vim inetutils-traceroute mtr iptables netcat
+COPY ./init/sleep-exercise.sh /sleep.sh
+
+CMD ["/sleep.sh"]
+```
+
+#### Discover the breakage
+
+So, we've built out our internet! Let's make sure our client can `ping` our server:
+
+```bash
+root@client:/# ping 5.0.0.100 -w 2
+PING 5.0.0.100 (5.0.0.100) 56(84) bytes of data.
+
+--- 5.0.0.100 ping statistics ---
+2 packets transmitted, 0 received, 100% packet loss, time 1046ms
+```
+
+Uh oh! We're not getting any response back from our `ping`! Something is wrong in internet land! Let's go figure out what that could be. When a client isn't receiving response packets from it ping, there's only 3 things that could be going on.
+
+1. The request packets aren't being routed to the destination
+2. The response packets aren't being routed back to the source/client
+3. The machine the packets are being routed to doesn't exist
+
+We can dismiss option 3 here. If the machine didn't exist, we would get an error in our `ping`, e.g:
+
+```bash
+root@client:/# ping 1.0.0.50
+PING 1.0.0.50 (1.0.0.50) 56(84) bytes of data.
+From 1.0.0.100 icmp_seq=1 Destination Host Unreachable
+```
+
+When we see `Destination Host Unreachable`, the packets were correctly routed to the network indicated by the IP address. However, when they got there, the router performed an ARP request for the machine in the `ping`, `1.0.0.50`, but it didn't receive a response. Because the router couldn't find the machine on its network, it responded to the `ping` with an error.
+
+> ASIDE: This could be a potential security leak. It tells an attacker something about what machines exist on the network. In modern network achitechture, this error response will be turned off to prevent unintentionally revealing the network shape.
+
+*TODO* In a future chapter, let's look at firewall settings to prevent this security leak.
+
+So now we know that the issue is a networking issue. We need to find where in our network communication is breaking down, where packets are getting lost, and in what direction those packets are getting lost. We know that this is a networking issue, but what kind? Are we trying to route packets across or to a network that doesn't exist? If that were the case, we would see a similar error message to what we saw when trying to ping a non-existant host:
+
+```bash
+root@client:/# ping 9.0.0.1
+PING 9.0.0.1 (9.0.0.1) 56(84) bytes of data.
+From 1.0.5.1 icmp_seq=1 Destination Net Unreachable
+```
+
+Because we're just getting no response back, that means the packets are being lost somewhere in our internetwork. We need to go find them! Before we get started let's define an investigation process that we can use to help us identify where the problem is.
+
+#### The Investigation
+
+We need some process to help us identify where the problem in out internetwork lives. What we've tried so far is to `ping` from Client to Server. That's causing us to traverse our whole internetwork, which is a lot of machine and a lot of points of potential failure. We can simplify this in a couple ways. First, let's start from the Client. Let's run a `ping` from Client to each of the routers on our internetwork. If we get a successful response back, we know that's not where the problem is.
+
+Once we've figured out where the packets are getting lost, we can jump on that machine and start investigating what's actually happening with our packets.
+
+Let's get started by pinging Router5's interface on the `1.0.0.0/8` network:
+
+```bash
+root@client:/# ping 1.0.5.1 -w 2
+PING 1.0.5.1 (1.0.5.1) 56(84) bytes of data.
+64 bytes from 1.0.5.1: icmp_seq=1 ttl=64 time=0.102 ms
+64 bytes from 1.0.5.1: icmp_seq=2 ttl=64 time=0.140 ms
+
+--- 1.0.5.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1010ms
+rtt min/avg/max/mdev = 0.102/0.121/0.140/0.019 ms
+```
+
+Sweet! It looks like that connection is operating as expected. Now, let's ping Router5's interface on `100.1.0.0/16`:
+
+```bash
+root@client:/# ping 100.1.5.1 -w 2
+PING 100.1.5.1 (100.1.5.1) 56(84) bytes of data.
+64 bytes from 100.1.5.1: icmp_seq=1 ttl=64 time=0.151 ms
+64 bytes from 100.1.5.1: icmp_seq=2 ttl=64 time=0.421 ms
+
+--- 100.1.5.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1004ms
+rtt min/avg/max/mdev = 0.151/0.286/0.421/0.135 ms
+```
+
+This one is a little tricky in what we're actually learning. When Client sends the ICMP packets to Router5, the packets are being received by Router5's `1.0.0.0/8` interface. However, rather than sending those packets to the `100.1.0.0/16` interface, Router5 sees that it is the destination machine and responds back to Client directly through the `5.0.0.0/8` interface. We can see this by capturing packets on each interface during our `ping`. 
+
+We need to start by finding the interface definitions for Router5 for each network:
+
+```bash
+root@router5:/# ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+168: eth1@if169: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:01:00:05:01 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 1.0.5.1/8 brd 1.255.255.255 scope global eth1
+       valid_lft forever preferred_lft forever
+182: eth0@if183: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:64:01:05:01 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 100.1.5.1/16 brd 100.1.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+190: eth2@if191: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:c8:01:01:13 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 200.1.1.19/29 brd 200.1.1.23 scope global eth2
+       valid_lft forever preferred_lft forever
+```
+
+From this, we see that Router5's `100.1.0.0/16` interface is `eth0` and its `1.0.0.0/8` interface is `eth1`. This configuration is not fixed. If you are running this locally, you may see these values differently. Check your own configuration.
+
+Now that we know the interface Router5 is using on each network, we can use `tcpdump` to watch traffic on each interface. Open 2 different windows on Router5 and run your `tcpdump`s simultaneously:
+
+Here's what we get in the window where we're listening on the `100.1.0.0/16` interface:
+
+```bash
+root@router5:/# tcpdump -ni eth0
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+^C
+0 packets captured
+0 packets received by filter
+0 packets dropped by kernel
+```
+
+There's nothing there! But, checking the window for the `1.0.0.0/8` interface, we see all the packets handled there:
+
+```bash
+root@router5:/# tcpdump -ni eth1
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on eth1, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+18:57:39.971463 IP 1.0.0.100 > 100.1.5.1: ICMP echo request, id 12, seq 1, length 64
+18:57:39.971485 IP 100.1.5.1 > 1.0.0.100: ICMP echo reply, id 12, seq 1, length 64
+18:57:41.015885 IP 1.0.0.100 > 100.1.5.1: ICMP echo request, id 12, seq 2, length 64
+18:57:41.015917 IP 100.1.5.1 > 1.0.0.100: ICMP echo reply, id 12, seq 2, length 64
+18:57:45.013855 ARP, Request who-has 1.0.0.100 tell 1.0.5.1, length 28
+18:57:45.013910 ARP, Request who-has 1.0.5.1 tell 1.0.0.100, length 28
+18:57:45.013929 ARP, Reply 1.0.5.1 is-at 02:42:01:00:05:01, length 28
+18:57:45.013946 ARP, Reply 1.0.0.100 is-at 02:42:01:00:00:64, length 28
+^C
+8 packets captured
+8 packets received by filter
+0 packets dropped by kernel
+```
+
+While we didn't see any packets on `eth0`, we see both the ICMP request and reply packets on `eth1`, thus showing that Router5 is successfully handling the `ping`. This tells us that Router5 does have an interface correctly configured on `100.1.0.0/16`.
+
+> ASIDE: At the end of this chapter, if you would like to come back and see what the `tcpdump` looks like if that interface isn't properly configured, try deleting the interface with `ip addr del 100.1.5.1/16 dev eth0`. If you delete the interface before the end of the chapter, you'll need to `restart` your containers because removing that interface will screw up our entire internet!
+
+The next step is to see if we can `ping` each interface on each of the other routers on the way to the server on our internet. So, our next step is to `ping` Router3's interface on `100.1.0.0/16`.
+
+__PICKING UP HERE__
 
 *TODO*
 
