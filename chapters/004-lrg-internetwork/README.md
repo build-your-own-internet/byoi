@@ -37,12 +37,12 @@ the list is a call to that `httpserver` function.
 
 Here's what we expect the internet to look like at the end of this chapter:
 
-```
+```markdown
                                           200.1.1.0/29
                                 ┌─────────────────────────┐
-               200.1.1.8/29     │ (.2)               (.3) │
+               200.1.1.8/29     │ (.2)               (.3) │(eth2)
              ┌────────────────Router2                  Router4─────┐
-             │ (.11)            │                        │    (.18)│
+             │ (.11)            │                  (eth0)│    (.18)│(eth1)
              │             ─────┴─┬──────────────────────┴─┬─      │200.1.1.16/29
              │                    │       100.1.0.0/16     │       │
              │                    │                        │       │
@@ -110,6 +110,12 @@ internetwork looks like and it makes decisions on its own for the most efficient
 way to send the packet to its destination. The internet, as we know today, is not
 possible without numerous routers facilitating the requests.
 
+### IP Masquerade
+
+If you checked the docker-compose file that generates the machines and networks for our internetwork, you probably saw that each network definition included a `com.docker.network.bridge.enable_ip_masquerade: 'false'`. We discovered in trying to build out our initial internetwork that docker uses a default router to communicate between networks. This default router was intercepting packets that we were attempting to send between networks. This is intended behavior for docker! In most cases when you're using docker, you don't want to have to setup all the network configurations! But... in our case... we WANT to be able to configure out network at a minute level. Sooo... adding that `enable_ip_masquerade: false` line removes the default router on the network. 
+
+If you'd like to see the notes from our investigation, checkout [docker-routing-pitfalls.md](../appendix/docker-routing-pitfalls.md). Disclaimer: these notes are not the refined and beauteous things you are witnessing in the chapters. These are notes. But they do demonstrate our discovery process for identifying the problem.
+
 ### How to read an IP address; i.e. octets and subnets
 
 This requires a long and detailed description to really understand. For the sake of keeping this document brief, we've moved the explanation for this to [prefixes-and-subnet-masks.md](../appendix/prefixes-and-subnet-masks.md) in the appendix. Please read that document and come back here when you feel confident you have a basic understanding of what it contains!
@@ -158,9 +164,7 @@ case $HOSTNAME in
 esac
 ```
 
-## Exercise time
-
-### EXERCISE 1: Build your routing tables.
+## Exercise time: Build your routing tables
 
 The `sleep.sh` file already has some setup in it. Build out the routes for `router3` similar to how you see the routes for `router1` being done. Once you've got the routes created in `sleep.sh`, `restart` your little internet and `hopon router3`. Can you ping `router1` with `ping 5.0.1.1 -w 4`? What about if we try to ping `router1` with packets that originate from `router3` on `100.1.0.0/16`? Try using `ping -I 100.1.3.1 5.0.1.1 -w 4` to do this.
 
@@ -213,14 +217,14 @@ Now that you have `router3` able to ping `server`, build out the rest of the int
 
 If you have problems creating your routing tables, the next exercise is going to cover troubleshooting!
 
-### EXERCISE 2: Troubleshoot your internet
+## Troubleshoot your internet
 
-#### What's the problem here
+### What's the problem here
 
 Setup the problem - what is the exercise
 Setup the goal
 
-#### Set up your environment
+### Set up your environment
 
 The first thing we'll need to do is get your network set up with a break we can investigate! Lucky for you, we've already created a setup that is broken and ready to use. If you check the `/init/sleep-exercise.sh` file, you'll see a whole set of routing tables created for each of the machines on our network. We want to use this broken setup instead of the working one you created in exercise 1.
 
@@ -235,7 +239,7 @@ COPY ./init/sleep-exercise.sh /sleep.sh
 CMD ["/sleep.sh"]
 ```
 
-#### Discover the breakage
+### Discover the breakage
 
 So, we've built out our internet! Let's make sure our client can `ping` our server:
 
@@ -277,7 +281,7 @@ From 1.0.5.1 icmp_seq=1 Destination Net Unreachable
 
 Because we're just getting no response back, that means the packets are being lost somewhere in our internetwork. We need to go find them! Before we get started let's define an investigation process that we can use to help us identify where the problem is.
 
-#### The Investigation
+### The Investigation
 
 We need some process to help us identify where the problem in out internetwork lives. What we've tried so far is to `ping` from Client to Server. That's causing us to traverse our whole internetwork, which is a lot of machine and a lot of points of potential failure. We can simplify this in a couple ways. First, let's start from the Client. Let's run a `ping` from Client to each of the routers on our internetwork. If we get a successful response back, we know that's not where the problem is.
 
@@ -309,7 +313,7 @@ PING 100.1.5.1 (100.1.5.1) 56(84) bytes of data.
 rtt min/avg/max/mdev = 0.151/0.286/0.421/0.135 ms
 ```
 
-This one is a little tricky in what we're actually learning. When Client sends the ICMP packets to Router5, the packets are being received by Router5's `1.0.0.0/8` interface. However, rather than sending those packets to the `100.1.0.0/16` interface, Router5 sees that it is the destination machine and responds back to Client directly through the `5.0.0.0/8` interface. We can see this by capturing packets on each interface during our `ping`. 
+This one is a little tricky in what we're actually learning. When Client sends the ICMP packets to Router5, the packets are being received by Router5's `1.0.0.0/8` interface. However, rather than sending those packets to the `100.1.0.0/16` interface, Router5 sees that it is the destination machine and responds back to Client directly through the `1.0.0.0/8` interface. We can see this by capturing packets on each interface during our `ping`.
 
 We need to start by finding the interface definitions for Router5 for each network:
 
@@ -375,177 +379,94 @@ While we didn't see any packets on `eth0`, we see both the ICMP request and repl
 
 The next step is to see if we can `ping` each interface on each of the other routers on the way to the server on our internet. So, our next step is to `ping` Router3's interface on `100.1.0.0/16`.
 
-__PICKING UP HERE__
+```bash
+root@client:/# ping 100.1.3.1 -w 2
+PING 100.1.3.1 (100.1.3.1) 56(84) bytes of data.
+64 bytes from 100.1.3.1: icmp_seq=1 ttl=63 time=0.441 ms
+64 bytes from 100.1.3.1: icmp_seq=2 ttl=63 time=0.193 ms
+
+--- 100.1.3.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1014ms
+rtt min/avg/max/mdev = 0.193/0.317/0.441/0.124 ms
+```
+
+Continue on `ping`ing each interface on each router until you find where the problem is.
+
+```bash
+root@client:/# ping -w 2 5.0.1.1
+PING 5.0.1.1 (5.0.1.1) 56(84) bytes of data.
+
+--- 5.0.1.1 ping statistics ---
+2 packets transmitted, 0 received, 100% packet loss, time 1053ms
+```
+
+Awwwww,SNAP! Look at that! What we've got here is a failure to communicate! So now, Client isn't receiving a response to packets it sends to Router1 on `5.0.0.0/8`. This means that either the packets aren't getting to Router1 on `5.0.0.0/8` OR Router1's response packets aren't being routed correctly back to Client. In most circumstances, there would be two potential problems that could be causing this packet loss:
+
+* Some router on the path between Client => Router1 has a wrong path to the  `5.0.0.0/8` network and cannot route packets there
+* Some router on the path between Router1 => Client has a wrong path to the  `1.0.0.0/8` network and cannot route packets there
+
+However, because we were approaching this methodically, we already tested the route back at every step by checking that our `ping` worked on each interface on each router on the expected path from Client => Router1. So now, we need to find where the breakdown on the way to `5.0.0.0/8` is happening. Now that we know where the communication is failing, we can work back towards our Client trying to `ping` `5.0.0.0/8`.
+
+Let's start with Router3. We'll ping Router1 on `5.0.0.0/8` from BOTH interfaces on Router3:
+
+```bash
+root@router3:/# ping 5.0.1.1 -w 2 -I 3.0.3.1
+PING 5.0.1.1 (5.0.1.1) from 3.0.3.1 : 56(84) bytes of data.
+64 bytes from 5.0.1.1: icmp_seq=1 ttl=64 time=0.073 ms
+64 bytes from 5.0.1.1: icmp_seq=2 ttl=64 time=0.092 ms
+
+--- 5.0.1.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1048ms
+rtt min/avg/max/mdev = 0.073/0.082/0.092/0.009 ms
+```
+
+```bash
+root@router3:/# ping 5.0.1.1 -w 2 -I 100.1.3.1
+PING 5.0.1.1 (5.0.1.1) from 100.1.3.1 : 56(84) bytes of data.
+64 bytes from 5.0.1.1: icmp_seq=1 ttl=64 time=0.219 ms
+64 bytes from 5.0.1.1: icmp_seq=2 ttl=64 time=0.137 ms
+
+--- 5.0.1.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1041ms
+rtt min/avg/max/mdev = 0.137/0.178/0.219/0.041 ms
+```
+
+Successful! That's not the problem. Now we move out one hop to Router5:
+
+```bash
+root@router5:/# ping -w 2 5.0.1.1 -I 100.1.5.1
+PING 5.0.1.1 (5.0.1.1) from 100.1.5.1 : 56(84) bytes of data.
+
+--- 5.0.1.1 ping statistics ---
+2 packets transmitted, 0 received, 100% packet loss, time 1014ms
+```
+
+Oh no! There's the breakage! We're narrowing in on the problem! This means that Router5 has a bad route TO `5.0.0.0/8`. We know the problem is TO that network because we were able to have successful `ping`s on each interface hopping away from that network. So now we check the routing table for Router5 with `ip route`:
+
+```bash
+root@router5:/# ip route
+1.0.0.0/8 dev eth1 proto kernel scope link src 1.0.5.1
+3.0.0.0/8 via 100.1.3.1 dev eth0
+5.0.0.0/8 via 200.1.1.18 dev eth2
+100.1.0.0/16 dev eth0 proto kernel scope link src 100.1.5.1
+200.1.1.0/29 via 200.1.1.18 dev eth2
+200.1.1.8/29 via 100.1.2.1 dev eth0
+200.1.1.16/29 dev eth2 proto kernel scope link src 200.1.1.19
+```
+
+Uh oh! The route to get to `5.0.0.0/8` is running through Router4 on `200.1.1.16/29`... That's not what we're expecting. We almost certainly have a routing loop there, which means that packets are being passed back and forth between the same machines without ever reaching their destination.
+
+**EXERCISE** Now that you know where the problem is, go into `sleep-exercise.sh` for this chapter, fix the route, and `restart` your containers! Can you ping Server from Client now?
+
+Notes:
+
+Another tool that could be used is `tcpdump`. is a heavier tool. networks aren't quiet, so you have to filter. `ping` is simple and tells us exactly what we're looking at.
+
+
+
 
 *TODO*
 
-add another exercise for seeing the client be able to make an http request to the server
-* tell them to use a specific broken set of routing 
-* diagnose the problem - get to use tcpdump/ping/ip stuff...
-review and clean up both readme and docker-routing-pitfalls
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Let's investigate what just happened there...
-
-## Now let's test out our internetwork!
-
-We have a client. We have a server. Let's get that client making requests to our server!
-
-First, let's `hopon client` and make sure we can reach our server with a `ping 5.0.0.100`. 
-
-### UH OH! That shit is broken! Let's fix it.
-
-When we see our ping go out, we get no response back... When we CTRL+c our way out of our ping, we get 100% packet loss... :thumbs-down: We need to do some investigationing to figure out where our packets are going and why they aren't going to our server. 
-
-#### General troubleshooting thought process
-
-We need to define a process that will help us figure out why our ping isn't succeeding. Something about our routes defined in sleep-exercise.sh isn't working. Let's think this through...
-
-- asymetric routing makes it harder to troubleshoot (not NECESSARILY a problem)
-- what are the possible causes for the ping to not go through:
-  * some router along the path doesn't know how to get to the destination
-  * some router along the path doesn't know how to get back to the source
-  * a wrong path is defined on the path somewhere in the process (e.g. routers pointing to each other)
-  * client doesn't have a route to the destination IP
-  * server doesn't have a route to the source IP
-
-Here's our strategy:
-
-We're trying to get from Client to Server, and that's not working. But... that's traversing our whole internet. Let's make this a little simpler by starting with just Router1. Can Router1 ping Server? Yes? Sweet! Let's move one hop out and jump on Router3. Can Router3 ping server? It can't... So, let's use the tools we've explored in previous chapters to discover why!
-
-#### A discovery process
-
-Ok, let's look at the packets carefully and how they are being routed using `tcpdump`. We expect, based on the network diagram at the beginning of this document, that router3 should have a path to the server via router1. However, typos are common in computing so we need to figure out why the expectation does not match reality.
-
-Towards that goal, let's hop on to router 1 and figure out which interface is on three-net.
-
-```bash
-ip addr
-...
-91: eth2@if92: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
-    link/ether 02:42:03:00:01:01 brd ff:ff:ff:ff:ff:ff link-netnsid 0
-    inet 3.0.1.1/8 brd 3.255.255.255 scope global eth2
-       valid_lft forever preferred_lft forever
-...
-```
-
-`eth2` is the interface. Router3 and router1 both have interfaces listening on three-net. We would expect packets from router3 to router1 going over three-net as that is the most efficient route. So we are going to watch for those packets on router1 on it's three-net interface (`eth2`) to ensure that they are arriving where they should be. To do that, we will hop on to router1 and run `tcpdump` listening on `eth2` interface. With that running, in a separate terminal session, we will hop on to router3 and issue a ping to server. We also need to run `tcpdump` on router3 for each of it's interfaces to prove packets are leaving as expected.
-
-```bash
-root@router3:/# ping 5.0.0.100 -w 2
-PING 5.0.0.100 (5.0.0.100) 56(84) bytes of data.
-
---- 5.0.0.100 ping statistics ---
-2 packets transmitted, 0 received, 100% packet loss, time 1005ms
-```
-
-Here we can see that our ping has 100% packet loss. Not good... Let's resend that ping while we listen on all of router3s interfaces to see what's happening with our packets:
-
-```bash
-root@router3:/# tcpdump -nvi eth2
-tcpdump: listening on eth2, link-type EN10MB (Ethernet), snapshot length 262144 bytes
-```
-
-```bash
-root@router3:/# tcpdump -nvi eth1
-tcpdump: listening on eth1, link-type EN10MB (Ethernet), snapshot length 262144 bytes
-```
-
-```bash
-root@router3:/# tcpdump -nvi eth0
-tcpdump: listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
-18:42:43.059083 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 100.1.2.1 tell 100.1.3.1, length 28
-18:42:43.059123 ARP, Ethernet (len 6), IPv4 (len 4), Reply 100.1.2.1 is-at 02:42:64:01:02:01, length 28
-18:42:46.831414 IP (tos 0x0, ttl 64, id 60255, offset 0, flags [DF], proto ICMP (1), length 84)
-    100.1.3.1 > 5.0.0.100: ICMP echo request, id 15, seq 1, length 64
-18:42:47.858788 IP (tos 0x0, ttl 64, id 60352, offset 0, flags [DF], proto ICMP (1), length 84)
-    100.1.3.1 > 5.0.0.100: ICMP echo request, id 15, seq 2, length 64
-18:43:04.658990 IP6 (hlim 255, next-header ICMPv6 (58) payload length: 16) fe80::ec1e:56ff:fe3e:ae11 > ff02::2: [icmp6 sum ok] ICMP6, router solicitation, length 16
-	  source link-address option (1), length 8 (1): ee:1e:56:3e:ae:11
-```
-
-Interesting! Here we're seeing the ICMP ping requests going out on the one-hundo-net interface! Uh oh! We were expecting these to go out the three-net interface! Let's look at the routing table for router3 in sleep.sh:
-
-```bash
-  (router3)
-    ip route add 5.0.0.0/8 via 100.1.2.1
-    ip route add 1.0.0.0/8 via 100.1.2.1
-    ip route add 200.1.1.8/29 via 3.0.1.1
-    ip route add 200.1.1.0/29 via 100.1.2.1
-    ip route add 200.1.1.16/29 via 100.1.4.1
-    ;;
-```
-
-Here, we can see we have the route to five-net defined as going through the one-hundo-net interface. Let's change that to go out the three-net interface instead; `3.0.1.1`. Once that's updated, let's `restart` our routers and `hopon router3` again to test that ping:
-
-```bash
-root@router3:/# ping 5.0.0.100 -w 2
-PING 5.0.0.100 (5.0.0.100) 56(84) bytes of data.
-64 bytes from 5.0.0.100: icmp_seq=1 ttl=63 time=0.087 ms
-64 bytes from 5.0.0.100: icmp_seq=2 ttl=63 time=0.199 ms
-
---- 5.0.0.100 ping statistics ---
-2 packets transmitted, 2 received, 0% packet loss, time 1016ms
-rtt min/avg/max/mdev = 0.087/0.143/0.199/0.056 ms
-```
-
-HAHA! Victory! Can the client reach the server now? 
-
-```bash
-root@client:/# ping 5.0.0.100 -w 2
-PING 5.0.0.100 (5.0.0.100) 56(84) bytes of data.
-64 bytes from 5.0.0.100: icmp_seq=1 ttl=61 time=0.277 ms
-64 bytes from 5.0.0.100: icmp_seq=2 ttl=61 time=0.335 ms
-
---- 5.0.0.100 ping statistics ---
-2 packets transmitted, 2 received, 0% packet loss, time 1057ms
-rtt min/avg/max/mdev = 0.277/0.306/0.335/0.029 ms
-```
-
-YESSSS! If this hadn't resolved the issue, we could have continued the pattern of hopon a router slightly further away from the server until we found a router where the ping was not successful. At that point, we would use the same combination of `ping`, `tcpdump`, and `ip addr` to troubleshoot where in the network the problem was coming from. Perhaps we could even make a checklist of requests that we would expect to be successful, and run through them, like so:
-
-* ping client => router5 one-net :check:
-* ping client => router5 hundo-net :check:
-* ping client => router3 hundo-net :check:
-* ping client => router3 three-net :NOPE:
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## IP Masquerade
-
-If you checked the docker-compose file that generates the machines and networks for our internetwork, you probably saw that each network definition included a `com.docker.network.bridge.enable_ip_masquerade: 'false'`. We discovered in trying to build out our initial internetwork that docker uses a default router to communicate between networks. This default router was intercepting packets that we were attempting to send between networks. This is intended behavior for docker! In most cases when you're using docker, you don't want to have to setup all the network configurations! But... in our case... we WANT to be able to configure out network at a minute level. Sooo... adding that `enable_ip_masquerade: false` line removes the default router on the network. 
-
-If you'd like to see the notes from our investigation, checkout [docker-routing-pitfalls.md](../appendix/docker-routing-pitfalls.md). Disclaimer: these notes are not the refined and beauteous things you are witnessing in the chapters. These are notes. But they do demonstrate our discovery process for identifying the problem.
+* review and clean up both readme and docker-routing-pitfalls
+* Flesh out the Notes (starting line 461)
+* investigate why router4 is dropping packets on the broken configuration...
