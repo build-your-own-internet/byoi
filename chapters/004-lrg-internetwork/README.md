@@ -1,39 +1,14 @@
-#TODO
-
-* [ ] Start from scratch and take more thorough notes explaining the process of
-  how we uncovered the issue
-* [ ] Flesh out TODOs in the old notes and incorporate them in the new README
-* [ ] Explain changes to docker-compose to make docker work correct and point to docker troubleshooting in appendix
-* [ ] Whenever we see a docker troubleshooting thing, move it to the appendix
-
-
 # Let's make that Internet MOAR BIGGER!
 
-## Goals for this section:
+## Goals for this section
 
 Let's use the tools and processes we've already discovered to make a much larger
 internetwork! In this case, we'll want to be able to traverse several networks
 to get machines who are not directly connected to be able to communicate with
-each other. Looking at the network diagram below, we can see that the `Client`
-machine is connected to the `1.0.0.0/8` network. We want the `Client` machine to
-be able to traverse our internetwork to reach the `Server` machine connected to
-the `5.0.0.0/8` to request a some HTML. 
-
-A bit about that HTML: If you check the `init/sleep.sh` file for this chapter,
-you'll see that we added a `httpserver` function:
-
-```bash
-  while true; do
-    echo -e "HTTP/1.1 200 OK\r\n$(date)\r\n\r\n<h1>hello world from $(hostname) on $(date)</h1>" | nc -vl 8080; 
-  done
-```
-
-This function is basically using a `netcat` hack to respond to any requests that
-come in on port 8080 with the very basic HTTP response that includes a tiny
-little HTML document. It's a clever solution so we don't actually have to build
-an HTTP server. If it doesn't make sense, don't worry about it... ✨_IT JUST
-WORKS_✨ In the setup for the server in `sleep.sh`, you'll see the last item in
-the list is a call to that `httpserver` function.
+each other. Looking at the network diagram below, we can see that the `client`
+machine is connected to the `1.0.0.0/8` network. We want `client` to
+be able to traverse our internetwork to reach `server` connected to
+`5.0.0.0/8`.
 
 Here's what we expect the internet to look like at the end of this chapter:
 
@@ -75,7 +50,7 @@ infrastructure, it's much easier to manage things when you assign roles to them
 that dictate how things are configured. Hence, we have Server(s), Client(s) and
 Router(s) instead of our lovable pets.
 
-There is an industry specific phrase that matches the theme here too. Within
+There is an industry-specific phrase that matches the theme here too. Within
 infrastructure industry, the popular way to see components of the infrastracture
 is as "cattle, not pets". This is a mean way of saying we only care about the
 larger system and we care less about details of individual components. Those
@@ -99,20 +74,15 @@ definition is sufficient for our current use case.
 
 A server is any machine whose purpose is to respond to a network request. If the
 server fails to serve the request, it can return an appropriate error back to
-the client. In our case, we have hacked together a very simple HTTP server that
-responds back to any request with a simple HTML.
+the client.
 
 #### Router
 
-A router is any machine whose purpose is to connect networks together. It does
-so by forwarding packets to the next hop. Each router has a picture of what the
-internetwork looks like and it makes decisions on its own for the most efficient
-way to send the packet to its destination. The internet, as we know today, is not
-possible without numerous routers facilitating the requests.
+A router is any machine whose purpose is to connect networks together. It does so by forwarding packets to the next hop. Each router has a routing table which serves much like a sign post on a highway: it tells the router where to send packets next on their way to their final destination. Each router makes decisions on its own for the most efficient way to send the packet to its destination. The internet, as we know today, is not possible without numerous routers facilitating the requests.
 
 ### IP Masquerade
 
-If you checked the docker-compose file that generates the machines and networks for our internetwork, you probably saw that each network definition included a `com.docker.network.bridge.enable_ip_masquerade: 'false'`. We discovered in trying to build out our initial internetwork that docker uses a default router to communicate between networks. This default router was intercepting packets that we were attempting to send between networks. This is intended behavior for docker! In most cases when you're using docker, you don't want to have to setup all the network configurations! But... in our case... we WANT to be able to configure out network at a minute level. Sooo... adding that `enable_ip_masquerade: false` line removes the default router on the network. 
+If you checked the docker-compose file that generates the machines and networks for our internetwork, you probably saw that each network definition included a `com.docker.network.bridge.enable_ip_masquerade: 'false'`. We discovered in trying to build out our initial internetwork that docker uses a default router to communicate between networks. This default router was intercepting packets that we were attempting to send between networks. This is intended behavior for docker! In most cases when you're using docker, you don't want to have to setup all the network configurations! But... in our case... we WANT to be able to configure our network at a minute level. Sooo... adding that `enable_ip_masquerade: false` line removes the default router on the network.
 
 If you'd like to see the notes from our investigation, checkout [docker-routing-pitfalls.md](../appendix/docker-routing-pitfalls.md). Disclaimer: these notes are not the refined and beauteous things you are witnessing in the chapters. These are notes. But they do demonstrate our discovery process for identifying the problem.
 
