@@ -15,9 +15,9 @@ Here's what we expect the internet to look like at the end of this chapter:
 ```markdown
                                           200.1.1.0/29
                                 ┌─────────────────────────┐
-               200.1.1.8/29     │ (.2)               (.3) │(eth2)
+               200.1.1.8/29     │ (.2)               (.3) │
              ┌────────────────Router2                  Router4─────┐
-             │ (.11)            │                  (eth0)│    (.18)│(eth1)
+             │ (.11)            │                        │    (.18)│
              │             ─────┴─┬──────────────────────┴─┬─      │200.1.1.16/29
              │                    │       100.1.0.0/16     │       │
              │                    │                        │       │
@@ -191,6 +191,7 @@ If you have problems creating your routing tables, the next exercise is going to
 
 ### What's the problem here
 
+**TODO**
 Setup the problem - what is the exercise
 Setup the goal
 
@@ -440,3 +441,4 @@ Another tool that could be used is `tcpdump`. is a heavier tool. networks aren't
 * review and clean up both readme and docker-routing-pitfalls
 * Flesh out the Notes (starting line 461)
 * investigate why router4 is dropping packets on the broken configuration...
+* fix sleep-exercise.sh
