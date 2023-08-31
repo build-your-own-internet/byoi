@@ -1,19 +1,9 @@
 # build-your-own-internet
 
 ## How to approach this repo
-The intention behind this project is discovery and understanding. The idea is to
-explore how the internet is put together and use common industry tools to see
-and understand all the communications necessary to make the services and apps we
-use work.
+The intention behind this project is discovery and understanding. The idea is to explore how the internet is put together and use common industry tools to see and understand all the communications necessary to make the services and apps we use work.
 
-We decided to take notes that create a reproducable experience. We document our
-questions, discovery, and our processes so other people who may want to take a
-similar journey can have a path to follow. We have broken up our exploration
-into chapters. Each chapter has a README that documents our exploration and
-**the final state** for that chapter of whatever files we create or modify in
-our exploration. There is, at least as of yet, very little actual software to
-run from this repo. Instead, the intent is to guide the experience and the
-learning process.
+We decided to take notes that create a reproducible experience. We document our questions, discovery, and our processes so other people who may want to take a similar journey can have a path to follow. We have broken up our exploration into chapters. Each chapter has a README that documents our exploration and **the final state** for that chapter of whatever files we create or modify in our exploration. There is, at least as of yet, very little actual software to run from this repo. Instead, the intent is to guide the experience and the learning process.
 
 ## Pre-requisites
 
@@ -28,10 +18,7 @@ learning process.
 
 ## DISCLAIMERS
 
-We've put some effort into explaining the commands that we're using. However, if
-we use a command with a flag that doesn't have explanation, check the command's
-`help` for more details; e.g. `ping --help`. Alternatively, check the command's
-manpage; e.g. `man ping`.
+We've put some effort into explaining the commands that we're using. However, if we use a command with a flag that doesn't have explanation, check the command's `help` for more details; e.g. `ping --help`. Alternatively, check the command's manpage; e.g. `man ping`.
 
 ## General thoughts
 
@@ -82,10 +69,9 @@ What if we build a little internet?
 - Build our own BGP implementation?
 - Build our own DNS server?
 
-### Side Quests? 
+### Side Quests?
 
-Here's some interesting topics that came up in the course of our exploration
-that didn't fit in at the time. We may come back to these?
+Here's some interesting topics that came up in the course of our exploration that didn't fit in at the time. We may come back to these?
 
 - DHCP
 - Proxy ARP
