@@ -1,6 +1,6 @@
 # Getting Started
 
-## Goals for this section:
+## Goals for this section
 
 We want to build a simple network where two machines can ping each other. To keep this simple and remote pairing friendly, we want to use docker containers to simulate machines on this network. We will use some simple common networking tools to understand the shape of our network and how and when successful communication is occurring.
 
@@ -33,8 +33,8 @@ To start with, we want to create 2 containers. We can use the same Docker image 
 1. `docker run -d --cap-add=NET_ADMIN --name=pippin $DOCKER_IMAGE`
 1. `docker run -d --cap-add=NET_ADMIN --name=boudi $DOCKER_IMAGE`
 
-**NOTE:**
-What is this `--cap-add=NET_ADMIN` all about, you ask? Check the "Problem Solving" section at the bottom for more information! Also see [this Stack Overflow post](https://stackoverflow.com/questions/27708376/why-am-i-getting-an-rtnetlink-operation-not-permitted-when-using-pipework-with-d) for more details.
+>**NOTE:**
+> What is this `--cap-add=NET_ADMIN` all about, you ask? Check the "Problem Solving" section at the bottom for more information! Also see [this Stack Overflow post](https://stackoverflow.com/questions/27708376/why-am-i-getting-an-rtnetlink-operation-not-permitted-when-using-pipework-with-d) for more details.
 
 ## Simple Network
 
@@ -46,7 +46,7 @@ What is this `--cap-add=NET_ADMIN` all about, you ask? Check the "Problem Solvin
 
 2 or more machines on different networks that can communicate with each other. There are special devices (routers) that are used to fascilitate communication between each machine.
 
-### Wait... There's a default network?!
+### Wait... There's a default network?
 
 When we initially started exploring building out our network, we were surprised to see that we could already `ping` between our containers. But that's not what we want. Instead, we want the experience of manually building out the network.  Part of this is teaching the hosts on the network how to reach each other. We don't want our hosts to be able to `ping` each other!
 
@@ -180,13 +180,14 @@ You can see that on this host, `eth1` is associated with the IP address `172.19.
 
 You'll want to repeat this process on the other container (using `ip addr` to show the IP and `ip addr del` to remove it).
 
-**NOTE** `ip addr` is an abbreviation for the actual command, `ip address`
+>**NOTE:**
+>`ip addr` is an abbreviation for the actual command, `ip address`
 
 There is a bit of a tradition within networking CLIs to allow users to abbreviate commands (cisco CLIs are famous for this), and the `ip` command carries this forward.
 
 ### Add our own IP address configuration
 
-NEXT, let's add IP addresses to each of these containers using the `ip addr add` command. In this example, we want to use the `10.1.1.0/24` network for these containers. *NOTE*: we are choosing this IP address because the `10.0.0.0/8` network is one of the networks identified in [RFC 1918](https://www.rfc-editor.org/rfc/rfc1918) that is exclusively used for *private* networking. This means that any IP packet that reaches the internet with this IP address will be dropped. This is helpful in our tutorial because if our system is misconfigured to route to the Internet, we don't want a false-positive for ping tests. Therefore on the first container, we use the command
+NEXT, let's add IP addresses to each of these containers using the `ip addr add` command. In this example, we want to use the `10.1.1.0/24` network for these containers. _NOTE_: we are choosing this IP address because the `10.0.0.0/8` network is one of the networks identified in [RFC 1918](https://www.rfc-editor.org/rfc/rfc1918) that is exclusively used for _private_ networking. This means that any IP packet that reaches the internet with this IP address will be dropped. This is helpful in our tutorial because if our system is misconfigured to route to the Internet, we don't want a false-positive for ping tests. Therefore on the first container, we use the command
 
 `ip addr add 10.1.1.3/24 dev eth1`
 
@@ -256,7 +257,7 @@ On the container that is being pinged (pippin), we see quite a bit more informat
 
 After seeing the ARP packets go back and forth (which establish the ability for those two containers to talk to each other on the local network), we see the ICMP echo-request and echo-reply packets go back and forth in our `tcpdump` output.
 
-## Automate that shit!
+## Automate that shit
 
 At this point, there are a whole bunch of manual steps to get all this going.  Now that we have proven to ourselves that we know how to do this all manually, let's automate it! We have more containers to bring up and networks to build, and doing that all by hand will be a lot of toil.
 
@@ -285,25 +286,25 @@ Sometimes, when experimenting with our containers and trying new things with our
 _Kill All Containers_
 
 ```
-$ docker container ls
+docker container ls
 ```
 
 Grab the container ID for each container and run
 
 ```
-$ docker container kill <container_id>
+docker container kill <container_id>
 ```
 
 _Kill All Networks_
 
 ```
-$ docker network prune
+docker network prune
 ```
 
 _Clean Sweep The System_
 
 ```
-$ docker system prune
+docker system prune
 ```
 
 ### Cannot edit IP addresses?

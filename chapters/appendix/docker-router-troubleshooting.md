@@ -1,11 +1,11 @@
-# Let's make that Internet MOAR BIGGER!
+# Let's make that Internet MOAR BIGGER
 
-## Goals for this section:
+## Goals for this section
 
 Let's use the tools and processes we've already discovered to make a much larger
 internetwork! In this case, we'll want to be able to traverse several networks
 to get machines who are not directly connected to be able to communicate with
-each other. Looking at the network diagram below, we can see that the `Client` machine is connected to the `1.0.0.0/8` network. We want the `Client` machine to be able to traverse our internetwork to reach the `Server` machine connected to the `5.0.0.0/8` to request a basic HTML document. 
+each other. Looking at the network diagram below, we can see that the `Client` machine is connected to the `1.0.0.0/8` network. We want the `Client` machine to be able to traverse our internetwork to reach the `Server` machine connected to the `5.0.0.0/8` to request a basic HTML document.
 
 **TODO: describe something about where the HTML document is and how the user can see it**
 
@@ -41,8 +41,8 @@ Simple, no?!
 
 ## Vocab
 
-* `subnet`: 
-* `prefix`: 
+* `subnet`:
+* `prefix`:
 
 ## Asides
 
@@ -102,22 +102,23 @@ possible without numerous routers facilitating the requests.
 ### How to read a MAC address
 
 *TODO*: describe how we think Docker is assigning mac address in a specific pattern where IPV4 addresses are converted to HEX. This likely should go closer to where we first start looking at MAC addresses.
-## Now let's test out our internetwork!
+
+## Now let's test out our internetwork
 
 We have a client. We have a server. Let's get that client making requests to our server!
 
-First, let's `hopon client` and make sure we can reach our server with a `ping 5.0.0.100`. 
+First, let's `hopon client` and make sure we can reach our server with a `ping 5.0.0.100`.
 
-### UH OH! That shit is broken! Let's fix it.
+### UH OH! That shit is broken! Let's fix it
 
-When we see our ping go out, we get no response back... When we CTRL+c our way out of our ping, we get 100% packet loss... :thumbs-down: We need to do some investigationing to figure out where our packets are going and why they aren't going to our server. 
+When we see our ping go out, we get no response back... When we CTRL+c our way out of our ping, we get 100% packet loss... :thumbs-down: We need to do some investigationing to figure out where our packets are going and why they aren't going to our server.
 
 #### General troubleshooting thought process
 
 We need to define a process that will help us figure out why our ping isn't succeeding. Something about our routes defined in sleep-exercise.sh isn't working. Let's think this through...
 
-- asymetric routing makes it harder to troubleshoot (not NECESSARILY a problem)
-- what are the possible causes for the ping to not go through:
+* asymetric routing makes it harder to troubleshoot (not NECESSARILY a problem)
+* what are the possible causes for the ping to not go through:
   * some router along the path doesn't know how to get to the destination
   * some router along the path doesn't know how to get back to the source
   * a wrong path is defined on the path somewhere in the process (e.g. routers pointing to each other)
@@ -137,7 +138,7 @@ our tcpdump command
 
 > 17:43:05.906765 ARP, Request who-has 3.0.0.1 tell 5.0.1.1, length 28
 who has the docker router on three-net, tell router1 on five-net
-**followup** why is docker router involved here at all? 
+**followup** why is docker router involved here at all?
 
 > 17:43:05.906829 IP 100.1.3.1 > 5.0.1.1: ICMP echo request, id 48, seq 5, length 64
 ping request sent from one-hundo-net to router1 on five-net
@@ -149,15 +150,14 @@ what is MAC address for router1 on three-net, tell router3 on three-net
 reply that mac address for router1 is _____
 I.E. router3 knows that to get to 5.0.1.1, it needs to go through the 3.0.1.1 router. It needs to be able to send a message to the 3.0.1.1 router on the local network (on the ethernet interface). Before it can do that, it needs to know what the mac address of the 3.0.1.1 machine is. router3 sends out an ARP request asking who 3.0.1.1 is, and router1 replies "it me!" with it's mac address.
 
-
 > 17:43:06.929647 IP 100.1.3.1 > 5.0.1.1: ICMP echo request, id 48, seq 6, length 64
 Here.... we would be expecting a reply... but we're not gettin' it.
 
 We see that router3 knew the correct next hop to get to five-net. We then see that router3 found the mac address for router1, which is the connection to five-net. We see router3 send our ping destined for router1 on five-net via router1 on three-net. We see that router3 is doing everything we expect correctly. Because we're not getting a reply to our ping request, we can assume the problem is somewhere in the route defined for router1 to one-hundo-net.
 
 If router3 had been the problem, we would have seen either
-- no output from our tcpdump because it was sending the request out the wrong interface
-- we wouldn't have seen the ARP Request/Reply
+* no output from our tcpdump because it was sending the request out the wrong interface
+* we wouldn't have seen the ARP Request/Reply
 
 So now, let's move on to the `tcpdump` from router1 listening on three-net interface
 
@@ -178,6 +178,7 @@ driver_opts:
 ```
 
 Now, we can `ping` from router3 => server! Huzzah! Progress!!! But, ummmm... things still break when we try to ping from client to server. Let's continue with our diagnostic. Following the same pattern we did before, We're going to check how far down the path Client can ping before we start losing packets:
+
 * ping client => router5 one-net :check:
 * ping client => router5 hundo-net :check:
 * ping client => router3 hundo-net :check:
@@ -213,12 +214,14 @@ Now, we can look at `tcpdump` output specific to that interface and see if we ca
 18:32:57.504868 IP (tos 0x0, ttl 63, id 61790, offset 0, flags [DF], proto ICMP (1), length 84)
     1.0.0.100 > 3.0.3.1: ICMP echo request, id 66, seq 1, length 64
 ```
+
 router3 receives ping on `eth0` (hundo-net) interface! yay!
 
 ```
 18:32:57.504895 IP (tos 0x0, ttl 64, id 17711, offset 0, flags [none], proto ICMP (1), length 84)
     3.0.3.1 > 1.0.0.100: ICMP echo reply, id 66, seq 1, length 64
 ```
+
 router3 replies to ping on `eth0`. yay?!
 
 ```
@@ -242,7 +245,7 @@ So, this looks good... what's happening? it would probably help to have the mac 
 ```
 
 We see the request hitting router3 on one-hundo-net: `02:42:64:01:05:01 > 02:42:64:01:03:01`
-Then we see router3 responding via router2 on one-hundo-net `02:42:64:01:03:01 > 02:42:64:01:02:01` 
+Then we see router3 responding via router2 on one-hundo-net `02:42:64:01:03:01 > 02:42:64:01:02:01`
 
 How was the route to router2 setup that
 
