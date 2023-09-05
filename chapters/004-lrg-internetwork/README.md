@@ -1,4 +1,4 @@
-# Let's make that Internet MOAR BIGGER!
+# Let's make that Internet MOAR BIGGER
 
 ## Goals for this section
 
@@ -103,7 +103,7 @@ Let's look at the output for one of our interfaces shown in `ip route`:
        valid_lft forever preferred_lft forever
 ```
 
-Here, we can see that the IP of the machine is `10.1.2.3` on a `/24` network. The MAC address listed on the line above is `02:42:0a:01:02:03`. It appears to keep things simple, when docker adds a new machine to a network, it has create an interface for that machine and put it on that network. That interface will have its own unique MAC address. Docker can assign whatever it wants for that MAC address, but, to help us, the humans, it will take the IP address for that machine and convert it into a human readable version in hexidecimal. So, the end of that MAC address, `0a:01:02:03`, converted from hexidecimal into decimal is `10.1.2.3`. This is great for us. It means when we look at MAC addresses in our tcpdump later in the chapter, it is much easier to see which machines our packets are being routed through. 
+Here, we can see that the IP of the machine is `10.1.2.3` on a `/24` network. The MAC address listed on the line above is `02:42:0a:01:02:03`. It appears to keep things simple, when docker adds a new machine to a network, it has create an interface for that machine and put it on that network. That interface will have its own unique MAC address. Docker can assign whatever it wants for that MAC address, but, to help us, the humans, it will take the IP address for that machine and convert it into a human readable version in hexidecimal. So, the end of that MAC address, `0a:01:02:03`, converted from hexidecimal into decimal is `10.1.2.3`. This is great for us. It means when we look at MAC addresses in our tcpdump later in the chapter, it is much easier to see which machines our packets are being routed through.
 
 **NOTE** When you see ethernet packets in the wild, there is no correlation between the MAC address and the IP address. This is simply a docker convenience.
 
@@ -222,13 +222,18 @@ PING 5.0.0.100 (5.0.0.100) 56(84) bytes of data.
 2 packets transmitted, 0 received, 100% packet loss, time 1046ms
 ```
 
-Uh oh! We're not getting any response back from our `ping`! Something is wrong in internet land! Let's go figure out what that could be. When a client isn't receiving response packets from it ping, there's only 3 things that could be going on.
+Uh oh! We're not getting any response back from our `ping`! Something is wrong in internet land! Let's go figure out what that could be. When a client isn't receiving response packets from it ping, there's only 2 things that could be going on.
 
-1. The request packets aren't being routed to the destination
-2. The response packets aren't being routed back to the source/client
-3. The machine the packets are being routed to doesn't exist
+1. A router that is responsible for getting request packets to their destination thinks it is impossible to get to the destination IP address
+2. Packets are getting lost to or from the destination
 
-We can dismiss option 3 here. If the machine didn't exist, we would get an error in our `ping`, e.g:
+Let's explore what these three things mean a little.
+
+#### A router that is responsible for getting request packets to their destination thinks it is impossible to get to the destination IP address
+
+This can happen for 2 reasons. A router that has an interface on the network of the destination IP sees that there is no machine with the destination IP on that network. OR a router that does not have an interface on the network of the destination IP and doesn't have a default route doesn't have a route for the destination IP.
+
+Basically, if the machine didn't exist, we would get an error response to our `ping`. For example, if we try to `ping 1.0.0.50`, a machine we've never created on our internetwork, we get back `Destination Host Unreachable`:
 
 ```bash
 root@client:/# ping 1.0.0.50
@@ -242,7 +247,9 @@ When we see `Destination Host Unreachable`, the packets were correctly routed to
 
 *TODO* In a future chapter, let's look at firewall settings to prevent this security leak.
 
-So now we know that the issue is a networking issue. We need to find where in our network communication is breaking down, where packets are getting lost, and in what direction those packets are getting lost. We know that this is a networking issue, but what kind? Are we trying to route packets across or to a network that doesn't exist? If that were the case, we would see a similar error message to what we saw when trying to ping a non-existant host:
+We know that the problem we're seeing in this exercise is not that the machine doesn't exist because we're not getting back this `Destination Host Unreachable` error. Instead, the issue is going to be a routing issue.
+
+Another case we could see is if a router doesn't have a route defined to a network in its routing table AND it doesn't have a default gateway. If that were the case, we would see a similar error message to what we saw when trying to ping a non-existant host:
 
 ```bash
 root@client:/# ping 9.0.0.1
@@ -250,11 +257,117 @@ PING 9.0.0.1 (9.0.0.1) 56(84) bytes of data.
 From 1.0.5.1 icmp_seq=1 Destination Net Unreachable
 ```
 
-Because we're just getting no response back, that means the packets are being lost somewhere in our internetwork. We need to go find them! Before we get started let's define an investigation process that we can use to help us identify where the problem is.
+In our case, because we're just getting no response back, that means the packets are being lost somewhere in our internetwork.
+
+#### Packets are getting lost to or from the destination
+
+In this case, all of our routers think they know how to forward packets to complete the full request/response cycle. However, our source/client isn't receiving the response packets.
+
+In a network *without* firewalls, this would most likely occur when there are 2 or more routers pointing to each other for their routing decisions, e.g. Router4 thinks it needs to pass the packets to Router3 to get to `5.0.0.0/8` but Router3 thinks it needs to pass the packets to Router4. This is called a routing loop.
+
+In a network *with* firewalls, some firewall definition is probably tossing our packets on the floor. HOWEVER! Our internetwork is laisse-faire and uses no firewalls.
+
+We need to find where in our network communication is breaking down, where packets are getting lost, and in what direction those packets are getting lost. We know that this is a networking issue, but in which direction?
 
 ### The Investigation
 
-We need some process to help us identify where the problem in out internetwork lives. What we've tried so far is to `ping` from Client to Server. That's causing us to traverse our whole internetwork, which is a lot of machine and a lot of points of potential failure. We can simplify this in a couple ways. First, let's start from the Client. Let's run a `ping` from Client to each of the routers on our internetwork. If we get a successful response back, we know that's not where the problem is.
+We need some process to help us identify where the problem in out internetwork lives. What we've tried so far is to `ping` from Client to Server. That's causing us to traverse our whole internetwork, which is a lot of machines and a lot of points of potential failure. We can simplify this in a couple ways. First, we can figure out if the issue is in routing the requests TO or FROM the destination IP. Once we know the direction that the packets are getting lost, we can check, hop by hop where the packets are going and find the exact router(s) where they're getting lost.
+
+Let's start by running that same `ping` from Client to Server, but this time, let's watch on server to see if the packets are even making it there. Open a second terminal window and run a `tcpdump` on server:
+
+```bash
+root@server:/# tcpdump -n
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+21:31:52.871414 IP 1.0.0.100 > 5.0.0.100: ICMP echo request, id 81, seq 1, length 64
+21:31:52.871444 IP 5.0.0.100 > 1.0.0.100: ICMP echo reply, id 81, seq 1, length 64
+21:31:52.871718 IP 3.0.3.1 > 5.0.0.100: ICMP time exceeded in-transit, length 92
+21:31:53.902288 IP 1.0.0.100 > 5.0.0.100: ICMP echo request, id 81, seq 2, length 64
+21:31:53.902331 IP 5.0.0.100 > 1.0.0.100: ICMP echo reply, id 81, seq 2, length 64
+21:31:53.905679 IP 3.0.3.1 > 5.0.0.100: ICMP time exceeded in-transit, length 92
+```
+
+Great! We can see the packets coming in from Client, `1.0.0.100`, and we can see the response packets going out! This means that the routing problem is on the response path back from Server => Client!
+
+But what's this `ICMP time exceeded in-transit`? Before we can dive into that, we need to know how `ping` works. Let's start by looking at the output of a successful `ping` from Client to Router5:
+
+```bash
+root@client:/# ping 1.0.5.1 -w 2
+PING 1.0.5.1 (1.0.5.1) 56(84) bytes of data.
+64 bytes from 1.0.5.1: icmp_seq=1 ttl=64 time=0.101 ms
+64 bytes from 1.0.5.1: icmp_seq=2 ttl=64 time=0.207 ms
+
+--- 1.0.5.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1068ms
+rtt min/avg/max/mdev = 0.101/0.154/0.207/0.053 ms
+```
+
+Do you see how, on each response recorded in this example, there's a `ttl=64`: `64 bytes from 1.0.5.1: icmp_seq=1 ttl=64 time=0.101 ms`? OK, let's jump out one hop and look at the output for a `ping` to Router4:
+
+```bash
+root@client:/# ping 100.1.4.1 -w 2
+PING 100.1.4.1 (100.1.4.1) 56(84) bytes of data.
+64 bytes from 100.1.4.1: icmp_seq=1 ttl=63 time=0.181 ms
+64 bytes from 100.1.4.1: icmp_seq=2 ttl=63 time=0.480 ms
+
+--- 100.1.4.1 ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1028ms
+rtt min/avg/max/mdev = 0.181/0.330/0.480/0.149 ms
+```
+
+Oooh! In this case, it's `ttl=63`. `ping` uses `ttl`, or "time to live", not by counting seconds, but instead by counting hops. So, when a `ping` is newly generated, it has its `ttl` set to `64`. Every router it runs through decrements this count before forwarding the packet. This means that, if a router receives a packet and it decrements the `ttl` down to `0`, the request has timed out, or in the words of the error, `ICMP time exceeded in-transit`. The only way we could have exceeded the 64 count `ttl` in our little network is if we have a routing loop.
+
+Dope! Now we know for sure that the problem is a routing loop and that it exists on the response path! The other thing we see in that error in our `tcpdump` is the router that issued the timeout, `3.0.3.1` or Router3. Let's `hopon router3` and issue a `ping` to client and see if it gets there.
+
+```bash
+root@router3:/# ping 1.0.0.100 -w 2
+PING 1.0.0.100 (1.0.0.100) 56(84) bytes of data.
+
+--- 1.0.0.100 ping statistics ---
+2 packets transmitted, 0 received, 100% packet loss, time 1022ms
+```
+
+But this `ping` alone won't tell us much. Let's re-run that `ping` while we watch the traffic on Router3 to see where our requests are going. To start with, we need to know which interface the requests are leaving Router3 on, which means... back to our old friend `ip addr`:
+
+```bash
+root@router3:/# ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+777: eth1@if778: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:03:00:03:01 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 3.0.3.1/8 brd 3.255.255.255 scope global eth1
+       valid_lft forever preferred_lft forever
+791: eth0@if792: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:64:01:03:01 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 100.1.3.1/16 brd 100.1.255.255 scope global eth0
+       valid_lft forever preferred_lft forever
+```
+
+Remember, this output could be different on your build of the little internet, so run this for youself and use the correct interfaces for the network addresses we're watching. In this case, Router3's interface on `3.0.0.0/8` is `eth1` and its interface on `100.1.0.0/16` is `eth0`. Open a new terminal window and run your `tcpdump` on both. This will tell us which interface the packets are exiting out of:
+
+```bash
+root@router3:/# tcpdump -nei eth0
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+21:57:59.839787 02:42:64:01:03:01 > 02:42:64:01:02:01, ethertype IPv4 (0x0800), length 98: 100.1.3.1 > 1.0.0.100: ICMP echo request, id 91, seq 1, length 64
+21:57:59.839891 02:42:64:01:02:01 > 02:42:64:01:03:01, ethertype IPv4 (0x0800), length 98: 100.1.3.1 > 1.0.0.100: ICMP echo request, id 91, seq 1, length 64
+21:58:00.861600 02:42:64:01:03:01 > 02:42:64:01:02:01, ethertype IPv4 (0x0800), length 98: 100.1.3.1 > 1.0.0.100: ICMP echo request, id 91, seq 2, length 64
+21:58:00.861768 02:42:64:01:02:01 > 02:42:64:01:03:01, ethertype IPv4 (0x0800), length 126: 100.1.2.1 > 100.1.3.1: ICMP redirect 1.0.0.100 to host 100.1.3.1, length 92
+21:58:00.861795 02:42:64:01:02:01 > 02:42:64:01:03:01, ethertype IPv4 (0x0800), length 98: 100.1.3.1 > 1.0.0.100: ICMP echo request, id 91, seq 2, length 64
+^C
+5 packets captured
+5 packets received by filter
+0 packets dropped by kernel
+```
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+==========================================================
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+let's start from the Client. Let's run a `ping` from Client to each of the routers on our internetwork. If we get a successful response back, we know that's not where the problem is.
 
 Once we've figured out where the packets are getting lost, we can jump on that machine and start investigating what's actually happening with our packets.
 
@@ -432,9 +545,6 @@ Uh oh! The route to get to `5.0.0.0/8` is running through Router4 on `200.1.1.16
 Notes:
 
 Another tool that could be used is `tcpdump`. is a heavier tool. networks aren't quiet, so you have to filter. `ping` is simple and tells us exactly what we're looking at.
-
-
-
 
 *TODO*
 
