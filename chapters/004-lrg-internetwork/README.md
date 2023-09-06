@@ -272,7 +272,7 @@ We need to find where in our network communication is breaking down, where packe
 
 ### The Investigation
 
-We need some process to help us identify where the problem in out internetwork lives. What we've tried so far is to `ping` from Client to Server. That's causing us to traverse our whole internetwork, which is a lot of machines and a lot of points of potential failure. We can simplify this in a couple ways. First, we can figure out if the issue is in routing the requests TO or FROM the destination IP. Once we know the direction that the packets are getting lost, we can check, hop by hop where the packets are going and find the exact router(s) where they're getting lost.
+We need some process to help us identify where the problem in our internetwork lives. What we've tried so far is to `ping` from Client to Server. That's causing us to traverse our whole internetwork, which is a lot of machines and a lot of points of potential failure. We can simplify this in a couple ways. First, we can figure out if the issue is in routing the requests TO or FROM the destination IP. Once we know the direction that the packets are getting lost, we can check, hop by hop, where the packets are going and find the exact router(s) where they're getting lost.
 
 Let's start by running that same `ping` from Client to Server, but this time, let's watch on server to see if the packets are even making it there. Open a second terminal window and run a `tcpdump` on server:
 
@@ -288,9 +288,21 @@ listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 21:31:53.905679 IP 3.0.3.1 > 5.0.0.100: ICMP time exceeded in-transit, length 92
 ```
 
-Great! We can see the packets coming in from Client, `1.0.0.100`, and we can see the response packets going out! This means that the routing problem is on the response path back from Server => Client!
+Great! We can see the packets coming in from Client, `1.0.0.100`:
 
-But what's this `ICMP time exceeded in-transit`? Before we can dive into that, we need to know how `ping` works. Let's start by looking at the output of a successful `ping` from Client to Router5:
+> 21:31:52.871414 IP 1.0.0.100 > 5.0.0.100: ICMP echo request, id 81, seq 1, length 64
+
+And we can see the response packets going out:
+> 21:31:52.871444 IP 5.0.0.100 > 1.0.0.100: ICMP echo reply, id 81, seq 1, length 64
+
+This means that the routing problem is on the response path back from Server => Client!
+
+But what's this `ICMP time exceeded in-transit`?
+> 21:31:52.871718 IP 3.0.3.1 > 5.0.0.100: ICMP time exceeded in-transit, length 92
+
+**It appears that router3 on three-net is letting the server know that it is unable to route packets.
+
+Before we can dive into that, we need to know how `ping` works. Let's start by looking at the output of a successful `ping` from Client to Router5:
 
 ```bash
 root@client:/# ping 1.0.5.1 -w 2
@@ -316,9 +328,13 @@ PING 100.1.4.1 (100.1.4.1) 56(84) bytes of data.
 rtt min/avg/max/mdev = 0.181/0.330/0.480/0.149 ms
 ```
 
-Oooh! In this case, it's `ttl=63`. `ping` uses `ttl`, or "time to live", not by counting seconds, but instead by counting hops. So, when a `ping` is newly generated, it has its `ttl` set to `64`. Every router it runs through decrements this count before forwarding the packet. This means that, if a router receives a packet and it decrements the `ttl` down to `0`, the request has timed out, or in the words of the error, `ICMP time exceeded in-transit`. The only way we could have exceeded the 64 count `ttl` in our little network is if we have a routing loop.
+Oooh! In this case, it's `ttl=63`. `ping` uses `ttl`, or "time to live", not by counting seconds, but instead by counting hops. So, when a `ping` is newly generated, it has its `ttl` set to a default number. Different operating systems have different defaults defined. On the linux system we are using in our containers, the default appears to be 64. You can confirm that by running the following:
 
-Dope! Now we know for sure that the problem is a routing loop and that it exists on the response path! The other thing we see in that error in our `tcpdump` is the router that issued the timeout, `3.0.3.1` or Router3. Let's `hopon router3` and issue a `ping` to client and see if it gets there.
+`root@client:/# cat /proc/sys/net/ipv4/ip_default_ttl`
+
+Every router it runs through decrements this count before forwarding the packet. This means that, if a router receives a packet and it decrements the `ttl` down to `0`, the request has timed out, or in the words of the error, `ICMP time exceeded in-transit`. The only way we could have exceeded the 64 count `ttl` in our little network is if we have a routing loop.
+
+Dope! Now we know for sure that the problem is a routing loop and that it exists on the response path! The other thing we see in that error in our `tcpdump` is the router that issued the timeout: `3.0.3.1` or Router3. Let's `hopon router3` and issue a `ping` to client and see if it gets there.
 
 ```bash
 root@router3:/# ping 1.0.0.100 -w 2
@@ -346,7 +362,7 @@ root@router3:/# ip addr
        valid_lft forever preferred_lft forever
 ```
 
-Remember, this output could be different on your build of the little internet, so run this for youself and use the correct interfaces for the network addresses we're watching. In this case, Router3's interface on `3.0.0.0/8` is `eth1` and its interface on `100.1.0.0/16` is `eth0`. Open a new terminal window and run your `tcpdump` on both. This will tell us which interface the packets are exiting out of:
+Remember, this output could be different on your build of the little internet, so run this for yourself and use the correct interfaces for the network addresses we're watching. In this case, Router3's interface on `3.0.0.0/8` is `eth1` and its interface on `100.1.0.0/16` is `eth0`. Open a new terminal window and run your `tcpdump` on both. This will tell us which interface the packets are exiting out of:
 
 ```bash
 root@router3:/# tcpdump -nei eth0
@@ -362,6 +378,32 @@ listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 5 packets received by filter
 0 packets dropped by kernel
 ```
+
+There is a lot happening in this output. Let's look at it line by line to understand what is happening.
+
+Let's start with:
+> `21:57:59.839787 02:42:64:01:03:01 > 02:42:64:01:02:01, ethertype IPv4 (0x0800), length 98: 100.1.3.1 > 1.0.0.100: ICMP echo request, id 91, seq 1, length 64`.
+
+Here, we see router3 sending a packet destined for client (`100.1.3.1 > 1.0.0.100`) via router2 (`02:42:64:01:03:01 > 02:42:64:01:02:01`). We are referencing IP and MAC addresses to glean this information. If this is confusing to you, you can look at [Appendix: Understanding tcpdump](#TODO) for more details. This is the basic communication we are expecting to see. `ICMP echo request` is the initiation of a ping. Referencing our network map, it seems like it is a bad choice to be routing the packet to router2 but we are people that are open to possibilities. So we will remain curious and see what happens!
+
+On to the next line:
+> `21:57:59.839891 02:42:64:01:02:01 > 02:42:64:01:03:01, ethertype IPv4 (0x0800), length 98: 100.1.3.1 > 1.0.0.100: ICMP echo request, id 91, seq 1, length 64`
+
+Hmmm, it appears that router2 agrees with our earlier assessment! We see the original source and destination IPs from router3 to client (`100.1.3.1 > 1.0.0.100`) but router2 is sending the packet **back** to router3 (`02:42:64:01:02:01 > 02:42:64:01:03:01`). That's what we in the biz say, "Not cool man!"
+
+We think we might have found the problem: router3 is sending packets to router2 and router2 is returning them in an infinite loop! But let's keep looking at this pitter patter among routers just to see if there is anything more interesting! 
+> `21:58:00.861600 02:42:64:01:03:01 > 02:42:64:01:02:01, ethertype IPv4 (0x0800), length 98: 100.1.3.1 > 1.0.0.100: ICMP echo request, id 91, seq 2, length 64`
+
+First off, we see `seq 2` which is different from `seq 1` that we have seen thus far. This tells us that it is the second ping request being sent to client. This is the same pattern we observed in the first ping request, so let's continue on!
+
+> `21:58:00.861768 02:42:64:01:02:01 > 02:42:64:01:03:01, ethertype IPv4 (0x0800), length 126: 100.1.2.1 > 100.1.3.1: ICMP redirect 1.0.0.100 to host 100.1.3.1, length 92`
+
+ICMP redirect! What does that mean? It's the technical term for the pitter patter we were observing earlier. When a router receives packets on the same interface it will forward them out of, that means the machine it received the packets from and the machine it is forwarding the packets to are on the same network. Therefore, they can communicate directly with each other instead of going through the intermediate router.
+
+In our case, router2 is sending a ICMP redirect to router3 so router3 can make a more efficient routing decision and not have packets destined to client go through router2. router3 ignores these messages for two reasons:
+
+1. it makes no sense for router3 to send packets to itself to reach client.
+2. Kernels have a configuration to determine whether to accept ICMP redirects but they are generally disabled for security reasons.
 
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ==========================================================
