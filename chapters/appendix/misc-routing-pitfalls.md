@@ -29,7 +29,7 @@ When we see our ping go out, we get no response back... When we CTRL+c our way o
 
 ##### General troubleshooting thought process
 
-We need to define a process that will help us figure out why our ping isn't succeeding. Something about our routes defined in sleep-exercise.sh isn't working. Let's think this through...
+We need to define a process that will help us figure out why our ping isn't succeeding. Something about our routes defined in start-up-exercise.sh isn't working. Let's think this through...
 
 - asymetric routing makes it harder to troubleshoot (not NECESSARILY a problem (in theory))
 - what are the possible causes for the ping to not go through:

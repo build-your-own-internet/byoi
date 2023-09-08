@@ -178,7 +178,7 @@ root@router5:/# ip route
 Uh oh! The route to get to `5.0.0.0/8` is running through Router4 on `200.1.1.16/29`... That's not what we're expecting. We almost certainly have a routing loop there, which means that packets are being passed back and forth between the same machines without ever reaching their destination.
 
 > **EXERCISE:**
-> Now that you know where the problem is, go into `sleep-exercise.sh` for this chapter, fix the route, and `restart` your containers! Can you ping Server from Client now?
+> Now that you know where the problem is, go into `start-up-exercise.sh` for this chapter, fix the route, and `restart` your containers! Can you ping Server from Client now?
 
 Notes:
 

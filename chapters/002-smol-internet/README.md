@@ -467,7 +467,7 @@ We've already seen this in action. At this point, we need to tell `pippin` how t
 
 ## Now let's make this routing setup automatic
 
-We don't want to spend the time manually adding and removing routes every time we start our containers. Earlier, we looked at automatically removing routes by adding the `ip route delete` to our `sleep.sh` file that runs on the container start. We're gonna do something similar here, except the logic is a bit more complicated. Because we want to add routes depending on the `hostname`, i.e. `tara` or `pippin`, we need some conditional logic. Check this out!
+We don't want to spend the time manually adding and removing routes every time we start our containers. Earlier, we looked at automatically removing routes by adding the `ip route delete` to our `start-up.sh` file that runs on the container start. We're gonna do something similar here, except the logic is a bit more complicated. Because we want to add routes depending on the `hostname`, i.e. `tara` or `pippin`, we need some conditional logic. Check this out!
 
 ```bash
 case $HOSTNAME in
@@ -476,7 +476,7 @@ case $HOSTNAME in
 esac
 ```
 
-We will add this logic to the `sleep.sh` for chapter 003.
+We will add this logic to the `start-up.sh` for chapter 003.
 
 ## Appendix: Answering Questions
 

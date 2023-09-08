@@ -97,7 +97,7 @@ possible without numerous routers facilitating the requests.
 
 ### How to read an IP address; i.e. octets and subnets
 
-*TODO:* describe how the network diagram above relates to the docker compose file which relates to the `ip route add` commands in the sleep.sh file.
+*TODO:* describe how the network diagram above relates to the docker compose file which relates to the `ip route add` commands in the start-up.sh file.
 
 ### How to read a MAC address
 
@@ -115,7 +115,7 @@ When we see our ping go out, we get no response back... When we CTRL+c our way o
 
 #### General troubleshooting thought process
 
-We need to define a process that will help us figure out why our ping isn't succeeding. Something about our routes defined in sleep-exercise.sh isn't working. Let's think this through...
+We need to define a process that will help us figure out why our ping isn't succeeding. Something about our routes defined in start-up-exercise.sh isn't working. Let's think this through...
 
 * asymetric routing makes it harder to troubleshoot (not NECESSARILY a problem)
 * what are the possible causes for the ping to not go through:

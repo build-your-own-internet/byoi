@@ -24,7 +24,7 @@ Here's what we expect our network to look like by the end of this chapter:
 
 ## Running your docker container
 
-We got this magic [Dockerfile](Dockerfile) that gets everything set up! Neat! Without going into too much detail, our Dockerfile builds our docker image on top of the specified OS (ubuntu), installs a bunch of networking software, and then copies in a script called `sleep.sh`. Because Docker containers only stay alive for as long as it takes to process whatever commands are given to it, we're using our `sleep.sh` script to tell our Docker container to `sleep` in the background so we can pop in and out of them as we please.
+We got this magic [Dockerfile](Dockerfile) that gets everything set up! Neat! Without going into too much detail, our Dockerfile builds our docker image on top of the specified OS (ubuntu), installs a bunch of networking software, and then copies in a script called `start-up.sh`. Because Docker containers only stay alive for as long as it takes to process whatever commands are given to it, we're using our `start-up.sh` script to tell our Docker container to `start-up` in the background so we can pop in and out of them as we please.
 
 To start with, we want to create 2 containers. We can use the same Docker image to generate both containers. To make it easy to differentiate between the containers, we're going to give them names. To do so:
 

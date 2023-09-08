@@ -123,7 +123,7 @@ Here, we can see that the IP of the machine is `10.1.2.3` on a `/24` network. Th
 
 In order for our little internet to work, we need a way for the machines on our networks to know how and where to route packets. Each router on the network will have a definition of all other networks on the internet and how it can reach machines on those networks. Think about it like this. When a driver is navigating our interstate highways to try to get from Portland to San Francisco, they're gonna see signs that direct them which lanes of traffic will take them in right direction. The driver follows those signs and ends up eventually in the right city. Our routers need those same little signs to follow. Each router will have a "routing table", which is like a list of all our little signs. These routing tables will have entries for how to send packets to each network on our internet.
 
-We want to create routing tables for each of the routers on the network we have diagramed at the top of this chapter. Each router will need to have entries on how to get to networks that the router does not already have a direct connection to. And, we need these routing tables to be defined as soon as we boot up our network. So, let's define all of the routes that are necessary for router1 and let's add them to the `sleep.sh` file that is run when we `restart` our whole system.
+We want to create routing tables for each of the routers on the network we have diagramed at the top of this chapter. Each router will need to have entries on how to get to networks that the router does not already have a direct connection to. And, we need these routing tables to be defined as soon as we boot up our network. So, let's define all of the routes that are necessary for router1 and let's add them to the `start-up.sh` file that is run when we `restart` our whole system.
 
 Based on that diagram, out of the 7 networks we've built, router1 already has interfaces on 3 of them:
 
@@ -133,7 +133,7 @@ Based on that diagram, out of the 7 networks we've built, router1 already has in
 * `200.1.1.8/29` or `p2p-eight`
 * `3.0.0.0/8` or `three-net`
 
-So, for router1 to participate in this internet, it needs to know how to route packets to each of the 4 networks it's not currently connected to. We can add routes to each of the 4 networks in our `sleep.sh` file to use a similar structure to what we used in chapter 3. So, we'll start by defining how router1 can reach each network through its connections with other routers. You'll see the following already defined in the `sleep.sh` file for this chapter:
+So, for router1 to participate in this internet, it needs to know how to route packets to each of the 4 networks it's not currently connected to. We can add routes to each of the 4 networks in our `start-up.sh` file to use a similar structure to what we used in chapter 3. So, we'll start by defining how router1 can reach each network through its connections with other routers. You'll see the following already defined in the `start-up.sh` file for this chapter:
 
 ```bash
 case $HOSTNAME in
@@ -148,7 +148,7 @@ esac
 
 ## Exercise time: Build your routing tables
 
-The `sleep.sh` file already has some setup in it. Build out the routes for router3 similar to how you see the routes for router1 being done. Once you've got the routes created in `sleep.sh`, `restart` your little internet and `hopon router3`. Can you ping router1 with `ping 5.0.1.1 -w 4`? What about if we try to ping router1 with packets that originate from router3 on `100.1.0.0/16`? Try using `ping -I 100.1.3.1 5.0.1.1 -w 4` to do this.
+The `start-up.sh` file already has some setup in it. Build out the routes for router3 similar to how you see the routes for router1 being done. Once you've got the routes created in `start-up.sh`, `restart` your little internet and `hopon router3`. Can you ping router1 with `ping 5.0.1.1 -w 4`? What about if we try to ping router1 with packets that originate from router3 on `100.1.0.0/16`? Try using `ping -I 100.1.3.1 5.0.1.1 -w 4` to do this.
 
 At this point, router3 knows how to send packets into `5.0.0.0/8`, but `server` doesn't know how to respond. If we try to ping `server` before we add routes telling `server` how to reach `3.0.0.0/8`, `server` will just drop those packets. Let's see what that looks like practically.
 
@@ -174,7 +174,7 @@ listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 0 packets dropped by kernel
 ```
 
-There are 2 `ICMP echo request`s, but we don't see any `ICMP echo reply`s. Set up the route for `server` to know how to send packets to `3.0.0.0/8` in `sleep.sh`. Once that's setup, `restart`, and can you get router3 to ping `server`? If it's successful, you should see the `echo reply`s on the `tcpdump` in your `server`. Let's look at that `tcpdump` in a bit of detail.
+There are 2 `ICMP echo request`s, but we don't see any `ICMP echo reply`s. Set up the route for `server` to know how to send packets to `3.0.0.0/8` in `start-up.sh`. Once that's setup, `restart`, and can you get router3 to ping `server`? If it's successful, you should see the `echo reply`s on the `tcpdump` in your `server`. Let's look at that `tcpdump` in a bit of detail.
 
 ```bash
 root@server:/# tcpdump -ne
@@ -209,17 +209,17 @@ Setup the goal
 
 ### Set up your environment
 
-The first thing we'll need to do is get your network set up with a break we can investigate! Lucky for you, we've already created a setup that is broken and ready to use. If you check the `/init/sleep-exercise.sh` file, you'll see a whole set of routing tables created for each of the machines on our network. We want to use this broken setup instead of the working one you created in exercise 1.
+The first thing we'll need to do is get your network set up with a break we can investigate! Lucky for you, we've already created a setup that is broken and ready to use. If you check the `/init/start-up-exercise.sh` file, you'll see a whole set of routing tables created for each of the machines on our network. We want to use this broken setup instead of the working one you created in exercise 1.
 
-If you remember from chapter 1, the way this file is loaded into our docker containers is through the container definition in our chapter's `Dockerfile`. We will want to update the line that says to use `./init/sleep.sh` to instead use `./init/sleep-exercise.sh`, so your `Dockerfile` will look like:
+If you remember from chapter 1, the way this file is loaded into our docker containers is through the container definition in our chapter's `Dockerfile`. We will want to update the line that says to use `./init/start-up.sh` to instead use `./init/start-up-exercise.sh`, so your `Dockerfile` will look like:
 
 ```Dockerfile
 FROM ubuntu
 
 RUN apt-get update && apt-get install -y iproute2 tcpdump iputils-ping net-tools bind9-utils dnsutils vim inetutils-traceroute mtr iptables netcat
-COPY ./init/sleep-exercise.sh /sleep.sh
+COPY ./init/start-up-exercise.sh /start-up.sh
 
-CMD ["/sleep.sh"]
+CMD ["/start-up.sh"]
 ```
 
 ### Discover the breakage
@@ -419,8 +419,7 @@ In our case, router2 is sending a ICMP redirect to router3 so router3 can make a
 
 Finally, we get to our last line... We see the same thing we saw in `seq 1`; router2 is sending the `echo request` packets router3 had sent to it right back to router3. 
 
-We've found out loop! Next step: go check the `sleep-exercise.sh` and look at the routes going to `1.0.0.0/8` on both router2 and router3. Where should those point instead? Use the network map at the beginning of this chapter to determine where these packets _should_ be getting forwarded to and update the routes. `restart` your containers and try your `ping` again!
+We've found out loop! Next step: go check the `start-up-exercise.sh` and look at the routes going to `1.0.0.0/8` on both router2 and router3. Where should those point instead? Use the network map at the beginning of this chapter to determine where these packets _should_ be getting forwarded to and update the routes. `restart` your containers and try your `ping` again!
 
 TODO:
 * review and clean up both readme and docker-routing-pitfalls
-* fix sleep-exercise.sh
