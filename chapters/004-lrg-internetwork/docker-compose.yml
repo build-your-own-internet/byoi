@@ -34,6 +34,10 @@ services:
       - NET_ADMIN
     sysctls:
       - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+      - net.ipv4.conf.eth0.rp_filter=0
+      - net.ipv4.conf.eth1.rp_filter=0
+      - net.ipv4.conf.eth2.rp_filter=0
   router3:
     build: .
     hostname: router3
@@ -46,6 +50,9 @@ services:
       - NET_ADMIN
     sysctls:
       - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+      - net.ipv4.conf.eth0.rp_filter=0
+      - net.ipv4.conf.eth1.rp_filter=0
   router2:
     build: .
     hostname: router2
@@ -60,6 +67,10 @@ services:
       - NET_ADMIN
     sysctls:
       - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+      - net.ipv4.conf.eth0.rp_filter=0
+      - net.ipv4.conf.eth1.rp_filter=0
+      - net.ipv4.conf.eth2.rp_filter=0
   router4:
     build: .
     hostname: router4
@@ -74,6 +85,10 @@ services:
       - NET_ADMIN
     sysctls:
       - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+      - net.ipv4.conf.eth0.rp_filter=0
+      - net.ipv4.conf.eth1.rp_filter=0
+      - net.ipv4.conf.eth2.rp_filter=0
   router5:
     build: .
     hostname: router5
@@ -88,46 +103,64 @@ services:
       - NET_ADMIN
     sysctls:
       - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+      - net.ipv4.conf.eth0.rp_filter=0
+      - net.ipv4.conf.eth1.rp_filter=0
+      - net.ipv4.conf.eth2.rp_filter=0
 
 networks:
   five-net:
     driver: bridge
+    driver_opts:
+       com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
         - subnet: 5.0.0.0/8
   three-net:
     driver: bridge
+    driver_opts:
+       com.docker.network.bridge.enable_ip_masquerade: 'false' 
     ipam:
       driver: default
       config:
         - subnet: 3.0.0.0/8
   one-net:
     driver: bridge
+    driver_opts:
+       com.docker.network.bridge.enable_ip_masquerade: 'false' 
     ipam:
       driver: default
       config:
         - subnet: 1.0.0.0/8
   one-hundo-net:
     driver: bridge
+    driver_opts:
+       com.docker.network.bridge.enable_ip_masquerade: 'false' 
     ipam:
       driver: default
       config:
         - subnet: 100.1.0.0/16
   p2p-eight:
     driver: bridge
+    driver_opts:
+       com.docker.network.bridge.enable_ip_masquerade: 'false' 
     ipam:
       driver: default
       config:
         - subnet: 200.1.1.8/29
   p2p-zero:
     driver: bridge
+    driver_opts:
+       com.docker.network.bridge.enable_ip_masquerade: 'false' 
     ipam:
       driver: default
       config:
         - subnet: 200.1.1.0/29
   p2p-sixteen:
     driver: bridge
+    driver_opts:
+       com.docker.network.bridge.enable_ip_masquerade: 'false' 
     ipam:
       driver: default
       config:

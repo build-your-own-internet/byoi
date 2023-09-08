@@ -6,7 +6,7 @@ Explore how traceroute gives us network topology so we can see how the machines 
 
 ## Vocab
 
-* `hop`: 
+* `hop`: refers to a machine between source and destination that a packet traverses through. The number of machines that a packet goes through before reaching the destination is the hop count.
 
 ## Examining traceroute
 
@@ -18,7 +18,7 @@ Explore how traceroute gives us network topology so we can see how the machines 
 
 Let's examine the `traceroute` output from `tara` to `pippin`. 
 
-#### Discecting traceroute output
+#### Dissecting traceroute output
 
 ```bash
 root@tara:/# traceroute 10.1.1.2
@@ -92,7 +92,7 @@ Let's look at the next packet:
     10.1.2.2.60765 > 10.1.1.2.33434: UDP, length 9
 ```
 
-Here, we can see that `boudi`, `10.1.2.3`, is sending the `ICMP time exceeded` packet to `tara`, `10.1.2.2`. The `ttl` is `64` because `boudi` wants to make sure the packet makes it back to the request initiator. The `ttl` on this packet is completely unrelated to the `ttl` of the first packet. The last 2 lines tell `tara` which packet `boudi` dropped; the `id 32336` is the same as the first packet we examined. The kernal on `tara` uses these lines to connect the incoming `ICMP time exceeded` packet to the `traceroute` application.
+Here, we can see that `boudi`, `10.1.2.3`, is sending the `ICMP time exceeded` packet to `tara`, `10.1.2.2`. The `ttl` is `64` because `boudi` wants to make sure the packet makes it back to the request initiator. The `ttl` on this packet is completely unrelated to the `ttl` of the first packet. The last 2 lines tell `tara` which packet `boudi` dropped; the `id 32336` is the same as the first packet we examined. The kernel on `tara` uses these lines to connect the incoming `ICMP time exceeded` packet to the `traceroute` application.
 
 We see this pattern repeated 2 more times with the `ttl` set to `1`. `traceroute` isn't just concerned with providing a list of hops between the initiator of the packets and the destination, it also wants to show patterns in the network. If you examine the output of the `traceroute` run on `tara`, you'll see that there are 3 durations after each hop; e.g. `10.1.2.3  0.054ms  0.056ms  0.113ms`. Those numbers show the fastest, average, and longest time it took to get a response from each hop.
 
