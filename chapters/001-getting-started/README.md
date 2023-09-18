@@ -6,7 +6,7 @@ We want to build a simple network where two machines can ping each other. To kee
 
 Here's what we expect our network to look like by the end of this chapter:
 
-```
+```markdown
    boudi             pippin
      │10.1.1.3          │10.1.1.2
      │                  │
@@ -21,12 +21,22 @@ Here's what we expect our network to look like by the end of this chapter:
 - `machine`: any computer. Could be a server, a router, a client...
 - `gateway`: a `machine` on the internet that has the ability to route.
 - `host`: a `machine` on the internet that does NOT have any routing capabilities.
+- network: 2 or more machines that can communicate directly with each other over a physical medium (think actual wires or actual radio signals).
+- internetwork (or internet): 2 or more machines on _different networks_ that can communicate with each other. There are special devices (routers) that are used to fascilitate communication between each machine.
 
 ## Running your docker container
 
-We got this magic [Dockerfile](Dockerfile) that gets everything set up! Neat! Without going into too much detail, our Dockerfile builds our docker image on top of the specified OS (ubuntu), installs a bunch of networking software, and then copies in a script called `start-up.sh`. Because Docker containers only stay alive for as long as it takes to process whatever commands are given to it, we're using our `start-up.sh` script to tell our Docker container to `start-up` in the background so we can pop in and out of them as we please.
+We got this magic [Dockerfile](Dockerfile) that gets everything set up! Neat! Without going into too much detail, our Dockerfile:
 
-To start with, we want to create 2 containers. We can use the same Docker image to generate both containers. To make it easy to differentiate between the containers, we're going to give them names. To do so:
+- builds a docker image on top of the specified OS (ubuntu)
+- installs a bunch of networking software
+- copies the bash script, `start-up.sh`, from this chapter into the docker image
+
+The `start-up.sh` script at this point is just call to run the `sleep` command forever. Why? Docker containers only stay alive for as long as it takes to process whatever commands are given to it. By running `sleep` in the background, we keep the container alive so we can pop in and out of them as we please. We will add more to this script in future chapters to create the exact docker image we need for a functional internetwork.
+
+To start with, we want to create 2 containers. We can use the same Docker image to generate both containers. To make it easy to differentiate between the containers, we're going to name them after my cats, `boudi` and `pippin`... Because what else would you do?
+
+To do so:
 
 1. `docker build .`
 1. Grab the image ID (the jumble of letters and numbers following `writing image sha256:`) from the output and assign that ID to an environment variable (i.e. `export DOCKER_IMAGE=<image_id>`)
@@ -35,16 +45,6 @@ To start with, we want to create 2 containers. We can use the same Docker image 
 
 >**NOTE:**
 > What is this `--cap-add=NET_ADMIN` all about, you ask? Check the "Problem Solving" section at the bottom for more information! Also see [this Stack Overflow post](https://stackoverflow.com/questions/27708376/why-am-i-getting-an-rtnetlink-operation-not-permitted-when-using-pipework-with-d) for more details.
-
-## Simple Network
-
-> What is a network?
-
-2 or more machines that can communicate directly with each other over a physical medium (think actual wires or actual radio signals).
-
-> What is an internetwork?
-
-2 or more machines on different networks that can communicate with each other. There are special devices (routers) that are used to fascilitate communication between each machine.
 
 ## Build a Network
 
@@ -140,8 +140,7 @@ As the message indicates, that network is no longer available. `boudi` doesn't k
 
 >**NOTE:**
 >`ip addr` is an abbreviation for the actual command, `ip address`
-
-There is a bit of a tradition within networking CLIs to allow users to abbreviate commands (cisco CLIs are famous for this), and the `ip` command carries this forward.
+> There is a bit of a tradition within networking CLIs to allow users to abbreviate commands (cisco CLIs are famous for this), and the `ip` command carries this forward.
 
 ### Add our own IP address configuration
 
@@ -172,13 +171,13 @@ The initial output of this command should be:
 tcpdump: listening on eth1, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 ```
 
-This command should not output anything else until we ping that container, at which time you'll see each packet detected on the eth1 network interface shown on its own line.
+This command command will sit and run, waiting for network traffic to come in over the `eth0` interface. Once it sees traffic, it will print to the terminal what it's sniffing on the network. You may not see anything else until you run the `ping` from `boudi`.
 
-Now it's time to verify that the two containers can reach each other, so let's use the `ping` command. On the boudi machine, run:
+Now it's time to verify that the two containers can reach each other, so let's use the `ping` command. On `boudi`, run:
 
 `ping -c 5 10.1.1.3`
 
-and you should see on boudi:
+and you should see on `boudi`:
 
 ```bash
 PING 10.1.1.3 (10.1.1.3) 56(84) bytes of data.
@@ -193,7 +192,7 @@ PING 10.1.1.3 (10.1.1.3) 56(84) bytes of data.
 rtt min/avg/max/mdev = 0.091/0.218/0.341/0.080 ms
 ```
 
-And, you should see the following on pippin:
+And, you should see some variation on the following on `pippin` (the packets may be in a different order, so you may see the ARP requests later in the dump):
 
 ```bash
 19:52:30.295932 ARP, Request who-has 10.1.1.2 tell 10.1.1.3, length 28
@@ -212,7 +211,7 @@ And, you should see the following on pippin:
 19:52:28.887926 IP 10.1.1.3 > 10.1.1.2: ICMP echo reply, id 5, seq 5, length 64
 ```
 
-### Interlude: how to read tcpdump and ping output
+### Understanding tcpdump and ping output
 
 From `boudi`, we see some ping output like this:
 
@@ -222,29 +221,45 @@ From `boudi`, we see some ping output like this:
 
 Basically, all you need to know about this is that `ping` is a program that sends packets across the network using a protocol called ICMP, which stands for Internet Control Message Protocol. `echo request` and `echo reply` are two types of ICMP message. You can read more about them [here](https://docs.netapp.com/us-en/e-series-santricity/sm-hardware/what-are-icmp-ping-responses.html) if you want to know more. What we see here in this ping message is that it has both sent a packet to the destination (echo request), and the destination has replied (echo reply). The `icmp_seq=3` designation marks each individual request/response pair. If the ping did not go through, you might see various error messages, but the most common is that the `ping` command replies with `Request timeout for icmp_seq 0` type messages.
 
-On the container that is being pinged (pippin), we see quite a bit more information from tcpdump. First, we see a series of messages that have `ARP` in them. ARP, which stands for Address Resolution Protoco,  is a protocol that allows a machine that is connected locally on one network to talk to another machine that is also connected to that same network (as opposed to a machine that wants to communicate over multiple networks). We will talk about this crucial protocol more over the coming chapters, but you can get a head start learning about ARP [here](https://www.fortinet.com/resources/cyberglossary/what-is-arp) if you are interested in diving deeper.
+`pippin`'s tcpdump has much more going on. First, we see a series of messages that have `ARP` in them.
+
+```bash
+19:52:30.295932 ARP, Request who-has 10.1.1.2 tell 10.1.1.3, length 28
+19:52:30.296116 ARP, Request who-has 10.1.1.3 tell 10.1.1.2, length 28
+19:52:30.297091 ARP, Reply 10.1.1.3 is-at 02:42:ac:16:00:02, length 28
+19:52:30.297112 ARP, Reply 10.1.1.2 is-at 02:42:ac:16:00:03, length 28
+```
+
+ARP, which stands for Address Resolution Protocol,  is a protocol that allows a machine that is connected locally on one network to talk to another machine that is also connected to that same network (as opposed to a machine that wants to communicate over multiple networks). To learn more about ARP, checkout the [prefixes and subnet masks appendix](../appendix/prefixes-and-subnet-masks.md).
 
 After seeing the ARP packets go back and forth (which establish the ability for those two containers to talk to each other on the local network), we see the ICMP echo-request and echo-reply packets go back and forth in our `tcpdump` output.
+
+```bash
+19:52:24.811978 IP 10.1.1.2 > 10.1.1.3: ICMP echo request, id 5, seq 1, length 64
+19:52:24.812031 IP 10.1.1.3 > 10.1.1.2: ICMP echo reply, id 5, seq 1, length 64
+```
 
 ## Automate that shit
 
 At this point, there are a whole bunch of manual steps to get all this going.  Now that we have proven to ourselves that we know how to do this all manually, let's automate it! We have more containers to bring up and networks to build, and doing that all by hand will be a lot of toil.
 
-We are going to use the `docker compose` command which uses the `docker-compose.yml` file in this directory to build, configure, and start our two containers on our network.
+We are going to use the `docker compose` command which uses the [docker-compose.yml](docker-compose.yml) file in this directory to build, configure, and start our two containers on our network.
 
 You will use the following command:
 
-`docker compose up -d`
+```bash
+docker compose up -d
+```
 
-The `-d` flag tells docker compose that you want to continue using your terminal. When you're done with this session, you'll want to run `docker compose stop` in the same directory as the `docker-compose.yml` file.
+The `-d` flag tells docker compose that you want to continue using your terminal. When you're done with this session, you'll want to run `docker compose stop` in the same directory as the [docker-compose.yml](docker-compose.yml) file.
 
 There are a few differences with the system that docker creates using `docker compose` as compared to when we did this manually:
 
-- the network it creates has the same name as the directory you ran this from - with the network name as defined in the `docker-compose.yml` file (i.e. `squasheeba`) appended to it (so, in our case, `build-your-own-internet_squasheeba`).
-- Similarly, each container has that same label prepended to it (e.g. `build-your-own-internet-pippin-1`).
+- the network it creates has the same name as the directory you ran this from with the network name as defined in the `docker-compose.yml` file appended to it. So, in this chapter, `build-your-own-internet_squasheeba`.
+- Similarly, each container has that same label prepended to it; e.g. `build-your-own-internet-pippin-1`.
 - Docker has added a router in this network which connects both of these containers to the Internet. That router has the IP address of `10.1.1.1`. Each container also has a default-gateway pointed to that IP address which enables you to run a command like `ping 4.2.2.2`, which will successfully ping a DNS machine on the internet.
 
-Now you can repeat the tests we did above by connecting to each container (this time with commands `docker exec -it build-your-own-internet-boudi-1 /bin/bash` and `docker exec -it build-your-own-internet-pippin-1 /bin/bash`) and run the same tcpdump and ping commands as earlier with the same results.
+Now you can repeat the tests we did above by connecting to each container (this time with commands `docker exec -it build-your-own-internet-boudi-1 /bin/bash` and `docker exec -it build-your-own-internet-pippin-1 /bin/bash`) and run the same `tcpdump` and `ping` commands as earlier with the same results.
 
 ## Aside: Troubleshooting
 
@@ -252,27 +267,27 @@ Now you can repeat the tests we did above by connecting to each container (this 
 
 Sometimes, when experimenting with our containers and trying new things with our images, we don't get the results we expect. Rather than putting together a course on troubleshooting docker, here's a few CTRL + ALT + DEL options to try to just nuke the current setup and start over:
 
-_Kill All Containers_
+#### Kill All Containers
 
-```
+```bash
 docker container ls
 ```
 
 Grab the container ID for each container and run
 
-```
+```bash
 docker container kill <container_id>
 ```
 
-_Kill All Networks_
+#### Kill All Networks
 
-```
+```bash
 docker network prune
 ```
 
-_Clean Sweep The System_
+#### Clean Sweep The System
 
-```
+```bash
 docker system prune
 ```
 
