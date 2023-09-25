@@ -80,7 +80,6 @@ the client.
 
 A router is any machine whose purpose is to connect networks together. It does so by forwarding packets to the next hop. Each router has a routing table which serves much like a sign post on a highway: it tells the router where to send packets next on their way to their final destination. Each router makes decisions on its own for the most efficient way to send the packet to its destination. The internet, as we know today, is not possible without numerous routers facilitating the requests.
 
-
 ### docker-compose settings
 
 We had to make some changes to the docker-compose file that generates the machines and networks for our internetwork. These changes were made to thwart default behavior that makes docker or linux work in better, more predicatable ways, but weren't adventageous to our particular scenario. Here's a summary of those changes:
@@ -203,9 +202,7 @@ If you have problems creating your routing tables, the next exercise is going to
 
 ### What's the problem here
 
-**TODO**
-Setup the problem - what is the exercise
-Setup the goal
+We've built an internet! Yay! We have routing tables on each machine on our internet that tells it where to send packets bound for a machine on any other network on our internet! Neat! But... It appears our internet is broken. When we try to `ping` our `server` from our `client`, we're not seeing response packets coming back. We need to figure out what's happening and fix our internet! Let's setup your environment with the same break so you can investigate along with us.
 
 ### Set up your environment
 
@@ -401,7 +398,7 @@ On to the next line:
 
 Hmmm, it appears that router2 agrees with our earlier assessment! We see the original source and destination IPs from router3 to client (`100.1.3.1 > 1.0.0.100`) but router2 is sending the packet **back** to router3 (`02:42:64:01:02:01 > 02:42:64:01:03:01`). That's what we in the biz say, "Not cool man!"
 
-We think we might have found the problem: router3 is sending packets to router2 and router2 is returning them in an infinite loop! But let's keep looking at this pitter patter among routers just to see if there is anything more interesting! 
+We think we might have found the problem: router3 is sending packets to router2 and router2 is returning them in an infinite loop! But let's keep looking at this pitter patter among routers just to see if there is anything more interesting!
 > `21:58:00.861600 02:42:64:01:03:01 > 02:42:64:01:02:01, ethertype IPv4 (0x0800), length 98: 100.1.3.1 > 1.0.0.100: ICMP echo request, id 91, seq 2, length 64`
 
 First off, we see `seq 2` which is different from `seq 1` that we have seen thus far. This tells us that it is the second ping request being sent to client. This is the same pattern we observed in the first ping request, so let's continue on!
@@ -417,9 +414,12 @@ In our case, router2 is sending a ICMP redirect to router3 so router3 can make a
 
 > `21:58:00.861795 02:42:64:01:02:01 > 02:42:64:01:03:01, ethertype IPv4 (0x0800), length 98: 100.1.3.1 > 1.0.0.100: ICMP echo request, id 91, seq 2, length 64`
 
-Finally, we get to our last line... We see the same thing we saw in `seq 1`; router2 is sending the `echo request` packets router3 had sent to it right back to router3. 
+Finally, we get to our last line... We see the same thing we saw in `seq 1`; router2 is sending the `echo request` packets router3 had sent to it right back to router3.
 
-We've found out loop! Next step: go check the `start-up-exercise.sh` and look at the routes going to `1.0.0.0/8` on both router2 and router3. Where should those point instead? Use the network map at the beginning of this chapter to determine where these packets _should_ be getting forwarded to and update the routes. `restart` your containers and try your `ping` again!
+We've found out loop! Next step: go check the `start-up-exercise.sh` and look at the routes going to `1.0.0.0/8` on both router2 and router3. Where should those point instead? Use the network map at the beginning of this chapter to determine where these packets *should* be getting forwarded to and update the routes. `restart` your containers and try your `ping` again!
 
 TODO:
-* review and clean up both readme and docker-routing-pitfalls
+* review and clean up both 004 readme and docker-routing-pitfalls
+* address comment in <https://github.com/psbanka/build-your-own-internet/pull/11>
+* find and address various TODOs
+* Ashish: remove new lines in appendix files
