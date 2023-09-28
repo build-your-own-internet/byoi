@@ -48,6 +48,12 @@ What if we build a little internet?
 - What are we doing today ?
 - Github projects (Kanban)
 
+## How to get started reading and getting involved:
+
+- Start with [Chapter 1](https://github.com/psbanka/build-your-own-internet/blob/main/chapters/001-getting-started/README.md).
+- If you want to make changes to this repository (e.g. fixing errors or adding sections), fork this repository and submit a pull-request
+- If you have a general question and want someone to talk to, [submit an issue](https://github.com/psbanka/build-your-own-internet/issues/new)
+
 ## Stages of the project
 
 ### [COMPLETE] STAGE 0: What is the bare minimum to make an internetwork?
