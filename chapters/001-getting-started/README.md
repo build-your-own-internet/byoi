@@ -144,11 +144,11 @@ As the message indicates, that network is no longer available. `boudi` doesn't k
 
 ### Add our own IP address configuration
 
-Now that we've removed the default network docker created, let's get started creatig a network of our own! Let's add IP addresses to each of these containers using the `ip addr add` command. In this example, we want to use the `10.1.1.0/24` network for these containers. `10.0.0.0/8` is one of the networks identified in [RFC 1918](https://www.rfc-editor.org/rfc/rfc1918) that is exclusively used for _private_ networking. This means that any IP packet that reaches the internet with an IP address in this range will be dropped. This is helpful in our tutorial because if our system is misconfigured to route to the Internet, we don't want a false-positive for ping tests. Therefore on `pippin`, we use the command
+Now that we've removed the default network docker created, let's get started creating a network of our own! Let's add IP addresses to each of these containers using the `ip addr add` command. In this example, we want to use the `10.1.1.0/24` network for these containers. `10.0.0.0/8` is one of the networks identified in [RFC 1918](https://www.rfc-editor.org/rfc/rfc1918) that is exclusively used for _private_ networking. This means that any IP packet that reaches the internet with an IP address in this range will be dropped. This is helpful in our tutorial because if our system is misconfigured to route to the Internet, we don't want a false-positive for ping tests. Therefore on `pippin`, we use the command
 
-`ip addr add 10.1.1.3/24 dev eth0`
+`ip addr add 10.1.1.2/24 dev eth0`
 
-You'll want to repeat this process on `boudi`, but in this case the ip address is `10.1.1.2/24`.
+You'll want to repeat this process on `boudi`, but in this case the ip address is `10.1.1.3/24`.
 
 But wait... why are we ending our addresses with `.2` and `.3`? Why aren't we starting with `.0` or `.1`??? In networking spaces, there are reserved IP addresses that can only be used for specific kinds of machines. Generally speaking, the first address in a network, in our case `10.1.1.0`, is the network address and cannot be used to identify specific machines. Similarly, the last address in a network space is reserved and cannot be used to identify specific machines.
 
@@ -163,31 +163,31 @@ tcpdump -ni eth0
 Let's take a quick look at the flags used in that command:
 
 - `-n`: tells that program not to try to resolve hostnames via DNS
-- `-i eth1`: tells `tcpdump` which network interface to use
+- `-i eth0`: tells `tcpdump` which network interface to use
 
 The initial output of this command should be:
 
 ```bash
-tcpdump: listening on eth1, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+tcpdump: listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 ```
 
 This command command will sit and run, waiting for network traffic to come in over the `eth0` interface. Once it sees traffic, it will print to the terminal what it's sniffing on the network. You may not see anything else until you run the `ping` from `boudi`.
 
 Now it's time to verify that the two containers can reach each other, so let's use the `ping` command. On `boudi`, run:
 
-`ping -c 5 10.1.1.3`
+`ping -c 5 10.1.1.2`
 
 and you should see on `boudi`:
 
 ```bash
-PING 10.1.1.3 (10.1.1.3) 56(84) bytes of data.
-64 bytes from 10.1.1.3: icmp_seq=1 ttl=64 time=0.341 ms
-64 bytes from 10.1.1.3: icmp_seq=2 ttl=64 time=0.223 ms
-64 bytes from 10.1.1.3: icmp_seq=3 ttl=64 time=0.240 ms
-64 bytes from 10.1.1.3: icmp_seq=4 ttl=64 time=0.091 ms
-64 bytes from 10.1.1.3: icmp_seq=5 ttl=64 time=0.199 ms
+PING 10.1.1.2 (10.1.1.2) 56(84) bytes of data.
+64 bytes from 10.1.1.2: icmp_seq=1 ttl=64 time=0.341 ms
+64 bytes from 10.1.1.2: icmp_seq=2 ttl=64 time=0.223 ms
+64 bytes from 10.1.1.2: icmp_seq=3 ttl=64 time=0.240 ms
+64 bytes from 10.1.1.2: icmp_seq=4 ttl=64 time=0.091 ms
+64 bytes from 10.1.1.2: icmp_seq=5 ttl=64 time=0.199 ms
 
---- 10.1.1.3 ping statistics ---
+--- 10.1.1.2 ping statistics ---
 5 packets transmitted, 5 received, 0% packet loss, time 4096ms
 rtt min/avg/max/mdev = 0.091/0.218/0.341/0.080 ms
 ```
@@ -199,16 +199,16 @@ And, you should see some variation on the following on `pippin` (the packets may
 19:52:30.296116 ARP, Request who-has 10.1.1.3 tell 10.1.1.2, length 28
 19:52:30.297091 ARP, Reply 10.1.1.3 is-at 02:42:ac:16:00:02, length 28
 19:52:30.297112 ARP, Reply 10.1.1.2 is-at 02:42:ac:16:00:03, length 28
-19:52:24.811978 IP 10.1.1.2 > 10.1.1.3: ICMP echo request, id 5, seq 1, length 64
-19:52:24.812031 IP 10.1.1.3 > 10.1.1.2: ICMP echo reply, id 5, seq 1, length 64
-19:52:25.820736 IP 10.1.1.2 > 10.1.1.3: ICMP echo request, id 5, seq 2, length 64
-19:52:25.820799 IP 10.1.1.3 > 10.1.1.2: ICMP echo reply, id 5, seq 2, length 64
-19:52:26.826028 IP 10.1.1.2 > 10.1.1.3: ICMP echo request, id 5, seq 3, length 64
-19:52:26.826081 IP 10.1.1.3 > 10.1.1.2: ICMP echo reply, id 5, seq 3, length 64
-19:52:27.865467 IP 10.1.1.2 > 10.1.1.3: ICMP echo request, id 5, seq 4, length 64
-19:52:27.865502 IP 10.1.1.3 > 10.1.1.2: ICMP echo reply, id 5, seq 4, length 64
-19:52:28.887895 IP 10.1.1.2 > 10.1.1.3: ICMP echo request, id 5, seq 5, length 64
-19:52:28.887926 IP 10.1.1.3 > 10.1.1.2: ICMP echo reply, id 5, seq 5, length 64
+19:52:24.811978 IP 10.1.1.3 > 10.1.1.2: ICMP echo request, id 5, seq 1, length 64
+19:52:24.812031 IP 10.1.1.2 > 10.1.1.3: ICMP echo reply, id 5, seq 1, length 64
+19:52:25.820736 IP 10.1.1.3 > 10.1.1.2: ICMP echo request, id 5, seq 2, length 64
+19:52:25.820799 IP 10.1.1.2 > 10.1.1.3: ICMP echo reply, id 5, seq 2, length 64
+19:52:26.826028 IP 10.1.1.3 > 10.1.1.2: ICMP echo request, id 5, seq 3, length 64
+19:52:26.826081 IP 10.1.1.2 > 10.1.1.3: ICMP echo reply, id 5, seq 3, length 64
+19:52:27.865467 IP 10.1.1.3 > 10.1.1.2: ICMP echo request, id 5, seq 4, length 64
+19:52:27.865502 IP 10.1.1.2 > 10.1.1.3: ICMP echo reply, id 5, seq 4, length 64
+19:52:28.887895 IP 10.1.1.3 > 10.1.1.2: ICMP echo request, id 5, seq 5, length 64
+19:52:28.887926 IP 10.1.1.2 > 10.1.1.3: ICMP echo reply, id 5, seq 5, length 64
 ```
 
 ### Understanding tcpdump and ping output
@@ -216,7 +216,7 @@ And, you should see some variation on the following on `pippin` (the packets may
 From `boudi`, we see some ping output like this:
 
 ```bash
-64 bytes from 10.1.1.3: icmp_seq=3 ttl=64 time=0.240 ms
+64 bytes from 10.1.1.2: icmp_seq=3 ttl=64 time=0.240 ms
 ```
 
 Basically, all you need to know about this is that `ping` is a program that sends packets across the network using a protocol called ICMP, which stands for Internet Control Message Protocol. `echo request` and `echo reply` are two types of ICMP message. You can read more about them [here](https://docs.netapp.com/us-en/e-series-santricity/sm-hardware/what-are-icmp-ping-responses.html) if you want to know more. What we see here in this ping message is that it has both sent a packet to the destination (echo request), and the destination has replied (echo reply). The `icmp_seq=3` designation marks each individual request/response pair. If the ping did not go through, you might see various error messages, but the most common is that the `ping` command replies with `Request timeout for icmp_seq 0` type messages.
@@ -255,11 +255,11 @@ The `-d` flag tells docker compose that you want to continue using your terminal
 
 There are a few differences with the system that docker creates using `docker compose` as compared to when we did this manually:
 
-- the network it creates has the same name as the directory you ran this from with the network name as defined in the `docker-compose.yml` file appended to it. So, in this chapter, `build-your-own-internet_squasheeba`.
-- Similarly, each container has that same label prepended to it; e.g. `build-your-own-internet-pippin-1`.
+- the network it creates has the same name as the directory you ran this from with the network name as defined in the `docker-compose.yml` file appended to it. So, in this chapter, `001-getting-started_squasheeba`.
+- Similarly, each container has that same label prepended to it; e.g. `001-getting-started-pippin-1`.
 - Docker has added a router in this network which connects both of these containers to the Internet. That router has the IP address of `10.1.1.1`. Each container also has a default-gateway pointed to that IP address which enables you to run a command like `ping 4.2.2.2`, which will successfully ping a DNS machine on the internet.
 
-Now you can repeat the tests we did above by connecting to each container (this time with commands `docker exec -it build-your-own-internet-boudi-1 /bin/bash` and `docker exec -it build-your-own-internet-pippin-1 /bin/bash`) and run the same `tcpdump` and `ping` commands as earlier with the same results.
+Now you can repeat the tests we did above by connecting to each container (this time with commands `docker exec -it 001-getting-started-boudi-1 /bin/bash` and `docker exec -it 001-getting-started-pippin-1 /bin/bash`) and run the same `tcpdump` and `ping` commands as earlier with the same results.
 
 ## Aside: Troubleshooting
 
