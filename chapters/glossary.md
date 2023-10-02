@@ -2,6 +2,19 @@
 
 You might run into terms that you don't know the definition to. Sometimes they are properly defined when they are first used, and sometimes they are not. Maybe you put this text down for a while and can't remember if we ever talked about it. Either way, we will do our best to define terms here!
 
+- [Glossary](#glossary)
+  - [client](#client)
+  - [container](#container)
+  - [docker](#docker)
+  - [host](#host)
+  - [interface](#interface)
+  - [internet (or internetwork)](#internet-or-internetwork)
+  - [machine](#machine)
+  - [network](#network)
+  - [router (also known as a `gateway`)](#router-also-known-as-a-gateway)
+  - [server](#server)
+
+
 ## client
 
 A client is any host that initiates a connection/request to a server on the network or the larger internetwork. A common example is a browser or curl request to a web resource. In future chapters, we might explore how clients are protected by the network either via firewall or through other means but this definition is sufficient for our current use case.
