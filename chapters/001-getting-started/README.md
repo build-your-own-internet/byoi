@@ -15,15 +15,6 @@ Here's what we expect our network to look like by the end of this chapter:
               (squasheeba 10.1.1.0/24)
 ```
 
-## Vocabulary
-
-- `container`: a running instance of a docker image. Each container we create will be one machine on that internet.
-- `machine`: any computer. Could be a server, a router, a client...
-- `gateway`: a `machine` on the internet that has the ability to route.
-- `host`: a `machine` on the internet that does NOT have any routing capabilities.
-- network: 2 or more machines that can communicate directly with each other over a physical medium (think actual wires or actual radio signals).
-- internetwork (or internet): 2 or more machines on _different networks_ that can communicate with each other. There are special devices (routers) that are used to fascilitate communication between each machine.
-
 ## Running your docker container
 
 We got this magic [Dockerfile](Dockerfile) that gets everything set up! Neat! Without going into too much detail, our Dockerfile:
@@ -72,7 +63,7 @@ root@3daaaf641c2d:/# ip addr
        valid_lft forever preferred_lft forever
 ```
 
-There's a lot going on here, and we'll get more familiar with this output in future chapters. But, for now, what we're seeing is 2 network interfaces on `pippin`, one for loopback, `lo`, which is used in networking for routing queries back to the machine that made the initial query. The other interface, `eth0` shows us that `pippin` already has an IP address, `172.17.0.2`, on an existing network, `172.17.0.2/16`. The exact address may be different on your machine, but the principles are the same.
+There's a lot going on here, and we'll get more familiar with this output in future chapters. But, for now, what we're seeing is 2 network [interfaces](../glossary.md#interfaces) on `pippin`, one for loopback, `lo`, which is used in networking for routing queries back to the machine that made the initial query. The other interface, `eth0` shows us that `pippin` already has an IP address, `172.17.0.2`, on an existing network, `172.17.0.2/16`. The exact address may be different on your machine, but the principles are the same.
 
 Uh oh... Let's hopon `boudi` and see if that machine is on the same network:
 
