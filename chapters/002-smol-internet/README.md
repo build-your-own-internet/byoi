@@ -54,6 +54,10 @@ Running an `export` in a new window means that the variable exported only lives 
 export PATH=$PATH:/path/to/repo/build-your-own-internet/bin
 ```
 
+#### The /final folder
+
+You'll notice that this chapter also contains a new `/final` folder. This folder contains a [docker-compose.yml file](./final/docker-compose.yml) that show what we expect the main [docker-compose.yml file](./docker-compose.yml) to look like at the end of this chapter.
+
 Now, onward! To the building of the internet!
 
 ## Create a second network

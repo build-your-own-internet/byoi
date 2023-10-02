@@ -6,7 +6,7 @@
 
 The intention behind this project is discovery and understanding. The idea is to explore how the internet is put together and use common industry tools to see and understand all the communications necessary to make the services and apps we use work.
 
-We decided to take notes that create a reproducible experience. We document our questions, discovery, and our processes so other people who may want to take a similar journey can have a path to follow. We have broken up our exploration into chapters. Each chapter has a README that documents our exploration and **the final state** for that chapter of whatever files we create or modify in our exploration. There is, at least as of yet, very little actual software to run from this repo. Instead, the intent is to guide the experience and the learning process.
+We decided to take notes that create a reproducible experience. We document our questions, discovery, and our processes so other people who may want to take a similar journey can have a path to follow. We have broken up our exploration into chapters. Each chapter has a README that documents our exploration and whatever files we create or modify in our exploration. Some chapters have a /final directory that contain the artifacts for the chapter in their final state. If you get lost in a chapter and need a reference point, these may be artifacts to help move you forward. There is, at least as of yet, very little actual software to run from this repo. Instead, the intent is to guide the experience and the learning process.
 
 ## Pre-requisites
 
@@ -48,7 +48,7 @@ What if we build a little internet?
 - What are we doing today ?
 - Github projects (Kanban)
 
-## How to get started reading and getting involved:
+## How to get started reading and getting involved
 
 - Start with [Chapter 1](https://github.com/psbanka/build-your-own-internet/blob/main/chapters/001-getting-started/README.md).
 - If you want to make changes to this repository (e.g. fixing errors or adding sections), fork this repository and submit a pull-request
