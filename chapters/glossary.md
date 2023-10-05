@@ -59,6 +59,10 @@ Sometimes when people use the term "network," they mean "internetwork." Since "i
 
 A router is any machine whose purpose is to connect networks together. It does so by forwarding packets further toward their destination. Each router has a routing table which serves much like a sign post on a highway: it tells the router where to send packets next on their way to their final destination. Each router makes decisions on its own for the most efficient way to send the packet to its destination. The internet, as we know today, is not possible without numerous routers facilitating the requests.
 
+## routing table
+
+A routing table is a list of known network IP address ranges and potentially a default gateway that lives on every machine connected to an internet. The routing table is used to know how to send packets across an internet from a source machine to a destination machine. The routing table shows network prefixes and subnets and associates them with a next hop that can forward packets towards the destination. If the routing table does not have a matching route for the destination IP address, the request can be sent out the default gateway in the hopes that another machine on that internet will know how to get the packets to their destination.
+
 ## server
 
 A server is any machine whose purpose is to serve a network request to a client. If the server fails to serve the request, it can return an appropriate error back to the client.
