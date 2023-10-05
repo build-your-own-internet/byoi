@@ -56,25 +56,9 @@ So, `Client`'s IP address is `1.0.0.100` and it only has an interface on the `1.
 
 ### Pets v. Cattle
 
-You might be wondering what the hell happened to our fun pets and their personalities from the previous chapter. Well, we are in serious business territory now and there is no room for emotions and personality when it comes to serious business™. In other words, when you are dealing with large infrastructure, it's much easier to manage things when you assign roles to them that dictate how things are configured. Hence, we have Server(s), Client(s) and Router(s) instead of our lovable pets.
+You might be wondering what the hell happened to our fun pets and their personalities from the previous chapter. Well, we are in serious business territory now and there is no room for emotions and personality when it comes to serious business™. In other words, when you are dealing with large infrastructure, it's much easier to manage things when you assign roles to them that dictate how things are configured. Hence, we have Server(s), Client(s), and Router(s) instead of our lovable pets.
 
 There is an industry-specific phrase that matches the theme here too. Within infrastructure industry, the popular way to see components of the infrastructure is as "cattle, not pets". This is a mean way of saying we only care about the larger system and we care less about details of individual components. Those components are there to serve a purpose and once they are unable to, we can easily replace them with other components that can serve the same role.
-
-Since we do care about the roles, let's dive a little deeper into them and understand what we mean:
-
-### Vocab reminders
-
-#### Client
-
-A client is any machine that initiates a connection/request to another machine on the network or the larger internetwork. A common example is a browser or curl request to a web resource. In future chapters, we might explore how clients are protected by the network either via firewall or through other means but this definition is sufficient for our current use case.
-
-#### Server
-
-A server is any machine whose purpose is to respond to a network request. If the server fails to serve the request, it can return an appropriate error back to the client.
-
-#### Router
-
-A router is any machine whose purpose is to connect networks together. It does so by forwarding packets to the next hop. Each router has a routing table which serves much like a sign post on a highway: it tells the router where to send packets next on their way to their final destination. Each router makes decisions on its own for the most efficient way to send the packet to its destination. The internet, as we know today, is not possible without numerous routers facilitating the requests.
 
 ### docker-compose settings
 

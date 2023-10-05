@@ -39,11 +39,6 @@ Here's what we expect the internet to look like at the end of this chapter:
 
 Simple, no?!
 
-## Vocab
-
-* `subnet`:
-* `prefix`:
-
 ## Asides
 
 ### Pets v. Cattle
@@ -156,6 +151,7 @@ Here.... we would be expecting a reply... but we're not gettin' it.
 We see that router3 knew the correct next hop to get to five-net. We then see that router3 found the mac address for router1, which is the connection to five-net. We see router3 send our ping destined for router1 on five-net via router1 on three-net. We see that router3 is doing everything we expect correctly. Because we're not getting a reply to our ping request, we can assume the problem is somewhere in the route defined for router1 to one-hundo-net.
 
 If router3 had been the problem, we would have seen either
+
 * no output from our tcpdump because it was sending the request out the wrong interface
 * we wouldn't have seen the ARP Request/Reply
 

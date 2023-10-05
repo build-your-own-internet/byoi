@@ -4,10 +4,6 @@
 
 Explore how traceroute gives us network topology so we can see how the machines we're creating are communicating with each other.
 
-## Vocab
-
-* `hop`: refers to a machine between source and destination that a packet traverses through. The number of machines that a packet goes through before reaching the destination is the hop count.
-
 ## Examining traceroute
 
 ### How it works

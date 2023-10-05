@@ -6,6 +6,7 @@ You might run into terms that you don't know the definition to. Sometimes they a
   - [client](#client)
   - [container](#container)
   - [docker](#docker)
+  - [hop](#hop)
   - [host](#host)
   - [interface](#interface)
   - [internet (or internetwork)](#internet-or-internetwork)
@@ -13,7 +14,6 @@ You might run into terms that you don't know the definition to. Sometimes they a
   - [network](#network)
   - [router (also known as a `gateway`)](#router-also-known-as-a-gateway)
   - [server](#server)
-
 
 ## client
 
@@ -27,13 +27,17 @@ A container is a virtual machine, typically (but not necessarily) being run and 
 
 Docker is a piece of software that runs and manages containers. It also creates virtual networking environments and will often try to butt in and do more network interference than you want it to.
 
+## hop
+
+A hop refers to a machine between the source and destination that a packet traverses through. The number of machines that a packet goes through before reaching the destination is the hop count.
+
 ## host
 
 A "host" is a machine that does not route packets. There are to sub-types of hosts: `clients`, which only originate requests on a network, and `servers` which only respond to network requests on a network.
 
 ## interface
 
-`interface` (or, more properly said, `network interface`): This is (typically) an ethernet port on a machine which allows it to send packets on an ethernet network. In a Docker environment, this interface is virtual, and not physical. Outside of docker, this interface will be connected to a physical wire or radio (WiFi) signal. In more exotic networking environments (such as a data-center), you may even see network interfaces other than Ethernet. Also, it's possible for a machine to have more than one interface, but that's uncommon (and typical only of routers).
+An `interface` (or, more properly said, `network interface`) is (typically) an ethernet port on a machine which allows it to send packets on an ethernet network. In a Docker environment, this interface is virtual, and not physical. Outside of docker, this interface will be connected to a physical wire or radio (WiFi) signal. In more exotic networking environments (such as a data-center), you may even see network interfaces other than Ethernet. Also, it's possible for a machine to have more than one interface, but that's uncommon (and typical only of routers).
 
 ## internet (or internetwork)
 
