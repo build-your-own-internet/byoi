@@ -65,7 +65,7 @@ root@3daaaf641c2d:/# ip addr
        valid_lft forever preferred_lft forever
 ```
 
-There's a lot going on here, and we'll get more familiar with this output in future chapters. But, for now, what we're seeing is 2 network [interfaces](../glossary.md#interfaces) on `pippin`, one for loopback, `lo`, which is used in networking for routing queries back to the machine that made the initial query. The other interface, `eth0` shows us that `pippin` already has an IP address, `172.17.0.2`, on an existing network, `172.17.0.2/16`. The exact address may be different on your machine, but the principles are the same.
+There's a lot going on here, and we'll get more familiar with this output in future chapters. But, for now, what we're seeing is 2 network [interfaces](../glossary.md#interface) on `pippin`, one for loopback, `lo`, which is used in networking for routing queries back to the machine that made the initial query. The other interface, `eth0` shows us that `pippin` already has an IP address, `172.17.0.2`, on an existing network, `172.17.0.2/16`. The exact address may be different on your machine, but the principles are the same.
 
 Uh oh... Let's hopon `boudi` and see if that machine is on the same network:
 
@@ -286,13 +286,11 @@ docker system prune
 
 ### Cannot edit IP addresses?
 
-tl;dr We initially could not edit our IP addresses for the containers within the network. The solution for the problem was adding the permission `--cap-add=NET_ADMIN` when running `docker run` to get docker to allow us to be able to edit them.
-
-It doesn't seem like it's possible to manually configure the IP address settings for a container. For example,
+tl;dr We initially could not edit our IP addresses for the containers within the network:
 
 ```bash
 / # ip addr add 10.1.1.3/24 dev eth1
 ip: RTNETLINK answers: Operation not permitted
 ```
 
-☝️ it's not possible to add an IP address to a running machine. Similarly, `ip addr del` also fails with an `Operation not permitted` error.
+The solution for the problem was adding the permission `--cap-add=NET_ADMIN` when running `docker run` to get docker to allow us to be able to edit them.
