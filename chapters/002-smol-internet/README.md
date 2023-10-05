@@ -24,6 +24,10 @@ Here's what we expect our internet to look like by the end of this chapter:
               (squasheeba 10.1.1.0/24)
 ```
 
+You'll notice in this network diagram that we've built on the smol network from Chapter 001. Here, we've added a new network, `doggonet`, and we've added a new machine, `tara`. By the end of this chapter, we want to modify `boudi` so that machine has an interface on both `squasheeba` and `doggonet`.
+
+Now that we've got a bit of an internet drawn out in our network diagram above, let's take a moment to really understand how to read what we're seeing there. Think of this diagram like a street map. Each line is a path we can take to get from one location to another. So, if we wanted to travel from `pippin` to `tara`, we'd leave `pippin` on the `squasheeba` network until we got to `boudi`. `boudi` is a bridge between `squasheeba` and `doggonet`, so we'd pass through `boudi` to get to `doggonet`. Once there, we could find `tara` and go visit that machine. We've added the IP addresses for the machines and networks to make it easier to reference and understand which machine is talking to which other machine on which network.
+
 ### Aside: Efficiencies
 
 #### Naming of the Containers

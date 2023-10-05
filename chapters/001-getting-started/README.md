@@ -15,6 +15,8 @@ Here's what we expect our network to look like by the end of this chapter:
               (squasheeba 10.1.1.0/24)
 ```
 
+In this diagram, there are 2 machines, `boudi` and `pippin`, who are a single network, `squasheeba`. The network range for squasheeba is `10.1.1.0/24`, meaning: all IP addresses in the range from `10.1.1.0` through `10.1.1.255` are a part of that network. Any machine on that network will have an IP address that is within that range, so `boudi` has the IP address `10.1.1.3` and `pippin` has the IP address `10.1.1.2`.
+
 ## Running your docker container
 
 We got this magic [Dockerfile](Dockerfile) that gets everything set up! Neat! Without going into too much detail, our Dockerfile:
