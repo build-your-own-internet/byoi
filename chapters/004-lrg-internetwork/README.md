@@ -2,13 +2,7 @@
 
 ## Goals for this section
 
-Let's use the tools and processes we've already discovered to make a much larger
-internetwork! In this case, we'll want to be able to traverse several networks
-to get machines who are not directly connected to be able to communicate with
-each other. Looking at the network diagram below, we can see that the `client`
-machine is connected to the `1.0.0.0/8` network. We want `client` to
-be able to traverse our internetwork to reach `server` connected to
-`5.0.0.0/8`.
+Let's use the tools and processes we've already discovered to make a much larger internetwork! In this case, we'll want to be able to traverse several networks to get machines who are not directly connected to be able to communicate with each other. Looking at the network diagram below, we can see that the `client` machine is connected to the `1.0.0.0/8` network. We want `client` to be able to traverse our internetwork to reach `server` connected to `5.0.0.0/8`.
 
 Here's what we expect the internet to look like at the end of this chapter:
 
@@ -38,47 +32,33 @@ Here's what we expect the internet to look like at the end of this chapter:
               5.0.0.0/8
 ```
 
+In the design of this network, we decided to make a few policies to make it easy to understand the IP addresses of each machine on each network without having to write them in the network diagram. While you can reference the [docker-compose](./docker-compose.yml) to find the various IP addresses of each machine, using the diagram makes it easier and if we have consistent decisions about how IP addresses are assigned, then the docker-compose file isn't needed as an additional reference.
+
+IP addresses for `Router`s:
+
+* The IP address for each `Router` will end in `.1` for each interface on each network that router has
+* Each `Router` will use the number in it's name on the third octet of the IP address for each interface on each network
+* On the peer2peer networks (the ones assigned a `/29` address range), we will include the specific last octet of the `Router` in the diagram
+
+So, for example, all of the IP addresses for `Router5` are:
+
+* `1.0.5.1` on the the `1.0.0.0/8` network
+* `100.1.5.1` on the `100.1.0.0/16` network
+* `200.1.1.19` on the `200.1.1.16/29` network
+
+IP addresses for `Client` and `Server`:
+
+* Both machines will use `.100` as the last octet for the network they have an interface on
+
+So, `Client`'s IP address is `1.0.0.100` and it only has an interface on the `1.0.0.0/8` network.
+
 ## Asides
 
 ### Pets v. Cattle
 
-You might be wondering what the hell happened to our fun pets and their
-personalities from the previous chapter. Well, we are in serious business
-territory now and there is no room for emotions and personality when it comes to
-serious business™. In other words, when you are dealing with large
-infrastructure, it's much easier to manage things when you assign roles to them
-that dictate how things are configured. Hence, we have Server(s), Client(s) and
-Router(s) instead of our lovable pets.
+You might be wondering what the hell happened to our fun pets and their personalities from the previous chapter. Well, we are in serious business territory now and there is no room for emotions and personality when it comes to serious business™. In other words, when you are dealing with large infrastructure, it's much easier to manage things when you assign roles to them that dictate how things are configured. Hence, we have Server(s), Client(s), and Router(s) instead of our lovable pets.
 
-There is an industry-specific phrase that matches the theme here too. Within
-infrastructure industry, the popular way to see components of the infrastracture
-is as "cattle, not pets". This is a mean way of saying we only care about the
-larger system and we care less about details of individual components. Those
-components are there to serve a purpose and once they are unable to, we can
-easily replace them with other components that can serve the same role.
-
-Since we do care about the roles, let's dive a little deeper into them and
-understand what we mean:
-
-### Vocab reminders
-
-#### Client
-
-A client is any machine that initiates a connection/request to another machine
-on the network or the larger internetwork. A common example is a browser or curl
-request to a web resource. In future chapters, we might explore how clients are
-protected by the network either via firewall or through other means but this
-definition is sufficient for our current use case.
-
-#### Server
-
-A server is any machine whose purpose is to respond to a network request. If the
-server fails to serve the request, it can return an appropriate error back to
-the client.
-
-#### Router
-
-A router is any machine whose purpose is to connect networks together. It does so by forwarding packets to the next hop. Each router has a routing table which serves much like a sign post on a highway: it tells the router where to send packets next on their way to their final destination. Each router makes decisions on its own for the most efficient way to send the packet to its destination. The internet, as we know today, is not possible without numerous routers facilitating the requests.
+There is an industry-specific phrase that matches the theme here too. Within infrastructure industry, the popular way to see components of the infrastructure is as "cattle, not pets". This is a mean way of saying we only care about the larger system and we care less about details of individual components. Those components are there to serve a purpose and once they are unable to, we can easily replace them with other components that can serve the same role.
 
 ### docker-compose settings
 
@@ -419,6 +399,7 @@ Finally, we get to our last line... We see the same thing we saw in `seq 1`; rou
 We've found out loop! Next step: go check the `start-up-exercise.sh` and look at the routes going to `1.0.0.0/8` on both router2 and router3. Where should those point instead? Use the network map at the beginning of this chapter to determine where these packets *should* be getting forwarded to and update the routes. `restart` your containers and try your `ping` again!
 
 TODO:
+
 * review and clean up both 004 readme and docker-routing-pitfalls
 * address comment in <https://github.com/psbanka/build-your-own-internet/pull/11>
 * find and address various TODOs
