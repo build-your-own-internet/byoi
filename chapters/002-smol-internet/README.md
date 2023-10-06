@@ -125,7 +125,7 @@ The only network `boudi` knows about on its routing table is its own `squasheeba
 
 ## Make those networks communicate with each other
 
-How do machines communicate across networks? Well, first they need to have a router. Sure, docker has its own built in router, but we want to build our own.  What is a router, but  another machine on the network. A router just has 2 special properties that make it a router instead of just a regular machine on the network:
+How do machines communicate across networks? Well, first they need to have a router. Sure, docker has its own built in router, but we want to build our own.  What is a router, but another machine on the network. A router just has 2 special properties that make it a router instead of just a regular machine on the network:
 
 * an interface on more than one network
 * the ability to forward packets that are not destined for itself to other machines
@@ -232,7 +232,7 @@ Here we see the incoming `ping` or `ICMP echo request`. The source machine is `1
 
 > **What's with those ARP requests?**
 
-YOu may or may not see in your own session some odd looking packets identified as `ARP` in the tcpdump:
+You may or may not see in your own session some odd looking packets identified as `ARP` in the tcpdump:
 
 ```bash
 18:53:54.166970 ARP, Request who-has 10.1.2.3 tell 10.1.2.2, length 28
@@ -241,7 +241,7 @@ YOu may or may not see in your own session some odd looking packets identified a
 18:53:54.167168 ARP, Reply 10.1.2.3 is-at 02:42:0a:01:02:03, length 28
 ```
 
-We go over this in more detail in [ip-and-mac-addresses.md in the appendix](../appendix/ip-and-mac-addresses.md), but let's look at a high level at what's going on here. IP addresses, like `10.1.2.3`, are used by machines for identifying where packets should be routed across an internet. So what we've been working with so far is designed to help machines communicate when there are multiple networks. HOWEVER. Within a network, machines are not identified by an IP address, but instead by a MAC address. In order for packets to be forwarded from one machine on a network to another machine on the same network, each machine needs to discover the MAC address that corresponds to the IP address identified in the packets. ARP, or Address Resolution Protocol, is the process by which this is done.
+We go over this in more detail in [ip-and-mac-addresses.md in the appendix](../appendix/ip-and-mac-addresses.md), but let's look at a high level at what's going on here. IP addresses, like `10.1.2.3`, are used by machines for identifying where packets should be routed across an internet. So what we've been working with so far is designed to help machines communicate when there are multiple networks. HOWEVER. Within a network, machines are not identified by an IP address, but instead by a MAC address. In order for packets to be sent from one machine on a network to another machine on the same network, each machine needs to discover the MAC address that corresponds to the IP address identified in the packets. ARP, or Address Resolution Protocol, is the process by which this is done.
 
 Let's read what's happening with the `ARP` requests we see above:
 
@@ -295,13 +295,15 @@ Lovely! This is because, while `boudi` has an interface on the `doggonet` networ
 
 ### Make `tara` ping hosts on the `squasheeba` network
 
-The first thing we need to do is add a route from `tara` to the `squasheeba` network via `boudi`. Because `boudi` has routes to both `doggonet` and `squasheeba`, `boudi` can act as the gateway between the two. We can manage routes on our machines using the `ip route` command:
+The first thing we need to do is add a route from `tara` to the `squasheeba` network via `boudi`. Because `boudi` has routes to both `doggonet` and `squasheeba`, `boudi` can act as the router between the two. We can manage routes on our machines using the `ip route` command:
 
 ```bash
 root@tara:/# ip route add 10.1.1.0/24 via 10.1.2.3
 ```
 
-This command defines the network, `10.1.1.0/24` and then says that routes to that network should use a machine that exists on a network it has an interface on, namely, `boudi` at `10.1.2.3`. Now, if we check the routes that `tara` knows about, we'll see the route defined in `tara`'s routing table:
+This command identifies the network, `10.1.1.0/24` (a.k.a. "squasheeba") and then says: "Any time you have a packet for this network, you should send it to `10.1.2.3` (a.k.a. `boudi`), cuz that dude knows all about it."
+
+Now, if we check the routes that `tara` knows about, we'll see the route defined in `tara`'s routing table:
 
 ```bash
 root@tara:/# ip route

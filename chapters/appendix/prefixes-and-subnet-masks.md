@@ -147,7 +147,7 @@ This might sound like gibberish to begin with. Don't worry! We'll spell it out i
 
 Let's go through an example of this. We're looking at one router on the Internet, and let's say it has the following routing table:
 
-```
+```none
 Route 1: 10.1.0.0/24
 Route 2: 10.2.0.0/23 <== notice the /23! tricky!
 Route 3: 10.3.3.0/24
@@ -168,19 +168,19 @@ First, we apply the subnet mask of that route to the destination IP address of t
 
 The subnet mask, that "/24" on the route, represents 24 bits of mask. Said another way, it has 24 "1"s turned on, starting from the left of the binary number, like this:
 
-```
+```none
 11111111.11111111.11111111.00000000 <== 24 "1"s
 ```
 
 Next, we convert each octet of the destination IP address to bits, so `10.2.1.4` becomes:
 
-```
+```none
 00001010.00000010.00000001.00000100
 ```
 
 To apply the binary AND operation between these numbers is simple: line them up and go bit-by-bit: if **both** bits are `1`, then the result is a `1`. Otherwise, the result is a `0`:
 
-```
+```none
 subnet mask:         11111111.11111111.11111111.00000000
 destination IP:      00001010.00000010.00000001.00000100
    AND               ===================================
@@ -207,7 +207,7 @@ Okay, the first route didn’t work out. But we’re not frightened. We have mor
 
 We apply the subnet mask (`/23`) to the destination IP address (`10.2.1.4`):
 
-```
+```none
 subnet mask:         11111111.11111111.11111110.00000000 <==  23 1's!
 network address:     00001010.00000010.00000001.00000100
  AND                 ===================================
@@ -279,7 +279,7 @@ Did you notice the pattern there? Eh? Eh?! The values at the upper end of the IP
 
 All we’re doing is turning on the next value in our 8-bit binary number!
 
-```
+```none
 0000 0000 = 0
 0000 0001 = 1
 0000 0010 = 2
@@ -306,7 +306,7 @@ Using what you know now, see if you can figure out the answers to the following 
 * What is the subnet mask for a network with a single address?
 * Using the routing table below, which route would a router pick for `10.4.4.18`?
 
-```
+```bash
 Route 1: 10.1.0.0/24
 Route 2: 10.2.0.0/23
 Route 3: 10.3.3.0/24
