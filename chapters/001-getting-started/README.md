@@ -12,10 +12,10 @@ Here's what we expect our network to look like by the end of this chapter:
      │                  │
      │                  │
 ─────┴──────────────────┴──────
-              (squasheeba 10.1.1.0/24)
+              (caternet 10.1.1.0/24)
 ```
 
-In this diagram, there are 2 machines, `boudi` and `pippin`, who are a single network, `squasheeba`. The network range for squasheeba is `10.1.1.0/24`, meaning: all IP addresses in the range from `10.1.1.0` through `10.1.1.255` are a part of that network. Any machine on that network will have an IP address that is within that range, so `boudi` has the IP address `10.1.1.3` and `pippin` has the IP address `10.1.1.2`.
+In this diagram, there are 2 machines, `boudi` and `pippin`, who are a single network, `caternet`. The network range for caternet is `10.1.1.0/24`, meaning: all IP addresses in the range from `10.1.1.0` through `10.1.1.255` are a part of that network. Any machine on that network will have an IP address that is within that range, so `boudi` has the IP address `10.1.1.3` and `pippin` has the IP address `10.1.1.2`.
 
 ## Running your docker container
 
@@ -248,7 +248,7 @@ The `-d` flag tells docker compose that you want to continue using your terminal
 
 There are a few differences with the system that docker creates using `docker compose` as compared to when we did this manually:
 
-- the network it creates has the same name as the directory you ran this from with the network name as defined in the `docker-compose.yml` file appended to it. So, in this chapter, `001-getting-started_squasheeba`.
+- the network it creates has the same name as the directory you ran this from with the network name as defined in the `docker-compose.yml` file appended to it. So, in this chapter, `001-getting-started_caternet`.
 - Similarly, each container has that same label prepended to it; e.g. `001-getting-started-pippin-1`.
 - Docker has added a router in this network which connects both of these containers to the Internet. That router has the IP address of `10.1.1.1`. Each container also has a default-gateway pointed to that IP address which enables you to run a command like `ping 4.2.2.2`, which will successfully ping a DNS machine on the internet.
 
