@@ -4,7 +4,7 @@ services:
     build: .
     hostname: boudi
     networks:
-      squasheeba:
+      caternet:
         ipv4_address: 10.1.1.3
     cap_add:
       - NET_ADMIN
@@ -12,13 +12,13 @@ services:
     build: .
     hostname: pippin
     networks:
-      squasheeba:
+      caternet:
         ipv4_address: 10.1.1.2
     cap_add:
       - NET_ADMIN
 
 networks:
-  squasheeba:
+  caternet:
     driver: bridge
     ipam:
       driver: default

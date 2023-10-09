@@ -21,12 +21,12 @@ Here's what we expect our internet to look like by the end of this chapter:
      │                  │
      │                  │
 ─────┴──────────────────┴──────
-              (squasheeba 10.1.1.0/24)
+              (caternet 10.1.1.0/24)
 ```
 
-You'll notice in this network diagram that we've built on the smol network from Chapter 001. Here, we've added a new network, `doggonet`, and we've added a new machine, `tara`. By the end of this chapter, we want to modify `boudi` so that machine has an [interface](../glossary.md#interface) on both `squasheeba` and `doggonet`.
+You'll notice in this network diagram that we've built on the smol network from Chapter 001. Here, we've added a new network, `doggonet`, and we've added a new machine, `tara`. By the end of this chapter, we want to modify `boudi` so that machine has an [interface](../glossary.md#interface) on both `caternet` and `doggonet`.
 
-Now that we've got a bit of an internet drawn out in our network diagram above, let's take a moment to really understand how to read what we're seeing there. Think of this diagram like a street map. Each line is a path we can take to get from one location to another. So, if we wanted to travel from `pippin` to `tara`, we'd leave `pippin` on the `squasheeba` network until we got to `boudi`. `boudi` is a bridge between `squasheeba` and `doggonet`, so we'd pass through `boudi` to get to `doggonet`. Once there, we could find `tara` and go visit that machine. We've added the IP addresses for the machines and networks to make it easier to reference and understand which machine is talking to which other machine on which network.
+Now that we've got a bit of an internet drawn out in our network diagram above, let's take a moment to really understand how to read what we're seeing there. Think of this diagram like a street map. Each line is a path we can take to get from one location to another. So, if we wanted to travel from `pippin` to `tara`, we'd leave `pippin` on the `caternet` network until we got to `boudi`. `boudi` is a bridge between `caternet` and `doggonet`, so we'd pass through `boudi` to get to `doggonet`. Once there, we could find `tara` and go visit that machine. We've added the IP addresses for the machines and networks to make it easier to reference and understand which machine is talking to which other machine on which network.
 
 ### Aside: Efficiencies
 
@@ -69,7 +69,7 @@ Now, onward! To the building of the internet!
 
 ## Create a second network
 
-What we have created so far is a single network with a couple machines that can communicate with each other. If you check the [docker-compose.yml file](./docker-compose.yml) for this chapter, you'll see that it's almost exactly what we had setup from Chapter 001. Now, we want to create a second network, `doggonet`, that cannot directly talk to the previously created network, `squasheeba`.
+What we have created so far is a single network with a couple machines that can communicate with each other. If you check the [docker-compose.yml file](./docker-compose.yml) for this chapter, you'll see that it's almost exactly what we had setup from Chapter 001. Now, we want to create a second network, `doggonet`, that cannot directly talk to the previously created network, `caternet`.
 
 To define our new `doggonet` network, add the following to the docker-compose.yml file for this chapter under `networks`.
 
@@ -121,7 +121,7 @@ root@boudi:/# ip route
 10.1.1.0/24 dev eth0 proto kernel scope link src 10.1.1.3
 ```
 
-The only network `boudi` knows about on its routing table is its own `squasheeba`, `10.1.2.0/24`. `boudi` doesn't have a default gateway assigned, so it has no hope of reaching the IP address in the `ping` we just ran. Therefore... `ping` returns a `Network is unreachable`.
+The only network `boudi` knows about on its routing table is its own `caternet`, `10.1.2.0/24`. `boudi` doesn't have a default gateway assigned, so it has no hope of reaching the IP address in the `ping` we just ran. Therefore... `ping` returns a `Network is unreachable`.
 
 ## Make those networks communicate with each other
 
@@ -141,7 +141,7 @@ Let's go back to our `docker-compose.yml` and give `boudi` an additional network
     build: .
     hostname: boudi
     networks:
-      squasheeba:
+      caternet:
         ipv4_address: 10.1.1.3
       doggonet:
         ipv4_address: 10.1.2.3
@@ -184,7 +184,7 @@ root@boudi:/# ip route
 
 ### Can `boudi` `ping` `tara`?
 
-BOOM! `boudi` has routes for both the `squasheeba` and `doggonet` networks! Remember: `tara` still only knows about `doggonet`. So at this point, `boudi` knows how to reach machines on the `doggonet` network, but `tara` still doesn't know anything about the `squasheeba` network... Let's see what happens when `boudi` tries to `ping` `tara`:
+BOOM! `boudi` has routes for both the `caternet` and `doggonet` networks! Remember: `tara` still only knows about `doggonet`. So at this point, `boudi` knows how to reach machines on the `doggonet` network, but `tara` still doesn't know anything about the `caternet` network... Let's see what happens when `boudi` tries to `ping` `tara`:
 
 ```bash
 root@boudi:/# ping 10.1.2.2 -c 2
@@ -269,7 +269,7 @@ Here's the MAC address for `10.1.2.2`, so now the machine on `10.1.2.3` knows wh
 
 Now back to our regularly scheduled exploration!
 
-### Can `tara` ping `boudi` on the `squasheeba` network?
+### Can `tara` ping `boudi` on the `caternet` network?
 
 We've already seen that `tara` can respond to `boudi`'s `ping`s that were issued from `boudi`'s interface on `doggonet`. We can double check that `tara` can initiate the `ping`, just for fun:
 
@@ -284,24 +284,24 @@ PING 10.1.2.3 (10.1.2.3) 56(84) bytes of data.
 rtt min/avg/max/mdev = 0.242/0.243/0.245/0.001 ms
 ```
 
-Now... let's see if `tara` is able to ping `boudi`'s interface on the `squasheeba` network...
+Now... let's see if `tara` is able to ping `boudi`'s interface on the `caternet` network...
 
 ```bash
 root@tara:/# ping 10.1.1.3
 ping: connect: Network is unreachable
 ```
 
-Lovely! This is because, while `boudi` has an interface on the `doggonet` network and `tara` and `boudi` can directly communicate on that network, `tara` doesn't know anything about the `squasheeba` network; not even that `boudi` knows about it. We need to define a route for `tara` that tells it how to get to the `squasheeba` network!
+Lovely! This is because, while `boudi` has an interface on the `doggonet` network and `tara` and `boudi` can directly communicate on that network, `tara` doesn't know anything about the `caternet` network; not even that `boudi` knows about it. We need to define a route for `tara` that tells it how to get to the `caternet` network!
 
-### Make `tara` ping hosts on the `squasheeba` network
+### Make `tara` ping hosts on the `caternet` network
 
-The first thing we need to do is add a route from `tara` to the `squasheeba` network via `boudi`. Because `boudi` has routes to both `doggonet` and `squasheeba`, `boudi` can act as the router between the two. We can manage routes on our machines using the `ip route` command:
+The first thing we need to do is add a route from `tara` to the `caternet` network via `boudi`. Because `boudi` has routes to both `doggonet` and `caternet`, `boudi` can act as the router between the two. We can manage routes on our machines using the `ip route` command:
 
 ```bash
 root@tara:/# ip route add 10.1.1.0/24 via 10.1.2.3
 ```
 
-This command identifies the network, `10.1.1.0/24` (a.k.a. "squasheeba") and then says: "Any time you have a packet for this network, you should send it to `10.1.2.3` (a.k.a. `boudi`), cuz that dude knows all about it."
+This command identifies the network, `10.1.1.0/24` (a.k.a. "caternet") and then says: "Any time you have a packet for this network, you should send it to `10.1.2.3` (a.k.a. `boudi`), cuz that dude knows all about it."
 
 Now, if we check the routes that `tara` knows about, we'll see the route defined in `tara`'s routing table:
 
@@ -324,7 +324,7 @@ PING 10.1.2.3 (10.1.2.3) 56(84) bytes of data.
 rtt min/avg/max/mdev = 0.266/0.303/0.340/0.037 ms
 ```
 
-Sweet! It looks like that's working! But, what does this request look like on `boudi`? `tara` is sending the `ping` packets out its `doggonet` interface and passing them off to `boudi`. `boudi` is receiving the packets on its `doggonet` interface, but the destination is for `boudi`'s IP address on `squasheeba`.
+Sweet! It looks like that's working! But, what does this request look like on `boudi`? `tara` is sending the `ping` packets out its `doggonet` interface and passing them off to `boudi`. `boudi` is receiving the packets on its `doggonet` interface, but the destination is for `boudi`'s IP address on `caternet`.
 
 Let's use `tcpdump` to investigate how `boudi` processes these packets. To do that, we'll need a couple more terminal windows open, one to run the `ping` from `tara` and one for each interface on `boudi`.
 
@@ -360,9 +360,9 @@ Exactly what we expected.
 
 `boudi` receiving the `ping` `ICMP echo request` and responding with and `ICMP echo reply`.
 
-> OUTPUT: Window 3 - `boudi` running `tcpdump -ni eth1` <= `squasheeba` interface
+> OUTPUT: Window 3 - `boudi` running `tcpdump -ni eth1` <= `caternet` interface
 
-NOTHING shows up here! Why? When the packets reach `boudi`, `boudi` recognizes that they have reached their destination. There's no need to send the packet through the `squasheeba` interface just to stay on the same machine. The work is done!
+NOTHING shows up here! Why? When the packets reach `boudi`, `boudi` recognizes that they have reached their destination. There's no need to send the packet through the `caternet` interface just to stay on the same machine. The work is done!
 
 ===
 
@@ -387,7 +387,7 @@ Notice that we see 100% packet loss. But, when we check `pippin`'s `tcpdump`, we
 
 What happened here?
 
-* `tara` has a route into the `squasheeba` network via `boudi`
+* `tara` has a route into the `caternet` network via `boudi`
 * `boudi` receives the requests and:
   * checks the destination IP
   * sees that the request is not for itself
@@ -401,7 +401,7 @@ But then what? `pippin` needs to reply to the ping, `pippin` knows the response 
 
 ### Tell `pippin` how to respond to `tara`
 
-We've already seen this in action. At this point, we need to tell `pippin` how to find the `doggonet` network. We did this earlier in teaching `tara` how to find the `squasheeba` network. We're going to leave this as an exercise for the reader to attempt on their own. If you need some guidance, review the [Make `tara` ping hosts on the squasheeba network](#make-tara-ping-hosts-on-the-squasheeba-network) section.
+We've already seen this in action. At this point, we need to tell `pippin` how to find the `doggonet` network. We did this earlier in teaching `tara` how to find the `caternet` network. We're going to leave this as an exercise for the reader to attempt on their own. If you need some guidance, review the [Make `tara` ping hosts on the caternet network](#make-tara-ping-hosts-on-the-caternet-network) section.
 
 ## Now let's make this routing setup automatic
 
@@ -442,7 +442,7 @@ It looks like docker, by default, sets the value on every container to `1`, whic
     build: .
     hostname: boudi
     networks:
-      squasheeba:
+      caternet:
         ipv4_address: 10.1.1.3
       doggonet:
         ipv4_address: 10.1.2.3
