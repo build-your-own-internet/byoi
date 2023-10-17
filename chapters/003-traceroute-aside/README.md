@@ -139,6 +139,16 @@ Currently, `pippin` has no rules for handling any packets in any special way. We
 root@pippin:/# iptables -A OUTPUT -p icmp --icmp-type port-unreachable -j DROP
 ```
 
+If we re-check the list of rules in `iptables` now, we'll see that there is a new rule defined to `DROP` any `OUTPUT` packets of type `icmp port-unreachable`:
+
+```bash
+root@pippin:/# iptables -L OUTPUT
+# Warning: iptables-legacy tables present, use iptables-legacy to see them
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination
+DROP       icmp --  anywhere             anywhere             icmp port-unreachable
+```
+
 Now, when we run out `traceroute` on `tara`, we get an interesting response:
 
 ```bash

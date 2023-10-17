@@ -42,6 +42,10 @@ The `ip` command is a tool for viewing and managing network configurations. It h
 
 * `iptables -L` - show the list of all rules applied to packets processed by the machine
 * `iptables -A OUTPUT -p icmp --icmp-type port-unreachable -j DROP` - generate a new rule to drop any ICMP port unreachable packets
+  * `-A OUTPUT`: append a rule to `OUTPUT`, which will only impact any outgoing packets
+  * `-p icmp`: only apply this rule to `icmp` requests
+  * `icmp-type port-unreachable`: specifically, only apply this rule to `ICMP port unreachable` responses
+  * `-j DROP`: `DROP`, or don't send, any packet that matches this rule
 
 ## ping
 
