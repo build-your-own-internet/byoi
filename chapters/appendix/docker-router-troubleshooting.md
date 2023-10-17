@@ -4,11 +4,9 @@
 
 Let's use the tools and processes we've already discovered to make a much larger internetwork! In this case, we'll want to be able to traverse several networks to get machines who are not directly connected to be able to communicate with each other. Looking at the network diagram below, we can see that the `Client` machine is connected to the `1.0.0.0/8` network. We want the `Client` machine to be able to traverse our internetwork to reach the `Server` machine connected to the `5.0.0.0/8` to request a basic HTML document.
 
-**TODO: describe something about where the HTML document is and how the user can see it**
-
 Here's what we expect the internet to look like at the end of this chapter:
 
-```none
+```markdown
                                           200.1.1.0/29
                                 ┌─────────────────────────┐
                200.1.1.8/29     │ (.2)               (.3) │
@@ -140,7 +138,7 @@ This is the problem here. It looks like somehow docker is doing :maaaaagiiiiiic:
 
 It turns out, this is yet ANOTHER thing docker does for us to make it easier to use docker in NORMAL circumstances. We wanna turn that shit off. Luckily for us, [some other numbskull out there also wanted to break docker](https://forums.docker.com/t/is-it-possible-to-disable-nat-in-docker-compose/48536/2). We're just gonna steal that solution and add the following to each network definition in our `docker-compose`:
 
-```
+```docker
 driver_opts:
     com.docker.network.bridge.enable_ip_masquerade: 'false'
 ```
@@ -154,7 +152,7 @@ Now, we can `ping` from router3 => server! Huzzah! Progress!!! But, ummmm... thi
 
 It looks like we start losing packets on the route between Client and Router3 on the three-net network:
 
-```
+```bash
 root@client:/# ping 3.0.3.1
 PING 3.0.3.1 (3.0.3.1) 56(84) bytes of data.
 ^C
@@ -166,7 +164,7 @@ So now, let's use our old friend `tcpdump` to figure out where those packets are
 
 First, let's get the correct ethernet interface with our old friend `ip addr`:
 
-```
+```bash
 root@router3:/# ip addr
 33288: eth0@if33289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
     link/ether 02:42:64:01:03:01 brd ff:ff:ff:ff:ff:ff link-netnsid 0
@@ -178,21 +176,21 @@ Now, we can look at `tcpdump` output specific to that interface and see if we ca
 
 `root@router3:/# tcpdump -nvi eth0`
 
-```
+```bash
 18:32:57.504868 IP (tos 0x0, ttl 63, id 61790, offset 0, flags [DF], proto ICMP (1), length 84)
     1.0.0.100 > 3.0.3.1: ICMP echo request, id 66, seq 1, length 64
 ```
 
 router3 receives ping on `eth0` (hundo-net) interface! yay!
 
-```
+```bash
 18:32:57.504895 IP (tos 0x0, ttl 64, id 17711, offset 0, flags [none], proto ICMP (1), length 84)
     3.0.3.1 > 1.0.0.100: ICMP echo reply, id 66, seq 1, length 64
 ```
 
 router3 replies to ping on `eth0`. yay?!
 
-```
+```bash
 18:32:58.547560 IP (tos 0x0, ttl 63, id 62284, offset 0, flags [DF], proto ICMP (1), length 84)
     1.0.0.100 > 3.0.3.1: ICMP echo request, id 66, seq 2, length 64
 18:32:58.547624 IP (tos 0x0, ttl 64, id 18022, offset 0, flags [none], proto ICMP (1), length 84)
@@ -205,7 +203,7 @@ So, this looks good... what's happening? it would probably help to have the mac 
 
 `root@router3:/# tcpdump -nvie eth0`
 
-```
+```bash
 18:41:24.110439 02:42:64:01:05:01 > 02:42:64:01:03:01, ethertype IPv4 (0x0800), length 98: (tos 0x0, ttl 63, id 23157, offset 0, flags [DF], proto ICMP (1), length 84)
     1.0.0.100 > 3.0.3.1: ICMP echo request, id 67, seq 1, length 64
 18:41:24.110501 02:42:64:01:03:01 > 02:42:64:01:02:01, ethertype IPv4 (0x0800), length 98: (tos 0x0, ttl 64, id 2178, offset 0, flags [none], proto ICMP (1), length 84)
