@@ -66,7 +66,7 @@ A router is any machine whose purpose is to connect networks together. It does s
 
 ## routing table
 
-A routing table is a list of known network IP address ranges, and every machine connected to an internet has a routing table to reference. Machines use routing tables to determine what the next [hop](#hop) should be when they're sending [packets](#packets-aka-ip-packets) towards a destination IP address. If the routing table does not have a matching route for the destination IP address, the request can be sent out the default gateway in the hopes that another machine on that internet will know how to get the packets to their destination. Check [prefixes-and-subnet-masks.md in the appendix](./appendix/prefixes-and-subnet-masks.md) for more details on how routing tables work.
+A routing table is a list of known network IP address ranges, and every machine connected to an internet has a routing table to reference. Machines use routing tables to determine what the next [hop](#hop) should be when they're sending [packets](#packets-aka-ip-packets) towards a destination IP address. If the routing table does not have a matching route for the destination IP address, the request can be sent out the default gateway in the hopes that another machine on that internet will know how to get the packets to their destination. Check [prefixes-and-subnet-masks.md in the appendix](../appendix/prefixes-and-subnet-masks.md) for more details on how routing tables work.
 
 ## server
 

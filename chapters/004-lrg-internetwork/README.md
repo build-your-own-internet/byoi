@@ -68,21 +68,21 @@ We had to make some changes to the docker-compose file that generates the machin
 
 First, each network definition now includes a `com.docker.network.bridge.enable_ip_masquerade: 'false'`. We discovered in trying to build out our initial internetwork that docker uses a default router to communicate between networks. This default router was intercepting packets that we were attempting to send between networks. This is intended behavior for docker! In most cases when you're using docker, you don't want to have to setup all the network configurations! But... in our case... we WANT to be able to configure our network at a minute level. Sooo... adding that `enable_ip_masquerade: false` line removes the default router on the network.
 
-If you'd like to see the notes from our investigation, checkout [Appendix: misc-routing-pitfalls.md](../appendix/misc-routing-pitfalls.md). Disclaimer: these notes are not the refined and beauteous things you are witnessing in the chapters. These are notes. But they do demonstrate our discovery process for identifying the problem.
+If you'd like to see the notes from our investigation, checkout [Miscellaneous: routing-pitfalls.md](../../miscellaneous/routing-pitfalls.md). Disclaimer: these notes are not the refined and beauteous things you are witnessing in the chapters. These are notes. But they do demonstrate our discovery process for identifying the problem.
 
 #### RP Filter
 
 `rp_filter`, or reverse path filter, is a setting on Linux machines that tells them to filter (or drop) packets that come in on one interface but are expected to go out a different interface on the return path. Let's look at an example. Look at the network map at the beginning of chapter 4. Packets coming from Client were sent to router4 via router5 on `200.1.1.16/29`, but, when router4 checked its routing table, it saw that its route back to Client was over `100.1.0.0/16`. Because the interfaces for incoming and outgoing packets to the same IP were different, router4 would drop the packets.
 
-If you'd like to see the rough notes of our discovery, checkout [Appendix: discovery-rp_filter](../appendix/discovery-rp_filter.md). Again, these notes are not refined, but they do show our discovery process.
+If you'd like to see the rough notes of our discovery, checkout [Miscellaneous: discovery-rp_filter](../../miscellaneous/discovery-rp_filter.md). Again, these notes are not refined, but they do show our discovery process.
 
 ### How to read an IP address; i.e. octets and subnets
 
-This requires a long and detailed description to really understand. For the sake of keeping this document brief, we've moved the explanation for this to [Appendix: prefixes-and-subnet-masks.md](../appendix/prefixes-and-subnet-masks.md) in the appendix. Please read that document and come back here when you feel confident you have a basic understanding of what it contains!
+This requires a long and detailed description to really understand. For the sake of keeping this document brief, we've moved the explanation for this to [Appendix: prefixes-and-subnet-masks.md](../../appendix/prefixes-and-subnet-masks.md) in the appendix. Please read that document and come back here when you feel confident you have a basic understanding of what it contains!
 
 ### How docker handles MAC addresses
 
-A MAC (media access control) address is the layer 2 address of a machine on a network. If you'd like to review what a MAC address is in detail, checkout [Appendix: ip-and-mac-addresses](../appendix/ip-and-mac-addresses.md).
+A MAC (media access control) address is the layer 2 address of a machine on a network. If you'd like to review what a MAC address is in detail, checkout [Appendix: ip-and-mac-addresses](../../appendix/ip-and-mac-addresses.md).
 
 Let's look at the output for one of our interfaces shown in `ip route`:
 
@@ -170,7 +170,7 @@ listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 0 packets dropped by kernel
 ```
 
-The first 2 packets in our `tcpdump` are `ARP` packets, i.e. `Request who-has 5.0.0.100 tell 5.0.1.1` and `Reply 5.0.0.100 is-at 02:42:05:00:00:64`. This is a machine on our network attempting to associate a MAC address with an IP address that it has learned about from an incoming request. For more details on what's happening here, check out the [appendix doc on IP and MAC addresses](../appendix/ip-and-mac-addresses.md).
+The first 2 packets in our `tcpdump` are `ARP` packets, i.e. `Request who-has 5.0.0.100 tell 5.0.1.1` and `Reply 5.0.0.100 is-at 02:42:05:00:00:64`. This is a machine on our network attempting to associate a MAC address with an IP address that it has learned about from an incoming request. For more details on what's happening here, check out the [appendix doc on IP and MAC addresses](../../appendix/ip-and-mac-addresses.md).
 
 Next we see 2 couplets of `ICMP echo request` and `ICMP echo reply`s. In these packets, we can see that the IP address of the machine requesting the ping is `3.0.3.1`, or router3's interface on `three-net`. The destination machine is `5.0.0.100`, or `server`'s interface on `five-net`. But! This also tells us the MAC addresses that are involved in the direct communication with `server`. So, when we see `02:42:05:00:01:01 > 02:42:05:00:00:64`, we can use what we know about how docker creates MAC addresses and see that router1's interface on `five-net`, `02:42:05:00:01:01`, is the interface sending the packets to `server`, `02:42:05:00:00:64`.
 
@@ -371,7 +371,7 @@ There is a lot happening in this output. Let's look at it line by line to unders
 Let's start with:
 > `21:57:59.839787 02:42:64:01:03:01 > 02:42:64:01:02:01, ethertype IPv4 (0x0800), length 98: 100.1.3.1 > 1.0.0.100: ICMP echo request, id 91, seq 1, length 64`.
 
-Here, we see router3 sending a packet destined for client (`100.1.3.1 > 1.0.0.100`) via router2 (`02:42:64:01:03:01 > 02:42:64:01:02:01`). We are referencing IP and MAC addresses to glean this information. If this is confusing to you, you can look at [Appendix: Understanding tcpdump](../appendix/understanding-tcpdump.md) for more details. This is the basic communication we are expecting to see. `ICMP echo request` is the initiation of a ping. Referencing our network map, it seems like it is a bad choice to be routing the packet to router2 but we are people that are open to possibilities. So we will remain curious and see what happens!
+Here, we see router3 sending a packet destined for client (`100.1.3.1 > 1.0.0.100`) via router2 (`02:42:64:01:03:01 > 02:42:64:01:02:01`). We are referencing IP and MAC addresses to glean this information. If this is confusing to you, you can look at [Appendix: Understanding tcpdump](../../appendix/understanding-tcpdump.md) for more details. This is the basic communication we are expecting to see. `ICMP echo request` is the initiation of a ping. Referencing our network map, it seems like it is a bad choice to be routing the packet to router2 but we are people that are open to possibilities. So we will remain curious and see what happens!
 
 On to the next line:
 > `21:57:59.839891 02:42:64:01:02:01 > 02:42:64:01:03:01, ethertype IPv4 (0x0800), length 98: 100.1.3.1 > 1.0.0.100: ICMP echo request, id 91, seq 1, length 64`
