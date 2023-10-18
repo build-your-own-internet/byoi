@@ -12,7 +12,8 @@ You might run into terms that you don't know the definition to. Sometimes they a
   - [internet (or internetwork)](#internet-or-internetwork)
   - [machine](#machine)
   - [network](#network)
-  - [router (also known as a `gateway`)](#router-also-known-as-a-gateway)
+  - [router (also known as a `gateway`)](#router-aka-gateway)
+  - [routing table](#routing-table)
   - [server](#server)
 
 ## client

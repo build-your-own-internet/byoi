@@ -24,7 +24,7 @@ Once you've got it installed, you'll need to have it running to work with Docker
 colima start
 ```
 
-Colima can be a bit resource intensive, so if you want to preserve your battery, take it down with:
+Colima can be a bit resource intensive, so, when you're not actively building your internet, you may want to preserve your battery and take it down with:
 
 ```bash
 colima stop
@@ -34,7 +34,7 @@ Just remember to `colima start` again the next time you want to work on building
 
 ### Docker
 
-Each machine on the tiny internet you will build in the course of these chapters is a separate Docker container. Docker allowed us to be able to make a reproducible experience that, with the correct setup, should run on anyone's laptop without people needing to buy expensive and wasteful hardware. Install Docker with:
+Each machine on the tiny internet you're building in these chapters is a separate Docker container. Docker allowed us to be able to make a reproducible experience that, with the correct setup, should run on anyone's laptop without people needing to buy expensive and wasteful hardware. Install Docker with:
 
 ```bash
 brew install docker

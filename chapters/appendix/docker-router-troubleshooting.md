@@ -2,16 +2,11 @@
 
 ## Goals for this section
 
-Let's use the tools and processes we've already discovered to make a much larger
-internetwork! In this case, we'll want to be able to traverse several networks
-to get machines who are not directly connected to be able to communicate with
-each other. Looking at the network diagram below, we can see that the `Client` machine is connected to the `1.0.0.0/8` network. We want the `Client` machine to be able to traverse our internetwork to reach the `Server` machine connected to the `5.0.0.0/8` to request a basic HTML document.
-
-**TODO: describe something about where the HTML document is and how the user can see it**
+Let's use the tools and processes we've already discovered to make a much larger internetwork! In this case, we'll want to be able to traverse several networks to get machines who are not directly connected to be able to communicate with each other. Looking at the network diagram below, we can see that the `Client` machine is connected to the `1.0.0.0/8` network. We want the `Client` machine to be able to traverse our internetwork to reach the `Server` machine connected to the `5.0.0.0/8` to request a basic HTML document.
 
 Here's what we expect the internet to look like at the end of this chapter:
 
-```
+```markdown
                                           200.1.1.0/29
                                 ┌─────────────────────────┐
                200.1.1.8/29     │ (.2)               (.3) │
@@ -43,20 +38,9 @@ Simple, no?!
 
 ### Pets v. Cattle
 
-You might be wondering what the hell happened to our fun pets and their
-personalities. Well, we are in serious business territory now and there is no
-room for emotions and personality when it comes to serious business™. In other
-words, when you are dealing with large infrastructure, it's much easier to
-manage things when you assign roles to them that dictate how things are
-configured. Hence, we have Server(s), Client(s) and Router(s) instead of our
-lovable pets.
+You might be wondering what the hell happened to our fun pets and their personalities. Well, we are in serious business territory now and there is no room for emotions and personality when it comes to serious business™. In other words, when you are dealing with large infrastructure, it's much easier to manage things when you assign roles to them that dictate how things are configured. Hence, we have Server(s), Client(s) and Router(s) instead of our lovable pets.
 
-There is an industry specific phrase that matches the theme here too. Within
-infrastructure industry, the popular way to see components of the infrastracture
-is as "cattle, not pets". This is a mean way of saying we only care about the
-larger system and we care less about details of individual components. Those
-components are there to serve a purpose and once they are unable to, we can
-easily replace them with other components that can serve the same role.
+There is an industry specific phrase that matches the theme here too. Within infrastructure industry, the popular way to see components of the infrastructure is as "cattle, not pets". This is a mean way of saying we only care about the larger system and we care less about details of individual components. Those components are there to serve a purpose and once they are unable to, we can easily replace them with other components that can serve the same role.
 
 Since we do care about the roles, let's dive a little deeper into them and understand what we mean:
 
@@ -64,31 +48,17 @@ Since we do care about the roles, let's dive a little deeper into them and under
 
 #### Client
 
-A client is any machine that initiates a connection/request to another machine
-on the network or the larger internetwork. A common example is a browser or curl
-request to a web resource. In future chapters, we might explore how clients are
-protected by the network either via firewall or through other means but this
-definition is sufficient for our current use case.
+A client is any machine that initiates a connection/request to another machine on the network or the larger internetwork. A common example is a browser or curl request to a web resource. In future chapters, we might explore how clients are protected by the network either via firewall or through other means but this definition is sufficient for our current use case.
 
 #### Server
 
-A server is any machine whose purpose is to serve a network request. If the
-server fails to serve the request, it can return an appropriate error back to
-the client. In our case, we have built a very simple HTTP server that responds
-back to any request with a simple HTML.
+A server is any machine whose purpose is to serve a network request. If the server fails to serve the request, it can return an appropriate error back to the client. In our case, we have built a very simple HTTP server that responds back to any request with a simple HTML.
 
 #### Router
 
-A router is any machine whose purpose is to connect networks together. It does
-so by forwarding packets to the next hop. Each router has a picture of what the
-internetwork looks like and it makes decision on its own for the most efficient
-way to send the packet to its destination. Internet, as we know today, is not
-possible without numerous routers facilitating the requests.
+A router is any machine whose purpose is to connect networks together. It does so by forwarding packets to the next hop. Each router has a picture of what the internetwork looks like and it makes decision on its own for the most efficient way to send the packet to its destination. Internet, as we know today, is not possible without numerous routers facilitating the requests.
 
-**NOTE** The way we have our routers setup right now is inconsistent with the
-*previous paragraphs assertion that a router can make decisions about which
-*route to use. Our routers have a single route defined via `ip route add` to
-*each network. There's no opportunity for choice.
+**NOTE** The way we have our routers setup right now is inconsistent with the *previous paragraphs assertion that a router can make decisions about which*route to use. Our routers have a single route defined via `ip route add` to *each network. There's no opportunity for choice.
 
 ### How to read an IP address; i.e. octets and subnets
 
@@ -168,7 +138,7 @@ This is the problem here. It looks like somehow docker is doing :maaaaagiiiiiic:
 
 It turns out, this is yet ANOTHER thing docker does for us to make it easier to use docker in NORMAL circumstances. We wanna turn that shit off. Luckily for us, [some other numbskull out there also wanted to break docker](https://forums.docker.com/t/is-it-possible-to-disable-nat-in-docker-compose/48536/2). We're just gonna steal that solution and add the following to each network definition in our `docker-compose`:
 
-```
+```docker
 driver_opts:
     com.docker.network.bridge.enable_ip_masquerade: 'false'
 ```
@@ -182,7 +152,7 @@ Now, we can `ping` from router3 => server! Huzzah! Progress!!! But, ummmm... thi
 
 It looks like we start losing packets on the route between Client and Router3 on the three-net network:
 
-```
+```bash
 root@client:/# ping 3.0.3.1
 PING 3.0.3.1 (3.0.3.1) 56(84) bytes of data.
 ^C
@@ -194,7 +164,7 @@ So now, let's use our old friend `tcpdump` to figure out where those packets are
 
 First, let's get the correct ethernet interface with our old friend `ip addr`:
 
-```
+```bash
 root@router3:/# ip addr
 33288: eth0@if33289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
     link/ether 02:42:64:01:03:01 brd ff:ff:ff:ff:ff:ff link-netnsid 0
@@ -206,21 +176,21 @@ Now, we can look at `tcpdump` output specific to that interface and see if we ca
 
 `root@router3:/# tcpdump -nvi eth0`
 
-```
+```bash
 18:32:57.504868 IP (tos 0x0, ttl 63, id 61790, offset 0, flags [DF], proto ICMP (1), length 84)
     1.0.0.100 > 3.0.3.1: ICMP echo request, id 66, seq 1, length 64
 ```
 
 router3 receives ping on `eth0` (hundo-net) interface! yay!
 
-```
+```bash
 18:32:57.504895 IP (tos 0x0, ttl 64, id 17711, offset 0, flags [none], proto ICMP (1), length 84)
     3.0.3.1 > 1.0.0.100: ICMP echo reply, id 66, seq 1, length 64
 ```
 
 router3 replies to ping on `eth0`. yay?!
 
-```
+```bash
 18:32:58.547560 IP (tos 0x0, ttl 63, id 62284, offset 0, flags [DF], proto ICMP (1), length 84)
     1.0.0.100 > 3.0.3.1: ICMP echo request, id 66, seq 2, length 64
 18:32:58.547624 IP (tos 0x0, ttl 64, id 18022, offset 0, flags [none], proto ICMP (1), length 84)
@@ -233,7 +203,7 @@ So, this looks good... what's happening? it would probably help to have the mac 
 
 `root@router3:/# tcpdump -nvie eth0`
 
-```
+```bash
 18:41:24.110439 02:42:64:01:05:01 > 02:42:64:01:03:01, ethertype IPv4 (0x0800), length 98: (tos 0x0, ttl 63, id 23157, offset 0, flags [DF], proto ICMP (1), length 84)
     1.0.0.100 > 3.0.3.1: ICMP echo request, id 67, seq 1, length 64
 18:41:24.110501 02:42:64:01:03:01 > 02:42:64:01:02:01, ethertype IPv4 (0x0800), length 98: (tos 0x0, ttl 64, id 2178, offset 0, flags [none], proto ICMP (1), length 84)

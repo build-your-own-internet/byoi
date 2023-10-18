@@ -1,3 +1,0 @@
-# Understanding tcpdump
-
-TODO

@@ -14,7 +14,7 @@ We decided to take notes that create a reproducible experience. We document our 
 
 - a basic understanding of terminals and [bash](https://www.linkedin.com/learning/learning-bash-scripting-17063287/learning-bash-scripting)
 - a basic understanding of [IPv4 and subnets](./chapters/appendix/prefixes-and-subnet-masks.md)
-- optional: a basic undestanding of docker [Course link](https://www.linkedin.com/learning/learning-docker-2018/why-create-containers-using-docker)
+- optional but highly recommended: a basic undestanding of docker [Course link](https://www.linkedin.com/learning/learning-docker-2018/why-create-containers-using-docker)
 - optional for the super motivated: understand the [communication protocol layers](https://datatracker.ietf.org/doc/rfc1122/) we'll be working with
 
 ### Software
@@ -26,6 +26,8 @@ You will need to install [colima](https://smallsharpsoftwaretools.com/tutorials/
 We've put some effort into [explaining the commands](./chapters/command-reference-guide.md) that we're using. However, if we use a command with a flag that doesn't have explanation, check the command's `help` for more details; e.g. `ping --help`. Alternatively, check the command's manpage; e.g. `man ping`.
 
 ## Stages of the project
+
+We now have a [future](./future/) folder with some ideas on technology we would like to implement in our internet. But... here's a rough flow of how we started thinking about the order.
 
 ### [COMPLETE] STAGE 0: What is the bare minimum to make an internetwork?
 
@@ -58,6 +60,8 @@ Here's some interesting topics that came up in the course of our exploration tha
 
 - DHCP
 - Proxy ARP
+- Firewalls
+- Caching
 
 This work is licensed under a [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License][cc-by-nc-sa].
 
