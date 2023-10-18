@@ -1,6 +1,6 @@
 # Misc Routing Pitfalls
 
-This document contains discovery on a number of routing issues we encountered in setting up our internetwork. We moved these notes out of the main chapters they started in because they had more to do with discovering tangential details of how docker, linux, or other systems worked than they had to do with actual networking fundamentals. These issues were occurring because we're hacking together an internet using docker containers rather than actual hardware that is designed specifically to be a router.
+This document contains discovery on a number of routing issues we encountered in setting up our internet. We moved these notes out of the main chapters they started in because they had more to do with discovering tangential details of how docker, linux, or other systems worked than they had to do with actual networking fundamentals. These issues were occurring because we're hacking together an internet using docker containers rather than actual hardware that is designed specifically to be a router.
 
 The learning here is valuable, but it isn't directly relevant to learning how to create an internet. We didn't want to completely lose the discovery process, so we started dumping our notes in another file to puruse later. Some of the notes are rough, but we'll do our best to flesh them out as we can.
 
@@ -123,9 +123,9 @@ Now, we can `ping` from router3 => server! Huzzah! Progress!!!
 
 ## Asymmetric routing woes
 
-When we initially created our broken set up for troubleshooting network problems in Chapter 4, we found that packets were getting mysteriously dropped where we weren't expecting them to be... Here's the deal. We had set up an asymmetric routing situation where one router was pointing to another over a peer-to-peer route, but the router receiving the request had a different route back for the response. This is a necessary thing in the wild; it allows flexibility in the internetwork. However, linux, the operating system we're starting our machines with, has opinions on this. If our linux machines see that they should send response packets out a different interface than the request packets came in on, by default, they will drop them on the floor.
+When we initially created our broken set up for troubleshooting network problems in Chapter 4, we found that packets were getting mysteriously dropped where we weren't expecting them to be... Here's the deal. We had set up an asymmetric routing situation where one router was pointing to another over a peer-to-peer route, but the router receiving the request had a different route back for the response. This is a necessary thing in the wild; it allows flexibility in the internet. However, linux, the operating system we're starting our machines with, has opinions on this. If our linux machines see that they should send response packets out a different interface than the request packets came in on, by default, they will drop them on the floor.
 
-To fix this problem, we need to override this configuration. If you look in your [docker-compose.yml file](../004-lrg-internetwork/docker-compose.yml) for Chapter 4, you'll see that each router has some more `sysctl` configuration setup that look something like:
+To fix this problem, we need to override this configuration. If you look in your [docker-compose.yml file](../004-lrg-internet/docker-compose.yml) for Chapter 4, you'll see that each router has some more `sysctl` configuration setup that look something like:
 
 ```yml
 - net.ipv4.conf.all.rp_filter=0

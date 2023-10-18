@@ -25,7 +25,7 @@ We got this magic [Dockerfile](Dockerfile) that gets everything set up! Neat! Wi
 - installs a bunch of networking software
 - copies the bash script, `start-up.sh`, from this chapter into the docker image
 
-The `start-up.sh` script at this point is just call to run the `sleep` command forever. Why? Docker containers only stay alive for as long as it takes to process whatever commands are given to it. By running `sleep` in the background, we keep the container alive so we can pop in and out of them as we please. We will add more to this script in future chapters to create the exact docker image we need for a functional internetwork.
+The `start-up.sh` script at this point is just call to run the `sleep` command forever. Why? Docker containers only stay alive for as long as it takes to process whatever commands are given to it. By running `sleep` in the background, we keep the container alive so we can pop in and out of them as we please. We will add more to this script in future chapters to create the exact docker image we need for a functional internet.
 
 To start with, we want to create 2 containers. We can use the same Docker image to generate both containers. To make it easy to differentiate between the containers, we're going to name them after my cats, `boudi` and `pippin`... Because what else would you do?
 

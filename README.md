@@ -13,8 +13,8 @@ We decided to take notes that create a reproducible experience. We document our 
 ### Knowledge
 
 - a basic understanding of terminals and [bash](https://www.linkedin.com/learning/learning-bash-scripting-17063287/learning-bash-scripting)
-- a basic understanding of [IPv4 and subnets](./chapters/appendix/prefixes-and-subnet-masks.md)
-- optional but highly recommended: a basic undestanding of docker [Course link](https://www.linkedin.com/learning/learning-docker-2018/why-create-containers-using-docker)
+- a basic understanding of [IPv4 and subnets](./appendix/prefixes-and-subnet-masks.md)
+- optional but highly recommended: a basic understanding of docker [Course link](https://www.linkedin.com/learning/learning-docker-2018/why-create-containers-using-docker)
 - optional for the super motivated: understand the [communication protocol layers](https://datatracker.ietf.org/doc/rfc1122/) we'll be working with
 
 ### Software
@@ -29,13 +29,13 @@ We've put some effort into [explaining the commands](./chapters/command-referenc
 
 We now have a [future](./future/) folder with some ideas on technology we would like to implement in our internet. But... here's a rough flow of how we started thinking about the order.
 
-### [COMPLETE] STAGE 0: What is the bare minimum to make an internetwork?
+### [COMPLETE] STAGE 0: What is the bare minimum to make an internet?
 
 - machines running on 3 or more networks
 - packets between machines on different networks
 - basic software to be able to view what's happening on the networks
 
-### STAGE 1: What makes large internetworks possible?
+### STAGE 1: What makes large internets possible?
 
 - BGP/IGP:Dozen nodes running BGP
 - DNS (root nodes)

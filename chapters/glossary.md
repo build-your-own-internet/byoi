@@ -18,7 +18,7 @@ You might run into terms that you don't know the definition to. Sometimes they a
 
 ## client
 
-A client is any host that initiates a connection/request to a server on the network or the larger internetwork. A common example is a browser or curl request to a web resource. In future chapters, we might explore how clients are protected by the network either via firewall or through other means but this definition is sufficient for our current use case.
+A client is any host that initiates a connection/request to a server on the network or the larger internet. A common example is a browser or curl request to a web resource. In future chapters, we might explore how clients are protected by the network either via firewall or through other means but this definition is sufficient for our current use case.
 
 ## container
 
@@ -42,7 +42,7 @@ An `interface` (or, more properly said, `network interface`) is (typically) an e
 
 ## internet (or internetwork)
 
-An internetwork is a set of networks joined together by routers so that machines can communicate across those networks to one other.
+An internet is a set of networks joined together by routers so that machines can communicate across those networks to one other.
 
 ## machine
 
@@ -54,7 +54,7 @@ A "network" is a slightly overloaded term. Strictly speaking, a network consists
 
 Typically a network will have a "network address" which (if we're using version 4 of IP), will be four numbers separated by dots with a slash and another number (e.g. 10.1.1.0/24).
 
-Sometimes when people use the term "network," they mean "internetwork." Since "internetwork" is a lot of syllables, it's a lot easier to just shorten the word.
+Sometimes when people use the term "network," they mean "internet." Since "internet" is a lot of syllables, it's a lot easier to just shorten the word.
 
 ## packets (a.k.a `IP packets`)
 

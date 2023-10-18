@@ -2,7 +2,7 @@
 
 ## Goals for this section
 
-Let's use the tools and processes we've already discovered to make a much larger internetwork! In this case, we'll want to be able to traverse several networks to get machines who are not directly connected to be able to communicate with each other. Looking at the network diagram below, we can see that the `client` machine is connected to the `1.0.0.0/8` network. We want `client` to be able to traverse our internetwork to reach `server` connected to `5.0.0.0/8`.
+Let's use the tools and processes we've already discovered to make a much larger internet! In this case, we'll want to be able to traverse several networks to get machines who are not directly connected to be able to communicate with each other. Looking at the network diagram below, we can see that the `client` machine is connected to the `1.0.0.0/8` network. We want `client` to be able to traverse our internet to reach `server` connected to `5.0.0.0/8`.
 
 Here's what we expect the internet to look like at the end of this chapter:
 
@@ -62,11 +62,11 @@ There is an industry-specific phrase that matches the theme here too. Within inf
 
 ### docker-compose settings
 
-We had to make some changes to the docker-compose file that generates the machines and networks for our internetwork. These changes were made to thwart default behavior that makes docker or linux work in better, more predicatable ways, but weren't adventageous to our particular scenario. Here's a summary of those changes:
+We had to make some changes to the docker-compose file that generates the machines and networks for our internet. These changes were made to thwart default behavior that makes docker or linux work in better, more predicatable ways, but weren't adventageous to our particular scenario. Here's a summary of those changes:
 
 #### IP Masquerade
 
-First, each network definition now includes a `com.docker.network.bridge.enable_ip_masquerade: 'false'`. We discovered in trying to build out our initial internetwork that docker uses a default router to communicate between networks. This default router was intercepting packets that we were attempting to send between networks. This is intended behavior for docker! In most cases when you're using docker, you don't want to have to setup all the network configurations! But... in our case... we WANT to be able to configure our network at a minute level. Sooo... adding that `enable_ip_masquerade: false` line removes the default router on the network.
+First, each network definition now includes a `com.docker.network.bridge.enable_ip_masquerade: 'false'`. We discovered in trying to build out our initial internet that docker uses a default router to communicate between networks. This default router was intercepting packets that we were attempting to send between networks. This is intended behavior for docker! In most cases when you're using docker, you don't want to have to setup all the network configurations! But... in our case... we WANT to be able to configure our network at a minute level. Sooo... adding that `enable_ip_masquerade: false` line removes the default router on the network.
 
 If you'd like to see the notes from our investigation, checkout [Miscellaneous: routing-pitfalls.md](../../miscellaneous/routing-pitfalls.md). Disclaimer: these notes are not the refined and beauteous things you are witnessing in the chapters. These are notes. But they do demonstrate our discovery process for identifying the problem.
 
@@ -222,7 +222,7 @@ Let's explore what these three things mean a little.
 
 This can happen for 2 reasons. A router that has an interface on the network of the destination IP sees that there is no machine with the destination IP on that network. OR a router that does not have an interface on the network of the destination IP and doesn't have a default route doesn't have a route for the destination IP.
 
-Basically, if the machine didn't exist, we would get an error response to our `ping`. For example, if we try to `ping 1.0.0.50`, a machine we've never created on our internetwork, we get back `Destination Host Unreachable`:
+Basically, if the machine didn't exist, we would get an error response to our `ping`. For example, if we try to `ping 1.0.0.50`, a machine we've never created on our internet, we get back `Destination Host Unreachable`:
 
 ```bash
 root@client:/# ping 1.0.0.50
@@ -246,7 +246,7 @@ PING 9.0.0.1 (9.0.0.1) 56(84) bytes of data.
 From 1.0.5.1 icmp_seq=1 Destination Net Unreachable
 ```
 
-In our case, because we're just getting no response back, that means the packets are being lost somewhere in our internetwork.
+In our case, because we're just getting no response back, that means the packets are being lost somewhere in our internet.
 
 #### Packets are getting lost to or from the destination
 
@@ -254,13 +254,13 @@ In this case, all of our routers think they know how to forward packets to compl
 
 In a network *without* firewalls, this would most likely occur when there are 2 or more routers pointing to each other for their routing decisions, e.g. Router4 thinks it needs to pass the packets to Router3 to get to `5.0.0.0/8` but Router3 thinks it needs to pass the packets to Router4. This is called a routing loop.
 
-In a network *with* firewalls, some firewall definition is probably tossing our packets on the floor. HOWEVER! Our internetwork is laisse-faire and uses no firewalls.
+In a network *with* firewalls, some firewall definition is probably tossing our packets on the floor. HOWEVER! Our internet is laisse-faire and uses no firewalls.
 
 We need to find where in our network communication is breaking down, where packets are getting lost, and in what direction those packets are getting lost. We know that this is a networking issue, but in which direction?
 
 ### The Investigation
 
-We need some process to help us identify where the problem in our internetwork lives. What we've tried so far is to `ping` from Client to Server. That's causing us to traverse our whole internetwork, which is a lot of machines and a lot of points of potential failure. We can simplify this in a couple ways. First, we can figure out if the issue is in routing the requests TO or FROM the destination IP. Once we know the direction that the packets are getting lost, we can check, hop by hop, where the packets are going and find the exact router(s) where they're getting lost.
+We need some process to help us identify where the problem in our internet lives. What we've tried so far is to `ping` from Client to Server. That's causing us to traverse our whole internet, which is a lot of machines and a lot of points of potential failure. We can simplify this in a couple ways. First, we can figure out if the issue is in routing the requests TO or FROM the destination IP. Once we know the direction that the packets are getting lost, we can check, hop by hop, where the packets are going and find the exact router(s) where they're getting lost.
 
 Let's start by running that same `ping` from Client to Server, but this time, let's watch on server to see if the packets are even making it there. Open a second terminal window and run a `tcpdump` on server:
 

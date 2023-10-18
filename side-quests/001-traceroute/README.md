@@ -4,6 +4,26 @@
 
 Explore how traceroute gives us network topology so we can see how the machines we're creating are communicating with each other.
 
+We'll be exploring traceroute using the internet we created in Chapter 002:
+
+```markdown
+         tara
+          │ 10.1.2.1
+          │
+ ────┬────┴────────────────────
+     │       (doggonet 10.1.2.0/24)
+     │
+     │
+     │
+     │10.1.2.3
+   boudi             pippin
+     │10.1.1.3          │10.1.1.2
+     │                  │
+     │                  │
+─────┴──────────────────┴──────
+              (caternet 10.1.1.0/24)
+```
+
 ## Examining traceroute
 
 ### How it works

@@ -1,8 +1,8 @@
-# Let's make an Internet
+# Let's make an Internet(work)
 
 ## Goals for this section
 
-In the previous chapter, we build a small network of 2 machines that could ping each other. Now, we want to build on that structure to add a second network. Once we have another network, we'll need to start building routes for machines on each network to be able to communicate with each other.
+In the previous chapter, we build a small network of 2 machines that could ping each other. Now, we want to build on that structure to add a second network. Once we have another network, we'll need to start building routes for machines on each network to be able to communicate with each other. This will create an internetwork, or internet. The collection of networks that communicate to and across each other on the World Wide Web is one example of an internet!
 
 Here's what we expect our internet to look like by the end of this chapter:
 
