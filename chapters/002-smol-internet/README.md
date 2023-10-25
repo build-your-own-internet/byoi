@@ -1,8 +1,8 @@
-# Let's make an Internet
+# Let's make an Internet(work)
 
 ## Goals for this section
 
-In the previous chapter, we build a small network of 2 machines that could ping each other. Now, we want to build on that structure to add a second network. Once we have another network, we'll need to start building routes for machines on each network to be able to communicate with each other.
+In the previous chapter, we build a small network of 2 machines that could ping each other. Now, we want to build on that structure to add a second network. Once we have another network, we'll need to start building routes for machines on each network to be able to communicate with each other. This will create an internetwork, or internet. The collection of networks that communicate to and across each other on the World Wide Web is one example of an internet!
 
 Here's what we expect our internet to look like by the end of this chapter:
 
@@ -241,7 +241,7 @@ You may or may not see in your own session some odd looking packets identified a
 18:53:54.167168 ARP, Reply 10.1.2.3 is-at 02:42:0a:01:02:03, length 28
 ```
 
-We go over this in more detail in [ip-and-mac-addresses.md in the appendix](../appendix/ip-and-mac-addresses.md), but let's look at a high level at what's going on here. IP addresses, like `10.1.2.3`, are used by machines for identifying where packets should be routed across an internet. So what we've been working with so far is designed to help machines communicate when there are multiple networks. HOWEVER. Within a network, machines are not identified by an IP address, but instead by a MAC address. In order for packets to be sent from one machine on a network to another machine on the same network, each machine needs to discover the MAC address that corresponds to the IP address identified in the packets. ARP, or Address Resolution Protocol, is the process by which this is done.
+We go over this in more detail in [ip-and-mac-addresses.md in the appendix](../../appendix/ip-and-mac-addresses.md), but let's look at a high level at what's going on here. IP addresses, like `10.1.2.3`, are used by machines for identifying where packets should be routed across an internet. So what we've been working with so far is designed to help machines communicate when there are multiple networks. HOWEVER. Within a network, machines are not identified by an IP address, but instead by a MAC address. In order for packets to be sent from one machine on a network to another machine on the same network, each machine needs to discover the MAC address that corresponds to the IP address identified in the packets. ARP, or Address Resolution Protocol, is the process by which this is done.
 
 Let's read what's happening with the `ARP` requests we see above:
 

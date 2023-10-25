@@ -1,10 +1,10 @@
 # Discovery: rp_filter
 
-These are rough notes of a problem we investigated on our internetwork in chapter 4. We were attempting to break out internetwork and we did... but not in the way we expected. We changed a route on router4, and the packets were just disappearing... After much investigation and consulting with the inimitable MABrown, we discovered another Linux setting, `rp_filter`, that was behaving in a way that would likely be preferable in the contained Docker environment, but, it wasn't the best for our scenario.
+These are rough notes of a problem we investigated on our internet in chapter 4. We were attempting to break out internet and we did... but not in the way we expected. We changed a route on router4, and the packets were just disappearing... After much investigation and consulting with the inimitable MABrown, we discovered another Linux setting, `rp_filter`, that was behaving in a way that would likely be preferable in the contained Docker environment, but, it wasn't the best for our scenario.
 
 ## Begin Notes
 
-let's start from the Client. Let's run a `ping` from Client to each of the routers on our internetwork. If we get a successful response back, we know that's not where the problem is.
+let's start from the Client. Let's run a `ping` from Client to each of the routers on our internet. If we get a successful response back, we know that's not where the problem is.
 
 Once we've figured out where the packets are getting lost, we can jump on that machine and start investigating what's actually happening with our packets.
 

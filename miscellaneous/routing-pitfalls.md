@@ -1,6 +1,6 @@
 # Misc Routing Pitfalls
 
-This document contains discovery on a number of routing issues we encountered in setting up our internetwork. We moved these notes out of the main chapters they started in because they had more to do with discovering tangential details of how docker, linux, or other systems worked than they had to do with actual networking fundamentals. These issues were occurring because we're hacking together an internet using docker containers rather than actual hardware that is designed specifically to be a router.
+This document contains discovery on a number of routing issues we encountered in setting up our internet. We moved these notes out of the main chapters they started in because they had more to do with discovering tangential details of how docker, linux, or other systems worked than they had to do with actual networking fundamentals. These issues were occurring because we're hacking together an internet using docker containers rather than actual hardware that is designed specifically to be a router.
 
 The learning here is valuable, but it isn't directly relevant to learning how to create an internet. We didn't want to completely lose the discovery process, so we started dumping our notes in another file to puruse later. Some of the notes are rough, but we'll do our best to flesh them out as we can.
 
@@ -23,7 +23,7 @@ We have a client. We have a server. Let's get that client making requests to our
 
 First, let's `hopon client` and make sure we can reach our server with a `ping 5.0.0.100`.
 
-#### UH OH! That shit is broken! Let's fix it.
+#### UH OH! That shit is broken! Let's fix it
 
 When we see our ping go out, we get no response back... When we CTRL+c our way out of our ping, we get 100% packet loss... :thumbs-down: We need to do some investigationing to figure out where our packets are going and why they aren't going to our server.
 
@@ -33,11 +33,11 @@ We need to define a process that will help us figure out why our ping isn't succ
 
 - asymetric routing makes it harder to troubleshoot (not NECESSARILY a problem (in theory))
 - what are the possible causes for the ping to not go through:
-  * some router along the path doesn't know how to get to the destination
-  * some router along the path doesn't know how to get back to the source
-  * a wrong path is defined on the path somewhere in the process (e.g. routers pointing to each other)
-  * client doesn't have a route to the destination IP
-  * server doesn't have a route to the source IP
+  - some router along the path doesn't know how to get to the destination
+  - some router along the path doesn't know how to get back to the source
+  - a wrong path is defined on the path somewhere in the process (e.g. routers pointing to each other)
+  - client doesn't have a route to the destination IP
+  - server doesn't have a route to the source IP
 
 Here's our strategy:
 
@@ -89,6 +89,7 @@ I.E. router3 knows that to get to 5.0.1.1, it needs to go through the 3.0.1.1 ro
 Here.... we would be expecting a reply... but we're not gettin' it.
 We see that router3 knew the correct next hop to get to five-net. We then see that router3 found the mac address for router1, which is the connection to five-net. We see router3 send our ping destined for router1 on five-net via router1 on three-net. We see that router3 is doing everything we expect correctly. Because we're not getting a reply to our ping request, we can assume the problem is somewhere in the route defined for router1 to one-hundo-net.
 If router3 had been the problem, we would have seen either
+
 - no output from our tcpdump because it was sending the request out the wrong interface
 - we wouldn't have seen the ARP Request/Reply
 
@@ -109,7 +110,7 @@ we never get a response... rude.
 
 This is the problem here. It looks like somehow docker is doing :maaaaagiiiiiic: and translating our ping from router3 on three-net to the docker router IP address on three-net. Docker router never responds so router1 doesn't know how to reply. so rude.
 
-where is docker taking over in this process? 
+where is docker taking over in this process?
 
 It turns out, this is yet ANOTHER thing docker does for us to make it easier to use docker in NORMAL circumstances. We wanna turn that shit off. Luckily for us, [some other numbskull out there also wanted to break docker](https://forums.docker.com/t/is-it-possible-to-disable-nat-in-docker-compose/48536/2). We're just gonna steal that solution and add the following to each network definition in our `docker-compose`:
 
@@ -122,9 +123,9 @@ Now, we can `ping` from router3 => server! Huzzah! Progress!!!
 
 ## Asymmetric routing woes
 
-When we initially created our broken set up for troubleshooting network problems in Chapter 4, we found that packets were getting mysteriously dropped where we weren't expecting them to be... Here's the deal. We had set up an asymmetric routing situation where one router was pointing to another over a peer-to-peer route, but the router receiving the request had a different route back for the response. This is a necessary thing in the wild; it allows flexibility in the internetwork. However, linux, the operating system we're starting our machines with, has opinions on this. If our linux machines see that they should send response packets out a different interface than the request packets came in on, by default, they will drop them on the floor.
+When we initially created our broken set up for troubleshooting network problems in Chapter 4, we found that packets were getting mysteriously dropped where we weren't expecting them to be... Here's the deal. We had set up an asymmetric routing situation where one router was pointing to another over a peer-to-peer route, but the router receiving the request had a different route back for the response. This is a necessary thing in the wild; it allows flexibility in the internet. However, linux, the operating system we're starting our machines with, has opinions on this. If our linux machines see that they should send response packets out a different interface than the request packets came in on, by default, they will drop them on the floor.
 
-To fix this problem, we need to override this configuration. If you look in your [docker-compose.yml file](../004-lrg-internetwork/docker-compose.yml) for Chapter 4, you'll see that each router has some more `sysctl` configuration setup that look something like:
+To fix this problem, we need to override this configuration. If you look in your [docker-compose.yml file](../004-lrg-internet/docker-compose.yml) for Chapter 4, you'll see that each router has some more `sysctl` configuration setup that look something like:
 
 ```yml
 - net.ipv4.conf.all.rp_filter=0

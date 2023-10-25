@@ -2,7 +2,7 @@
 
 ## Goals for this section
 
-Let's use the tools and processes we've already discovered to make a much larger internetwork! In this case, we'll want to be able to traverse several networks to get machines who are not directly connected to be able to communicate with each other. Looking at the network diagram below, we can see that the `Client` machine is connected to the `1.0.0.0/8` network. We want the `Client` machine to be able to traverse our internetwork to reach the `Server` machine connected to the `5.0.0.0/8` to request a basic HTML document.
+Let's use the tools and processes we've already discovered to make a much larger internet! In this case, we'll want to be able to traverse several networks to get machines who are not directly connected to be able to communicate with each other. Looking at the network diagram below, we can see that the `Client` machine is connected to the `1.0.0.0/8` network. We want the `Client` machine to be able to traverse our internet to reach the `Server` machine connected to the `5.0.0.0/8` to request a basic HTML document.
 
 Here's what we expect the internet to look like at the end of this chapter:
 
@@ -48,7 +48,7 @@ Since we do care about the roles, let's dive a little deeper into them and under
 
 #### Client
 
-A client is any machine that initiates a connection/request to another machine on the network or the larger internetwork. A common example is a browser or curl request to a web resource. In future chapters, we might explore how clients are protected by the network either via firewall or through other means but this definition is sufficient for our current use case.
+A client is any machine that initiates a connection/request to another machine on the network or the larger internet. A common example is a browser or curl request to a web resource. In future chapters, we might explore how clients are protected by the network either via firewall or through other means but this definition is sufficient for our current use case.
 
 #### Server
 
@@ -56,7 +56,7 @@ A server is any machine whose purpose is to serve a network request. If the serv
 
 #### Router
 
-A router is any machine whose purpose is to connect networks together. It does so by forwarding packets to the next hop. Each router has a picture of what the internetwork looks like and it makes decision on its own for the most efficient way to send the packet to its destination. Internet, as we know today, is not possible without numerous routers facilitating the requests.
+A router is any machine whose purpose is to connect networks together. It does so by forwarding packets to the next hop. Each router has a picture of what the internet looks like and it makes decision on its own for the most efficient way to send the packet to its destination. Internet, as we know today, is not possible without numerous routers facilitating the requests.
 
 **NOTE** The way we have our routers setup right now is inconsistent with the *previous paragraphs assertion that a router can make decisions about which*route to use. Our routers have a single route defined via `ip route add` to *each network. There's no opportunity for choice.
 
@@ -68,7 +68,7 @@ A router is any machine whose purpose is to connect networks together. It does s
 
 *TODO*: describe how we think Docker is assigning mac address in a specific pattern where IPV4 addresses are converted to HEX. This likely should go closer to where we first start looking at MAC addresses.
 
-## Now let's test out our internetwork
+## Now let's test out our internet
 
 We have a client. We have a server. Let's get that client making requests to our server!
 
@@ -99,23 +99,28 @@ We're trying to get from Client to Server, and that's not working. But... that's
 Let's examine the `tcpdump` output from Router3 line by line:
 
 > root@router3:/# tcpdump -ni eth1
+
 our tcpdump command
 
 > 17:43:05.906765 ARP, Request who-has 3.0.0.1 tell 5.0.1.1, length 28
+
 who has the docker router on three-net, tell router1 on five-net
 **followup** why is docker router involved here at all?
 
 > 17:43:05.906829 IP 100.1.3.1 > 5.0.1.1: ICMP echo request, id 48, seq 5, length 64
+
 ping request sent from one-hundo-net to router1 on five-net
 **followup** verbose tcpdump should show mac addresses which will tell us if the packets are being sent to router1 - without verbose, we only know source and destination, with verbose, we know (via mac addresses) what the NEXT machine is (reading the next couple bits of output, the ARP request/response, tells us that it does get to the next machine, router1 on three-net, as we expect it to)
 
 > 17:43:06.801388 ARP, Request who-has 3.0.1.1 tell 3.0.3.1, length 28
 > 17:43:06.801625 ARP, Reply 3.0.1.1 is-at 02:42:03:00:01:01, length 28
+
 what is MAC address for router1 on three-net, tell router3 on three-net
 reply that mac address for router1 is _____
 I.E. router3 knows that to get to 5.0.1.1, it needs to go through the 3.0.1.1 router. It needs to be able to send a message to the 3.0.1.1 router on the local network (on the ethernet interface). Before it can do that, it needs to know what the mac address of the 3.0.1.1 machine is. router3 sends out an ARP request asking who 3.0.1.1 is, and router1 replies "it me!" with it's mac address.
 
 > 17:43:06.929647 IP 100.1.3.1 > 5.0.1.1: ICMP echo request, id 48, seq 6, length 64
+
 Here.... we would be expecting a reply... but we're not gettin' it.
 
 We see that router3 knew the correct next hop to get to five-net. We then see that router3 found the mac address for router1, which is the connection to five-net. We see router3 send our ping destined for router1 on five-net via router1 on three-net. We see that router3 is doing everything we expect correctly. Because we're not getting a reply to our ping request, we can assume the problem is somewhere in the route defined for router1 to one-hundo-net.
@@ -128,9 +133,11 @@ If router3 had been the problem, we would have seen either
 So now, let's move on to the `tcpdump` from router1 listening on three-net interface
 
 > 18:20:55.044856 02:42:03:00:03:01 > 02:42:03:00:01:01, ethertype IPv4 (0x0800), length 98: 3.0.0.1 > 5.0.1.1: ICMP echo request, id 54, seq 1, length 64
+
 ping request coming in from docker router on three-net?? TF???
 
 > 18:20:55.044900 02:42:03:00:01:01 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Request who-has 3.0.0.1 tell 5.0.1.1, length 28
+
 router1 is asking docker router on three-net "who is?"
 we never get a response... rude.
 

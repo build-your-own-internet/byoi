@@ -25,7 +25,7 @@ We got this magic [Dockerfile](Dockerfile) that gets everything set up! Neat! Wi
 - installs a bunch of networking software
 - copies the bash script, `start-up.sh`, from this chapter into the docker image
 
-The `start-up.sh` script at this point is just call to run the `sleep` command forever. Why? Docker containers only stay alive for as long as it takes to process whatever commands are given to it. By running `sleep` in the background, we keep the container alive so we can pop in and out of them as we please. We will add more to this script in future chapters to create the exact docker image we need for a functional internetwork.
+The `start-up.sh` script at this point is just call to run the `sleep` command forever. Why? Docker containers only stay alive for as long as it takes to process whatever commands are given to it. By running `sleep` in the background, we keep the container alive so we can pop in and out of them as we please. We will add more to this script in future chapters to create the exact docker image we need for a functional internet.
 
 To start with, we want to create 2 containers. We can use the same Docker image to generate both containers. To make it easy to differentiate between the containers, we're going to name them after my cats, `boudi` and `pippin`... Because what else would you do?
 
@@ -223,7 +223,7 @@ Basically, all you need to know about this is that `ping` is a program that send
 19:52:30.297112 ARP, Reply 10.1.1.2 is-at 02:42:ac:16:00:03, length 28
 ```
 
-ARP, which stands for Address Resolution Protocol,  is a protocol that allows a machine that is connected locally on one network to talk to another machine that is also connected to that same network (as opposed to a machine that wants to communicate over multiple networks). To learn more about ARP, checkout the [prefixes and subnet masks appendix](../appendix/prefixes-and-subnet-masks.md).
+ARP, which stands for Address Resolution Protocol,  is a protocol that allows a machine that is connected locally on one network to talk to another machine that is also connected to that same network (as opposed to a machine that wants to communicate over multiple networks). To learn more about ARP, checkout the [prefixes and subnet masks appendix](../../appendix/prefixes-and-subnet-masks.md).
 
 After seeing the ARP packets go back and forth (which establish the ability for those two containers to talk to each other on the local network), we see the ICMP echo-request and echo-reply packets go back and forth in our `tcpdump` output.
 
