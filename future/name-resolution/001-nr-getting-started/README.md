@@ -37,6 +37,13 @@ Here's what the internet to looks like at the end of the end of chapter [003-int
 At the end of **this** chapter, our hope is that we can run `ping server-fivenet` instead of having to remember that Server's IP address is `5.0.0.100`. Wouldn't that be swell? We think so!
 
 IDEAS
+* Change network configuration to have nine servers instead of one with still a single client
+* redraw our internet with those changes
+* state the actual problem
+  * how do we get to these servers without memorizing IP addresses which can change
+  * there is no longer going to be `hopon` because we no longer want to use docker tooling
+* `ssh` can be a different topic rather than part of name resolution
+  * it might be good to introduce ssh after we have introduced IGP
 * Not let folks use `hopon` except to `hopon client`
 * Use `ssh` for everything else
 * Have routers loopback interface be the one that is named and ensure other interfaces can be reached via loopback for the exercise
