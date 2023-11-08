@@ -1,14 +1,19 @@
-#!/bin/sh
+#!/bin/bash
+
+if [[ ! -e 'docker-compose.yml' ]]; then
+  echo "Please make sure you are in a specific chapter directory with a docker compose file."
+  exit 1
+fi
 
 docker compose down
 
 # kill all running containers
-docker ps | grep `basename $(pwd)` | awk '{ print $1 }' |  xargs docker container kill
+docker ps | grep "build-your-own-internet" | awk '{ print $1 }' |  xargs docker container kill | xargs docker container rm
 
 # remove all networks
-docker network ls | grep `basename $(pwd)` | awk '{ print $1 }' | xargs docker network rm
+docker network ls | grep "build-your-own-internet" | awk '{ print $1 }' | xargs docker network rm
 
 # docker images delete all 3
-docker images | grep `basename $(pwd)` | awk '{ print $1 }' | xargs docker image rm -f
+docker images | grep "build-your-own-internet" | awk '{ print $1 }' | xargs docker image rm -f
 
 docker compose up -d
