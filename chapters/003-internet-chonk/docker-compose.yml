@@ -2,6 +2,8 @@ version: "3.0"
 services:
   server:
     build: .
+    container_name: build-your-own-internet-003-server
+    image: build-your-own-internet-003-server
     hostname: server
     networks:
       five-net:
@@ -12,6 +14,8 @@ services:
       - net.ipv4.ip_forward=0
   client:
     build: .
+    container_name: build-your-own-internet-003-client
+    image: build-your-own-internet-003-client
     hostname: client
     networks:
       one-net:
@@ -22,6 +26,8 @@ services:
       - net.ipv4.ip_forward=0
   router1:
     build: .
+    container_name: build-your-own-internet-003-router1
+    image: build-your-own-internet-003-router1
     hostname: router1
     networks:
       five-net:
@@ -40,6 +46,8 @@ services:
       - net.ipv4.conf.eth2.rp_filter=0
   router3:
     build: .
+    container_name: build-your-own-internet-003-router3
+    image: build-your-own-internet-003-router3
     hostname: router3
     networks:
       three-net:
@@ -55,6 +63,8 @@ services:
       - net.ipv4.conf.eth1.rp_filter=0
   router2:
     build: .
+    container_name: build-your-own-internet-003-router2
+    image: build-your-own-internet-003-router2
     hostname: router2
     networks:
       one-hundo-net:
@@ -73,6 +83,8 @@ services:
       - net.ipv4.conf.eth2.rp_filter=0
   router4:
     build: .
+    container_name: build-your-own-internet-003-router4
+    image: build-your-own-internet-003-router4
     hostname: router4
     networks:
       one-hundo-net:
@@ -91,6 +103,8 @@ services:
       - net.ipv4.conf.eth2.rp_filter=0
   router5:
     build: .
+    container_name: build-your-own-internet-003-router5
+    image: build-your-own-internet-003-router5
     hostname: router5
     networks:
       one-hundo-net:
@@ -110,57 +124,64 @@ services:
 
 networks:
   five-net:
+    name: build-your-own-internet-003-five-net
     driver: bridge
     driver_opts:
-       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
         - subnet: 5.0.0.0/8
   three-net:
+    name: build-your-own-internet-003-three-net
     driver: bridge
     driver_opts:
-       com.docker.network.bridge.enable_ip_masquerade: 'false' 
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
         - subnet: 3.0.0.0/8
   one-net:
+    name: build-your-own-internet-003-one-net
     driver: bridge
     driver_opts:
-       com.docker.network.bridge.enable_ip_masquerade: 'false' 
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
         - subnet: 1.0.0.0/8
   one-hundo-net:
+    name: build-your-own-internet-003-one-hundo-net
     driver: bridge
     driver_opts:
-       com.docker.network.bridge.enable_ip_masquerade: 'false' 
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
         - subnet: 100.1.0.0/16
   p2p-eight:
+    name: build-your-own-internet-003-p2p-eight
     driver: bridge
     driver_opts:
-       com.docker.network.bridge.enable_ip_masquerade: 'false' 
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
         - subnet: 200.1.1.8/29
   p2p-zero:
+    name: build-your-own-internet-003-p2p-zero
     driver: bridge
     driver_opts:
-       com.docker.network.bridge.enable_ip_masquerade: 'false' 
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
         - subnet: 200.1.1.0/29
   p2p-sixteen:
+    name: build-your-own-internet-003-p2p-sixteen
     driver: bridge
     driver_opts:
-       com.docker.network.bridge.enable_ip_masquerade: 'false' 
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:

@@ -2,6 +2,8 @@ version: "3.0"
 services:
   boudi:
     build: .
+    container_name: build-your-own-internet-002-boudi
+    image: build-your-own-internet-002-boudi
     hostname: boudi
     networks:
       caternet:
@@ -10,6 +12,8 @@ services:
       - NET_ADMIN
   pippin:
     build: .
+    container_name: build-your-own-internet-002-pippin
+    image: build-your-own-internet-002-pippin
     hostname: pippin
     networks:
       caternet:
@@ -19,6 +23,7 @@ services:
 
 networks:
   caternet:
+    name: build-your-own-internet-002-caternet
     driver: bridge
     ipam:
       driver: default

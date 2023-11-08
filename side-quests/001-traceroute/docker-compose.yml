@@ -3,6 +3,8 @@ services:
   boudi:
     build: .
     hostname: boudi
+    container_name: build-your-own-internet-traceroute-boudi
+    image: build-your-own-internet-traceroute-boudi
     networks:
       caternet:
         ipv4_address: 10.1.1.3
@@ -15,6 +17,8 @@ services:
   pippin:
     build: .
     hostname: pippin
+    container_name: build-your-own-internet-traceroute-pippin
+    image: build-your-own-internet-traceroute-pippin
     networks:
       caternet:
         ipv4_address: 10.1.1.2
@@ -26,6 +30,8 @@ services:
   tara:
     build: .
     hostname: tara
+    container_name: build-your-own-internet-traceroute-tara
+    image: build-your-own-internet-traceroute-tara
     networks:
       doggonet:
         ipv4_address: 10.1.2.2
@@ -36,12 +42,14 @@ services:
 
 networks:
   caternet:
+    name: build-your-own-internet-traceroute-caternet
     driver: bridge
     ipam:
       driver: default
       config:
         - subnet: 10.1.1.0/24
   doggonet:
+    name: build-your-own-internet-traceroute-doggonet
     driver: bridge
     ipam:
       driver: default
