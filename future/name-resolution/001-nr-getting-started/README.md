@@ -8,31 +8,8 @@ With that preamble, what is name resolution? What problem(s) does it solve? In p
 
 Here's what the internet to looks like at the end of the end of chapter [003-internet-chonk](../../../chapters/003-internet-chonk/):
 
-```markdown
-                                          200.1.1.0/29
-                                ┌─────────────────────────┐
-               200.1.1.8/29     │ (.2)               (.3) │
-             ┌────────────────Router2                  Router4─────┐
-             │ (.11)            │                        │    (.18)│
-             │             ─────┴─┬──────────────────────┴─┬─      │200.1.1.16/29
-             │                    │       100.1.0.0/16     │       │
-             │                    │                        │       │
-             │                    │                        │       │
-             │                    │                        │       │
-             │                    │                        │       │
-             │                    │                        │  (.19)│
-             │                Router3                   Router5────┘
-             │                  │                           │
-             │      ──┬─────────┴────────            ───────┴──────────────┬──
-             │        │       3.0.0.0/8                    1.0.0.0/8       │
-             │        │                                                    │
-             │        │                                                    │
-             │ (.10)  │                                                    │
-  Server     └─────Router1                                               Client
-  (.100)              │                                                  (.100)
-────┴─────────────────┴─────
-              5.0.0.0/8
-```
+![our-inter-network](../img/nr-getting-started.svg)
+
 
 At the end of **this** chapter, our hope is that we can run `ping server-fivenet` instead of having to remember that Server's IP address is `5.0.0.100`. Wouldn't that be swell? We think so!
 
