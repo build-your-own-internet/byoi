@@ -20,3 +20,32 @@ How will you know if it works?
 How will you troubleshoot problems?
 Links or existing documentation that could be helpful?
 Can you draw what your internet will look like by the end of your implementation?
+
+## Chapters
+
+- 1. /etc/hosts files copied via Docker
+  - Why are names nice and helpful at all?
+  - solves most of the problems for a network of this size
+  - it's cheating.
+- 2. STOP CHEATING WITH DOCKER: nis.
+  - you don't trust people. doesn't scale.
+- 3. DNS: single authoritative server
+  - Set up a single authoritative DNS that does the conversion of all names to IP addresses
+- 4. DNS: root-server
+  - multiple TLDs
+  - recursive resolvers
+- 5. SSH? Optional side-quest
+
+### Scratchpad
+
+Chapter 2:
+
+- [ ] there is no longer going to be `hopon` because we no longer want to use docker tooling
+
+Later stuff:
+
+- [ ] it might be good to introduce ssh after we have introduced IGP
+- [ ] Use `ssh` for everything else
+- [ ] `ssh` can be a different topic rather than part of name resolution
+- [ ] Have routers loopback interface be the one that is named and ensure other interfaces can be reached via loopback for the exercise
+- [ ] Goal of the exercise is to `ssh router1` from `client` and it opens a ssh connection to the box.
