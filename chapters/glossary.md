@@ -11,9 +11,12 @@ You might run into terms that you don't know the definition to. Sometimes they a
   - [interface](#interface)
   - [internet (or internetwork)](#internet-or-internetwork)
   - [machine](#machine)
+  - [name resolution](#name-resolution)
   - [network](#network)
-  - [router (also known as a `gateway`)](#router-aka-gateway)
+  - [packets (a.k.a `IP packets`)](#packets-aka-ip-packets)
+  - [router (a.k.a `gateway`)](#router-aka-gateway)
   - [routing table](#routing-table)
+  - [service](#service)
   - [server](#server)
 
 ## client
@@ -34,7 +37,7 @@ A hop refers to a machine between the source and destination that a packet trave
 
 ## host
 
-A "host" is a machine that does not route packets. There are to sub-types of hosts: `clients`, which only originate requests on a network, and `servers` which only respond to network requests on a network.
+A "host" is a machine that does not route packets. There are two sub-types of hosts: `clients`, which only originate requests on a network, and `servers` which only respond to network requests on a network.
 
 ## interface
 
@@ -47,6 +50,10 @@ An internet is a set of networks joined together by routers so that machines can
 ## machine
 
 A machine is any computer that (at least for the purpose of this document) is more-or-less permanently attached to a network and does not move around from one network to another. Could be a host or a router.
+
+## name resolution
+
+Name-resolution is the process of converting a human-friendly name into the IP address machines need to be able to route traffic across the Internet.
 
 ## network
 
@@ -67,6 +74,10 @@ A router is any machine whose purpose is to connect networks together. It does s
 ## routing table
 
 A routing table is a list of known network IP address ranges, and every machine connected to an internet has a routing table to reference. Machines use routing tables to determine what the next [hop](#hop) should be when they're sending [packets](#packets-aka-ip-packets) towards a destination IP address. If the routing table does not have a matching route for the destination IP address, the request can be sent out the default gateway in the hopes that another machine on that internet will know how to get the packets to their destination. Check [prefixes-and-subnet-masks.md in the appendix](../appendix/prefixes-and-subnet-masks.md) for more details on how routing tables work.
+
+## service
+
+A process on a server which responds to requests. E.g. a website, API, DNS, TLS terminator, ssh, etc.
 
 ## server
 
