@@ -57,4 +57,10 @@ case $HOSTNAME in
     ;;
 esac
 
-/bin/sleep infinity
+if [[ $(hostname) =~ host.* ]]; then
+  cp -a /home/www/$(hostname) /var/www
+  rm -rf /home/www
+  /usr/bin/busybox httpd -h /var/www -f
+else
+  /bin/sleep infinity
+fi

@@ -98,13 +98,15 @@ Name resolved! ✅
 
 ### NOTES
 
+- [ ] Using the network with all the name-resolution done by docker-compose
+      talk about using lynx to browse around our internet
 - [X] Introduce the new inter-network and why we changed our design
 - [X] Set up Docker/docker-compose for hosts
 - [X] Have a _single_ `/etc/hosts` on one of the hosts
-- [ ] need to create an HTML document and place ASCII-image files on each host
+- [X] need to create an HTML document and place ASCII-image files on each host
 - [ ] explain something about what each of these servers is offering
 - [ ] Start with the basics: reach each host with http://<ip-address>
-- [ ] Cheat with docker by synchronizing that `/etc/hosts` files across all hosts
+- [X] Cheat with docker by synchronizing that `/etc/hosts` files across all hosts
 - [ ] Stop cheating and implement synchronization of `/etc/hosts` on each machine and see name-resolution work.
 
 - [ ] think about stuff:
