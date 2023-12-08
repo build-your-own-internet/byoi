@@ -24,33 +24,33 @@ case $HOSTNAME in
   (host-g) 
     ip route add default via 2.0.6.1 
     ;;
-  (router1)
+  (router-1)
     ip route add default via 9.0.2.1
     ip route add 2.0.0.0/8 via 3.0.6.1
     ip route add 8.0.0.0/8 via 3.0.5.1
     ;;
-  (router2)
+  (router-2)
     ip route add default via 4.0.4.1
     ip route add 1.0.0.0/8 via 9.0.1.1
     ip route add 6.0.0.0/8 via 4.0.3.1
     ;;
-  (router3)
+  (router-3)
     ip route add default via 4.0.4.1
     ip route add 5.0.0.0/8 via 4.0.2.1
     ip route add 1.0.0.0/8 via 4.0.2.1
     ;;
-  (router4)
+  (router-4)
     ip route add default via 10.0.5.1
     ip route add 6.0.0.0/8 via 4.0.3.1
     ip route add 5.0.0.0/8 via 4.0.2.1
     ip route add 1.0.0.0/8 via 4.0.2.1
     ;;
-  (router5)
+  (router-5)
     ip route add default via 10.0.4.1
     ip route add 2.0.0.0/8 via 3.0.6.1
     ip route add 1.0.0.0/8 via 3.0.1.1
     ;;
-  (router6)
+  (router-6)
     ip route add default via 3.0.5.1
     ip route add 1.0.0.0/8 via 3.0.1.1
     ip route add 5.0.0.0/8 via 3.0.1.1

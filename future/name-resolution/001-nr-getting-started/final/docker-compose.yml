@@ -134,11 +134,11 @@ services:
       host-e: 8.0.0.105
       host-f: 6.0.0.106
 
-  router1:
-    container_name: "build-your-own-internet-router1"
+  router-1:
+    container_name: "build-your-own-internet-router-1"
     build: .
     image: "build-your-own-internet-router"
-    hostname: router1
+    hostname: router-1
     networks:
       one-net:
         ipv4_address: 1.0.1.1
@@ -154,11 +154,11 @@ services:
       - net.ipv4.conf.eth0.rp_filter=0
       - net.ipv4.conf.eth1.rp_filter=0
       - net.ipv4.conf.eth2.rp_filter=0
-  router2:
-    container_name: "build-your-own-internet-router2"
+  router-2:
+    container_name: "build-your-own-internet-router-2"
     build: .
     image: "build-your-own-internet-router"
-    hostname: router2
+    hostname: router-2
     networks:
       four-net:
         ipv4_address: 4.0.2.1
@@ -174,11 +174,11 @@ services:
       - net.ipv4.conf.eth0.rp_filter=0
       - net.ipv4.conf.eth1.rp_filter=0
       - net.ipv4.conf.eth2.rp_filter=0
-  router3:
-    container_name: "build-your-own-internet-router3"
+  router-3:
+    container_name: "build-your-own-internet-router-3"
     build: .
     image: "build-your-own-internet-router"
-    hostname: router3
+    hostname: router-3
     networks:
       four-net:
         ipv4_address: 4.0.3.1
@@ -191,11 +191,11 @@ services:
       - net.ipv4.conf.all.rp_filter=0
       - net.ipv4.conf.eth0.rp_filter=0
       - net.ipv4.conf.eth1.rp_filter=0
-  router4:
-    container_name: "build-your-own-internet-router4"
+  router-4:
+    container_name: "build-your-own-internet-router-4"
     build: .
     image: "build-your-own-internet-router"
-    hostname: router4
+    hostname: router-4
     networks:
       four-net:
         ipv4_address: 4.0.4.1
@@ -211,11 +211,11 @@ services:
       - net.ipv4.conf.eth0.rp_filter=0
       - net.ipv4.conf.eth1.rp_filter=0
       - net.ipv4.conf.eth2.rp_filter=0
-  router5:
-    container_name: "build-your-own-internet-router5"
+  router-5:
+    container_name: "build-your-own-internet-router-5"
     build: .
     image: "build-your-own-internet-router"
-    hostname: router5
+    hostname: router-5
     networks:
       three-net:
         ipv4_address: 3.0.5.1
@@ -231,11 +231,11 @@ services:
       - net.ipv4.conf.eth0.rp_filter=0
       - net.ipv4.conf.eth1.rp_filter=0
       - net.ipv4.conf.eth2.rp_filter=0
-  router6:
-    container_name: "build-your-own-internet-router6"
+  router-6:
+    container_name: "build-your-own-internet-router-6"
     build: .
     image: "build-your-own-internet-router"
-    hostname: router6
+    hostname: router-6
     networks:
       two-net:
         ipv4_address: 2.0.6.1
