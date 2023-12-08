@@ -205,7 +205,7 @@ networks:
     name: "build-your-own-internet-one-net"
     driver: bridge
     driver_opts:
-       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
@@ -214,7 +214,7 @@ networks:
     name: "build-your-own-internet-two-net"
     driver: bridge
     driver_opts:
-       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
@@ -223,7 +223,7 @@ networks:
     name: "build-your-own-internet-three-net"
     driver: bridge
     driver_opts:
-       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
@@ -232,7 +232,7 @@ networks:
     name: "build-your-own-internet-four-net"
     driver: bridge
     driver_opts:
-       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
@@ -241,7 +241,7 @@ networks:
     name: "build-your-own-internet-five-net"
     driver: bridge
     driver_opts:
-       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
@@ -250,7 +250,7 @@ networks:
     name: "build-your-own-internet-six-net"
     driver: bridge
     driver_opts:
-       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
@@ -259,7 +259,7 @@ networks:
     name: "build-your-own-internet-seven-net"
     driver: bridge
     driver_opts:
-       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
@@ -268,7 +268,7 @@ networks:
     name: "build-your-own-internet-eight-net"
     driver: bridge
     driver_opts:
-       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
@@ -277,7 +277,7 @@ networks:
     name: "build-your-own-internet-nine-net"
     driver: bridge
     driver_opts:
-       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
@@ -286,7 +286,7 @@ networks:
     name: "build-your-own-internet-ten-net"
     driver: bridge
     driver_opts:
-       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:

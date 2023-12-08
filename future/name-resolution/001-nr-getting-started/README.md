@@ -96,18 +96,74 @@ rtt min/avg/max/mdev = 0.426/0.426/0.426/0.000 ms
 
 Name resolved! ✅
 
-### NOTES
+### Let's make it easier for ourselves by cheating
 
-- [ ] Using the network with all the name-resolution done by docker-compose
-      talk about using lynx to browse around our internet
-- [X] Introduce the new inter-network and why we changed our design
-- [X] Set up Docker/docker-compose for hosts
-- [X] Have a _single_ `/etc/hosts` on one of the hosts
-- [X] need to create an HTML document and place ASCII-image files on each host
-- [ ] explain something about what each of these servers is offering
-- [ ] Start with the basics: reach each host with http://<ip-address>
-- [X] Cheat with docker by synchronizing that `/etc/hosts` files across all hosts
-- [ ] Stop cheating and implement synchronization of `/etc/hosts` on each machine and see name-resolution work.
+While that was exciting, the thought of manually editing host files seems to suck all the air out of the room. Well, we can cheat a little bit. Docker allows us to define what it calls `extra_hosts` that will get added to `/etc/hosts`. So, let's update `host-a`'s definition in our docker-compose file to add the necessary hosts.
 
-- [ ] think about stuff:
-  - [ ] are we still going to have "hopon" ?
+```yaml
+  host-a:
+    container_name: "build-your-own-internet-host-a"
+    build: .
+    image: "build-your-own-internet-host"
+    hostname: host-a
+    networks:
+      one-net:
+        ipv4_address: 1.0.0.101
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+    extra_hosts:
+      host-b: 5.0.0.102
+      host-c: 6.0.0.103
+      host-d: 7.0.0.104
+      host-e: 8.0.0.105
+      host-f: 6.0.0.106
+      host-g: 2.0.0.107
+```
+
+A quick `restart` and we can `hopon host-a` and travel to all the other hosts!
+
+### Test your work with `ping`
+
+```bash
+root@host-a:/# ping host-b -c2 -w1
+PING host-b (5.0.0.102) 56(84) bytes of data.
+64 bytes from host-b (5.0.0.102): icmp_seq=1 ttl=62 time=0.148 ms
+
+--- host-b ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.148/0.148/0.148/0.000 ms
+```
+
+```bash
+root@host-a:/# ping host-c -c2 -w1
+PING host-c (6.0.0.103) 56(84) bytes of data.
+64 bytes from host-c (6.0.0.103): icmp_seq=1 ttl=61 time=0.154 ms
+
+--- host-c ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.154/0.154/0.154/0.000 ms
+```
+
+Feel free to ping the rest of the machines (`host-d` through `host-g`) to confirm that your names are resolving properly.
+
+Now that we have `host-a` working properly, it's up to you to update the rest of the entries for hosts to add the necessary `extra_hosts` fields. If you would like to see a properly configured final version of this file, we have left one for you here [final/docker-compose.yml](final/docker-compose.yml).
+
+### Test your work with `links`
+
+Working with `ping` is cool and all, but that's not what makes the Internet the international phenomena that it is today. We want to see those pictures that we referenced earlier. Fortunately, we've already set up a simple http server on each of our hosts and loaded some pictures on them.
+
+Let's use [links](http://links.twibright.com/user_en.html) to explore our internet and see what's available to look at!
+
+Let's `hopon host-a` and check out what's available locally to start:
+
+```bash
+root@host-a:/# links http://host-a
+```
+
+As soon as you run this command, you'll see the full-screen text-based web-browsing majesty that is links:
+
+![links-welcome](../img/links-welcome.jpg)
+
+Press `<enter>` on your keyboard to dismiss the welcome message. This is a text-based app to browse web-pages. It uses arrow-keys and tabs and enter and backspace in relatively intuitive way. Feel free to browse the documentation for it if you get stuck. Enjoy the amazing images! Also, notice that you can follow hyperlinks to all the other servers in this internet and explore the images on those systems as well!
