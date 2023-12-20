@@ -36,7 +36,7 @@ To do so:
 1. `docker run -d --cap-add=NET_ADMIN --name=pippin $DOCKER_IMAGE`
 1. `docker run -d --cap-add=NET_ADMIN --name=boudi $DOCKER_IMAGE`
 
->**NOTE:**
+>**📝 NOTE:**
 > What is this `--cap-add=NET_ADMIN` all about, you ask? Check the "Problem Solving" section at the bottom for more information! Also see [this Stack Overflow post](https://stackoverflow.com/questions/27708376/why-am-i-getting-an-rtnetlink-operation-not-permitted-when-using-pipework-with-d) for more details.
 
 ## Build a Network
@@ -131,7 +131,7 @@ ping: connect: Network is unreachable
 
 As the message indicates, that network is no longer available. `boudi` doesn't know how to send packets out to be able to have a hope of reaching that network, so instead of the packets disappearing into the ether, we get an error message indicating that the network isn't defined in any way `boudi` knows how to reach.
 
->**NOTE:**
+>**📝 NOTE:**
 >`ip addr` is an abbreviation for the actual command, `ip address`
 > There is a bit of a tradition within networking CLIs to allow users to abbreviate commands (cisco CLIs are famous for this), and the `ip` command carries this forward.
 

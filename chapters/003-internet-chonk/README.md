@@ -95,7 +95,7 @@ Let's look at the output for one of our interfaces shown in `ip route`:
 
 Here, we can see that the IP of the machine is `10.1.2.3` on a `/24` network. The MAC address listed on the line above is `02:42:0a:01:02:03`. It appears to keep things simple, when docker adds a new machine to a network, it has create an interface for that machine and put it on that network. That interface will have its own unique MAC address. Docker can assign whatever it wants for that MAC address, but, to help us, the humans, it will take the IP address for that machine and convert it into a human readable version in hexidecimal. So, the end of that MAC address, `0a:01:02:03`, converted from hexidecimal into decimal is `10.1.2.3`. This is great for us. It means when we look at MAC addresses in our tcpdump later in the chapter, it is much easier to see which machines our packets are being routed through.
 
-> **NOTE:**
+> **📝 NOTE:**
 > When you see ethernet packets in the wild, there is no correlation between the MAC address and the IP address. This is simply a docker convenience.
 
 ## There and Back Again - a setup journey

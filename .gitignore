@@ -1,0 +1,69 @@
+# See http://help.github.com/ignore-files/ for more about ignoring files.
+
+# compiled output
+/packages/**/dist
+/packages/design-tokens/dist/*/[!theme]*
+/packages/**/dist
+# /packages/beacon/dist
+# /packages/ui-documentation-website/dist
+# /packages/design-tokens/dist/index*
+# /packages/design-tokens/dist/*/[!theme]*
+tmp
+.tmp
+**/*.swp
+*.swp
+out-tsc
+
+# dependencies
+node_modules
+.yalc
+yalc.lock
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+.turbo
+/gha-creds-*.json
+
+# System Files
+.DS_Store
+Thumbs.db
+TODO.md
+
+# yarn
+**/.pnp.*
+**/.yarn/*
+!**/.yarn/patches
+!**/.yarn/plugins
+!**/.yarn/releases
+!**/.yarn/sdks
+!**/.yarn/versions
+packages/design-tokens/scripts/build.js
+
+**/cypress/videos
+**/cypress/fixtures
+packages/ui-documentation-website/cypress/videos/
+
+.npmrc
+
+# Storybook
+storybook-static
