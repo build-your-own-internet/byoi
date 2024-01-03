@@ -58,6 +58,9 @@ case $HOSTNAME in
 esac
 
 if [[ $(hostname) =~ host.* ]]; then
+  cp /avahi-daemon.conf /etc/avahi/avahi-daemon.conf
+  # avahi-daemon --daemonize
+
   cp -a /home/www/$(hostname) /var/www
   rm -rf /home/www
   /usr/bin/busybox httpd -h /var/www -f

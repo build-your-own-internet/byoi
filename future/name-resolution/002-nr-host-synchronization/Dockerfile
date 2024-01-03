@@ -5,5 +5,6 @@ RUN apt-get install -y busybox curl links
 RUN apt-get install avahi-utils -y
 COPY ./init/start-up.sh /start-up.sh
 COPY www /home/www
+COPY /init/avahi-daemon.conf /avahi-daemon.conf
 
 CMD ["/start-up.sh"]
