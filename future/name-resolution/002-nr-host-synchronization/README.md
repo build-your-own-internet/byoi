@@ -62,11 +62,41 @@ PING pippin (10.1.1.2) 56(84) bytes of data.
 rtt min/avg/max/mdev = 0.104/0.140/0.227/0.050 ms
 ```
 
-next steps:
+resolv.conf:
 
-- why?
-- how?
-- what next?
+```none
+search hsd1.co.comcast.net
+nameserver 127.0.0.11
+options edns0 trust-ad ndots:0
+```
+
+see that `nameserver` there? that's a docker dns server. turn that shit off.
+
+added an `/init/resolv.conf` that we're dumping into the container in the `start-up.sh` script. now docker isn't getting all up in our shit.
+
+now, with `avahi-daemon` running, we can `ping host-{x}.local`.
+
+*next steps:*
+
+[] expand this documentation - include description of how `resolv.conf` file is used and why it needs to be nixed (maybe have the reader do the work of commenting out the `nameserver`)
+[] how does the linux box know to go to avahi-daemon for `.local` names
+[] how do we get the routers in on the joke
+[] verify current operating theory on how this is working
+
+current operating theory on how this is working:
+
+- when we start an avani-daemon on a host it does a multicast announcement
+- it also begins to listen for other multicast announcements and records those names.... somewhere
+- when a couple avahi-daemons are running on a local network, they will record each other's names
+- when you ping anything that ends in `.local` the linux box knows to ask the avahi-daemon for the name resolution
+
+`.local` works because of this line in `/etc/nsswitch.conf`
+
+```none
+hosts:          files mdns4_minimal [NOTFOUND=return] dns
+```
+
+remove the `mdns4_minimal` and `.local` doesn't resolve any more.
 
 =====================
 

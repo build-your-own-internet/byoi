@@ -6,5 +6,6 @@ RUN apt-get install avahi-utils -y
 COPY ./init/start-up.sh /start-up.sh
 COPY www /home/www
 COPY /init/avahi-daemon.conf /avahi-daemon.conf
+COPY /init/resolv.conf /resolv.conf
 
 CMD ["/start-up.sh"]

@@ -58,11 +58,18 @@ case $HOSTNAME in
 esac
 
 if [[ $(hostname) =~ host.* ]]; then
-  cp /avahi-daemon.conf /etc/avahi/avahi-daemon.conf
-  # avahi-daemon --daemonize
+  # use our special version of resolv.conf that turns off the docker dns name resolution
+  cp /resolv.conf /etc/resolv.conf
+  rm /resolv.conf
 
+  # use our special avahi-daemon configs that turns off enable-dbus... whatever that does.
+  mv /avahi-daemon.conf /etc/avahi/avahi-daemon.conf
+  avahi-daemon --daemonize
+
+  # copy in all the image files for each specific host
   cp -a /home/www/$(hostname) /var/www
   rm -rf /home/www
+  # start an http server on each host
   /usr/bin/busybox httpd -h /var/www -f
 else
   /bin/sleep infinity
