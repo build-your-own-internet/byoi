@@ -11,6 +11,7 @@ You might run into terms that you don't know the definition to. Sometimes they a
   - [interface](#interface)
   - [internet (or internetwork)](#internet-or-internetwork)
   - [machine](#machine)
+  - [multicast](#multicast)
   - [name resolution](#name-resolution)
   - [network](#network)
   - [packets (a.k.a `IP packets`)](#packets-aka-ip-packets)
@@ -50,6 +51,10 @@ An internet is a set of networks joined together by routers so that machines can
 ## machine
 
 A machine is any computer that (at least for the purpose of this document) is more-or-less permanently attached to a network and does not move around from one network to another. Could be a host or a router.
+
+## multicast
+
+TODO!
 
 ## name resolution
 
