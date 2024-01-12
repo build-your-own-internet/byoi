@@ -58,6 +58,11 @@ case $HOSTNAME in
 esac
 
 if [[ $(hostname) =~ host.* ]]; then
+  # use our special versions of resolv.conf and nsswitch.conf that turns off the docker dns name resolution
+  cp /init/resolv.conf /etc/resolv.conf
+  cp /init/nsswitch.conf /etc/nsswitch.conf
+  rm -rf /init
+
   cp -a /home/www/$(hostname) /var/www
   rm -rf /home/www
   /usr/bin/busybox httpd -h /var/www -f
