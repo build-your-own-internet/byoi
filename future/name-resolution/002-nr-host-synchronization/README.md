@@ -2,7 +2,7 @@
 
 ## Goal
 
-In the last chapter, we kinda cheated... We used our docker-compose.yaml file to insert entries into our `/etc/hosts` file for name resolution. In the real world, we don't have an option to modify the `/etc/hosts` files on every machine on the internet. So what can we do to solve this problem without using our little Docker hack?
+In the last chapter, we kinda cheated... We used our docker-compose.yaml file to insert entries into our `/etc/hosts` file for name resolution. In the real world, we don't have an option to modify the `/etc/hosts` files on every machine on the internet. In this chapter, we've removed those `/etc/hosts` entries, so we're starting back in the same place. So what can we do to solve this problem without using our little Docker hack?
 
 Let's review what our little internet looks like:
 
@@ -10,11 +10,19 @@ Let's review what our little internet looks like:
 
 Let's start with the simplest thing we can do on our little internet to provide name resolution without using Docker or manually editing `/etc/hosts`. We're gonna head down the route of using a [multicast](../../../chapters/glossary.md#multicast) solution called `avahi`. By the end of this chapter, you should be able to `ping` or use `links` to reach each host on our little internet.
 
-## Preamble
+## Avahi and avahi-daemon
 
-You'll see that `avahi-utils` has been added to your Dockerfile for this chapter to install the software for you on `restart`. We also needed to be able to configure the avahi server. You'll find the configuration settings in [the avahi-daemon.conf file](./init/avahi-daemon.conf) and you'll see the file copied into our containers in [the start-up.sh script](./init/start-up.sh).
+Avahi is a program which uses multicast to perform name resolution on local networks with minimal configuration.
 
-The other major change we made in the setup of this internet was turning off Docker's ability to perform name resolution. We did this by commenting out all of the data in the `/etc/resolv.conf` file. To understand this, we need to discuss how name resolution is performed on Linux systems.
+[] test when avahi modifies nsswitch.conf - is it when we daemonize or when we install?
+[] do we want to start with `avahi-utils` added in the dockerfile (depending on the answer to the previous questoin)
+[] provide a pinch more infor about avahi in the paragraph above.
+
+## install and configure avahi/-daemon
+
+more text on installing things
+
+now the below section on exploring what's happening with avahi
 
 ### Name Resolution on Linux (or any Unix like system)
 
@@ -37,19 +45,28 @@ Let's pick this apart piece by piece:
 
 Next documention Steps:
 [] what is avahi/avahi-daemon? what is multicasting?
-[] add multicast definition in the glossary.
+[x] add multicast definition in the glossary.
 [] how does avahi work in a local network?
 [] hopon on a machine, edit avahi-daemon.conf file, restart avahi-daemon - generally explore that shit (tcpdump, ping, all the tools we already know and love)
 [] how do we need to hack things in order to get it to work in our internet?
+
+[] bring in and credit use the wikipedia diagram showing the differences between various "casts" on <https://en.wikipedia.org/wiki/Anycast>
 
 Next exploration steps:
 [] how do we get the routers in on the joke
 .
 .
+
+## Aside: Multicast V. Broadcast V. Anycast
+
 .
 .
 .
-.
+
+Maybe use later?
+
+You'll see that `avahi-utils` has been added to your Dockerfile for this chapter to install the software for you on `restart`. We also needed to be able to configure the avahi server. You'll find the configuration settings in [the avahi-daemon.conf file](./init/avahi-daemon.conf) and you'll see the file copied into our containers in [the start-up.sh script](./init/start-up.sh).
+
 .
 
 ## Where we are currently

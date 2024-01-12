@@ -54,7 +54,12 @@ A machine is any computer that (at least for the purpose of this document) is mo
 
 ## multicast
 
-TODO!
+For the purpose of this document, a multicast message is anything with a destination IP in the range of `224.0.0.0/4`. When a host sends a packet to an IP within that range, two things happen on the ethernet network the host is on:
+
+1. The packet broadcasts to ALL machines on that ethernet network.
+2. If there are any routers configured to route multicast, they'll pick up the packet and forward it out of the ethernet network to any other routers that are configured to support multicast routing.
+
+This tends to be a private network solution because hosts can't really trust the open internet.
 
 ## name resolution
 
