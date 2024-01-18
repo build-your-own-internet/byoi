@@ -32,7 +32,7 @@ When we have this many hosts, we need a convenient way to tell them apart and kn
 
 ## Preamble
 
-Before we get started, we made some configuration changes to the hosts on this internet that we haven't seen yet in other chapters. Docker, by default has a name resolution server that we don't want to use or accidentally get involved as we're exploring implementing our own name resolution solutions. We therefore made a couple configuration changes to `/etc/nsswitch.conf` and `/etc/resolv.conf` which nerfs Docker's ability to perform name resolution on our behalf. We'll talk more about these files in later chapters.
+Before we get started, we made some configuration changes to the hosts on this internet that we haven't seen yet in other chapters. Docker, by default has a name resolution server that we don't want to use or accidentally get involved as we're exploring implementing our own name resolution solutions. We therefore made a couple configuration changes to `/etc/resolv.conf` which nerfs Docker's ability to perform name resolution on our behalf. We'll talk more about these files in later chapters.
 
 ## Let's do some computers
 

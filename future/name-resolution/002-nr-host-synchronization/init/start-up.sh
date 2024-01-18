@@ -58,9 +58,13 @@ case $HOSTNAME in
 esac
 
 if [[ $(hostname) =~ host.* ]]; then
-  # use our special versions of resolv.conf and nsswitch.conf that turns off the docker dns name resolution
+  # use our special versions of resolv.conf that turns off the docker dns name resolution
   cp /init/resolv.conf /etc/resolv.conf
-  cp /init/nsswitch.conf /etc/nsswitch.conf
+  
+  # use our special avahi-daemon configs that turns off enable-dbus... whatever that does.
+  mv /init/avahi-daemon.conf /etc/avahi/avahi-daemon.conf
+  avahi-daemon --daemonize
+
   rm -rf /init
 
   # copy in all the image files for each specific host
