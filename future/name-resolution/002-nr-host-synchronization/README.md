@@ -12,38 +12,30 @@ Let's start with the simplest thing we can do on our little internet to provide 
 
 ## Avahi and avahi-daemon
 
-Avahi is a program which uses multicast to perform name resolution on local networks with minimal configuration.
+Avahi is a program which uses multicast to perform name resolution on local networks with minimal configuration. If you check the [Dockerfile](./Dockerfile) for this chapter, you'll see that we added a new software, `avahi-utils`. Once you've `restart`ed for this chapter, `hopon` a host and `cat /etc/nsswitch.conf`.
 
-[] test when avahi modifies nsswitch.conf - is it when we daemonize or when we install?
-[] do we want to start with `avahi-utils` added in the dockerfile (depending on the answer to the previous questoin)
-[] provide a pinch more infor about avahi in the paragraph above.
+You'll recall, in [chapter 1](../001-nr-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name), we took a look at the contents of `/etc/nsswitch.conf`. We saw that the `hosts` line directed the computer how to resolve a name. It started with looking at the `files` on the system, e.g. `/etc/hosts`, then made a wider internet request on `dns`.
 
-## install and configure avahi/-daemon
-
-more text on installing things
-
-now the below section on exploring what's happening with avahi
-
-### Name Resolution on Linux (or any Unix like system)
-
-We've already discussed the `/etc/hosts` file in our previous chapter, but how does that file get hooked into the name resolution process as a whole? Let's start with the command `ping host-f`... what happens? Your computer needs to figure out where to send the packets, which means turning `host-f` into an IP address. It will start by referencing the `/etc/nsswitch.conf` file, which (on Ubuntu Jammy) contains a line related to `hosts`:
+What looks different now? We'll see that `avahi-utils` added a couple new entries into that `hosts` line to direct name resolution requests for itself.
 
 ```bash
 hosts:          files mdns4_minimal [NOTFOUND=return] dns
 ```
 
-What we see here is the sequence, from left to right, that will be followed in resolving the name. As soon as the resolution process finds an entry, we have successfully converted the name into an IP address and we don't need to keep looking.
+Let's look at what each of these is doing, a couple of them will be review:
 
-Let's pick this apart piece by piece:
-
-* `files`: is there an entry for this hostname in `/etc/hosts`?
+* `files`: Is there an entry for this hostname in a local file? In UNIX based systems that file would be `/etc/hosts`.
 * `mdns4_minimal`: can this name be resolved using a multicast resolver? This is specific to resolving hostnames in the local network.
 * `[NOTFOUND=return]`: if the hostname matches the TLD for `mdns4_minimal`, e.g. `.local`, but the hostname cannot be resolved, don't send this request out to the open internet. For example, if we requested `host-x.local`, which doesn't exist, don't make an open internet request.
-* `dns`: we gotta outsource this request to the larger internet; check the `/etc/resolv.conf` file for where we should send our DNS queries.
+* `dns`: We gotta outsource this request to the larger internet; check the `/etc/resolv.conf` file for where we should send our DNS queries.
+
+>**📝 NOTE:**
+> In order to ensure that Docker wasn't trying to help us with name resolution for these chapters, we nerfed the `/etc/resolv.conf` file. Therefore the `dns` entry in `/etc/nsswitch.conf` won't do anything on these hosts.
 
 **THIS IS WHERE WE STOPPED**
 
 Next documention Steps:
+[x] provide a pinch more infor about avahi in the paragraph above.
 [] what is avahi/avahi-daemon? what is multicasting?
 [x] add multicast definition in the glossary.
 [] how does avahi work in a local network?
@@ -53,7 +45,9 @@ Next documention Steps:
 [] bring in and credit use the wikipedia diagram showing the differences between various "casts" on <https://en.wikipedia.org/wiki/Anycast>
 
 Next exploration steps:
-[] how do we get the routers in on the joke
+[x] test when avahi modifies nsswitch.conf - is it when we daemonize or when we install? - ANSWER: it modifies nsswitch.conf on install
+[x] do we want to start with `avahi-utils` added in the dockerfile (depending on the answer to the previous questoin) - we decided to look at the file in chapetr 1
+[] look into what we need to do to configure the routers (peba recommends pim-dense gets installed on all the routers)
 .
 .
 
@@ -108,7 +102,6 @@ we need to get the routers in on the joke. this will require teaching the router
 Next Steps
 
 * [x] automatically set `enable-dbus=no` for all configs (start-up.sh)
-* look into what we need to do to configure the routers (peba recommends pim-dense gets installed on all the routers)
 
 when checking the behavior of nodes in chapter 002, we saw that `boudi` got the same tcpdump multicast business that we had on our `host-c` and `host-f` in this chapter; ip: `224.0.0.251.5353`. maybe avahi isn't doing any work? and that's why the config file changes aren't having an impact?
 
