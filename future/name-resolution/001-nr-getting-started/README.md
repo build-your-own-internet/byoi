@@ -59,6 +59,21 @@ root@host-a:/# ping host-c -c 2 -w 1
 ping: host-c: Name or service not known
 ```
 
+## How does your computer know where to go to resolve a name?
+
+Let's start with the command `ping host-c`... what happens? Your computer needs to figure out where to send the ICMP ping packets, which means turning `host-c` into an IP address. It will start by referencing a configuration file, `/etc/nsswitch.conf`. On the host you're currently looking at, go ahead and `cat /etc/nsswitch.conf` to look at its contents. It should contain a line related to `hosts`:
+
+```bash
+hosts:          files dns
+```
+
+What we see here is the sequence, from left to right, that will be followed in resolving the name. As soon as the resolution process finds an entry, we have successfully converted the name into an IP address and we don't need to keep looking.
+
+What do these mean though?
+
+- `files`: Is there an entry for this hostname in a local file? In UNIX based systems that file would be `/etc/hosts`.
+- `dns`: We gotta outsource this request to the larger internet; check the `/etc/resolv.conf` file for where we should send our DNS queries.
+
 ## `/etc/hosts` files
 
 `/etc/hosts` is a file used by the unix-family of machines for hard-coded name-resolution. It allows technically-savvy people to force name-resolution to a specific IP address.
