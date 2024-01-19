@@ -12,7 +12,7 @@ Let's start with the simplest thing we can do on our little internet to provide 
 
 ## Avahi and avahi-daemon
 
-Avahi is a program which uses multicast to perform name resolution on local networks with minimal configuration. If you check the [Dockerfile](./Dockerfile) for this chapter, you'll see that we added a new software, `avahi-utils`. Once you've `restart`ed for this chapter, `hopon` a host and `cat /etc/nsswitch.conf`.
+Avahi is a program which uses [multicast](../../../chapters/glossary.md#multicast) to perform name resolution on local networks with minimal configuration. If you check the [Dockerfile](./Dockerfile) for this chapter, you'll see that we added a new software, `avahi-utils`. Once you've `restart`ed for this chapter, `hopon` a host and `cat /etc/nsswitch.conf`.
 
 You'll recall, in [chapter 1](../001-nr-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name), we took a look at the contents of `/etc/nsswitch.conf`. We saw that the `hosts` line directed the computer how to resolve a name. It started with looking at the `files` on the system, e.g. `/etc/hosts`, then made a wider internet request on `dns`.
 
@@ -32,13 +32,61 @@ Let's look at what each of these is doing, a couple of them will be review:
 >**📝 NOTE:**
 > In order to ensure that Docker wasn't trying to help us with name resolution for these chapters, we nerfed the `/etc/resolv.conf` file. Therefore the `dns` entry in `/etc/nsswitch.conf` won't do anything on these hosts.
 
+## Using Multicast to Resolve Names
+
+First, let's check to make sure `avahi-daemon` is already running on our hosts. Go ahead and `hopon host-c` and run `ps -aux` to get a list of processes that are currently running on the host.
+
+```bash
+root@host-c:/# ps aux | grep avahi
+avahi         14  0.0  0.1   7236  2696 ?        S    18:14   0:00 avahi-daemon: running [host-c.local]
+avahi         15  0.0  0.0   7136  1300 ?        S    18:14   0:00 avahi-daemon: chroot helper
+root          42  0.0  0.0   3472  1792 pts/0    S+   18:20   0:00 grep --color=auto avahi
+```
+
+We can see that the `avahi-daemon` is running. Huzzah! We should be able to use it to perform local name resolution. Let's start by `ping`ing `host-f`:
+
+```bash
+root@host-c:/# ping -w2 host-f
+ping: host-f: Temporary failure in name resolution
+```
+
+Oh no... As you can see, we still have a name resolution failure here. When we check the [Avahi docs](https://avahi.org/), we can see that Avahi responds to the `*.local` hostname. Let's see what happens when we run the same ping, but this time to `host-f.local`:
+
+```bash
+root@host-c:/# ping -w2 host-f.local
+PING host-f.local (6.0.0.106) 56(84) bytes of data.
+64 bytes from 6.0.0.106: icmp_seq=1 ttl=64 time=0.093 ms
+64 bytes from 6.0.0.106: icmp_seq=2 ttl=64 time=0.113 ms
+
+--- host-f.local ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1021ms
+rtt min/avg/max/mdev = 0.093/0.103/0.113/0.010 ms
+```
+
+Boom! We got a `ping` there! But if we look at the network diagram pictured at the top of this chapter, we can see that `host-c` and `host-f` are on the same network. What happens if we try to `ping host-a`, which is on a different network?
+
+```bash
+root@host-c:/# ping -w2 host-a.local
+ping: host-a.local: Name or service not known
+```
+
+Multicasting by default only works on local networks, in this case machines that can communicate directly with one another via ethernet, [a quick reminder on how ethernet works](../../../appendix/ip-and-mac-addresses.md). This is because ethernet provides an ability for a machine to broadcast to all other machines on the network.
+
+Avahi uses IP multicast, which gets translated to ethernet broadcast messages. By default, routers ignore these messages, so these messages never get sent to the broader internet. To put this more simply, `host-c` and `host-f` are on the same network, so they can exchange ethernet broadcast messages with each other directly. `host-a`, however, has to be reached through our internet, which requires routers to forward messages to it. It's possible to configure your internetwork to have multicast messages routed between networks, but that's not a default setting.
+
+## Hacking some Routers
+
+Just like with everything else in technology, there are many options on how we could approach this problem.
+
+<here's where we're gonna do some hacking and add more content about exploring multicast>
+
 **THIS IS WHERE WE STOPPED**
 
 Next documention Steps:
 [x] provide a pinch more infor about avahi in the paragraph above.
-[] what is avahi/avahi-daemon? what is multicasting?
+[x] what is avahi/avahi-daemon? what is multicasting?
 [x] add multicast definition in the glossary.
-[] how does avahi work in a local network?
+[x] how does avahi work in a local network?
 [] hopon on a machine, edit avahi-daemon.conf file, restart avahi-daemon - generally explore that shit (tcpdump, ping, all the tools we already know and love)
 [] how do we need to hack things in order to get it to work in our internet?
 

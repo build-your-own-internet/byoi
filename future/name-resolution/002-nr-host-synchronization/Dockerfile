@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y iproute2 \
     curl \
     links
 
-RUN apt-get install -y avahi-utils
+RUN apt-get install -y avahi-utils pimd
 
 COPY www /home/www
 COPY /init/ /init

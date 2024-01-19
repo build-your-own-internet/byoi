@@ -68,6 +68,16 @@ ping -c 2 <some_ip_address>
 * `-c <some_number>`: Count. Send a specific number of ICMP echo requests. `ping` will wait until its received the ICMP echo response for each request, then exit the program.
 * `-w <some_number>`: Wait. Keep sending ICMP echo requests until the time limit in seconds indicated by the number has passed. `ping` does not wait for the ICMP echo responses.
 
+## ps
+
+`ps` stands for "process status" and is tool that can be used to see which processes are currently running on a machine.
+
+> Example command:
+
+```bash
+ps aux
+```
+
 ## tcpdump
 
 [@bork's comic](https://wizardzines.com/comics/tcpdump/) exploring `tcpdump`.
