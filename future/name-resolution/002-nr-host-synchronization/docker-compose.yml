@@ -66,8 +66,8 @@ services:
     image: "build-your-own-internet-host"
     hostname: host-f
     networks:
-      six-net:
-        ipv4_address: 6.0.0.106
+      four-net:
+        ipv4_address: 4.0.0.106
     cap_add:
       - NET_ADMIN
     sysctls:
