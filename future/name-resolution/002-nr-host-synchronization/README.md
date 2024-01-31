@@ -218,3 +218,122 @@ routers don't know how to handle avahi requests because requests are being sent 
 <grab a tcpdump that shows the IP address>
 routers need to be taught to handle multicast requests
 once they know how to handle the requests, then we'll need to teach them how to prevent packets from looping back (how to tree)
+
+```
+root@host-c:/# ping host-f.local -c2
+PING host-f.local (4.0.0.106) 56(84) bytes of data.
+64 bytes from 4.0.0.106: icmp_seq=1 ttl=63 time=0.209 ms
+64 bytes from 4.0.0.106: icmp_seq=2 ttl=63 time=0.319 ms
+
+--- host-f.local ping statistics ---
+2 packets transmitted, 2 received, 0% packet loss, time 1031ms
+rtt min/avg/max/mdev = 0.209/0.264/0.319/0.055 ms
+```
+
+```
+root@router-3:/# tcpdump -nvvvi eth1
+tcpdump: listening on eth1, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+19:58:36.776906 IP (tos 0x0, ttl 255, id 6263, offset 0, flags [DF], proto UDP (17), length 58)
+    6.0.0.103.5353 > 224.0.0.251.5353: [bad udp cksum 0xe799 -> 0x628b!] 0 A (QM)? host-f.local. (30)
+19:58:36.785114 IP (tos 0x0, ttl 255, id 15580, offset 0, flags [DF], proto UDP (17), length 68)
+    6.0.3.1.5353 > 224.0.0.251.5353: [bad udp cksum 0xea3d -> 0x56f6!] 0*- [0q] 1/0/0 host-f.local. (Cache flush) [2m] A 4.0.0.106 (40)
+19:58:36.787590 IP (tos 0x0, ttl 64, id 24750, offset 0, flags [DF], proto ICMP (1), length 84)
+    6.0.0.103 > 4.0.0.106: ICMP echo request, id 8, seq 1, length 64
+19:58:36.787710 IP (tos 0x0, ttl 63, id 8806, offset 0, flags [none], proto ICMP (1), length 84)
+    4.0.0.106 > 6.0.0.103: ICMP echo reply, id 8, seq 1, length 64
+19:58:37.819110 IP (tos 0x0, ttl 64, id 24918, offset 0, flags [DF], proto ICMP (1), length 84)
+    6.0.0.103 > 4.0.0.106: ICMP echo request, id 8, seq 2, length 64
+19:58:37.819264 IP (tos 0x0, ttl 63, id 8949, offset 0, flags [none], proto ICMP (1), length 84)
+    4.0.0.106 > 6.0.0.103: ICMP echo reply, id 8, seq 2, length 64
+19:58:42.040599 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 6.0.0.103 tell 6.0.3.1, length 28
+19:58:42.040775 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 6.0.3.1 tell 6.0.0.103, length 28
+19:58:42.040877 ARP, Ethernet (len 6), IPv4 (len 4), Reply 6.0.3.1 is-at 02:42:06:00:03:01, length 28
+19:58:42.040903 ARP, Ethernet (len 6), IPv4 (len 4), Reply 6.0.0.103 is-at 02:42:06:00:00:67, length 28
+^C
+10 packets captured
+10 packets received by filter
+0 packets dropped by kernel
+```
+
+```
+root@host-c:/# tcpdump -n
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+19:58:36.776848 IP 6.0.0.103.5353 > 224.0.0.251.5353: 0 A (QM)? host-f.local. (30)
+19:58:36.785144 IP 6.0.3.1.5353 > 224.0.0.251.5353: 0*- [0q] 1/0/0 (Cache flush) A 4.0.0.106 (40)
+19:58:36.787560 IP 6.0.0.103 > 4.0.0.106: ICMP echo request, id 8, seq 1, length 64
+19:58:36.787743 IP 4.0.0.106 > 6.0.0.103: ICMP echo reply, id 8, seq 1, length 64
+19:58:37.819056 IP 6.0.0.103 > 4.0.0.106: ICMP echo request, id 8, seq 2, length 64
+19:58:37.819299 IP 4.0.0.106 > 6.0.0.103: ICMP echo reply, id 8, seq 2, length 64
+19:58:42.040695 ARP, Request who-has 6.0.3.1 tell 6.0.0.103, length 28
+19:58:42.040733 ARP, Request who-has 6.0.0.103 tell 6.0.3.1, length 28
+19:58:42.040794 ARP, Reply 6.0.0.103 is-at 02:42:06:00:00:67, length 28
+19:58:42.040942 ARP, Reply 6.0.3.1 is-at 02:42:06:00:03:01, length 28
+^C
+10 packets captured
+10 packets received by filter
+0 packets dropped by kernel
+```
+
+```
+root@router-3:/# tcpdump -nvvvi eth0
+tcpdump: listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+19:58:36.777712 IP (tos 0x0, ttl 255, id 35930, offset 0, flags [DF], proto UDP (17), length 58)
+    4.0.3.1.5353 > 224.0.0.251.5353: [bad udp cksum 0xe833 -> 0x61f1!] 0 A (QM)? host-f.local. (30)
+19:58:36.782772 IP (tos 0x0, ttl 255, id 50413, offset 0, flags [DF], proto UDP (17), length 68)
+    4.0.0.106.5353 > 224.0.0.251.5353: [bad udp cksum 0xe5a6 -> 0x5b8d!] 0*- [0q] 1/0/0 host-f.local. (Cache flush) [2m] A 4.0.0.106 (40)
+19:58:36.787610 IP (tos 0x0, ttl 63, id 24750, offset 0, flags [DF], proto ICMP (1), length 84)
+    6.0.0.103 > 4.0.0.106: ICMP echo request, id 8, seq 1, length 64
+19:58:36.787697 IP (tos 0x0, ttl 64, id 8806, offset 0, flags [none], proto ICMP (1), length 84)
+    4.0.0.106 > 6.0.0.103: ICMP echo reply, id 8, seq 1, length 64
+19:58:37.819136 IP (tos 0x0, ttl 63, id 24918, offset 0, flags [DF], proto ICMP (1), length 84)
+    6.0.0.103 > 4.0.0.106: ICMP echo request, id 8, seq 2, length 64
+19:58:37.819244 IP (tos 0x0, ttl 64, id 8949, offset 0, flags [none], proto ICMP (1), length 84)
+    4.0.0.106 > 6.0.0.103: ICMP echo reply, id 8, seq 2, length 64
+19:58:42.040666 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 4.0.0.106 tell 4.0.3.1, length 28
+19:58:42.040748 ARP, Ethernet (len 6), IPv4 (len 4), Request who-has 4.0.3.1 tell 4.0.0.106, length 28
+19:58:42.040822 ARP, Ethernet (len 6), IPv4 (len 4), Reply 4.0.3.1 is-at 02:42:04:00:03:01, length 28
+19:58:42.040929 ARP, Ethernet (len 6), IPv4 (len 4), Reply 4.0.0.106 is-at 02:42:04:00:00:6a, length 28
+^C
+10 packets captured
+10 packets received by filter
+0 packets dropped by kernel
+```
+
+```
+root@host-f:/# tcpdump -n
+tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
+listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
+19:58:36.777779 IP 4.0.3.1.5353 > 224.0.0.251.5353: 0 A (QM)? host-f.local. (30)
+19:58:36.782619 IP 4.0.0.106.5353 > 224.0.0.251.5353: 0*- [0q] 1/0/0 (Cache flush) A 4.0.0.106 (40)
+19:58:36.787645 IP 6.0.0.103 > 4.0.0.106: ICMP echo request, id 8, seq 1, length 64
+19:58:36.787669 IP 4.0.0.106 > 6.0.0.103: ICMP echo reply, id 8, seq 1, length 64
+19:58:37.819176 IP 6.0.0.103 > 4.0.0.106: ICMP echo request, id 8, seq 2, length 64
+19:58:37.819206 IP 4.0.0.106 > 6.0.0.103: ICMP echo reply, id 8, seq 2, length 64
+19:58:42.040638 ARP, Request who-has 4.0.3.1 tell 4.0.0.106, length 28
+19:58:42.040762 ARP, Request who-has 4.0.0.106 tell 4.0.3.1, length 28
+19:58:42.040850 ARP, Reply 4.0.0.106 is-at 02:42:04:00:00:6a, length 28
+19:58:42.040916 ARP, Reply 4.0.3.1 is-at 02:42:04:00:03:01, length 28
+^C
+10 packets captured
+10 packets received by filter
+0 packets dropped by kernel
+```
+
+Observations:
+
+> 19:58:36.776848 IP 6.0.0.103.5353 > 224.0.0.251.5353: 0 A (QM)? host-f.local. (30)
+
+host-c makes an mDNS request into 224.0.0.251:5353 for name resolution on host-f.local
+
+>
+
+router-3 makes an mDNS request on both netwoks for host-f
+
+* host-c makes an mDNS request into 224.0.0.251:5353 for name resolution on host-f.local
+* router-3 receives the request from host-c and says hang on a sec
+* router-3 generates its own mDNS request to 224.0.0.251:5353 on four-net to resolve host-f
+* host-f receives the mDNS request from router-3 and responds "it me!"
+* router-3 caches the response (assumed) and responds back to host-c
+* host-c caches the response (assumed) and initiates ICMP requests
+* standard ICMP behavior follows from here
