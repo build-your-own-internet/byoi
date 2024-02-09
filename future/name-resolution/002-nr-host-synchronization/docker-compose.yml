@@ -67,7 +67,7 @@ services:
     hostname: host-f
     networks:
       four-net:
-        ipv4_address: 4.0.0.106
+        ipv4_address: 3.0.0.106
     cap_add:
       - NET_ADMIN
     sysctls:
@@ -80,6 +80,18 @@ services:
     networks:
       two-net:
         ipv4_address: 2.0.0.107
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  host-h:
+    container_name: "build-your-own-internet-host-h"
+    build: .
+    image: "build-your-own-internet-host"
+    hostname: host-h
+    networks:
+      two-net:
+        ipv4_address: 4.0.0.108
     cap_add:
       - NET_ADMIN
     sysctls:
