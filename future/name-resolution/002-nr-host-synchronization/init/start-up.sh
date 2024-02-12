@@ -24,6 +24,9 @@ case $HOSTNAME in
   (host-g) 
     ip route add default via 2.0.6.1 
     ;;
+  (host-h)
+    ip route add default via 4.0.3.1
+    ;;
   (router-1)
     ip route add default via 9.0.2.1
     ip route add 2.0.0.0/8 via 3.0.6.1
@@ -59,6 +62,10 @@ esac
 
 # use our special versions of resolv.conf that turns off the docker dns name resolution
 cp /init/resolv.conf /etc/resolv.conf
+
+if [[ $(hostname) =~ router.* ]]; then
+  /etc/init.d/dbus start
+fi
 
 # use our special avahi-daemon configs that turns off enable-dbus... whatever that does.
 mv /init/avahi-daemon.conf /etc/avahi/avahi-daemon.conf
