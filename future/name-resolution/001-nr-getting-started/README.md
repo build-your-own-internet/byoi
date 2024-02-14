@@ -67,7 +67,7 @@ Let's start with the command `ping host-c`... what happens? Your computer needs 
 hosts:          files dns
 ```
 
-What we see here is the sequence, from left to right, that will be followed in resolving the name. As soon as the resolution process finds an entry, we have successfully converted the name into an IP address and we don't need to keep looking.
+What we see here is the sequence, from left to right, that will be followed in resolving each and every name the host needs to look up. As soon as the resolution process finds an entry, we have successfully converted the name into an IP address and we don't need to keep looking.
 
 What do these mean though?
 

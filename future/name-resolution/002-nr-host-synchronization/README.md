@@ -2,7 +2,7 @@
 
 ## Preface: the shape of our internet
 
-First, let's check out what our little internet looks like:
+First, let's check out what our little internet looks like for this chapter:
 
 ![our-inter-network](../img/nr-multicast.svg)
 
@@ -10,27 +10,27 @@ The significant things to note about this internet are that we have 2 machines o
 
 ## Goal
 
-In the last chapter, we kinda cheated... We used our docker-compose.yaml file to insert entries into our `/etc/hosts` file for name resolution. In the real world, we don't have an option to modify the `/etc/hosts` files on every machine on the internet. In this chapter, we've removed those `/etc/hosts` entries, so we're starting back in the same place. What can we do to solve this problem without using our little Docker hack?
+In the last chapter, we kinda cheated... We used our docker-compose.yaml file to insert entries into our `/etc/hosts` file for name resolution. In the real world, we don't have an option to modify the `/etc/hosts` files on every machine on the internet. In this chapter, we've removed those `/etc/hosts` entries, so we're starting off with nothing configured for name resolution. What can we do to solve the problem of name resolution _without_ using our little Docker hack?
 
-Let's start with the simplest thing we can do on our little internet to provide name resolution without using Docker or manually editing `/etc/hosts`. We're gonna head down the route of using a [multicast](../../../chapters/glossary.md#multicast) solution called `avahi`. By the end of this chapter, you should be able to `ping` or use `links` to reach each host on our little internet.
+Let's start with the simplest thing we can do. We're gonna head down the route of using a [multicast](../../../chapters/glossary.md#multicast) solution called `avahi`. By the end of this chapter, you should be able to `ping` or use `links` to reach each name for each host on our little internet.
 
 ## Avahi and avahi-daemon
 
-Avahi is a program which uses [multicast](../../../chapters/glossary.md#multicast) to perform name resolution on local networks with minimal configuration. If you check the [Dockerfile](./Dockerfile) for this chapter, you'll see that we added a new software, `avahi-utils`. Once you've `restart`ed for this chapter, `hopon` a host and `cat /etc/nsswitch.conf`.
+Avahi is a program which uses [multicast](../../../chapters/glossary.md#multicast) to perform name resolution on local networks with minimal configuration. If you check the [Dockerfile](./Dockerfile) for this chapter, you'll see that we added a new software, `avahi-utils`.
 
-You'll recall, in [chapter 1](../001-nr-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name), we took a look at the contents of `/etc/nsswitch.conf`. We saw that the `hosts` line directed the computer how to resolve a name. It started with looking at the `files` on the system, e.g. `/etc/hosts`, then made a wider internet request on `dns`.
+You'll recall, in [chapter 1](../001-nr-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name), we took a look at the contents of `/etc/nsswitch.conf`. We saw that the `hosts` line directed the computer how to resolve a name. It started with looking at the `files` on the system, e.g. `/etc/hosts`, and if it didn't find the name there, then it could use `dns` if it were configured.
 
-What looks different now? We'll see that `avahi-utils` added a couple new entries into that `hosts` line to direct name resolution requests for itself.
+Once you've `restart`ed for this chapter, `hopon` a host and `cat /etc/nsswitch.conf`. We'll see that `avahi-utils` added a couple new entries into that `hosts` line to direct name resolution requests for itself.
 
 ```bash
 hosts:          files mdns4_minimal [NOTFOUND=return] dns
 ```
 
-Let's look at what each of these is doing, a couple of them will be review:
+What looks different now? Let's look at what each of these is doing; a couple of them will be review:
 
 * `files`: Is there an entry for this hostname in a local file? In UNIX based systems that file would be `/etc/hosts`.
 * `mdns4_minimal`: can this name be resolved using a multicast resolver? This is specific to resolving hostnames in the local network.
-* `[NOTFOUND=return]`: if the hostname matches the TLD for `mdns4_minimal`, e.g. `.local`, but the hostname cannot be resolved, don't send this request out to the open internet. For example, if we requested `host-x.local`, which doesn't exist, don't make an open internet request.
+* `[NOTFOUND=return]`: if the hostname matches the TLD for `mdns4_minimal`, e.g. `.local`, but the hostname cannot be resolved, don't send this request out to the open internet. For example, if we requested `host-x.local`, which doesn't exist on our little internet, don't make an open internet request.
 * `dns`: We gotta outsource this request to the larger internet; check the `/etc/resolv.conf` file for where we should send our DNS queries.
 
 >**📝 NOTE:**
@@ -67,6 +67,8 @@ PING host-f.local (6.0.0.106) 56(84) bytes of data.
 rtt min/avg/max/mdev = 0.093/0.103/0.113/0.010 ms
 ```
 
+**TODO:** let's add some tcpdumps showing the name resolution process for `host-c` to `host-f`
+
 Boom! We got a `ping` there! But if we look at the network diagram pictured at the top of this chapter, we can see that `host-c` and `host-f` are on the same network. What happens if we try to `ping host-h`, which is on a different network?
 
 ```bash
@@ -76,143 +78,19 @@ ping: host-h.local: Name or service not known
 
 Multicasting by default only works on local networks, in this case machines that can communicate directly with one another via ethernet ([a quick reminder on how ethernet works](../../../appendix/ip-and-mac-addresses.md)). This is because ethernet provides an ability for a machine to broadcast to all other machines on the network.
 
-Avahi uses IP multicast, which gets translated to ethernet broadcast messages. By default, routers ignore these messages, so these messages never get sent to the broader internet. To put this more simply, `host-c` and `host-f` are on the same network, so they can exchange ethernet broadcast messages with each other directly. `host-h`, however, has to be reached through our internet, which requires routers to forward messages to it. It's possible to configure your internet to have multicast messages routed between networks, but that's not a default setting.
+Avahi uses IP multicast, which gets translated to ethernet broadcast messages. By default, routers ignore these messages, so these messages never get sent to the broader internet. To put this more simply, `host-c` and `host-f` are on the same network, so they can exchange ethernet broadcast messages with each other directly. `host-h`, however, has to be reached through our internet, which requires routers to forward or proxy messages to it.
 
 ## Hacking some Routers
 
-Just like with everything else in technology, there are many options on how we could approach this problem.
+Ok, first off... Let's talk a little more about what Avahi can do for us. Within a local network, Avahi will help us with multicast name resolution. However, when it comes to traversing networks, it is STRONGLY discouraged to use multicast for name resolution. Fortunately for us, Avahi has some built-in tooling to allow us to resolve names across networks.
 
-<here's where we're gonna do some hacking and add more content about exploring multicast>
+Soooooo, we kinda tricked you. The default build we created for this chapter only has `avahi-daemon` running on the hosts, not the routers. If you check the network diagram above, you'll see that the network `host-c` is on and the network `host-h` is on are connected by `router-3`. In order for name resolution to work between these networks, we need to get `router-3` in on the game!
 
-**THIS IS WHERE WE STOPPED**
+`hopon router-3` and run `avahi-daemon --daemonize` to get Avahi set up for name resolution between these networks!
 
-Next documention Steps:
-[x] provide a pinch more infor about avahi in the paragraph above.
-[x] what is avahi/avahi-daemon? what is multicasting?
-[x] add multicast definition in the glossary.
-[x] how does avahi work in a local network?
-[] hopon on a machine, edit avahi-daemon.conf file, restart avahi-daemon - generally explore that shit (tcpdump, ping, all the tools we already know and love)
-[] how do we need to hack things in order to get it to work in our internet?
+## See it work
 
-[] bring in and credit use the wikipedia diagram showing the differences between various "casts" on <https://en.wikipedia.org/wiki/Anycast>
-
-Next exploration steps:
-[x] test when avahi modifies nsswitch.conf - is it when we daemonize or when we install? - ANSWER: it modifies nsswitch.conf on install
-[x] do we want to start with `avahi-utils` added in the dockerfile (depending on the answer to the previous questoin) - we decided to look at the file in chapetr 1
-[] look into what we need to do to configure the routers (peba recommends pim-dense gets installed on all the routers)
-.
-.
-
-## Aside: Multicast V. Broadcast V. Anycast
-
-.
-.
-.
-
-## Where we are currently
-
-We started looking at using avahi, added it to the chapter 002 docker file as an apt-get
-
-started the daemon with `avahi-daemon --debug` and got an error:
-
-```bash
-dbus_bus_get_private(): Failed to connect to socket /var/run/dbus/system_bus_socket: No such file or directory
-```
-
-looked in `/etc/avahi/avahi-daemon.conf` and set `enable-dbus=no`
-
-everything worked for a local setup, i.e. between host-c and host-f
-
-able to ping with a `local` label appended to the hostname on the same network. it appears that the `.local` was unnecessary:
-
-```bash
-root@host-c:/# ping host-f
-PING host-f (6.0.0.106) 56(84) bytes of data.
-64 bytes from build-your-own-internet-host-f.build-your-own-internet-six-net (6.0.0.106): icmp_seq=1 ttl=64 time=0.063 ms
-64 bytes from build-your-own-internet-host-f.build-your-own-internet-six-net (6.0.0.106): icmp_seq=2 ttl=64 time=0.061 ms
-64 bytes from build-your-own-internet-host-f.build-your-own-internet-six-net (6.0.0.106): icmp_seq=3 ttl=64 time=0.068 ms
-64 bytes from build-your-own-internet-host-f.build-your-own-internet-six-net (6.0.0.106): icmp_seq=4 ttl=64 time=0.067 ms
-^C
---- host-f ping statistics ---
-4 packets transmitted, 4 received, 0% packet loss, time 3051ms
-rtt min/avg/max/mdev = 0.061/0.064/0.068/0.003 ms
-```
-
-QUESTIONS:
-
-* how is `ping` getting the hostname and network on this output `build-your-own-internet-host-f.build-your-own-internet-six-net`
-* how do we change the hostname? what are the `host-name` and `domain-name` fields in the `/etc/avahi/avahi-daemon.conf` file? They don't seem to have impact on name resolution... :shrug:
-
-we need to get the routers in on the joke. this will require teaching the routers how to handle multicast requests
-
-Next Steps
-
-* [x] automatically set `enable-dbus=no` for all configs (start-up.sh)
-
-when checking the behavior of nodes in chapter 002, we saw that `boudi` got the same tcpdump multicast business that we had on our `host-c` and `host-f` in this chapter; ip: `224.0.0.251.5353`. maybe avahi isn't doing any work? and that's why the config file changes aren't having an impact?
-
-boudi could ping pippin with `ping pippin`:
-
-```bash
-root@boudi:/# ping pippin
-PING pippin (10.1.1.2) 56(84) bytes of data.
-64 bytes from build-your-own-internet-002-pippin.build-your-own-internet-002-caternet (10.1.1.2): icmp_seq=1 ttl=64 time=0.227 ms
-64 bytes from build-your-own-internet-002-pippin.build-your-own-internet-002-caternet (10.1.1.2): icmp_seq=2 ttl=64 time=0.104 ms
-64 bytes from build-your-own-internet-002-pippin.build-your-own-internet-002-caternet (10.1.1.2): icmp_seq=3 ttl=64 time=0.110 ms
-64 bytes from build-your-own-internet-002-pippin.build-your-own-internet-002-caternet (10.1.1.2): icmp_seq=4 ttl=64 time=0.121 ms
-^C
---- pippin ping statistics ---
-4 packets transmitted, 4 received, 0% packet loss, time 3039ms
-rtt min/avg/max/mdev = 0.104/0.140/0.227/0.050 ms
-```
-
-resolv.conf:
-
-```none
-search hsd1.co.comcast.net
-nameserver 127.0.0.11
-options edns0 trust-ad ndots:0
-```
-
-see that `nameserver` there? that's a docker dns server. turn that shit off.
-
-added an `/init/resolv.conf` that we're dumping into the container in the `start-up.sh` script. now docker isn't getting all up in our shit.
-
-now, with `avahi-daemon` running, we can `ping host-{x}.local`.
-
-*next steps:*
-
-[] expand this documentation - include description of how `resolv.conf` file is used and why it needs to be nixed (maybe have the reader do the work of commenting out the `nameserver`)
-[] how does the linux box know to go to avahi-daemon for `.local` names
-[] how do we get the routers in on the joke
-[] verify current operating theory on how this is working
-
-current operating theory on how this is working:
-
-* when we start an avani-daemon on a host it does a multicast announcement
-* it also begins to listen for other multicast announcements and records those names.... somewhere
-* when a couple avahi-daemons are running on a local network, they will record each other's names
-* when you ping anything that ends in `.local` the linux box knows to ask the avahi-daemon for the name resolution
-
-`.local` works because of this line in `/etc/nsswitch.conf`
-
-```none
-hosts:          files mdns4_minimal [NOTFOUND=return] dns
-```
-
-remove the `mdns4_minimal` and `.local` doesn't resolve any more.
-
-At some point link to [this ChatGPT chat](https://chat.openai.com/share/e00cee99-19db-4997-8c62-1ca2f09f82f3).
-
-=====================
-
-BELOW IS ALL DEFINITELY **NOT** A LIE
-
-==================
-
-> TODO: make sure reader knows that `avahi-daemon` is running on all machines (including routers) and why
-
-Let's see name resolution working across networks. We can test that that's working using our old friend `ping`! The first thing `ping` will have to do is resolve the hostname to an IP address. If you review the network diagram at the beginning of this section, you'll see that `host-c` can only reach `host-h` via `router-3`. This means that `host-c` and `host-h` are on different networks but only one hop away.
+Now that we've got it all configured, let's see name resolution working across networks. We can test that that's working using our old friend `ping`! The first thing `ping` will have to do is resolve the hostname to an IP address. If you review the network diagram at the beginning of this section, you'll see that `host-c` can only reach `host-h` via `router-3`. This means that `host-c` and `host-h` are on different networks but only one hop away.
 
 Let's start by running the `ping` from host-c.
 
@@ -228,6 +106,11 @@ rtt min/avg/max/mdev = 0.209/0.264/0.319/0.055 ms
 ```
 
 Here we can see the name resolution was successful! That `PING host-h.local (4.0.0.108)` shows that `host-c` knows that `host-h` resolves to `4.0.0.108`. It can now send packets to that IP in order to complete the `ping`. But let's look at what was involved in performing that name resolution.
+
+## Let's see that again, this time with more detail
+
+>**📝 NOTE:**
+> When a machine resolves a name, it will commonly cache the results to make future lookups faster and easier. We want to watch the full name resolution process happen again, so in this case, that caching isn't doing us any favors. You may need to `restart` your containers and run `avahi-daemon --daemonize` on `router-3` again to follow along on this section.
 
 We're going to re-run that `ping` on `host-c`, but this time we need a few more terminal sessions open to watch what's happening on each machine:
 
@@ -356,7 +239,7 @@ Let's see if we can make sense of what we're seeing by following the timestamps 
 > **host-c:**
 > 19:58:36.776848 IP 6.0.0.103.5353 > 224.0.0.251.5353: 0 A (QM)? host-h.local. (30)
 
-Before `host-c` can send out the ICMP packets, it needs to know the IP address of the machine its sending them to. We know that `host-c` is configured through `/etct/nsswitch.conf` to use multicast to lookup any `.local` address. Any address within the `224.0.0.0/4` subnet is designated as a multicast address; specifically, `224.0.0.251` is reserved for multicast DNS requests. We can also see that it's using the port `5353`, which is also reserved for multicast DNS requests.
+Before `host-c` can send out the ICMP packets, it needs to know the IP address of the machine its sending them to. We know that `host-c` is configured through `/etc/nsswitch.conf` to use multicast to lookup any `.local` address. Any address within the `224.0.0.0/4` subnet is designated as a multicast address; specifically, `224.0.0.251` is reserved for multicast DNS requests. We can also see that it's using the port `5353`, which is also reserved for multicast DNS requests.
 
 So, on this line, we see that `host-c` (`6.0.0.103`) is making a request to a known multicast DNS IP address and port for name resolution for `host-h.local`.
 
@@ -364,7 +247,7 @@ So, on this line, we see that `host-c` (`6.0.0.103`) is making a request to a kn
 > 19:58:36.776906 IP (tos 0x0, ttl 255, id 6263, offset 0, flags [DF], proto UDP (17), length 58)
     6.0.0.103.5353 > 224.0.0.251.5353: [bad udp cksum 0xe799 -> 0x628b!] 0 A (QM)? host-h.local. (30)
 
-We see the name resolution request packet that `host-c` sent hitting `router-3`. This is exact same story we told above, except this time from `router-3`'s perspective.
+We see the name resolution request packet that `host-c` sent hitting `router-3`. This is exact same packet we saw above, except this time from `router-3`'s perspective.
 
 > **router-3, eth0**
 > 19:58:36.777712 IP (tos 0x0, ttl 255, id 35930, offset 0, flags [DF], proto UDP (17), length 58)
@@ -372,7 +255,7 @@ We see the name resolution request packet that `host-c` sent hitting `router-3`.
 
 Here we see `router-3` generating its own request for name resolution for `host-h.local`. At first blush, this looks like the same packet we saw on `eth1` for `router-3`... but there's one big important difference. Look at the source IP address: `4.0.3.1`. That's `router-3`'s address on `4.0.0.0/8`, not `host-c`'s address on `6.0.0.0/8`...
 
-What happened is `router-3` received `host-c`'s request. Rather than just forwarding `host-c`'s packet, `router-3` then initiated it's own name resolution process. It will respond back to `host-c` directly once it has an answer. This is textbook proxy behavior!
+What happened is `router-3` received `host-c`'s request, and rather than just forwarding `host-c`'s packet, `router-3` then initiated it's own name resolution process. It will respond back to `host-c` directly once it has an answer. This is textbook proxy behavior!
 
 > **host-h**
 > 19:58:36.777779 IP 4.0.3.1.5353 > 224.0.0.251.5353: 0 A (QM)? host-h.local. (30)
@@ -394,7 +277,7 @@ What happened is `router-3` received `host-c`'s request. Rather than just forwar
 > 19:58:36.785114 IP (tos 0x0, ttl 255, id 15580, offset 0, flags [DF], proto UDP (17), length 68)
     6.0.3.1.5353 > 224.0.0.251.5353: [bad udp cksum 0xea3d -> 0x56f6!] 0*- [0q] 1/0/0 host-h.local. (Cache flush) [2m] A 4.0.0.108 (40)
 
-`router-3` responds back to `host-c`'s initial request by letting every machine on the `6.0.0.0/8` network know that `host-h.local` is at `4.0.0.108` and that participating machines should follow the same cache protocol described above.
+`router-3` responds back to `host-c`'s initial request by letting every machine on the `6.0.0.0/8` network know that `host-h.local` is at `4.0.0.108` and that machines on that network should update their local name resolution cache accordingly.
 
 > **host-c**
 > 19:58:36.785144 IP 6.0.3.1.5353 > 224.0.0.251.5353: 0*- [0q] 1/0/0 (Cache flush) A 4.0.0.108 (40)
@@ -404,7 +287,7 @@ What happened is `router-3` received `host-c`'s request. Rather than just forwar
 > **host-c**
 > 19:58:36.787560 IP 6.0.0.103 > 4.0.0.108: ICMP echo request, id 8, seq 1, length 64
 
-`host-c` initiates the ICMP ping request. The rest of this should be old hat to dedicated readers.
+Now that `host-c` knows the IP address to send its packets to, it initiates the ICMP ping request. The rest of this should be old hat to dedicated readers.
 
 NEXT STEPS: - go back and simplify the network and what we're watching
 
@@ -417,12 +300,31 @@ NEXT STEPS: - go back and simplify the network and what we're watching
 * watch name resolution work for `host-b` from `host-c`, also maybe watch gossip happen from `host-h`
 * exercise: how to get name resolution to work for host-a from host c?
 
-**TODO:** consider if we should replace `ping` with an actual name resolution tool
+**TODOS:**
 
-**TODO:** add an end of the chapter exercises section. one exercise should be changing configuration settings on avahi-conf, e.g. change the hostname. maybe this explanation would help set the stage?
-
-**TODO:** exercise: `hopon host-a`, can you see name resolution packets for `host-b` hitting `host-a`. Maybe use this line: Since this is a multicast packet, every machine on the `6.0.0.0/8` network receives the packet.
-
-**TODO:** execise: kill avahi-daemon on `router-3` and see the name resolution fail for `host-h`.
+* consider if we should replace `ping` with an actual name resolution tool
+* add an end of the chapter exercises section. one exercise should be changing configuration settings on avahi-conf, e.g. change the hostname. maybe this explanation would help set the stage?
+* exercise: `hopon host-a`, can you see name resolution packets for `host-b` hitting `host-a`. Maybe use this line: Since this is a multicast packet, every machine on the `6.0.0.0/8` network receives the packet.
+* execise: kill avahi-daemon on `router-3` and see the name resolution fail for `host-h`.
+* exercise: links to pix on our internet (also add images ot host-h)
+* exercise: remove the `mdns4_minimal` and `.local` doesn't resolve any more.
 
 You'll see that `avahi-utils` has been added to your Dockerfile for this chapter to install the software for you on `restart`. We also needed to be able to configure the avahi server. You'll find the configuration settings in [the avahi-daemon.conf file](./init/avahi-daemon.conf) and you'll see the file copied into our containers in [the start-up.sh script](./init/start-up.sh).
+
+## Aside: Multicast V. Broadcast V. Anycast
+
+bring in and credit use the wikipedia diagram showing the differences between various "casts" on <https://en.wikipedia.org/wiki/Anycast>
+
+## Appendix
+
+### why enable-dbus=no?
+
+started the daemon with `avahi-daemon --debug` and got an error:
+
+```bash
+dbus_bus_get_private(): Failed to connect to socket /var/run/dbus/system_bus_socket: No such file or directory
+```
+
+looked in `/etc/avahi/avahi-daemon.conf` and set `enable-dbus=no`
+
+everything worked for a local setup, i.e. between host-c and host-f

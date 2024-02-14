@@ -65,11 +65,11 @@ cp /init/resolv.conf /etc/resolv.conf
 
 # use our special avahi-daemon configs that turns off enable-dbus... whatever that does.
 mv /init/avahi-daemon.conf /etc/avahi/avahi-daemon.conf
+avahi-daemon --daemonize
+
 rm -rf /init
 
 if [[ $(hostname) =~ host.* ]]; then  # copy in all the image files for each specific host
-  avahi-daemon --daemonize
-
   cp -a /home/www/$(hostname) /var/www
   rm -rf /home/www
   # start an http server on each host
