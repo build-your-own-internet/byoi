@@ -177,7 +177,7 @@ Soooooo, we kinda tricked you. The default build we created for this chapter onl
 
 `hopon router-3` and run `avahi-daemon --daemonize` to get Avahi set up for name resolution between these networks!
 
-## See it work
+### See it work
 
 Now that we've got it all configured, let's see name resolution working across networks. We can test that that's working using our old friend `ping`! The first thing `ping` will have to do is resolve the hostname to an IP address.
 
@@ -196,7 +196,7 @@ rtt min/avg/max/mdev = 0.209/0.264/0.319/0.055 ms
 
 Here we can see the name resolution was successful! That `PING host-h.local (4.0.0.108)...` shows that `host-c` knows that `host-h` resolves to `4.0.0.108`. It can now send packets to that IP in order to complete the `ping`. But let's look at what was involved in performing that name resolution.
 
-## Let's see that again, this time with more detail
+### Let's see that again, this time with more detail
 
 >**📝 NOTE:**
 > When a machine resolves a name, it will commonly cache the results to make future lookups faster and easier. We want to watch the full name resolution process happen again, so in this case, that caching isn't doing us any favors. You may need to run `restart` to get a clean environment, then run `avahi-daemon --daemonize` on `router-3` to follow along on this section.
@@ -376,16 +376,54 @@ What's happening here? `router-3` received `host-c`'s request, and rather than j
 
 Now that `host-c` knows the IP address to send its packets to, it initiates the ICMP ping request. The rest of this should be old hat to dedicated readers.
 
+## Spreading the gossip
+
+**TODO: update section title**
+
+**TODO:** `restart` the network. `hopon` each host, `c`, `f`, `h`, and `b`. Run a `tcpdump`. get `avahi-daemon` running on routers `2` and `3`. `ping host-b.local` from `host-c`. discuss why we're seeing the name resolution query and response packets on every machine.
+
+## Exercises
+
+### Can `host-c` resolve `host-b.local`?
+
+We've now used Avahi to be able to perform name resolution for machines on `6.0.0.0/8` to machines on `4.0.0.0/8`. Neat! But what about the rest of our little internet? Can you get `host-b.local` to resolve from `host-c`? What needs to change in order for that to work?
+
+<details>
+<summary>the super secret answer lies within...</summary>
+
+When `host-c` couldn't reach `host-h.local`, we looked at the network map for this chapter and saw that `router-3` connected the networks these machines were on. Then, we ran `avahi-daemon --daemonize` on `router-3`. By running the Avahi daemon, we were able to use Avahi to connect our multicast networks.
+
+Go check the network map. Which additional router do you need to run `avahi-daemon --daemonize` on for `host-c` to be able to resolve `host-b.local`?
+</details>
+
+### Now let's get the whole internet resolving correctly
+
+Previously, we looked at how we `hopon router-*` and run `avahi-daemon --daemonize` to connect another network for name resolution. Obviously, you CAN go to each router and run this command, but that's some boring work if you don't wanna be repetitive. Another option is to update the [start-up.sh](./init/start-up.sh) script for this chapter. Try moving `avahi-daemon --daemonize` to before the conditional and `restart` your internet. Can you `ping` each `host-*.local`?
+
+### Using links to browse our internet
+
+Once you have `avahi-daemon` running on all the routers on our little internet, we should be able to use `links` to browse our images again! We'll need to be sure to use the `*.local` name:
+
+```bash
+root@host-c:/# links http://host-f.local
+```
+
+### Let's break it all
+
+As [we went over previously](#avahi-and-avahi-daemon), Avahi name resolution works by editing the `hosts` entry in `/etc/nsswitch.conf`. Even if we have the `avahi-daemon` running on a machine, if we remove the `mdns4_minimal` entry from the `hosts` in `/etc/nsswitch.conf`, we'll break the name resolution process. Try it for yourself.
+
+Can you explain why? If you're not comfortable with your explanation yet, review how a computer knows how to resolve a name in [chapter 1](../001-nr-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name).
+
 NEXT STEPS: - go back and simplify the network and what we're watching
 
 * [x] don't turn on avahi-daemon on all the routers
 * [x] watch name resolution fail for `host-h` from `host-c`
 * [x] have the reader manually turn it on on router-3
 * [x] watch name resolution work for `host-h.local` and watch all the tcpdumps
-* [] see name resolution NOT work for `host-b.local`
-* [] turn on avahi-daemon for `router-2`
-* [] watch name resolution work for `host-b` from `host-c`, also maybe watch gossip happen from `host-h`
-* [] exercise: how to get name resolution to work for host-a from host c?
+* [x] see name resolution NOT work for `host-b.local`
+* [x] turn on avahi-daemon for `router-2`
+* [x] watch name resolution work for `host-b` from `host-c`, also maybe watch gossip happen from `host-h`
+* [x] exercise: how to get name resolution to work for host-a from host c?
 
 **TODOS:**
 
@@ -394,12 +432,12 @@ NEXT STEPS: - go back and simplify the network and what we're watching
     * dig
     * getent
 * exercise: `hopon host-a`, can you see name resolution packets for `host-b` hitting `host-a`. Maybe use this line: Since this is a multicast packet, every machine on the `6.0.0.0/8` network receives the packet.
-* execise: kill avahi-daemon on `router-3` and see the name resolution fail for `host-h`.
-* exercise: links to pix on our internet.  maybe watch tcpdump?
-* exercise: remove the `mdns4_minimal` and `.local` doesn't resolve any more.
+* [x] execise: kill avahi-daemon on `router-3` and see the name resolution fail for `host-h`.
+* [x] exercise: links to pix on our internet.  maybe watch tcpdump?
+* [x] exercise: remove the `mdns4_minimal` and `.local` doesn't resolve any more.
 * exercise: `restart` machines and perform name resolution for `host-c` => `host-h` again. run `tcpdump` on `host-f`. what are you seeing? why?
-* exercise: edit the `start-up.sh` script to turn on `avahi-daemon` for routers too.
-* file update: in the /www directory, update the `index.html` files to point to the `.local` addresses (also include `host-h`)
+* [x] exercise: edit the `start-up.sh` script to turn on `avahi-daemon` for routers too.
+* [x] file update: in the /www directory, update the `index.html` files to point to the `.local` addresses (also include `host-h`)
 * add an end of the chapter exercises section. one exercise should be changing configuration settings on avahi-conf, e.g. change the hostname. maybe this explanation would help set the stage?
 
 You'll see that `avahi-utils` has been added to your Dockerfile for this chapter to install the software for you on `restart`. We also needed to be able to configure the avahi server. You'll find the configuration settings in [the avahi-daemon.conf file](./init/avahi-daemon.conf) and you'll see the file copied into our containers in [the start-up.sh script](./init/start-up.sh).
