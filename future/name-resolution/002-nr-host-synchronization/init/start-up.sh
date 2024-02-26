@@ -67,11 +67,13 @@ cp /init/resolv.conf /etc/resolv.conf
 mv /init/avahi-daemon.conf /etc/avahi/avahi-daemon.conf
 rm -rf /init
 
-if [[ $(hostname) =~ host.* ]]; then  # copy in all the image files for each specific host
+if [[ $(hostname) =~ host.* ]]; then  
   avahi-daemon --daemonize
 
+  # copy in all the image files for each specific host
   cp -a /home/www/$(hostname) /var/www
   rm -rf /home/www
+  
   # start an http server on each host
   /usr/bin/busybox httpd -h /var/www -f
 else
