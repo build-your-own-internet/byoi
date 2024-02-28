@@ -49,7 +49,7 @@ avahi         15  0.0  0.0   7136  1300 ?        S    18:14   0:00 avahi-daemon:
 root          42  0.0  0.0   3472  1792 pts/0    S+   18:20   0:00 grep --color=auto avahi
 ```
 
-We can see that the `avahi-daemon` is running. Huzzah! We should be able to use it to perform local name resolution. Let's start by `ping`ing `host-f`. But, just like in other chapters, we wanna see what's happening in all this communication. Let's use our old friend `tcpdump`!
+We can see that the `avahi-daemon` is running. Huzzah! We should be able to use it to perform local name resolution. Let's start by `ping`ing `host-f`. The first thing `ping` will have to do is resolve the hostname to an IP address. But, just like in other chapters, we wanna see what's happening in all this communication. Let's use our old friend `tcpdump`!
 
 We'll need to open 3 terminal sessions:
 
@@ -179,9 +179,17 @@ Soooooo, we kinda tricked you. The default build we created for this chapter onl
 
 ### See it work
 
-Now that we've got it all configured, let's see name resolution working across networks. We can test that that's working using our old friend `ping`! The first thing `ping` will have to do is resolve the hostname to an IP address.
+Now that we've got it all configured, let's see name resolution working across networks. We're going to re-run that `ping` on `host-c`, but this time we need a few more terminal sessions open to watch what's happening on each machine:
 
-Let's start by running the `ping` from host-c.
+* `host-h`: run `tcpdump -n`
+* `router-3`: run `tcpdump -nvvvi eth0`
+* `router-3`: run `tcpdump -nvvvi eth1`
+* `host-c`: run `tcpdump -n`
+* `host-c`: run `ping host-h.local -c2`
+
+Make sure you keep track of which interface is on which network for `router-3`. We want to be able to examine the packets running through each machine, and knowing the interface will help you understand the story!
+
+Let's start by looking at the `ping` output from host-c.
 
 ```bash
 root@host-c:/# ping host-h.local -c2
@@ -196,22 +204,7 @@ rtt min/avg/max/mdev = 0.209/0.264/0.319/0.055 ms
 
 Here we can see the name resolution was successful! That `PING host-h.local (4.0.0.108)...` shows that `host-c` knows that `host-h` resolves to `4.0.0.108`. It can now send packets to that IP in order to complete the `ping`. But let's look at what was involved in performing that name resolution.
 
-### Let's see that again, this time with more detail
-
->**📝 NOTE:**
-> When a machine resolves a name, it will commonly cache the results to make future lookups faster and easier. We want to watch the full name resolution process happen again, so in this case, that caching isn't doing us any favors. You may need to run `restart` to get a clean environment, then run `avahi-daemon --daemonize` on `router-3` to follow along on this section.
-
-We're going to re-run that `ping` on `host-c`, but this time we need a few more terminal sessions open to watch what's happening on each machine:
-
-* `host-h`: run `tcpdump -n`
-* `router-3`: run `tcpdump -nvvvi eth0`
-* `router-3`: run `tcpdump -nvvvi eth1`
-* `host-c`: run `tcpdump -n`
-* `host-c`: run `ping host-h.local -c2`
-
-Make sure you keep track of which interface is on which network for `router-3`. We want to be able to examine the packets running through each machine, and knowing the interface will help you understand the story!
-
-All this output is a little overwhelming. You can click on each command to see the full output block of what we saw when we ran these commands on our machines.
+Just like we saw before, the rest of this output is a little overwhelming. You can click on each command to see the full output block of what we saw when we ran these commands on our machines.
 
 <details>
 <summary><b>host-h: tcpdump -n</b></summary>
@@ -414,17 +407,6 @@ As [we went over previously](#avahi-and-avahi-daemon), Avahi name resolution wor
 
 Can you explain why? If you're not comfortable with your explanation yet, review how a computer knows how to resolve a name in [chapter 1](../001-nr-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name).
 
-NEXT STEPS: - go back and simplify the network and what we're watching
-
-* [x] don't turn on avahi-daemon on all the routers
-* [x] watch name resolution fail for `host-h` from `host-c`
-* [x] have the reader manually turn it on on router-3
-* [x] watch name resolution work for `host-h.local` and watch all the tcpdumps
-* [x] see name resolution NOT work for `host-b.local`
-* [x] turn on avahi-daemon for `router-2`
-* [x] watch name resolution work for `host-b` from `host-c`, also maybe watch gossip happen from `host-h`
-* [x] exercise: how to get name resolution to work for host-a from host c?
-
 **TODOS:**
 
 * consider if we should replace `ping` with an actual name resolution tool
@@ -432,19 +414,11 @@ NEXT STEPS: - go back and simplify the network and what we're watching
     * dig
     * getent
 * exercise: `hopon host-a`, can you see name resolution packets for `host-b` hitting `host-a`. Maybe use this line: Since this is a multicast packet, every machine on the `6.0.0.0/8` network receives the packet.
-* [x] execise: kill avahi-daemon on `router-3` and see the name resolution fail for `host-h`.
-* [x] exercise: links to pix on our internet.  maybe watch tcpdump?
-* [x] exercise: remove the `mdns4_minimal` and `.local` doesn't resolve any more.
 * exercise: `restart` machines and perform name resolution for `host-c` => `host-h` again. run `tcpdump` on `host-f`. what are you seeing? why?
-* [x] exercise: edit the `start-up.sh` script to turn on `avahi-daemon` for routers too.
-* [x] file update: in the /www directory, update the `index.html` files to point to the `.local` addresses (also include `host-h`)
+* finish Anycast/Multicast/Broadcast explanation
 * add an end of the chapter exercises section. one exercise should be changing configuration settings on avahi-conf, e.g. change the hostname. maybe this explanation would help set the stage?
 
 You'll see that `avahi-utils` has been added to your Dockerfile for this chapter to install the software for you on `restart`. We also needed to be able to configure the avahi server. You'll find the configuration settings in [the avahi-daemon.conf file](./init/avahi-daemon.conf) and you'll see the file copied into our containers in [the start-up.sh script](./init/start-up.sh).
-
-## Aside: Multicast V. Broadcast V. Anycast
-
-bring in and credit use the wikipedia diagram showing the differences between various "casts" on <https://en.wikipedia.org/wiki/Anycast>
 
 ## Appendix
 
@@ -459,3 +433,17 @@ dbus_bus_get_private(): Failed to connect to socket /var/run/dbus/system_bus_soc
 looked in `/etc/avahi/avahi-daemon.conf` and set `enable-dbus=no`
 
 everything worked for a local setup, i.e. between host-c and host-f
+
+### Unicast v. Anycast v. Broadcast v. Multicast
+
+We've talked a lot in this chapter about multicast. But what makes multicast different from broadcast? Or hey, anycast and unicast for that matter? What do each of these routing protocols mean? Why would you use each one?
+
+**Unicast** is what we think of when we think of most internet routing. Unicast means that there is a single machine out there on the internet that responds to the destination IP address on a packet. One and only one machine is out there advertising that it is responsible for that IP address. Think of a unicast address like an exact location that you can type into your GPS. You know exactly where you're going and exactly what address you're going to end up at.
+
+**Anycast** is a protocol where more than one machine can answer queries for a single IP address. Each machine will advertise the same IP address into the internet. So, when client sends packets to an IP address that is anycasted from multiple machines, routers will make decisions on where to send the packets. Usually, routers are going to choose the shortest path to the destination, which will very likely be the closest machine. Importantly, the packets still end up on a single machine; they aren't sent to every machine that advertises the IP address. Think of anycast like doing a search for a business. You want to go to a Target. You don't care which location, you just need to get to any Target. You can type 'Target' into your favorite maps app, pick the location that's closest to you, and follow instructions on how to get there.
+
+**Broadcast** is exactly what it sounds like; a message is sent out broadly, so every machine on a network will receive the packets being sent. Think of broadcast like political flyers on a presidential elecation year... They want those flyers to be at EVERY house. They want those flyers to be at every business. They want those flyers to be seen as far and wide as possible with absolutely no discression about who is going to see them.
+
+**Multicast** is another protocol to send packages to many machines at once. Think of multicast like a delivery system for a library. We need to get a box of all the new books, movies, and music to each location so it'll be available for neighborhood patrons. We're gonna go to every location to drop off our packages, but we aren't going to drop packages at the hardware store on our way.
+
+![an image of routing schemes](https://bunnyacademy.b-cdn.net/what-is-routing-scheme.svg)
