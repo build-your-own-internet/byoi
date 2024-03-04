@@ -12,9 +12,19 @@ The significant things to note about this internet are that we have 2 machines o
 
 In the last chapter, we kinda cheated... We used our docker-compose.yaml file to insert entries into our `/etc/hosts` file for name resolution. In the real world, we don't have an option to modify the `/etc/hosts` files on every machine on the internet. In this chapter, we've removed those `/etc/hosts` entries, so we're starting off with nothing configured for name resolution. What can we do to solve the problem of name resolution _without_ using our little Docker hack?
 
-Let's start with the simplest thing we can do. We're gonna head down the route of using a [multicast](../../../chapters/glossary.md#multicast) solution called `avahi`. By the end of this chapter, you should be able to `ping` or use `links` to reach each name for each host on our little internet.
+Let's start with the simplest thing we can do. We're gonna head down the route of using a zero configuration solution called `avahi`. By the end of this chapter, you should be able to `ping` or use `links` to reach each name for each host on our little internet **without** configuring names on each host!
 
-What is this "multicast" stuff? Don't worry, you'll see it in action pretty soon!
+### Disclaimer: Turns out, this isn't true multicast
+
+First, there is more than one way to do this. We planned on using Avahi regardless of the route we took in implementing multicast name resolution.
+
+Option 1: Use Avahi on each of the hosts to generate the multicast packets, but install some other routing software that understands multicast protocols on the routers so those packets could traverse our internet.
+
+Option 2: Install Avahi on _both_ the routers and the hosts and use it to route multicast packets.
+
+We truly wanted to try implementing option 1 to show how it could be done, but we ran into a whole batch of problems. At the end of the day, this solution isn't really used on the internet as a whole.
+
+It turns out, when routing packets across an internet, Avahi doesn't use multicast, but instead performs a proxy lookup. The routers receive the name resolution packets and then make their own queries to discover the address for the destination name.
 
 ## Avahi and avahi-daemon
 
@@ -417,6 +427,7 @@ Can you explain why? If you're not comfortable with your explanation yet, review
 * exercise: `restart` machines and perform name resolution for `host-c` => `host-h` again. run `tcpdump` on `host-f`. what are you seeing? why?
 * finish Anycast/Multicast/Broadcast explanation
 * add an end of the chapter exercises section. one exercise should be changing configuration settings on avahi-conf, e.g. change the hostname. maybe this explanation would help set the stage?
+* reread and make sure there's a good flow
 
 You'll see that `avahi-utils` has been added to your Dockerfile for this chapter to install the software for you on `restart`. We also needed to be able to configure the avahi server. You'll find the configuration settings in [the avahi-daemon.conf file](./init/avahi-daemon.conf) and you'll see the file copied into our containers in [the start-up.sh script](./init/start-up.sh).
 
@@ -442,8 +453,8 @@ We've talked a lot in this chapter about multicast. But what makes multicast dif
 
 **Anycast** is a protocol where more than one machine can answer queries for a single IP address. Each machine will advertise the same IP address into the internet. So, when client sends packets to an IP address that is anycasted from multiple machines, routers will make decisions on where to send the packets. Usually, routers are going to choose the shortest path to the destination, which will very likely be the closest machine. Importantly, the packets still end up on a single machine; they aren't sent to every machine that advertises the IP address. Think of anycast like doing a search for a business. You want to go to a Target. You don't care which location, you just need to get to any Target. You can type 'Target' into your favorite maps app, pick the location that's closest to you, and follow instructions on how to get there.
 
-**Broadcast** is exactly what it sounds like; a message is sent out broadly, so every machine on a network will receive the packets being sent. Think of broadcast like political flyers on a presidential elecation year... They want those flyers to be at EVERY house. They want those flyers to be at every business. They want those flyers to be seen as far and wide as possible with absolutely no discression about who is going to see them.
+**Broadcast** is exactly what it sounds like; a message is sent out broadly, so every machine on a network will receive the packets being sent. Broadcast exists only within a single network; its packets do not get routed across an internet. Think of broadcast like talking into a megaphone inside a building. Everyone in that building can hear you, but no one outside that building knows whats being said.
 
-**Multicast** is another protocol to send packages to many machines at once. Think of multicast like a delivery system for a library. We need to get a box of all the new books, movies, and music to each location so it'll be available for neighborhood patrons. We're gonna go to every location to drop off our packages, but we aren't going to drop packages at the hardware store on our way.
+**Multicast** is another protocol to send packages to many machines at once. Essentially, multicast is just broadcast that can be routed across multiple networks. Think of multicast like NPR syndication; local public radios have different programming from the national radio. But each location has programming that is distinct from each other location.
 
 ![an image of routing schemes](https://bunnyacademy.b-cdn.net/what-is-routing-scheme.svg)
