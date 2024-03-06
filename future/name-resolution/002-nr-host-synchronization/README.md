@@ -379,11 +379,46 @@ What's happening here? `router-3` received `host-c`'s request, and rather than j
 
 Now that `host-c` knows the IP address to send its packets to, it initiates the ICMP ping request. The rest of this should be old hat to dedicated readers.
 
+## Make the whole internet resolve names correctly
+
+In order to get name resolution working between `host-c` and `host-h`, we had to jump onto `router-3` and run `avahi-daemon --daemonize`. The reason you had to do this is the [start-up.sh](./init/start-up.sh) script only runs `avahi-daemon` on the hosts, not the routers. Obviously, you CAN go to each router and run this command, but that's some boring work. Another option is to update the [start-up.sh](./init/start-up.sh) script for this chapter.
+
+Try moving `avahi-daemon --daemonize` to before the conditional and `restart` your internet. If you're confused or it isn't working, try checking [/final/start-up.sh](./final/start-up.sh) for this chapter.
+
 ## Spreading the gossip
 
-**TODO: update section title**
+When we looked at how name resolution worked with Avahi previously, we saw that `router-3` proxied the request out to `host-h`. How did it know where to go to get that name resolved? Well... Here's the thing. It didn't. Instead, the name resolution request was flooded across all machines on all networks that were connected via Avahi. Let's see this in action.
 
-**TODO:** `restart` the network. `hopon` each host, `c`, `f`, `h`, and `b`. Run a `tcpdump`. get `avahi-daemon` running on routers `2` and `3`. `ping host-b.local` from `host-c`. discuss why we're seeing the name resolution query and response packets on every machine.
+`restart` your internet, then `hopon host-c` and `hopon host-b`. Start a `tcpdump -nvvv` on `host-b`. Re-run that `ping host-h.local` from `host-c`. What do you see happen on `host-b`?
+
+```bash
+root@host-b:/# tcpdump -nvvv
+...
+19:17:09.406042 IP (tos 0x0, ttl 255, id 50217, offset 0, flags [DF], proto UDP (17), length 58)
+    5.0.2.1.5353 > 224.0.0.251.5353: [bad udp cksum 0xe833 -> 0x5ff1!] 0 A (QM)? host-h.local. (30)
+19:17:09.409361 IP (tos 0x0, ttl 255, id 50218, offset 0, flags [DF], proto UDP (17), length 68)
+    5.0.2.1.5353 > 224.0.0.251.5353: [bad udp cksum 0xe83d -> 0x56f4!] 0*- [0q] 1/0/0 host-h.local. (Cache flush) [2m] A 4.0.0.108 (40)
+```
+
+Would'ja look at that! We're seeing the same query for `host-h.local` (`(QM)? host-h.local.`) and the same name resolution (`host-h.local. (Cache flush) [2m] A 4.0.0.108`) that we saw when we were examining packets earlier. Why is that? We don't have a central location for discovering a name's IP address. We don't even have anywhere to start. Avahi's solution to this was to send a request to every machine that's connected, and the machine that's responsible for the name will respond with it's IP address. That response will then be populated back across all the connected machines.
+
+Previously, we saw `router-3` proxying the request for name resolutoin for `host-h` out to the networks it was connected to. This process is duplicated by every router on our internet. Once each router receives a response, it then propogates that response out to every machine on every network it is connected to, including other routers.
+
+The name resolution request flow looks something like this:
+
+!["flowchart of proxy broadcast through our internet"](../img/proxy-broadcast.svg)
+
+Each arrow in this diagram indicates a new proxied request for name resolution for `host-h.local`. The color of the arrows indicates how far down the proxy chain that request is.
+
+Two important things to notice on this diagram:
+
+First, when a router receives a request on one interface, it doesn't then send another proxied request out that interface, e.g. `router-5` doesn't proxy a request back to `router-4`.
+
+Second, when a router receives a duplicate request, e.g. `router-5` receives a request from both `router-4` AND `router-1`, it doesn't start another round of proxying that request.
+
+The result of these behaviors is that messages don't go around the internet forever. Each message gets to every network only one time.
+
+**TODO:** make a diagram of h's response back with some similar descriptions below.
 
 ## Exercises
 
@@ -399,10 +434,6 @@ When `host-c` couldn't reach `host-h.local`, we looked at the network map for th
 Go check the network map. Which additional router do you need to run `avahi-daemon --daemonize` on for `host-c` to be able to resolve `host-b.local`?
 </details>
 
-### Now let's get the whole internet resolving correctly
-
-Previously, we looked at how we `hopon router-*` and run `avahi-daemon --daemonize` to connect another network for name resolution. Obviously, you CAN go to each router and run this command, but that's some boring work if you don't wanna be repetitive. Another option is to update the [start-up.sh](./init/start-up.sh) script for this chapter. Try moving `avahi-daemon --daemonize` to before the conditional and `restart` your internet. Can you `ping` each `host-*.local`?
-
 ### Using links to browse our internet
 
 Once you have `avahi-daemon` running on all the routers on our little internet, we should be able to use `links` to browse our images again! We'll need to be sure to use the `*.local` name:
@@ -416,20 +447,6 @@ root@host-c:/# links http://host-f.local
 As [we went over previously](#avahi-and-avahi-daemon), Avahi name resolution works by editing the `hosts` entry in `/etc/nsswitch.conf`. Even if we have the `avahi-daemon` running on a machine, if we remove the `mdns4_minimal` entry from the `hosts` in `/etc/nsswitch.conf`, we'll break the name resolution process. Try it for yourself.
 
 Can you explain why? If you're not comfortable with your explanation yet, review how a computer knows how to resolve a name in [chapter 1](../001-nr-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name).
-
-**TODOS:**
-
-* consider if we should replace `ping` with an actual name resolution tool
-  * what about just having a small section at the end that shows some tools/commands?
-    * dig
-    * getent
-* exercise: `hopon host-a`, can you see name resolution packets for `host-b` hitting `host-a`. Maybe use this line: Since this is a multicast packet, every machine on the `6.0.0.0/8` network receives the packet.
-* exercise: `restart` machines and perform name resolution for `host-c` => `host-h` again. run `tcpdump` on `host-f`. what are you seeing? why?
-* finish Anycast/Multicast/Broadcast explanation
-* add an end of the chapter exercises section. one exercise should be changing configuration settings on avahi-conf, e.g. change the hostname. maybe this explanation would help set the stage?
-* reread and make sure there's a good flow
-
-You'll see that `avahi-utils` has been added to your Dockerfile for this chapter to install the software for you on `restart`. We also needed to be able to configure the avahi server. You'll find the configuration settings in [the avahi-daemon.conf file](./init/avahi-daemon.conf) and you'll see the file copied into our containers in [the start-up.sh script](./init/start-up.sh).
 
 ## Appendix
 
