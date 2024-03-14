@@ -406,7 +406,7 @@ Previously, we saw `router-3` proxying the request for name resolutoin for `host
 
 The name resolution request flow looks something like this:
 
-!["flowchart of proxy broadcast through our internet"](../img/proxy-broadcast.svg)
+![flowchart of proxy broadcast through our internet](../img/proxy-broadcast.svg)
 
 Each arrow in this diagram indicates a new proxied request for name resolution for `host-h.local`. The color of the arrows indicates how far down the proxy chain that request is.
 
@@ -418,7 +418,13 @@ Second, when a router receives a duplicate request, e.g. `router-5` receives a r
 
 The result of these behaviors is that messages don't go around the internet forever. Each message gets to every network only one time.
 
-**TODO:** make a diagram of h's response back with some similar descriptions below.
+That shows us how the request has been flooded over the internet. Now we need to look at how the response makes its way to every machine as well.
+
+![flowchart of a proxy response through our internet](../img/proxy-response.svg)
+
+Here, we see that `host-h` generates the initial message that then hits every router on `4.0.0.0/8`. Each router proxies that message to each machine on each network it has an interface on. This allows the response to reach every machine on our internet.
+
+What this means is that every machine on our internet will already have an answer for where to find `host-h.local`. So, if, after the name resolution has been performed and during the cache window, if you run a `tcpdump` on a different host while you run `ping host-h.local` on that host, you won't see any name resolution traffic.
 
 ## Exercises
 
