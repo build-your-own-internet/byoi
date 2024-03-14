@@ -11,6 +11,7 @@ You might run into terms that you don't know the definition to. Sometimes they a
   - [interface](#interface)
   - [internet (or internetwork)](#internet-or-internetwork)
   - [machine](#machine)
+  - [multicast](#multicast)
   - [name resolution](#name-resolution)
   - [network](#network)
   - [packets (a.k.a `IP packets`)](#packets-aka-ip-packets)
@@ -50,6 +51,15 @@ An internet is a set of networks joined together by routers so that machines can
 ## machine
 
 A machine is any computer that (at least for the purpose of this document) is more-or-less permanently attached to a network and does not move around from one network to another. Could be a host or a router.
+
+## multicast
+
+For the purpose of this document, a multicast message is anything with a destination IP in the range of `224.0.0.0/4`. When a host sends a packet to an IP within that range, two things happen on the ethernet network the host is on:
+
+1. The packet broadcasts to ALL machines on that ethernet network.
+2. If there are any routers configured to route multicast, they'll pick up the packet and forward it out of the ethernet network to any other routers that are configured to support multicast routing.
+
+This tends to be a private network solution because hosts can't really trust the open internet.
 
 ## name resolution
 
