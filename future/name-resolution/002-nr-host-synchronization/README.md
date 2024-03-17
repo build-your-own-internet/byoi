@@ -1,30 +1,18 @@
 # Name Resolution
 
+In the last chapter, we kinda cheated... We used our docker-compose.yaml file to insert entries into our `/etc/hosts` file for name resolution. In the real world, we don't have an option to modify the `/etc/hosts` files on every machine on the internet. In this chapter, we've removed those `/etc/hosts` entries, so we're starting off with nothing configured for name resolution. What can we do to solve the problem of name resolution _without_ using our little Docker hack?
+
+## Goal
+
+Let's start with the simplest thing we can do. We're gonna head down the route of using a zero configuration solution called `avahi`. By the end of this chapter, you should be able to `ping` or use `links` to reach each name for any host on our little internet **without** configuring names on each host!
+
 ## Preface: the shape of our internet
 
 First, let's check out what our little internet looks like for this chapter:
 
 ![our-inter-network](../img/nr-multicast.svg)
 
-The significant things to note about this internet are that we have 2 machines on one network, `host-c` and `host-f` are on `6.0.0.0/8`, and we added a new host, `host-h` to the `4.0.0.0/8` network. `host-h` is only one hop away from `host-c` and `host-f`. This means that requests from `host-h` <=> `host-c` only need to be routed through one router. This simplifies what we're looking at when we are checking what's happening on our internet. We wanted to have a request path that involved one and only one router; adding `host-h` handled that for us.
-
-## Goal
-
-In the last chapter, we kinda cheated... We used our docker-compose.yaml file to insert entries into our `/etc/hosts` file for name resolution. In the real world, we don't have an option to modify the `/etc/hosts` files on every machine on the internet. In this chapter, we've removed those `/etc/hosts` entries, so we're starting off with nothing configured for name resolution. What can we do to solve the problem of name resolution _without_ using our little Docker hack?
-
-Let's start with the simplest thing we can do. We're gonna head down the route of using a zero configuration solution called `avahi`. By the end of this chapter, you should be able to `ping` or use `links` to reach each name for each host on our little internet **without** configuring names on each host!
-
-### Disclaimer: Turns out, this isn't true multicast
-
-First, there is more than one way to do this. We planned on using Avahi regardless of the route we took in implementing multicast name resolution.
-
-Option 1: Use Avahi on each of the hosts to generate the multicast packets, but install some other routing software that understands multicast protocols on the routers so those packets could traverse our internet.
-
-Option 2: Install Avahi on _both_ the routers and the hosts and use it to route multicast packets.
-
-We truly wanted to try implementing option 1 to show how it could be done, but we ran into a whole batch of problems. At the end of the day, this solution isn't really used on the internet as a whole.
-
-It turns out, when routing packets across an internet, Avahi doesn't use multicast, but instead performs a proxy lookup. The routers receive the name resolution packets and then make their own queries to discover the address for the destination name.
+The significant things to note about this internet are that we have 2 machines on one network, `host-c` and `host-f` are on `6.0.0.0/8`, and we added a new host, `host-h`, to the `4.0.0.0/8` network. `host-h` is only one hop away from `host-c` and `host-f`. This means that requests from `host-h` <=> `host-c` only need to be routed through one router. This simplifies what we're looking at when we are checking what's happening on our internet. We wanted to have a request path that involved one and only one router; adding `host-h` handled that for us.
 
 ## Avahi and avahi-daemon
 
@@ -38,7 +26,7 @@ Once you've `restart`ed for this chapter, `hopon` a host and `cat /etc/nsswitch.
 hosts:          files mdns4_minimal [NOTFOUND=return] dns
 ```
 
-What looks different now? Let's look at what each of these is doing; a couple of them will be review:
+Let's look at what each of these is doing; a couple of them will be review:
 
 * `files`: Is there an entry for this hostname in a local file? In UNIX based systems that file would be `/etc/hosts`.
 * `mdns4_minimal`: can this name be resolved using a multicast resolver? This is specific to resolving hostnames in the local network.
@@ -48,9 +36,21 @@ What looks different now? Let's look at what each of these is doing; a couple of
 >**📝 NOTE:**
 > In order to ensure that Docker wasn't trying to help us with name resolution for these chapters, we nerfed the `/etc/resolv.conf` file. Therefore the `dns` entry in `/etc/nsswitch.conf` won't do anything on these hosts.
 
+### Disclaimer: Turns out, this isn't true multicast
+
+First, there is more than one way to do this. We planned on using Avahi regardless of the route we took in implementing multicast name resolution.
+
+Option 1: Use Avahi on each of the hosts to generate the multicast packets, but install some other routing software that understands multicast protocols on the routers so those packets could traverse our internet.
+
+Option 2: Install Avahi on _both_ the routers and the hosts and use it to route multicast packets.
+
+We truly wanted to try implementing option 1 to show how it could be done, but we ran into a whole batch of problems. At the end of the day, this solution isn't really used on the internet as a whole.
+
+It turns out, when routing packets across an internet, Avahi doesn't use multicast, but instead performs a proxy lookup. The routers receive the name resolution packets and then make their own queries to discover the address for the destination name.
+
 ## Using Multicast to Resolve Names Between 2 Hosts on the Same Network
 
-First, let's check to make sure `avahi-daemon` is already running on our hosts. Go ahead and `hopon host-c` and run `ps -aux` to get a list of processes that are currently running on the host.
+First, let's check to make sure `avahi-daemon` is already running on our hosts. Go ahead and `hopon host-c` and run `ps aux` to get a list of processes that are currently running on the host.
 
 ```bash
 root@host-c:/# ps aux | grep avahi
@@ -128,7 +128,7 @@ All this output is a little overwhelming. You can click on each command to see t
 
 </details>
 
-Let's see if we can make sense of what we're seeing by following the timestamps in chronological order for each line of output from both machines. Look at the timestamps across all the output. What's the first thing you see happening?
+Let's see if we can make sense of all this by following the timestamps in chronological order for each line of output from both machines. Look at the timestamps across all the output. What's the first thing you see happening?
 
 > **host-c:**
 > 19:59:53.972283 IP (tos 0x0, ttl 255, id 50541, offset 0, flags [DF], proto UDP (17), length 58)
@@ -142,15 +142,15 @@ So, on this line, we see that `host-c` (`6.0.0.103`) is making a request to a kn
 > 19:59:53.972447 IP (tos 0x0, ttl 255, id 50541, offset 0, flags [DF], proto UDP (17), length 58)
     6.0.0.103.5353 > 224.0.0.251.5353: [bad udp cksum 0xe799 -> 0x628b!] 0 A (QM)? host-f.local. (30)
 
-We see the name resolution request packet that `host-c` sent hitting `host-f`. This is exact same packet we saw above, except this time from `host-f`'s perspective.
+We see the name resolution request packet that `host-c` sent hitting `host-f`. This is the exact same packet we saw above, except this time from `host-f`'s perspective.
 
 Why is `host-f` receiving a packet for `224.0.0.251`? That's not its IP address!
 
 So now, let's go back to the question of "what is this 'multicast' stuff?" Multicast is a protocol that provides a structure for a machine on an internetwork to communicate with other machines on an internetwork without already knowing their IP addresses.
 
-We've seen a similar protocol in previous chapters, ARP ([a quick reminder on how ARP and ethernet works](../../../appendix/ip-and-mac-addresses.md)). ARP is a protocol that enables IP discovery between machines on a network. ARP doesn't need to know the IP address of each machine ahead of time because it can send packets to all machines to find out which machine owns an address. Similarly, multicast doesn't need to know the IP addresses of the hosts taht it wants to communicate with. Both ARP and multicast using the same underlying capability within the ethernet, namely, ethernet broadcast.
+We've seen a similar protocol in previous chapters: ARP ([a quick reminder on how ARP and ethernet works](../../../appendix/ip-and-mac-addresses.md)). ARP is a protocol that enables IP discovery between machines on a network. ARP doesn't need to know the IP address of each machine ahead of time because it can send packets to all machines to find out which machine owns an address. Similarly, multicast doesn't need to know the IP addresses of the hosts it wants to communicate with. Both ARP and multicast using the same underlying capability within the ethernet, namely, ethernet broadcast.
 
-An ethernet broadcast frame goes to a special ethernet MAC address, `ff:ff:ff:ff:ff:ff`. Any frames destined for that MAC address go to EVERY machine on that network. However, routers don't route those packets. A multicast packet, even though its being broadcast on an ethernet network, CAN be picked up by a router and forwarded throughout an internet network. But the routers have to be specially configured for that and the vast majority of the time, they aren't.
+An ethernet broadcast frame goes to a special ethernet MAC address, `ff:ff:ff:ff:ff:ff`. Any frames destined for that MAC address go to EVERY machine on that network. However, routers don't route those packets. A multicast packet, even though its being broadcast on an ethernet network, CAN be picked up by a router and forwarded throughout an internetwork. But the routers have to be specially configured for that and the vast majority of the time, they aren't.
 
 > **host-f:**
 > 19:59:53.973418 IP (tos 0x0, ttl 255, id 46184, offset 0, flags [DF], proto UDP (17), length 68)
@@ -212,7 +212,7 @@ PING host-h.local (4.0.0.108) 56(84) bytes of data.
 rtt min/avg/max/mdev = 0.209/0.264/0.319/0.055 ms
 ```
 
-Here we can see the name resolution was successful! That `PING host-h.local (4.0.0.108)...` shows that `host-c` knows that `host-h` resolves to `4.0.0.108`. It can now send packets to that IP in order to complete the `ping`. But let's look at what was involved in performing that name resolution.
+Here we can see the name resolution was successful! That `PING host-h.local (4.0.0.108)...` shows that `host-c` knows that `host-h.local` resolves to `4.0.0.108`. It can now send packets to that IP in order to complete the `ping`. But let's look at what was involved in performing that name resolution.
 
 Just like we saw before, the rest of this output is a little overwhelming. You can click on each command to see the full output block of what we saw when we ran these commands on our machines.
 
@@ -331,26 +331,26 @@ Just like we did when examining the output of the `tcpdump` of the `ping` from `
 > **host-c:**
 > 19:58:36.776848 IP 6.0.0.103.5353 > 224.0.0.251.5353: 0 A (QM)? host-h.local. (30)
 
-This is the same thing we saw before. `host-c` is sending a name resolution query for `host-h.local` on the multicast DNS IP address and port.
+`host-c` is sending a name resolution query for `host-h.local` on the multicast DNS IP address (`224.0.0.251`) and port (`5353`). Because this request is being sent to a multicast address, it will be broadcast to every machine on the network.
 
 > **router-3, eth1**
 > 19:58:36.776906 IP (tos 0x0, ttl 255, id 6263, offset 0, flags [DF], proto UDP (17), length 58)
     6.0.0.103.5353 > 224.0.0.251.5353: [bad udp cksum 0xe799 -> 0x628b!] 0 A (QM)? host-h.local. (30)
 
-We see the name resolution request packet that `host-c` sent hitting `router-3`. This is exact same packet we saw above, except this time from `router-3`'s perspective.
+`router-3` recieves the name resolution request broadcast from `host-c`. This is exact same packet we saw above, except this time from `router-3`'s perspective.
 
 > **router-3, eth0**
 > 19:58:36.777712 IP (tos 0x0, ttl 255, id 35930, offset 0, flags [DF], proto UDP (17), length 58)
     4.0.3.1.5353 > 224.0.0.251.5353: [bad udp cksum 0xe833 -> 0x61f1!] 0 A (QM)? host-h.local. (30)
 
-Here we see `router-3` generating its own request for name resolution for `host-h.local`. At first blush, this looks like the same packet we saw on `eth1` for `router-3`... but there's one big important difference. Look at the source IP address: `4.0.3.1`. That's `router-3`'s address on `4.0.0.0/8`, not `host-c`'s address on `6.0.0.0/8`...
+Here we see `router-3` generating _its own_ request for name resolution for `host-h.local`. At first blush, this looks like the same packet we saw on `eth1` for `router-3`... but there's one big important difference. Look at the source IP address: `4.0.3.1`. That's `router-3`'s address on `4.0.0.0/8`, not `host-c`'s address on `6.0.0.0/8`...
 
-What's happening here? `router-3` received `host-c`'s request, and rather than just forwarding `host-c`'s packet, `router-3` then initiated it's own name resolution process. It will respond back to `host-c` directly once it has an answer. This is textbook proxy behavior!
+What's happening here? `router-3` received `host-c`'s request, and rather than just forwarding `host-c`'s packet, `router-3` then initiated _it's own name resolution process_. It will respond back to `host-c` directly once it has an answer. This is textbook proxy behavior! :D
 
 > **host-h**
 > 19:58:36.777779 IP 4.0.3.1.5353 > 224.0.0.251.5353: 0 A (QM)? host-h.local. (30)
 
-`host-h` receives the name resolution request from `router-3` for itself. Remember, this is the nature of multicasting. Any packet destined for a multicast IP address, anything in the `224.0.0.0/4` subnet, will be broadcast to EVERY machine on the multicast network.
+`host-h` receives the name resolution request from `router-3` for itself. Remember: this is the nature of multicasting. Any packet destined for a multicast IP address, anything in the `224.0.0.0/4` subnet, will be broadcast to EVERY machine on the multicast network.
 
 > **host-h**
 > 19:58:36.782619 IP 4.0.0.108.5353 > 224.0.0.251.5353: 0*- [0q] 1/0/0 (Cache flush) A 4.0.0.108 (40)
@@ -402,7 +402,7 @@ root@host-b:/# tcpdump -nvvv
 
 Would'ja look at that! We're seeing the same query for `host-h.local` (`(QM)? host-h.local.`) and the same name resolution (`host-h.local. (Cache flush) [2m] A 4.0.0.108`) that we saw when we were examining packets earlier. Why is that? We don't have a central location for discovering a name's IP address. We don't even have anywhere to start. Avahi's solution to this was to send a request to every machine that's connected, and the machine that's responsible for the name will respond with it's IP address. That response will then be populated back across all the connected machines.
 
-Previously, we saw `router-3` proxying the request for name resolutoin for `host-h` out to the networks it was connected to. This process is duplicated by every router on our internet. Once each router receives a response, it then propogates that response out to every machine on every network it is connected to, including other routers.
+Previously, we saw `router-3` proxying the request for name resolution for `host-h` out to the networks it was connected to. This process is duplicated by every router on our internet. Once each router receives a response, it then propogates that response out to every machine on every network it is connected to, including other routers.
 
 The name resolution request flow looks something like this:
 
@@ -410,11 +410,11 @@ The name resolution request flow looks something like this:
 
 Each arrow in this diagram indicates a new proxied request for name resolution for `host-h.local`. The color of the arrows indicates how far down the proxy chain that request is.
 
-Two important things to notice on this diagram:
+Two important things to note about the request flow in this diagram:
 
 First, when a router receives a request on one interface, it doesn't then send another proxied request out that interface, e.g. `router-5` doesn't proxy a request back to `router-4`.
 
-Second, when a router receives a duplicate request, e.g. `router-5` receives a request from both `router-4` AND `router-1`, it doesn't start another round of proxying that request.
+Second, when a router receives a duplicate request, e.g. `router-5` receives a request from both `router-4` AND `router-1`, it doesn't start another round of proxying for that request.
 
 The result of these behaviors is that messages don't go around the internet forever. Each message gets to every network only one time.
 
@@ -427,18 +427,6 @@ Here, we see that `host-h` generates the initial message that then hits every ro
 What this means is that every machine on our internet will already have an answer for where to find `host-h.local`. So, if, after the name resolution has been performed and during the cache window, if you run a `tcpdump` on a different host while you run `ping host-h.local` on that host, you won't see any name resolution traffic.
 
 ## Exercises
-
-### Can `host-c` resolve `host-b.local`?
-
-We've now used Avahi to be able to perform name resolution for machines on `6.0.0.0/8` to machines on `4.0.0.0/8`. Neat! But what about the rest of our little internet? Can you get `host-b.local` to resolve from `host-c`? What needs to change in order for that to work?
-
-<details>
-<summary>the super secret answer lies within...</summary>
-
-When `host-c` couldn't reach `host-h.local`, we looked at the network map for this chapter and saw that `router-3` connected the networks these machines were on. Then, we ran `avahi-daemon --daemonize` on `router-3`. By running the Avahi daemon, we were able to use Avahi to connect our multicast networks.
-
-Go check the network map. Which additional router do you need to run `avahi-daemon --daemonize` on for `host-c` to be able to resolve `host-b.local`?
-</details>
 
 ### Using links to browse our internet
 
@@ -456,18 +444,6 @@ Can you explain why? If you're not comfortable with your explanation yet, review
 
 ## Appendix
 
-### why enable-dbus=no?
-
-started the daemon with `avahi-daemon --debug` and got an error:
-
-```bash
-dbus_bus_get_private(): Failed to connect to socket /var/run/dbus/system_bus_socket: No such file or directory
-```
-
-looked in `/etc/avahi/avahi-daemon.conf` and set `enable-dbus=no`
-
-everything worked for a local setup, i.e. between host-c and host-f
-
 ### Unicast v. Anycast v. Broadcast v. Multicast
 
 We've talked a lot in this chapter about multicast. But what makes multicast different from broadcast? Or hey, anycast and unicast for that matter? What do each of these routing protocols mean? Why would you use each one?
@@ -481,3 +457,13 @@ We've talked a lot in this chapter about multicast. But what makes multicast dif
 **Multicast** is another protocol to send packages to many machines at once. Essentially, multicast is just broadcast that can be routed across multiple networks. Think of multicast like NPR syndication; local public radios have different programming from the national radio. But each location has programming that is distinct from each other location.
 
 ![an image of routing schemes](https://bunnyacademy.b-cdn.net/what-is-routing-scheme.svg)
+
+### why enable-dbus=no?
+
+We initially had issues gettign Avahi up and running. We started the daemon with `avahi-daemon --debug` and got an error:
+
+```bash
+dbus_bus_get_private(): Failed to connect to socket /var/run/dbus/system_bus_socket: No such file or directory
+```
+
+We checked `/etc/avahi/avahi-daemon.conf` and set `enable-dbus=no`. After that, everything worked for a local setup, i.e. between `host-c` and `host-f`.
