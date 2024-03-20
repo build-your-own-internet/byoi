@@ -77,6 +77,10 @@ Sometimes when people use the term "network," they mean "internet." Since "inter
 
 All traffic on an internet is wrapped up in IP packets. IP packets provide a header that contains a bit of metadata that is necessary to be able to correctly route and manage the data container within the packet.
 
+## proxy
+
+A proxy is a stand-in for something else. In computing, a proxy is a system that understands a network protocol and acts as an endpoint. A proxy will pretend to be the real system that is being communicated with while secretly relying on the real entity to serve the request.
+
 ## router (a.k.a `gateway`)
 
 A router is any machine whose purpose is to connect networks together. It does so by forwarding packets further toward their destination. Each router has a routing table which serves much like a sign post on a highway: it tells the router where to send packets next on their way to their final destination. Each router makes decisions on its own for the most efficient way to send the packet to its destination. The internet, as we know today, is not possible without numerous routers facilitating the requests.

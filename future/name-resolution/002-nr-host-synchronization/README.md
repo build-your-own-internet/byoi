@@ -6,7 +6,7 @@ So, in this chapter, we're going to start over. We've removed those `/etc/hosts`
 
 ## Goal
 
-Let's start with the simplest thing we can do: we're gonna head down the route of using a zero-configuration solution called `avahi`. By the end of this chapter, you should be able to `ping` or use `links` to reach each name for any host on our little internet **without** configuring names on each host!
+Let's start with the simplest thing we can do: we're gonna head down the route of using a zero-configuration solution called `avahi`. By the end of this chapter, you should be able to `ping` or use `links` to reach each host using their hostnames on our little internet **without** configuring names on each host!
 
 ## Preface: the shape of our internet
 
@@ -20,7 +20,7 @@ The significant things to note about this internet are that we have 2 machines o
 
 Avahi is a program which uses [multicast](../../../chapters/glossary.md#multicast) to perform name resolution on local networks with minimal configuration. If you check the [Dockerfile](./Dockerfile) for this chapter, you'll see that we added a new software, `avahi-utils`.
 
-As you might recall, in [chapter 1](../001-nr-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name), we took a look at the contents of `/etc/nsswitch.conf`. We saw that the `hosts` line provided instructions for how to resolve a name. It started with looking at the `files` on the system (i.e. `/etc/hosts`), and, if it didn't find the name there, then it could use `dns` (if it were configured).
+As you might recall, in [chapter 1](../001-nr-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name), we took a look at the contents of `/etc/nsswitch.conf`. We saw that the `hosts` line provided instructions for how to resolve a name. The order runs sequentially through each entry in that line; it starts with looking at the `files` on the system (i.e. `/etc/hosts`), and, if it doesn't find the name there, then it should use `dns` (if it is configured).
 
 Let's start off by taking a quick look at the `/etc/nsswitch.conf` file on our machines now.
 
@@ -32,25 +32,13 @@ hosts:          files mdns4_minimal [NOTFOUND=return] dns
 
 Let's look at what each of these entries is doing (a couple of them will be review from chapter 1):
 
-* `files`: Is there an entry for this hostname in a local file? In UNIX-based systems, that file would be `/etc/hosts`.
+* `files`: Check for an entry for this hostname in a local file. In UNIX-based systems, that file would be `/etc/hosts`.
 * `mdns4_minimal`: This is new! This instructs the machine to attempt to resolve a name using a multicast resolver. This is specific to resolving hostnames in the local network.
-* `[NOTFOUND=return]`: if the hostname matches the TLD for `mdns4_minimal`, e.g. `.local`, but the hostname cannot be resolved, this entry tells it not to send this request out to the open internet. For example, if we requested `host-x.local` (which doesn't exist on our little internet), then don't make an open internet request.
+* `[NOTFOUND=return]`: If the hostname matches the **T**op **L**evel **D**omain (TLD) for `mdns4_minimal`, e.g. `.local`, but the hostname cannot be resolved, this entry tells it not to send this request out to the open internet. For example, if we requested `host-x.local` (which doesn't exist on our little internet), then don't make an open internet request.
 * `dns`: If we hit this, then we gotta outsource this request to the larger internet; check the `/etc/resolv.conf` file for where we should send our DNS queries.
 
 >**📝 NOTE:**
-> In order to ensure that Docker wasn't trying to help us with name resolution for these chapters, we nerfed the `/etc/resolv.conf` file. Therefore the `dns` entry in `/etc/nsswitch.conf` won't do anything on these hosts.
-
-### What is this "multicast" stuff, anyway, and why it doesn't matter
-
-In general, Avahi is intended to be used on a single network, and it is not really intended to be used in an internet. If you are going to do this in an internet-type environment, there is more than one way to do it.
-
-**Option 1:** Install Avahi on all of the hosts so that each host sends multicast packets for name resolution. Then: set up our routers so that that they understand multicast and can route multicast packets properly around the internet.
-
-**Option 2:** Install Avahi on _both_ the routers and the hosts and have the routers participate as avahi name-resolvers.
-
-We truly wanted to try implementing option 1 to show how it could be done. This involves setting up what is known as "multicast routing." Multicast routing is something that was developed decades ago when computers were still young and network engineers were very naïve about how networks would be used. Multicast routing is not really used on the Internet, and we ran into a whole batch of problems trying to set it up. At the end of the day, since this solution isn't really used on the internet as a whole, we decided to skip it.
-
-We ended up going with option-2. We're going to install the same Avahi software on our routers as we installed on the hosts. This way, our routers will be aware of name-resolution requests and will participate in name-resolution requests by proxy. The routers will receive name-resolution packets and then make their own queries to discover the address for the destination name.
+> In order to ensure that Docker wasn't trying to "help" us with name resolution for these chapters, we nerfed the `/etc/resolv.conf` file. Therefore the `dns` entry in `/etc/nsswitch.conf` won't do anything on these hosts.
 
 ## Using Multicast to Resolve Names Between 2 Hosts on the Same Network
 
@@ -65,11 +53,11 @@ root          42  0.0  0.0   3472  1792 pts/0    S+   18:20   0:00 grep --color=
 
 We can see that the `avahi-daemon` is running. Huzzah!
 
-We should be able to that running service to perform name resolution on our local network. Let's start by `ping`ing `host-f`. The first thing `ping` will have to do is resolve the hostname to an IP address. But, just like in other chapters, we wanna see what's happening in all this communication. Let's use our old friend `tcpdump`!
+We should be able to use that running service to perform name resolution on our local network. Let's start by `ping`ing `host-f`. The first thing `ping` will have to do is resolve the hostname to an IP address. But, just like in other chapters, we wanna see what's happening behind the scenes in all this communication. Let's use our old friend `tcpdump`!
 
 ### Performing a `tcpdump` to examine multicast name-resolution on one network
 
-We'll need to open 3 terminal sessions:
+We'll need to open 3 terminal sessions (the order is important here):
 
 * `host-f`: `tcpdump -nvvv`
 * `host-c`: `tcpdump -nvvv`
@@ -80,11 +68,11 @@ root@host-c:/# ping -w1 host-f
 ping: host-f: Temporary failure in name resolution
 ```
 
-Oh no... As you can see, we still have a name resolution failure here. Not only that, we're not even seeing any packets on `host-c`'s `tcpdump`: the machine is not even *attempting* to send any packets across the network to figure out the IP address for `host-f`. Because `/etc/hosts` doesn't contain this name and because `/etc/resolv.conf` has been commented out to disable DNS, only multicast DNS (`mdns4_minimal`) is available to us.
+Oh no... As you can see, we still have a name resolution failure here. Not only that, we're not even seeing any packets on `host-c`'s `tcpdump`: the machine is not even *attempting* to send any packets across the network to figure out the IP address for `host-f`. Because `/etc/hosts` (`files` entry from `/etc/nsswitch.conf`) doesn't contain this name and because `/etc/resolv.conf` (`dns` entry) has been commented out to disable DNS, only multicast DNS (`mdns4_minimal`) is available to us.
 
 So what's happening? Why doesn't it send multicast messages to find the name?
 
-Well, when we check the [Avahi docs](https://avahi.org/), we can see that Avahi responds to the `*.local` hostname. Let's see what happens when we run the same ping, but this time to `host-f.local`:
+Well, when we check the [Avahi docs](https://avahi.org/), we can see that Avahi responds to `*.local` hostnames. Let's see what happens when we run the same ping, but this time to `host-f.local`:
 
 ```bash
 root@host-c:/# ping -w1 host-f.local
@@ -144,7 +132,7 @@ Okay, let's see if we can make sense of all this by following the timestamps.
 
 What's a timestamp? Well, the first thing in each line of the `tcpdump` output is the **exact** time that the packet was seen. These timestamps look a little something like this: `19:59:53.972283`. This means that when the machine running `tcpdump` saw a packet, it looked at its watch and found that the time was approximately 8:00pm local time (this is in 24-hour time). But computers have *very* precise clocks, and the *exact* time of this packet was 7:59pm and 53 seconds and 972 hundred-thousanths of a second! This kind of precision might seems a little ridiculous, but when packets are flying around the network quickly, having very exact time for each one is essential to help us understand which ones came first and which ones came next.
 
-Since we have precise timestamps being reported for each packets by `host-c` and `host-f` (and note that the clocks on both of these machines are synchronized), we can look back and forth between the output from both machines and put the packets in chronological order. So let's look at the timestamps across all the output: what's the first thing you see happening?
+Since we have precise timestamps being reported for each packet by `host-c` and `host-f` (and note that the clocks on both of these machines are synchronized), we can look back and forth between the output from both machines and put the packets in chronological order. So let's look at the timestamps across all the output: what's the first thing you see happening?
 
 > **host-c:**
 > 19:59:53.972283 IP (tos 0x0, ttl 255, id 50541, offset 0, flags [DF], proto UDP (17), length 58)
@@ -152,11 +140,12 @@ Since we have precise timestamps being reported for each packets by `host-c` and
 
 So remember that we started this process with a `ping` command on `host-c`. Now, before `host-c` can send out a ping packet, it needs to know the IP address of the machine its sending them to. All the computer knows from the command we typed in was that we wanted to send a ping to `host-f.local`. So `host-c`'s first job is to figure out what IP address is associated with `host-f.local`.
 
-Next, we know that `host-c` is configured through `/etc/nsswitch.conf` to use "multicast" to look up any `.local` address.
+Next, we know that `host-c` is configured through `/etc/nsswitch.conf` to use multicast to look up any `.local` address.
 
-> But, what is this "multicast" anyway? We haven't really talked about it. Strictly speaking, a multicast IP address is any IP address within the `224.0.0.0/4` subnet. Any time a message is sent to an IP address in this range, it will be "multicasted". For an Ethernet network like the one that our hosts are both on, this really just means that the packet will be broadcast to every machine on that network.
+> 📝 **NOTE**:
+But, what is this multicast anyway? We haven't really talked about it. Strictly speaking, a multicast IP address is any IP address within the `224.0.0.0/4` subnet. Any time a message is sent to an IP address in this range, it will be "multicasted". For an Ethernet network like the one that our hosts are both on, this really just means that the packet will be broadcasted to every machine on that network.
 
-However, beyond just broadcasting to every machine, multicast has one other interesting property, and that is that specific multicast IP addresses are registered for specific uses. In our case, `224.0.0.251` is reserved for multicast DNS requests. So we're seeing, in this first tcpdump entry, a message being sent to all machines on this ethernet network to this special IP address using the port `5353`, which is also reserved for multicast DNS requests.
+However, beyond just broadcasting to every machine, multicast has one other interesting property, and that is that specific multicast IP addresses are registered for specific uses. In our case, `224.0.0.251` is [reserved for multicast](https://www.iana.org/assignments/multicast-addresses/multicast-addresses.xhtml#multicast-addresses-9) DNS requests. So we're seeing, in this first tcpdump entry, a message being sent to all machines on this ethernet network to this special IP address using the port `5353`, which is also reserved for multicast DNS requests.
 
 So, on this line, we see that `host-c` (`6.0.0.103`) is making a request to a known multicast DNS IP address and port for name resolution for `host-f.local`.
 
@@ -170,11 +159,7 @@ We see the name resolution request packet that `host-c` sent hitting `host-f`. T
 
 So why is `host-f` receiving a packet for `224.0.0.251`? Because it's being *broadcast* on this ethernet network.
 
-We've seen something similar in previous chapters: ARP ([a quick reminder on how ARP and ethernet works](../../../appendix/ip-and-mac-addresses.md)). ARP is a protocol that enables IP discovery between machines on a network. ARP doesn't need to know the IP address of each machine ahead of time because it can send packets to all machines to find out which machine owns an address. Similarly, multicast doesn't need to know the IP addresses of the hosts it wants to communicate with. Both ARP and multicast using the same underlying capability within the ethernet, namely, ethernet broadcast.
-
-<!-- consider deleting this next paragraph -->
-
-An ethernet broadcast frame goes to a special ethernet MAC address, `ff:ff:ff:ff:ff:ff`. Any frames destined for that MAC address go to EVERY machine on that network. However, routers don't route those packets. A multicast packet, even though it's being broadcast on an ethernet network, CAN be picked up by a router and forwarded throughout an internetwork. But the routers have to be specially configured for that and the vast majority of the time, they aren't.
+We've seen something similar in previous chapters: ARP ([a quick reminder on how ARP and ethernet works](../../../appendix/ip-and-mac-addresses.md)). ARP is a protocol that enables IP discovery between machines on a network. ARP doesn't need to know the IP address of each machine ahead of time because it can send packets to all machines to find out which machine owns an address. Similarly, multicast doesn't need to know the IP addresses of the hosts it wants to communicate with. Both ARP and multicast are using the same underlying capability within the ethernet, namely, ethernet broadcast.
 
 Okay, so what's the next packet chronologically between the two tcpdumps?
 
@@ -190,7 +175,7 @@ Here, we see that `host-f` sends a response packet to the same multicast IP addr
 
 Next, `host-c` receives `host-f`'s response packet, which says "hey, if you have a cached response for `host-f.local`, go ahead and flush that cache and instead cache this IP address for 2m (2 minutes)".
 
-Et voila! We have name resolution. If you follow the rest of the tcpdumps, you'll see content we've already talked about. ARP, followed by ICMP echo requests and replies.
+Et voila! We have name resolution. If you follow the rest of the tcpdumps, you'll see content we've already talked about: ARP, followed by ICMP echo requests and replies.
 
 ## Resolving Names Between Hosts on Two Different Networks
 
@@ -204,6 +189,18 @@ ping: host-h.local: Name or service not known
 Avahi name-resolution only really works on local networks: in this case, machines that can communicate directly with one another via broadcast on ethernet.
 
 Since Avahi's IP multicast gets translated to ethernet broadcast messages, routers ignore these messages. The messages therefore never get sent to the broader internet. To put this more simply, `host-c` and `host-f` are on the same network, so they can exchange ethernet broadcast messages with each other directly. `host-h`, however, has to be reached through our internet, which requires routers to participate in this communication.
+
+### What is this "multicast" stuff, anyway, and why it doesn't matter
+
+In general, Avahi is intended to be used on a single network, and it is not really intended to be used in an internet. If you are going to do this in an internet-type environment, there is more than one way to do it.
+
+**Option 1:** Install Avahi on all of the hosts so that each host sends multicast packets for name resolution. Then set up our routers so that they understand multicast and can route multicast packets properly around the internet.
+
+**Option 2:** Install Avahi on _both_ the routers and the hosts and have the routers participate as avahi name-resolvers.
+
+We truly wanted to try implementing option 1 to show how it could be done. This involves setting up what is known as "multicast routing." Multicast routing is something that was developed decades ago when computers were still young and we did not have a robust understanding about how networks would be used. Multicast routing is not really used on the Internet, and we ran into a whole batch of problems trying to set it up. At the end of the day, since this solution isn't really used on the internet as a whole, we decided to skip it.
+
+We ended up going with option-2. We're going to install the same Avahi software on our routers as we installed on the hosts. This way, our routers will be aware of name-resolution requests and will participate in name-resolution requests by [proxy](../../../chapters/glossary.md#proxy). The routers will receive name-resolution packets and then make their own queries to discover the address for the destination name.
 
 ### Getting the Routers in on the Game
 
