@@ -402,15 +402,19 @@ Now that `host-c` knows the IP address to send its packets to, it initiates the 
 
 Okay, it's been fun looking at getting name resolution working network-by-network using avahi. Let's now get things working on the whole internet.
 
-In order to get name resolution working between `host-c` and `host-h`, we had to jump onto `router-3` and run `avahi-daemon --daemonize`. The reason you had to do this is the [start-up.sh](./init/start-up.sh) script only runs `avahi-daemon` on the hosts, not the routers. Obviously, you **could** go to each router and run this command, but that's some boring work. Another option is to update the [start-up.sh](./init/start-up.sh) script for this chapter.
+In order to get name resolution working between `host-c` and `host-h`, we had to jump onto `router-3` and run `avahi-daemon --daemonize`. The reason you had to do this is the [start-up.sh](./init/start-up.sh) script only runs `avahi-daemon` on the hosts, not the routers. You **could** go to each router and run this command, but that's some boring work.
 
-Try moving `avahi-daemon --daemonize` to before the conditional and `restart` your internet. If you're confused or if things just aren't working, try checking [/final/start-up.sh](./final/start-up.sh) for this chapter.
+Another option is to update the [start-up.sh](./init/start-up.sh) script for this chapter. Try moving `avahi-daemon --daemonize` to before the conditional and `restart` your internet. If you're confused or if things just aren't working, try checking [/final/start-up.sh](./final/start-up.sh) for this chapter.
 
-## Spreading the Gossip
+### Spreading the Gossip
 
-When we looked at how name resolution worked with Avahi previously, we saw that `router-3` proxied the request out to `host-h`. How did that router know where to go to get that name resolved? Well... here's the thing: it didn't. Instead, the name resolution request was just "flooded" across all machines on all networks that were connected via Avahi. Let's see this in action:
+When we looked at how name resolution worked with Avahi previously, we saw that `router-3` proxied the request out to `host-h`. How did that router know where to go to get that name resolved? Well... here's the thing: it didn't. It was Avahi installed on `router-3` that was proxying the name resolution requests to machines on the networks `router-3` was connected to. Now, with Avahi installed on all the routers, the name resolution request is "flooded" across all machines on all networks. Let's see this in action:
 
-`restart` your internet, then `hopon host-c` and `hopon host-b`. Start a `tcpdump -nvvv` on `host-b`. Re-run that `ping host-h.local` from `host-c`. What do you see happen on `host-b`?
+1. `restart` your internet
+1. `hopon host-b` and run `tcpdump -nvvv`
+1. In another terminal session, `hopon host-c` and run `ping host-h.local`
+
+What do you see happen on `host-b`?
 
 ```bash
 root@host-b:/# tcpdump -nvvv
@@ -425,7 +429,7 @@ Would'ja look at that! We're seeing the same query for `host-h.local` (`(QM)? ho
 
 We don't have a central location for discovering a name's IP address. Avahi's solution to this is to send a request to every machine on every network (called "flooding"), and eventually the machine that owns that name will respond with it's IP address. That response will then be flooded back across all the connected machines.
 
-Previously, we saw `router-3` proxying the request for name resolution for `host-h` out to the networks it was connected to. This process is is now being duplicated by every router on our internet. Once each router receives a response, they will each then propagate that response out to every machine on every network they are connected to (including other routers).
+Previously, we saw `router-3` proxying the request for name resolution for `host-h` out to the networks it was connected to. This process is now being duplicated by every router on our internet. Once each router receives a response, they will each then propagate that response out to every machine on every network they are connected to (including other routers).
 
 The name resolution request flow looks something like this:
 
@@ -447,7 +451,7 @@ Next, let's look at how the response makes its way to every machine as well.
 
 Here, we see that `host-h` generates the response message that gets broadcast to every router on the `4.0.0.0/8` network. Each router then proxies that message to each machine on each other network it has an interface on. As each router, in turn, does the same thing, this allows the response to flood back to every machine on the internet.
 
-What this means is that every machine on our internet will already have an answer for where to find `host-h.local`. So, if, after the name resolution has been performed and during the cache window, if you run a `tcpdump` on a different host while you run `ping host-h.local` on that host, you won't see any name resolution traffic, because it already knows the IP address of that machine!
+What this means is that every machine on our internet will already have an answer for where to find `host-h.local`. So, after the name resolution has been performed and during the cache window, you won't see any name resolution traffic. If you run a `tcpdump` on a different host while you run `ping host-h.local` on that host, you will not see another name resolution traffic for that name!
 
 ## Exercises
 
@@ -469,24 +473,14 @@ Can you explain why? If you're not comfortable with your explanation yet, review
 
 ### Unicast v. Anycast v. Broadcast v. Multicast
 
-We've talked a lot in this chapter about multicast. But what makes multicast different from broadcast? Or hey, anycast and unicast for that matter? What do each of these routing protocols mean? Why would you use each one?
+We've talked a lot in this chapter about multicast. But what makes multicast different from broadcast? Or hey, anycast and unicast for that matter? What do each of these routing schemes mean? Why would you use each one?
 
-**Unicast** is what we think of when we think of most internet routing. Unicast means that there is a single machine out there on the internet that responds to the destination IP address on a packet. One and only one machine is out there advertising that it is responsible for that IP address. Think of a unicast address like an exact location that you can type into your GPS. You know exactly where you're going and exactly what address you're going to end up at.
+**Unicast** is what we think of when we think of most internet addressing. Unicast means that there is a single machine out there on the internet that responds to the destination IP address on a packet. **One and only one** machine is out there advertising that it is responsible for that IP address. Think of a unicast address like an exact location that you can type into your GPS. You know exactly where you're going and exactly what address you're going to end up at.
 
-**Anycast** is a protocol where more than one machine can answer queries for a single IP address. Each machine will advertise the same IP address into the internet. So, when client sends packets to an IP address that is anycasted from multiple machines, routers will make decisions on where to send the packets. Usually, routers are going to choose the shortest path to the destination, which will very likely be the closest machine. Importantly, the packets still end up on a single machine; they aren't sent to every machine that advertises the IP address. Think of anycast like doing a search for a business. You want to go to a Target. You don't care which location, you just need to get to any Target. You can type 'Target' into your favorite maps app, pick the location that's closest to you, and follow instructions on how to get there.
+**Anycast** is an addressing scheme where more than one machine can answer queries for a single IP address. Each machine will advertise the same IP address into the internet. So, when client sends packets to an IP address that is anycasted to multiple machines, routers will make decisions on where to send the packets. Usually, routers are going to choose the shortest path to the destination, which will very likely be the closest machine. Importantly, the packets still end up on a single machine; they aren't sent to every machine that advertises the IP address. Think of anycast like doing a search for a business. You want to go to a Target. You don't care which location, you just need to get to any Target. You can type 'Target' into your favorite maps app, pick the location that's closest to you, and follow instructions on how to get there.
 
 **Broadcast** is exactly what it sounds like; a message is sent out broadly, so every machine on a network will receive the packets being sent. Broadcast exists only within a single network; its packets do not get routed across an internet. Think of broadcast like talking into a megaphone inside a building. Everyone in that building can hear you, but no one outside that building knows whats being said.
 
-**Multicast** is another protocol to send packages to many machines at once. Unlike "broadcast" packets, there are special registered multicast addresses that carry semantic meaning. We saw that the IP address `224.0.0.51`, for example, is used for multicast name-resolution. Machines that care about multicast name-resolution will listen for broadcast messages to this IP address and will respond accordingly. Furthermore, multicast is just broadcast that **could** be routed across multiple networks, but, in practice, this is rarely ever done.
+**Multicast** is another routing scheme which sends packets to many machines at once. Unlike "broadcast" packets, there are special registered multicast addresses that carry semantic meaning. We saw that the IP address `224.0.0.51`, for example, is used for multicast name-resolution. Machines that care about multicast name-resolution will listen for broadcast messages to this IP address and will respond accordingly. Furthermore, multicast is just broadcast that **could** be routed across multiple networks, but, in practice, this is rarely ever done.
 
 ![an image of routing schemes](https://bunnyacademy.b-cdn.net/what-is-routing-scheme.svg)
-
-### why enable-dbus=no?
-
-We initially had issues gettign Avahi up and running. We started the daemon with `avahi-daemon --debug` and got an error:
-
-```bash
-dbus_bus_get_private(): Failed to connect to socket /var/run/dbus/system_bus_socket: No such file or directory
-```
-
-We checked `/etc/avahi/avahi-daemon.conf` and set `enable-dbus=no`. After that, everything worked for a local setup, i.e. between `host-c` and `host-f`.
