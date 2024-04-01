@@ -177,7 +177,7 @@ Next, `host-c` receives `host-f`'s response packet, which says "hey, if you have
 
 Et voila! We have name resolution. If you follow the rest of the tcpdumps, you'll see content we've already talked about: ARP, followed by ICMP echo requests and replies.
 
-## Resolving Names Between Hosts on Two Different Networks
+## Resolving Names Between Hosts on Two _Different_ Networks
 
 OK! We got a `ping` working! But if we look at the network diagram pictured at the top of this chapter, we can see that `host-c` and `host-f` are on the same network. What happens if we try to `ping host-h.local`, from `host-c` (which is on a different network)?
 
@@ -188,19 +188,19 @@ ping: host-h.local: Name or service not known
 
 Avahi name-resolution only really works on local networks: in this case, machines that can communicate directly with one another via broadcast on ethernet.
 
-Since Avahi's IP multicast gets translated to ethernet broadcast messages, routers ignore these messages. The messages therefore never get sent to the broader internet. To put this more simply, `host-c` and `host-f` are on the same network, so they can exchange ethernet broadcast messages with each other directly. `host-h`, however, has to be reached through our internet, which requires routers to participate in this communication.
+Since Avahi's IP multicast gets translated to ethernet broadcast messages, routers ignore these messages. The messages therefore never get sent to the broader internet. To put this more simply, `host-c` and `host-f` are on the same network, so they can exchange ethernet broadcast messages with each other directly. `host-h`, however, has to be reached through our internet, which requires routers to participate in this communication. If you have reviewed our appendix on [IP and MAC addresses](../../../appendix/ip-and-mac-addresses.md), you will be familiar with this.
 
-### What is this "multicast" stuff, anyway, and why it doesn't matter
+### What is this "multicast" stuff anyway, and why it doesn't matter
 
-In general, Avahi is intended to be used on a single network, and it is not really intended to be used in an internet. If you are going to do this in an internet-type environment, there is more than one way to do it.
+In general, multicast is intended to be used either on a single network or a private internetwork, and it **cannot** be used in a public internet. We want to use Avahi for name resolution across our (private) internetwork. In that context, there is more than one way to implement it.
 
-**Option 1:** Install Avahi on all of the hosts so that each host sends multicast packets for name resolution. Then set up our routers so that they understand multicast and can route multicast packets properly around the internet.
+**Option 1 - Multicast Routing:** Install Avahi on all of the hosts so that each host sends multicast packets for name resolution. Then set up our routers so that they understand multicast and can route multicast packets properly around our internet.
 
-**Option 2:** Install Avahi on _both_ the routers and the hosts and have the routers participate as avahi name-resolvers.
+**Option 2 - Avahi Proxy:** Install Avahi on _both_ the routers and the hosts and have the routers participate as avahi name-resolvers.
 
-We truly wanted to try implementing option 1 to show how it could be done. This involves setting up what is known as "multicast routing." Multicast routing is something that was developed decades ago when computers were still young and we did not have a robust understanding about how networks would be used. Multicast routing is not really used on the Internet, and we ran into a whole batch of problems trying to set it up. At the end of the day, since this solution isn't really used on the internet as a whole, we decided to skip it.
+We truly wanted to try implementing option 1 to show how it could be done. Multicast routing is something that was developed decades ago when computers were still young and we did not have a robust understanding about how networks would be used. Since multicast routing is highly insecure, Avahi does not recommend implementing it.
 
-We ended up going with option-2. We're going to install the same Avahi software on our routers as we installed on the hosts. This way, our routers will be aware of name-resolution requests and will participate in name-resolution requests by [proxy](../../../chapters/glossary.md#proxy). The routers will receive name-resolution packets and then make their own queries to discover the address for the destination name.
+Therefore, we ended up going with option 2. We're going to install the same Avahi software on our routers as we installed on the hosts. This way, our routers will be aware of name-resolution requests and will participate in name-resolution requests by [proxy](../../../chapters/glossary.md#proxy). The routers will receive name-resolution packets and then make their own queries to discover the address for the destination name.
 
 ### Getting the Routers in on the Game
 
@@ -345,12 +345,12 @@ listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 
 </details>
 
-Just like we did when examining the output of the `tcpdump` of the `ping` from `host-c` to `host-f`, let's follow the timestamps in chronological order for each line of output from each machine.
+Similar to how we were examining the output of the `tcpdump` of the `ping` from `host-c` to `host-f`, let's follow the timestamps in chronological order for each line of output from each machine.
 
 > **host-c:**
 > 19:58:36.776848 IP 6.0.0.103.5353 > 224.0.0.251.5353: 0 A (QM)? host-h.local. (30)
 
-Just like before, `host-c` is sending a name resolution query for `host-h.local` on the multicast DNS IP address (`224.0.0.251`) and port (`5353`). Because this request is being sent to a multicast address, it will be broadcast to every machine on the ethernet network.
+As we saw before, `host-c` is sending a name resolution query for `host-h.local` on the multicast DNS IP address (`224.0.0.251`) and port (`5353`). Because this request is being sent to a multicast address, it will be broadcast to every machine on the ethernet network.
 
 > **router-3, eth1**
 > 19:58:36.776906 IP (tos 0x0, ttl 255, id 6263, offset 0, flags [DF], proto UDP (17), length 58)
@@ -369,7 +369,7 @@ What's happening here? `router-3` received `host-c`'s request, and rather than j
 > **host-h**
 > 19:58:36.777779 IP 4.0.3.1.5353 > 224.0.0.251.5353: 0 A (QM)? host-h.local. (30)
 
-`host-h` receives the name resolution request from `router-3` for itself. Remember: this is the nature of multicasting: any packet destined for a multicast IP address-range (the `224.0.0.0/4` subnet) will be broadcast to **every** machine on the multicast network.
+`host-h` receives the name resolution request from `router-3` for itself. Remember, this is the nature of multicasting: any packet destined for a multicast IP address-range (the `224.0.0.0/4` subnet) will be broadcast to **every** machine on the ethernet network.
 
 > **host-h**
 > 19:58:36.782619 IP 4.0.0.108.5353 > 224.0.0.251.5353: 0*- [0q] 1/0/0 (Cache flush) A 4.0.0.108 (40)
