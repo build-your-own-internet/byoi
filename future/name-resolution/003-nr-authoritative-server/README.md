@@ -11,15 +11,31 @@ So rather than life being “nasty, brutish, and having the inability to know pe
 
 For this chapter, we want to build a single server that is responsible for knowing the IP address for any hostname on our internet. When each machine is added to the internet, it will need its hostname and IP address registered with the authoritative server. Then, when any machine wants to send packets to another machine, it will perform name resolution by querying the authoritative server to learn the IP address of the destination machine.
 
-describe what we expect our process to look like
+![our-inter-network](../img/basic-knot-internet.svg)
 
-describe why this is a good next step
+Notice that our internet now has a server called `DNS` at `2.0.0.107`. This server provides Authoritative DNS services for our internet. If you check the directory for this chapter, you'll see that there's a new Dockerfile entry: `Dockerfile_dns`. This Dockerfile builds its image from a base image that includes DNS server software called `knot`. To achieve our goal for this chapter, we will need to:
 
-maybe list the tools
+* Configure `knot` on our DNS server to answer DNS queries
+* Create a database of names to IP addresses that `knot` can use to answer DNS queries
+* Configure each host and router on our internet to point to our DNS server for DNS queries
 
-## Preface: the shape of our internet
+## What is knot? Why are we using knot?
 
-![our-inter-network](../img/nr-multicast.svg)
+maybe we do this section? maybe not?
+
+### Why knot?
+
+* commonly used server
+* people on this team are already familiar with this software
+* free open source
+* high performance/internet scale
+
+possible alternatives:
+
+* bind
+* tiny DNS
+
+### Why is this a good next step
 
 ==================================
 
@@ -150,3 +166,10 @@ vim /etc/resolv.conf
 nameserver 2.0.0.107
 # options edns0 trust-ad ndots:0
 ```
+
+TODOS:
+
+* update knot's resolv.conf to point to itself? Or nerf it? Or think on this.
+* update each host to point to knot's IP (`2.0.0.107`)
+* update knot's zonefile for each host & router in our internet
+* change server name references to `knot` => `dns`
