@@ -78,14 +78,13 @@ services:
       - SYS_ADMIN
     sysctls:
       - net.ipv4.ip_forward=0
-  host-knot:
-    container_name: "build-your-own-internet-host-knot"
-    # build: .
+  host-dns:
+    container_name: "build-your-own-internet-host-dns"
     build:
       context: .
-      dockerfile: Dockerfile_knot
-    image: "build-your-own-internet-knot"
-    hostname: host-knot
+      dockerfile: Dockerfile_dns
+    image: "build-your-own-internet-dns"
+    hostname: host-dns
     networks:
       two-net:
         ipv4_address: 2.0.0.107

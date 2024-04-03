@@ -11,7 +11,7 @@ So rather than life being “nasty, brutish, and having the inability to know pe
 
 For this chapter, we want to build a single server that is responsible for knowing the IP address for any hostname on our internet. When each machine is added to the internet, it will need its hostname and IP address registered with the authoritative server. Then, when any machine wants to send packets to another machine, it will perform name resolution by querying the authoritative server to learn the IP address of the destination machine.
 
-![our-inter-network](../img/basic-knot-internet.svg)
+![our-inter-network](../img/basic-dns-internet.svg)
 
 Notice that our internet now has a server called `DNS` at `2.0.0.107`. This server provides Authoritative DNS services for our internet. If you check the directory for this chapter, you'll see that there's a new Dockerfile entry: `Dockerfile_dns`. This Dockerfile builds its image from a base image that includes DNS server software called `knot`. To achieve our goal for this chapter, we will need to:
 
@@ -83,7 +83,7 @@ Options:
 
 Next Steps:
 
-* now we need different runtime instructions (edit Dockerfile_knot)
+* now we need different runtime instructions (edit Dockerfile_dns)
 * figure out how to configure knot
   * chatgpt instructions: <https://chat.openai.com/share/a281dd4b-67f6-4888-be0b-ecbd5aafa000>
 * figure out how to add entries into knot
@@ -172,4 +172,4 @@ TODOS:
 * update knot's resolv.conf to point to itself? Or nerf it? Or think on this.
 * update each host to point to knot's IP (`2.0.0.107`)
 * update knot's zonefile for each host & router in our internet
-* change server name references to `knot` => `dns`
+* [x]change server name references to `knot` => `dns`
