@@ -15,7 +15,6 @@ We decided to take notes that create a reproducible experience. We document our 
 * `chapters`: The primary folder of this repo. That runs through the learning process of building up an internet from scratch.
 * `future`: ideas we want to explore in the future, some of which have some outlines of how we intend to start thinking about those topics.
 * `miscellaneous`: mostly explorations that were discarded because they turned out to be tangential docker problems/learnings.
-* `side-quests`: concepts that we did a deep dive into, but that weren't crucial path to building out our internet.
 
 ## Pre-requisites
 
