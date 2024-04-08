@@ -18,7 +18,7 @@ The significant things to note about this internet are that we have 2 machines o
 
 ## Avahi and avahi-daemon
 
-Avahi is a program which uses [multicast](../../../chapters/glossary.md#multicast) to perform name resolution on local networks with minimal configuration. If you check the [Dockerfile](./Dockerfile) for this chapter, you'll see that we added a new software, `avahi-utils`.
+Avahi is a program which uses [multicast](../../glossary.md#multicast) to perform name resolution on local networks with minimal configuration. If you check the [Dockerfile](./Dockerfile) for this chapter, you'll see that we added a new software, `avahi-utils`.
 
 As you might recall, in [chapter 1](../001-nr-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name), we took a look at the contents of `/etc/nsswitch.conf`. We saw that the `hosts` line provided instructions for how to resolve a name. The order runs sequentially through each entry in that line; it starts with looking at the `files` on the system (i.e. `/etc/hosts`), and, if it doesn't find the name there, then it should use `dns` (if it is configured).
 
@@ -68,7 +68,7 @@ root@host-c:/# ping -w1 host-f
 ping: host-f: Temporary failure in name resolution
 ```
 
-Oh no... As you can see, we still have a name resolution failure here. Not only that, we're not even seeing any packets on `host-c`'s `tcpdump`: the machine is not even *attempting* to send any packets across the network to figure out the IP address for `host-f`. Because `/etc/hosts` (`files` entry from `/etc/nsswitch.conf`) doesn't contain this name and because `/etc/resolv.conf` (`dns` entry) has been commented out to disable DNS, only multicast DNS (`mdns4_minimal`) is available to us.
+Oh no... As you can see, we still have a name resolution failure here. Not only that, we're not even seeing any packets on `host-c`'s `tcpdump`: the machine is not even _attempting_ to send any packets across the network to figure out the IP address for `host-f`. Because `/etc/hosts` (`files` entry from `/etc/nsswitch.conf`) doesn't contain this name and because `/etc/resolv.conf` (`dns` entry) has been commented out to disable DNS, only multicast DNS (`mdns4_minimal`) is available to us.
 
 So what's happening? Why doesn't it send multicast messages to find the name?
 
@@ -130,7 +130,7 @@ All this `tcpdump` output can be a little overwhelming. To help with formatting,
 
 Okay, let's see if we can make sense of all this by following the timestamps.
 
-What's a timestamp? Well, the first thing in each line of the `tcpdump` output is the **exact** time that the packet was seen. These timestamps look a little something like this: `19:59:53.972283`. This means that when the machine running `tcpdump` saw a packet, it looked at its watch and found that the time was approximately 8:00pm local time (this is in 24-hour time). But computers have *very* precise clocks, and the *exact* time of this packet was 7:59pm and 53 seconds and 972 hundred-thousanths of a second! This kind of precision might seems a little ridiculous, but when packets are flying around the network quickly, having very exact time for each one is essential to help us understand which ones came first and which ones came next.
+What's a timestamp? Well, the first thing in each line of the `tcpdump` output is the **exact** time that the packet was seen. These timestamps look a little something like this: `19:59:53.972283`. This means that when the machine running `tcpdump` saw a packet, it looked at its watch and found that the time was approximately 8:00pm local time (this is in 24-hour time). But computers have _very_ precise clocks, and the _exact_ time of this packet was 7:59pm and 53 seconds and 972 hundred-thousanths of a second! This kind of precision might seems a little ridiculous, but when packets are flying around the network quickly, having very exact time for each one is essential to help us understand which ones came first and which ones came next.
 
 Since we have precise timestamps being reported for each packet by `host-c` and `host-f` (and note that the clocks on both of these machines are synchronized), we can look back and forth between the output from both machines and put the packets in chronological order. So let's look at the timestamps across all the output: what's the first thing you see happening?
 
@@ -157,7 +157,7 @@ Okay, so what is the next packet that we see chronologically in these tcpdumps?
 
 We see the name resolution request packet that `host-c` sent hitting `host-f`. This is the exact same packet we saw above, except this time from `host-f`'s perspective.
 
-So why is `host-f` receiving a packet for `224.0.0.251`? Because it's being *broadcast* on this ethernet network.
+So why is `host-f` receiving a packet for `224.0.0.251`? Because it's being _broadcast_ on this ethernet network.
 
 We've seen something similar in previous chapters: ARP ([a quick reminder on how ARP and ethernet works](../../../appendix/ip-and-mac-addresses.md)). ARP is a protocol that enables IP discovery between machines on a network. ARP doesn't need to know the IP address of each machine ahead of time because it can send packets to all machines to find out which machine owns an address. Similarly, multicast doesn't need to know the IP addresses of the hosts it wants to communicate with. Both ARP and multicast are using the same underlying capability within the ethernet, namely, ethernet broadcast.
 
@@ -200,7 +200,7 @@ In general, multicast is intended to be used either on a single network or a pri
 
 We truly wanted to try implementing option 1 to show how it could be done. Multicast routing is something that was developed decades ago when computers were still young and we did not have a robust understanding about how networks would be used. Since multicast routing is highly insecure, Avahi does not recommend implementing it.
 
-Therefore, we ended up going with option 2. We're going to install the same Avahi software on our routers as we installed on the hosts. This way, our routers will be aware of name-resolution requests and will participate in name-resolution requests by [proxy](../../../chapters/glossary.md#proxy). The routers will receive name-resolution packets and then make their own queries to discover the address for the destination name.
+Therefore, we ended up going with option 2. We're going to install the same Avahi software on our routers as we installed on the hosts. This way, our routers will be aware of name-resolution requests and will participate in name-resolution requests by [proxy](../../glossary.md#proxy). The routers will receive name-resolution packets and then make their own queries to discover the address for the destination name.
 
 ### Getting the Routers in on the Game
 
