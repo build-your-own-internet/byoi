@@ -1,10 +1,10 @@
 # Name Resolution
 
-What is name resolution? What problem(s) does it solve? In previous chapters, we had to know the exact IP address of each [machine's](../../../chapters/glossary.md#machine) connection on each network to be able to ping. This became really tedious even with a network map in front of us to be able to see what the IP addresses should be. Wouldn't it be nice if we could reach machines over the internet using human-friendly names instead? That's where name resolution comes in! Name-resolution is the process of converting a human-friendly name into the IP address machines need to be able to route traffic across the Internet.
+What is name resolution? What problem(s) does it solve? In previous chapters, we had to know the exact IP address of each [machine's](../../glossary.md#machine) connection on each network to be able to ping. This became really tedious even with a network map in front of us to be able to see what the IP addresses should be. Wouldn't it be nice if we could reach machines over the internet using human-friendly names instead? That's where name resolution comes in! Name-resolution is the process of converting a human-friendly name into the IP address machines need to be able to route traffic across the Internet.
 
 ## Goals for this section
 
-Let's take a look at the internet we'll be working with for this chapter. You'll notice we've made some changes from the network diagrams we've used in other chapters. In _this_ internet, we have a bunch of [hosts](../../../chapters/glossary.md#host) that would like to communicate with each other:
+Let's take a look at the internet we'll be working with for this chapter. You'll notice we've made some changes from the network diagrams we've used in other chapters. In _this_ internet, we have a bunch of [hosts](../../glossary.md#host) that would like to communicate with each other:
 
 ![our-inter-network](../img/nr-getting-started.svg)
 
