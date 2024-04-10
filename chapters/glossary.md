@@ -109,3 +109,7 @@ A process on a server which responds to requests. E.g. a website, API, DNS, TLS 
 ## server
 
 A server is any machine whose purpose is to serve a network request to a client. If the server fails to serve the request, it can return an appropriate error back to the client.
+
+## TCP (Transmission Control Protocol)
+
+## UDP (User Datagram Protocol)

@@ -1,0 +1,22 @@
+@       IN SOA  ns1.byoi.org. admin.byoi.org. (
+                2023010101 ; serial
+                3600       ; refresh (1 hour)
+                900        ; retry (15 minutes)
+                604800     ; expire (1 week)
+                86400      ; minimum (1 day)
+                )
+        IN NS   ns1.byoi.org.
+        IN NS   ns2.byoi.org.
+
+ns1 IN A 2.0.0.107
+ns2 IN A 2.0.0.107
+
+host-a     IN A    1.0.0.101
+host-b     IN A    5.0.0.102
+host-c     IN A    6.0.0.103
+host-d     IN A    7.0.0.104
+host-e     IN A    8.0.0.105
+host-f     IN A    6.0.0.106
+host-h     IN A    4.0.0.108
+
+host-dns   IN A    2.0.0.107
