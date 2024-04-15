@@ -115,18 +115,15 @@ nano /etc/knot/byoi.org.zone
 And inside that file:
 
 ```bash
-@       IN SOA  ns1.byoi.org. admin.byoi.org. (
-                2023010101 ; serial
-                3600       ; refresh (1 hour)
-                900        ; retry (15 minutes)
-                604800     ; expire (1 week)
-                86400      ; minimum (1 day)
+@       IN SOA (
+                host-dns.byoi.org.  ; MNAME
+                admin.byoi.org.     ; RNAME
+                2024041501          ; serial
+                3600                ; refresh (1 hour)
+                900                 ; retry (15 minutes)
+                604800              ; expire (1 week)
+                86400               ; minimum (1 day)
                 )
-        IN NS   ns1.byoi.org.
-        IN NS   ns2.byoi.org.
-
-ns1 IN A 2.0.0.107
-ns2 IN A 2.0.0.107
 
 host-a     IN A    1.0.0.101
 host-b     IN A    5.0.0.102
@@ -139,9 +136,37 @@ host-h     IN A    4.0.0.108
 host-dns   IN A    2.0.0.107
 ```
 
-This file is called a `zonefile`.
+This file is called a `zonefile`. A zonefile defines all the DNS responses for a given zone, e.g. all the subdomains of `byoi.org`. In this file, we just added the IP address for each host on our internet.
 
-now we need to start running knot. daemon.
+But what's that big block at the top? `SOA`, or **S**tart **O**f **A**uthority, is a DNS record that provides zone configuration and other information. The details of this block aren't necessary to go into for our minimal DNS configuration for this chapter. We'll need to look at a few of these values next chapter. If you're gunning to learn more before then, checkout [this awesome document](https://www.cloudflare.com/learning/dns/dns-records/dns-soa-record/).
+
+## Get Knot running
+
+Now it's time to get our Knot server up and running! Still on the `host-dns` machine, run the following command:
+
+```bash
+/usr/sbin/knotd -c /config/knot.conf
+```
+
+This will run Knot in the foreground. Meaning, if you `CTRL + C` out of that, the server stops running. The benefit of running it in the foreground is that you get to see all the logs of what happens during startup. If you see an error, you can `CTRL + C` out of the server, fix the problem, and try again.
+
+You can either leave Knot running in the foreground and open a new terminal session to continue working, or you can daemonize the Knot server by restarting it and adding the `--daemonize` flag:
+
+```bash
+/usr/sbin/knotd -c /config/knot.conf --daemonize
+```
+
+## See it working
+
+dig and see it fail
+explain that `/etc/resolv.conf` is using docker resolver for DNS
+dig with `@`
+
+## Configure hosts to use `host-dns` as the DNS server
+
+but that's not efficient! let's update our handy `resolv.conf`!
+maybe do this for a couple other hosts
+update start-up to reference a saved `resolv.conf` file
 
 ==================================
 
