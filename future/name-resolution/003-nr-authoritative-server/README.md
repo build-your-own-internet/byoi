@@ -224,7 +224,7 @@ Next Steps:
 
 ```bash
 cat > /config/knot.conf <<EOF
-> # Define the server options
+# Define the server options
 server:
   # Listen on all interfaces
   listen: 0.0.0.0@53
@@ -234,12 +234,16 @@ zone:
   - domain: byoi.com
     file: "/etc/knot/byoi.com.zone"
     storage: "/var/lib/knot"
-> EOF
+EOF
+```
+
+```bash
+mkdir -p /etc/knot
 ```
 
 ```bash
 cat > /etc/knot/byoi.com.zone <<EOF
-> @       IN SOA  ns1.byoi.com. admin.byoi.com. (
+@       IN SOA  ns1.byoi.com. admin.byoi.com. (
                 2023010101 ; serial
                 3600       ; refresh (1 hour)
                 900        ; retry (15 minutes)
@@ -251,7 +255,11 @@ cat > /etc/knot/byoi.com.zone <<EOF
 
 ns1     IN A    192.0.2.1
 ns2     IN A    192.0.2.2
-> EOF
+EOF
+```
+
+```bash
+/usr/sbin/knotd -c /config/knot.conf -d
 ```
 
 ```bash
