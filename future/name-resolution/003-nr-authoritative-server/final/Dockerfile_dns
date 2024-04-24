@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y iproute2 \
     links
 
 COPY ./init/knot.conf /config/knot.conf
-COPY ./init/byoi.com.zone /etc/knot/byoi.com.zone
+COPY ./init/byoi.net.zone /etc/knot/byoi.net.zone
 
 COPY ./init/dns-start-up.sh /dns-start-up.sh
 

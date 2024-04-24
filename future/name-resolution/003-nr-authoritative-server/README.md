@@ -82,7 +82,7 @@ Next up, we need to tell Knot where to find how to turn names into DNS responses
 
 So, what's a `zone`? The short answer is zones are a way to delegate responsibility for hostnames around the internet. We can think of a zone as any domain and its subdomains, e.g. `example.com`, `www.example.com`, `api.example.com`. The organization who owns `example.com` needs to be able to insert and update DNS records for any of the domains that exist in that zone. We'll be looking at zones in more detail in the next chapter when we look at internet scale DNS.
 
-The zone we'll create for this chapter is going to cover `byoi.org`. We'll add some A records (IPv4 address) for the hostnames that exist on our little internet with the `byoi.org` suffix, e.g. `host-a.byoi.org`.
+The zone we'll create for this chapter is going to cover `byoi.net`. We'll add some A records (IPv4 address) for the hostnames that exist on our little internet with the `byoi.net` suffix, e.g. `host-a.byoi.net`.
 
 So let's go ahead and get our small internet Knot set up. We'll need to start by creating a new Knot config file and we'll add the `server` and `zone` configurations to it.
 
@@ -100,24 +100,24 @@ server:
 
 # Define the zone
 zone:
-  - domain: byoi.org
-    file: "/etc/knot/byoi.org.zone"
+  - domain: byoi.net
+    file: "/etc/knot/byoi.net.zone"
     storage: "/var/lib/knot"
 ```
 
-Ok, as you can see, in the `zone` definition, we've referenced a zonefile, `/etc/knot/byoi.org.zone`. But that file doesn't exist yet! We need to make a file that defines the `byoi.org` zone!
+Ok, as you can see, in the `zone` definition, we've referenced a zonefile, `/etc/knot/byoi.net.zone`. But that file doesn't exist yet! We need to make a file that defines the `byoi.net` zone!
 
 ```bash
 mkdir /etc/knot
-nano /etc/knot/byoi.org.zone
+nano /etc/knot/byoi.net.zone
 ```
 
 And inside that file:
 
 ```bash
 @       IN SOA (
-                host-dns.byoi.org.  ; MNAME
-                admin.byoi.org.     ; RNAME
+                host-dns.byoi.net.  ; MNAME
+                admin.byoi.net.     ; RNAME
                 2024041501          ; serial
                 3600                ; refresh (1 hour)
                 900                 ; retry (15 minutes)
@@ -136,7 +136,7 @@ host-h     IN A    4.0.0.108
 host-dns   IN A    2.0.0.107
 ```
 
-This file is called a `zonefile`. A zonefile defines all the DNS responses for a given zone, e.g. all the subdomains of `byoi.org`. In this file, we just added the IP address for each host on our internet.
+This file is called a `zonefile`. A zonefile defines all the DNS responses for a given zone, e.g. all the subdomains of `byoi.net`. In this file, we just added the IP address for each host on our internet.
 
 But what's that big block at the top? `SOA`, or **S**tart **O**f **A**uthority, is a DNS record that provides zone configuration and other information. The details of this block aren't necessary to go into for our minimal DNS configuration for this chapter. We'll need to look at a few of these values next chapter. If you're gunning to learn more before then, checkout [this awesome document](https://www.cloudflare.com/learning/dns/dns-records/dns-soa-record/).
 
@@ -157,6 +157,28 @@ You can either leave Knot running in the foreground and open a new terminal sess
 ```
 
 ## See it working
+
+Sweet! We got our Knot DNS server up and running. Let's run a `dig` and see what we get back:
+
+```bash
+root@host-dns:/# dig host-a.byoi.net
+
+; <<>> DiG 9.18.24-1-Debian <<>> host-a.byoi.net
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 36904
+;; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 65494
+;; QUESTION SECTION:
+;host-a.byoi.net.  IN A
+
+;; Query time: 232 msec
+;; SERVER: 127.0.0.11#53(127.0.0.11) (UDP)
+;; WHEN: Wed Apr 24 18:19:02 UTC 2024
+;; MSG SIZE  rcvd: 44
+```
 
 dig and see it fail
 explain that `/etc/resolv.conf` is using docker resolver for DNS
@@ -312,3 +334,4 @@ TODOS:
 * update each host to point to knot's IP (`2.0.0.107`)
 * update knot's zonefile for each host & router in our internet
 * [x]change server name references to `knot` => `dns`
+* create a 'definition of done' list for promoting future => chapters

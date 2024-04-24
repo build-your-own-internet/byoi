@@ -14,7 +14,12 @@ RUN apt-get update && apt-get install -y iproute2 \
     nano \
     busybox \
     curl \
-    links
+    links \
+    psutils
+
+# TODO: remove `psutils` from above
+
+RUN apt-get install -y procps
 
 COPY www /home/www
 COPY /init/ /init
