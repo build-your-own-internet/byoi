@@ -18,6 +18,7 @@ You might run into terms that you don't know the definition to. Sometimes they a
   - [network](#network)
   - [packets (a.k.a `IP packets`)](#packets-aka-ip-packets)
   - [proxy](#proxy)
+  - [resolver](#resolver)
   - [router (a.k.a `gateway`)](#router-aka-gateway)
   - [routing table](#routing-table)
   - [service](#service)
@@ -93,6 +94,10 @@ All traffic on an internet is wrapped up in IP packets. IP packets provide a hea
 ## proxy
 
 A proxy is a stand-in for something else. In computing, a proxy is a system that understands a network protocol and acts as an endpoint. A proxy will pretend to be the real system that is being communicated with while secretly relying on the real entity to serve the request.
+
+## resolver
+
+A resolver is a piece of software that performs DNS lookups.
 
 ## router (a.k.a `gateway`)
 

@@ -180,9 +180,43 @@ root@host-dns:/# dig host-a.byoi.net
 ;; MSG SIZE  rcvd: 44
 ```
 
-dig and see it fail
-explain that `/etc/resolv.conf` is using docker resolver for DNS
-dig with `@`
+Ok, there's a lot of information in that `dig` output. First, let's acknowledge that the dig output is a bit of a mystery wrapped in an engima. Why are there `;`s at the beginning of every line? Who knows? Who cares?
+
+But... this is the most commonly used tool for diagnosing DNS configurations. So, we're gonna use it. Let's take second to understand the basics of it. We'll pull out some particularly useful things to note. Future `dig` output for this chapter will have more sections to it. We'll discuss what's happening in those sections when they become relevant.
+
+> ;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 36904
+
+First, `HEADER`. Any time you see `header`, you're looking at metadata. This section is just giving us some high level information about the response that we're going to be looking at.
+
+The most important bit in this line of the `HEADER` is `status`. The `status` header tells us whether or not a request was able to return a response, and in cases where it couldn’t, why it couldn’t return a response.  The most common `status`es are:
+
+* `NOERROR`: The request for a domain was able to be successfully routed to an authoritative DNS server. The authoritative server did not error out when looking up the name requested.
+* `SERVFAIL`: The domain requested exists, but the DNS server either doesn’t have data or has bad data for it.
+* `NXDOMAIN`: The domain requested doesn’t exist. The `NX` here stands for `Non-eXistent`.
+* `REFUSED`: The authoritative DNS server refused the request. The domain doesn’t exist and the server refuses to process requests for domains that do not exist.
+
+> ;; QUESTION SECTION:
+> ;host-a.byoi.net.  IN A
+
+This is the question you sent to to your [resolver](../../../chapters/glossary.md#resolver). In this case, the question is asking the resolver to return the A record for the indicated hostname.
+
+What is an `A record`, you ask? Excellent question. The A in A record stands for `address`. An A record is just DNS shorthand for an IPv4 address, so an address that looks like `127.0.0.1`. There are [a plethora of DNS record types](https://en.wikipedia.org/wiki/List_of_DNS_record_types) if you want to look up more of them!
+
+`dig`, by default, sends a query for an `A record`, thus, our `QUESTION SECTION` shows us that we were querying `host-a.byoi.net` for an `A` record.
+
+>;; SERVER: 127.0.0.11#53(127.0.0.11) (UDP)
+
+This line tells us the IP address for the resolver that answered our DNS query. You'll notice that the IP address here is for `127.0.0.11`, which if you remember looking at the `/etc/resolv.conf` file from previous chapters was the `nameserver` that was defined. This is the default value that docker inserted into that file for docker functioning. Yeah, we don't want that. So in previous chapters, we just commented that out! Now, in this chapter we're going to update that line to point to our newly installed DNS server.
+
+**NEXT STEPS**
+
+* update `resolv.conf` to nerf nameserver again
+* run `netstat -nlp` to show what's listening on `host-dns`
+* update dig output to show ANSWER section
+* update SERVER explanation in dig output to explain that default knot running on 127.0.0.1
+* what happens when we run this query from `host-c`?
+* failure. use `dig @`.
+* update `resolv.conf` on `host-c`
 
 ## Configure hosts to use `host-dns` as the DNS server
 
@@ -335,3 +369,4 @@ TODOS:
 * update knot's zonefile for each host & router in our internet
 * [x]change server name references to `knot` => `dns`
 * create a 'definition of done' list for promoting future => chapters
+* create a 'how to move a chapter to the chapters folder' checklist
