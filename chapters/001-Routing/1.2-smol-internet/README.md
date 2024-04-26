@@ -144,6 +144,8 @@ Let's go back to our `docker-compose.yml` and give `boudi` an additional network
   boudi:
     build: .
     hostname: boudi
+    container_name: build-your-own-internet-002-boudi
+    image: build-your-own-internet-002-boudi
     networks:
       caternet:
         ipv4_address: 10.1.1.3
