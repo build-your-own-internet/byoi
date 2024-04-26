@@ -102,6 +102,8 @@ Now we have 2 separate networks. Fantastic! An internet is a group of machines o
 First, hop onto `boudi`:
 
 ```bash
+colima start
+restart
 hopon boudi
 ```
 
