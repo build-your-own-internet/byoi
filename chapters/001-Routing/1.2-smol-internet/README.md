@@ -87,6 +87,8 @@ What's a network without a machine right? Next, let's create a lone `tara` in th
 ```yml
   tara:
     build: .
+    container_name: build-your-own-internet-002-tara
+    image: build-your-own-internet-002-tara
     hostname: tara
     networks:
       doggonet:
