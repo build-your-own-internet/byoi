@@ -110,7 +110,7 @@ hopon boudi
 Then, run a `ping` to `tara`'s IP address on the `doggonet` network:
 
 ```bash
-root@tara:/# ping 10.1.2.2
+root@boudi:/# ping 10.1.2.2
 ping: connect: Network is unreachable
 ```
 
