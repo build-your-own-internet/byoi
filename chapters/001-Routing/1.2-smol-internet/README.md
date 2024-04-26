@@ -101,7 +101,7 @@ What's a network without a machine right? Next, let's create a lone `tara` in th
 
 Now we have 2 separate networks. Fantastic! An internet is a group of machines on different networks that can all communicate with each other. We have the machines, we have the networks, but before we go about getting them to talk to each other, let's make sure they can't already communicate... To do this, we're gonna reuse the same tricks we did in Chapter 001. Let's try to `ping` `boudi` from `tara`.
 
-First, hop onto `boudi`:
+First, hop onto `boudi`. You'll need to make sure your docker management software is up and running. That command will depend on which software you're using. We're using [colima](https://github.com/abiosoft/colima), so our instructions start with that:
 
 ```bash
 colima start
