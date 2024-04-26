@@ -58,7 +58,7 @@ An IP (Internet Protocol) address is the layer 3 address of a machine on a netwo
 
 ## MAC address
 
-A MAC (Media Access Control) address is the layer 2 address of a machine on a network. If you'd like to read more about what a MAC address is in technical terms, checkout [Appendix: Understanding tcpdump](../appendix/understanding-tcpdump.md).
+A MAC (Media Access Control) address is the layer 2 address of a machine on a network. If you'd like to read more about what a MAC address is in technical terms, checkout [Appendix: IP and MAC addresses](../appendix/ip-and-mac-addresses.md).
 <!-- TODO: write a definition for MAC address, and perhaps create this appendix -->
 
 ## machine
