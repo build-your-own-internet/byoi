@@ -226,5 +226,4 @@ How was the route to router2 setup that
 
 [ ] Explain network topology
     [ ] Explain octets or slash thingies
-[ ] Explain the HTTP server via netcat hack
 [ ] Explain the /29 choice and why we did that instead of /30 for p2p networks
