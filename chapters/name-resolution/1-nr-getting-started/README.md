@@ -38,7 +38,7 @@ Before we get started, we made some configuration changes to the hosts on this i
 
 Okay, we have a brand-new [docker-compose.yml](./docker-compose.yml) file and [Dockerfile](./Dockerfile) for you. This will build out the network that we showed above. Let's start by testing out that this internet works as expected.
 
-Use the [restart](../../../bin/restart) command to start everything up, and use the [hopon](../../../bin/hopon) command to get into `host-a` and `ping` host-c (which is at `6.0.0.103`):
+Use the [byoi-rebuild](../../../bin/byoi-rebuild) command to start everything up, and use the [hopon](../../../bin/hopon) command to get into `host-a` and `ping` host-c (which is at `6.0.0.103`):
 
 ```bash
 ➜  001-nr-getting-started $ hopon host-a
@@ -141,7 +141,7 @@ While that was exciting, the thought of manually editing host files seems to suc
       host-g: 2.0.0.107
 ```
 
-A quick `restart` and we can `hopon host-a` and travel to all the other hosts!
+A quick `byoi-rebuild` and we can `hopon host-a` and travel to all the other hosts!
 
 ### Test your work with `ping`
 
