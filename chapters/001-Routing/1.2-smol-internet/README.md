@@ -45,6 +45,9 @@ Before we get started, let's look at a couple scripts we added. On the root leve
 * `hopon`: in order to jump on a container, we had to type a long-ish command `docker exec -it 002-smol-internet-boudi-1 /bin/bash`. This allows us to simply type `hopon boudi`, which we will be using for the rest of our exploration.
 * `restart`: in experimenting with various setups in both our `Dockerfile` and `docker-compose.yml`, we needed to cleanup the images our containers were built from regularly. Now, we can simply type `restart` instead of finding and removing each container.
 
+> DISCLAIMER:
+The `restart` script performs a check that you have the Docker management software `colima` installed and running. If you are using `docker desktop` or another Docker management software, this check will always fail for you. To make this command work, comment out line 5, `bash meets-colima-requirements` in the [restart script](../../../bin/restart). Just make sure you have your Docker management software up and running whenever you're following along in these chapters!
+
 Because the scripts are dependent on a version of `docker-compose.yml` that exists in each chapter subfolder, we need to add the scripts to our `PATH` from the root of this directory:
 
 ```bash
@@ -101,10 +104,11 @@ What's a network without a machine right? Next, let's create a lone `tara` in th
 
 Now we have 2 separate networks. Fantastic! An internet is a group of machines on different networks that can all communicate with each other. We have the machines, we have the networks, but before we go about getting them to talk to each other, let's make sure they can't already communicate... To do this, we're gonna reuse the same tricks we did in Chapter 001. Let's try to `ping` `boudi` from `tara`.
 
-First, hop onto `boudi`. You'll need to make sure your docker management software is up and running. That command will depend on which software you're using. We're using [colima](https://github.com/abiosoft/colima), so our instructions start with that:
+First, we'll want to hop onto `boudi`. You'll need to make sure your docker management software is up and running. That command will depend on which software you're using. We're using [colima](https://github.com/abiosoft/colima), so our instructions start with that: `colima start`. If you get an error with colima, check out the [colima installation instructions](../../000-getting-started/README.md#Colima) in chapter 000.
+
+Now, back to our regularly scheduled content:
 
 ```bash
-colima start
 restart
 hopon boudi
 ```
