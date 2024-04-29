@@ -10,11 +10,14 @@ You might run into terms that you don't know the definition to. Sometimes they a
   - [host](#host)
   - [interface](#interface)
   - [internet (or internetwork)](#internet-or-internetwork)
+  - [IP address](#ip-address)
+  - [MAC address](#mac-address)
   - [machine](#machine)
   - [multicast](#multicast)
   - [name resolution](#name-resolution)
   - [network](#network)
   - [packets (a.k.a `IP packets`)](#packets-aka-ip-packets)
+  - [proxy](#proxy)
   - [router (a.k.a `gateway`)](#router-aka-gateway)
   - [routing table](#routing-table)
   - [service](#service)
@@ -47,6 +50,16 @@ An `interface` (or, more properly said, `network interface`) is (typically) an e
 ## internet (or internetwork)
 
 An internet is a set of networks joined together by routers so that machines can communicate across those networks to one other.
+
+## IP address
+
+An IP (Internet Protocol) address is the layer 3 address of a machine on a network.
+<!-- TODO: write a definition for IP address -->
+
+## MAC address
+
+A MAC (Media Access Control) address is the layer 2 address of a machine on a network. If you'd like to read more about what a MAC address is in technical terms, checkout [Appendix: IP and MAC addresses](../appendix/ip-and-mac-addresses.md).
+<!-- TODO: write a definition for MAC address, and perhaps create this appendix -->
 
 ## machine
 

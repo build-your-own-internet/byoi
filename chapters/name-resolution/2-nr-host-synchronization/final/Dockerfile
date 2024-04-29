@@ -10,7 +10,6 @@ RUN apt-get update && apt-get install -y iproute2 \
     inetutils-traceroute \
     mtr \
     iptables \
-    netcat \
     nano \
     busybox \
     curl \

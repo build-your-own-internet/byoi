@@ -96,7 +96,7 @@ listening on eth1, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 
 While we didn't see any packets on `eth0`, we see both the ICMP request and reply packets on `eth1`, thus showing that Router5 is successfully handling the `ping`. This tells us that Router5 does have an interface correctly configured on `100.1.0.0/16`.
 
-> ASIDE: At the end of this chapter, if you would like to come back and see what the `tcpdump` looks like if that interface isn't properly configured, try deleting the interface with `ip addr del 100.1.5.1/16 dev eth0`. If you delete the interface before the end of the chapter, you'll need to `restart` your containers because removing that interface will screw up our entire internet!
+> ASIDE: At the end of this chapter, if you would like to come back and see what the `tcpdump` looks like if that interface isn't properly configured, try deleting the interface with `ip addr del 100.1.5.1/16 dev eth0`. If you delete the interface before the end of the chapter, you'll need to `byoi-rebuild` your containers because removing that interface will screw up our entire internet!
 
 The next step is to see if we can `ping` each interface on each of the other routers on the way to the server on our internet. So, our next step is to `ping` Router3's interface on `100.1.0.0/16`.
 
@@ -178,7 +178,7 @@ root@router5:/# ip route
 Uh oh! The route to get to `5.0.0.0/8` is running through Router4 on `200.1.1.16/29`... That's not what we're expecting. We almost certainly have a routing loop there, which means that packets are being passed back and forth between the same machines without ever reaching their destination.
 
 > **EXERCISE:**
-> Now that you know where the problem is, go into `start-up-exercise.sh` for this chapter, fix the route, and `restart` your containers! Can you ping Server from Client now?
+> Now that you know where the problem is, go into `start-up-exercise.sh` for this chapter, fix the route, and `byoi-rebuild` your containers! Can you ping Server from Client now?
 
 Notes:
 

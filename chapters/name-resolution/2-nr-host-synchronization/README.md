@@ -24,7 +24,7 @@ As you might recall, in [chapter 1](../001-nr-getting-started/README.md#how-does
 
 Let's start off by taking a quick look at the `/etc/nsswitch.conf` file on our machines now.
 
-Once you've `restart`ed for this chapter, `hopon host-c` and `cat /etc/nsswitch.conf`. This file suddenly looks a little different! The reason for this is that when we installed `avahi-utils`, it added a couple new entries into that `hosts` line to direct name resolution requests for itself.
+Once you've `byoi-rebuild`ed for this chapter, `hopon host-c` and `cat /etc/nsswitch.conf`. This file suddenly looks a little different! The reason for this is that when we installed `avahi-utils`, it added a couple new entries into that `hosts` line to direct name resolution requests for itself.
 
 ```bash
 hosts:          files mdns4_minimal [NOTFOUND=return] dns
@@ -404,13 +404,13 @@ Okay, it's been fun looking at getting name resolution working network-by-networ
 
 In order to get name resolution working between `host-c` and `host-h`, we had to jump onto `router-3` and run `avahi-daemon --daemonize`. The reason you had to do this is the [start-up.sh](./init/start-up.sh) script only runs `avahi-daemon` on the hosts, not the routers. You **could** go to each router and run this command, but that's some boring work.
 
-Another option is to update the [start-up.sh](./init/start-up.sh) script for this chapter. Try moving `avahi-daemon --daemonize` to before the conditional and `restart` your internet. If you're confused or if things just aren't working, try checking [/final/start-up.sh](./final/start-up.sh) for this chapter.
+Another option is to update the [start-up.sh](./init/start-up.sh) script for this chapter. Try moving `avahi-daemon --daemonize` to before the conditional and `byoi-rebuild` your internet. If you're confused or if things just aren't working, try checking [/final/start-up.sh](./final/start-up.sh) for this chapter.
 
 ### Spreading the Gossip
 
 When we looked at how name resolution worked with Avahi previously, we saw that `router-3` proxied the request out to `host-h`. How did that router know where to go to get that name resolved? Well... here's the thing: it didn't. It was Avahi installed on `router-3` that was proxying the name resolution requests to machines on the networks `router-3` was connected to. Now, with Avahi installed on all the routers, the name resolution request is "flooded" across all machines on all networks. Let's see this in action:
 
-1. `restart` your internet
+1. `byoi-rebuild` your internet
 1. `hopon host-b` and run `tcpdump -nvvv`
 1. In another terminal session, `hopon host-c` and run `ping host-h.local`
 

@@ -43,7 +43,10 @@ The first solution we employed was to modify the `/etc/hosts` on each machine, e
 Before we get started, let's look at a couple scripts we added. On the root level of this repo, there's a `bin` folder. We've started adding simple scripts there to make our lives easier. Here's the scripts we've added thus far:
 
 * `hopon`: in order to jump on a container, we had to type a long-ish command `docker exec -it 002-smol-internet-boudi-1 /bin/bash`. This allows us to simply type `hopon boudi`, which we will be using for the rest of our exploration.
-* `restart`: in experimenting with various setups in both our `Dockerfile` and `docker-compose.yml`, we needed to cleanup the images our containers were built from regularly. Now, we can simply type `restart` instead of finding and removing each container.
+* `byoi-rebuild`: in experimenting with various setups in both our `Dockerfile` and `docker-compose.yml`, we needed to cleanup the images our containers were built from regularly. Now, we can simply type `byoi-rebuild` instead of finding and removing each container.
+
+> DISCLAIMER:
+The `byoi-rebuild` script performs a check that you have the Docker management software `colima` installed and running. If you are using `docker desktop` or another Docker management software, this check will always fail for you. To make this command work, comment out line 5, `bash meets-colima-requirements` in the [byoi-rebuild script](../../../bin/byoi-rebuild). Just make sure you have your Docker management software up and running whenever you're following along in these chapters!
 
 Because the scripts are dependent on a version of `docker-compose.yml` that exists in each chapter subfolder, we need to add the scripts to our `PATH` from the root of this directory:
 
@@ -87,6 +90,8 @@ What's a network without a machine right? Next, let's create a lone `tara` in th
 ```yml
   tara:
     build: .
+    container_name: build-your-own-internet-002-tara
+    image: build-your-own-internet-002-tara
     hostname: tara
     networks:
       doggonet:
@@ -99,16 +104,19 @@ What's a network without a machine right? Next, let's create a lone `tara` in th
 
 Now we have 2 separate networks. Fantastic! An internet is a group of machines on different networks that can all communicate with each other. We have the machines, we have the networks, but before we go about getting them to talk to each other, let's make sure they can't already communicate... To do this, we're gonna reuse the same tricks we did in Chapter 001. Let's try to `ping` `boudi` from `tara`.
 
-First, hop onto `boudi`:
+First, we'll want to hop onto `boudi`. You'll need to make sure your docker management software is up and running. That command will depend on which software you're using. We're using [colima](https://github.com/abiosoft/colima), so our instructions start with that: `colima start`. If you get an error with colima, check out the [colima installation instructions](../../000-getting-started/README.md#Colima) in chapter 000.
+
+Now, back to our regularly scheduled content:
 
 ```bash
+byoi-rebuild
 hopon boudi
 ```
 
 Then, run a `ping` to `tara`'s IP address on the `doggonet` network:
 
 ```bash
-root@tara:/# ping 10.1.2.2
+root@boudi:/# ping 10.1.2.2
 ping: connect: Network is unreachable
 ```
 
@@ -140,6 +148,8 @@ Let's go back to our `docker-compose.yml` and give `boudi` an additional network
   boudi:
     build: .
     hostname: boudi
+    container_name: build-your-own-internet-002-boudi
+    image: build-your-own-internet-002-boudi
     networks:
       caternet:
         ipv4_address: 10.1.1.3
@@ -152,7 +162,7 @@ Let's go back to our `docker-compose.yml` and give `boudi` an additional network
 Exit out of `tara` if you're still in that container, and let's re-build our containers and see how those changes impacted `boudi`:
 
 ```bash
-restart
+byoi-rebuild
 hopon boudi
 ```
 
@@ -405,7 +415,7 @@ We've already seen this in action. At this point, we need to tell `pippin` how t
 
 ## Now let's make this routing setup automatic
 
-We don't want to spend the time manually adding and removing routes every time we start our containers. Luckily, we can edit the [start-up.sh](./init/start-up.sh) script to conditionally add routes depending on the `hostname`, i.e. `tara` or `pippin`. Add the following to your start-up script and `restart` your containers. You should be able to ping each machine on each network.
+We don't want to spend the time manually adding and removing routes every time we start our containers. Luckily, we can edit the [start-up.sh](./init/start-up.sh) script to conditionally add routes depending on the `hostname`, i.e. `tara` or `pippin`. Add the following to your start-up script and `byoi-rebuild` your containers. You should be able to ping each machine on each network.
 
 ```bash
 case $HOSTNAME in

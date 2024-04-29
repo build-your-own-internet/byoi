@@ -45,7 +45,7 @@ Just remember to `colima start` again the next time you want to work on building
 Each machine on the tiny internet you're building in these chapters is a separate Docker container. Docker allowed us to be able to make a reproducible experience that, with the correct setup, should run on anyone's laptop without people needing to buy expensive and wasteful hardware. Install Docker with:
 
 ```bash
-brew install docker
+brew install docker docker-compose
 ```
 
 #### Learning Docker

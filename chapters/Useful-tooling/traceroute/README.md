@@ -218,7 +218,7 @@ listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 
 ### Exercises for the reader
 
-* `restart` everything and see what happens when you use `ip route` to remove the route `pippin` => `tara`. Where do you see changes in the output?
+* `byoi-rebuild` everything and see what happens when you use `ip route` to remove the route `pippin` => `tara`. Where do you see changes in the output?
 * What about `tara` => `pippin`? How does the output change?
 * How else can you use `iptables` to block the connection between `tara` and `pippin`?
 * How does `mtr` function differently than `traceroute`? Use the help (`H` key when it's running) to figure out how to change the protocol that's used!
