@@ -4,8 +4,6 @@ set -o errexit
 
 bash meets-colima-requirements
 
-docker compose down
-
 # kill all running containers
 docker ps --all | grep "build-your-own-internet" | awk '{ print $1 }' | xargs docker container rm --force
 
