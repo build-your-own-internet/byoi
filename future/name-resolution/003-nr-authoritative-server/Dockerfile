@@ -10,14 +10,10 @@ RUN apt-get update && apt-get install -y iproute2 \
     inetutils-traceroute \
     mtr \
     iptables \
-    netcat \
     nano \
     busybox \
     curl \
-    links \
-    psutils
-
-# TODO: remove `psutils` from above
+    links 
 
 RUN apt-get install -y procps
 

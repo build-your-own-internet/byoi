@@ -15,6 +15,8 @@ RUN apt-get update && apt-get install -y iproute2 \
     curl \
     links
 
+COPY /init/ /init
 COPY ./init/dns-start-up.sh /dns-start-up.sh
+
 
 CMD ["/dns-start-up.sh"]

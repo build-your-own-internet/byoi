@@ -57,7 +57,7 @@ If you wanted to look at possible alternatives to implement on your own, here ar
 
 As we mentioned at the start of the chapter, we designated one of the machines on the internet to be our authoritative DNS server. That machine was built with a different docker image that included the Knot DNS software. While that software was installed and is ready to be used, we still need to do some configuration in order for it to serve our little internet.
 
-Go ahead and `restart` to get this chapter's internet up and running. Then, `hopon host-dns` and we'll start working on the configuration files.
+Go ahead and `byoi-rebuild` to get this chapter's internet up and running. Then, `hopon host-dns` and we'll start working on the configuration files.
 
 Knot needs 2 files in order to know how to answer our DNS queries. The first is a `knot.conf` file. When Knot was installed, it came with a file in the `config` directory, `knot.sample.conf`. We can reference this file to build out our own `knot.conf` file. In `/config/knot.sample.conf`, there are a number of headings that we can use to make Knot perform how we want:
 
@@ -166,25 +166,29 @@ root@host-dns:/# dig host-a.byoi.net
 ; <<>> DiG 9.18.24-1-Debian <<>> host-a.byoi.net
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 36904
-;; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 1
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 62982
+;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
-; EDNS: version: 0, flags:; udp: 65494
+; EDNS: version: 0, flags:; udp: 1232
 ;; QUESTION SECTION:
 ;host-a.byoi.net.  IN A
 
-;; Query time: 232 msec
-;; SERVER: 127.0.0.11#53(127.0.0.11) (UDP)
-;; WHEN: Wed Apr 24 18:19:02 UTC 2024
-;; MSG SIZE  rcvd: 44
+;; ANSWER SECTION:
+host-a.byoi.net. 3600 IN A 1.0.0.101
+
+;; Query time: 0 msec
+;; SERVER: 127.0.0.1#53(127.0.0.1) (UDP)
+;; WHEN: Wed May 01 18:52:53 UTC 2024
+;; MSG SIZE  rcvd: 60
 ```
 
 Ok, there's a lot of information in that `dig` output. First, let's acknowledge that the dig output is a bit of a mystery wrapped in an engima. Why are there `;`s at the beginning of every line? Who knows? Who cares?
 
 But... this is the most commonly used tool for diagnosing DNS configurations. So, we're gonna use it. Let's take second to understand the basics of it. We'll pull out some particularly useful things to note. Future `dig` output for this chapter will have more sections to it. We'll discuss what's happening in those sections when they become relevant.
 
-> ;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 36904
+> ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 62982
 
 First, `HEADER`. Any time you see `header`, you're looking at metadata. This section is just giving us some high level information about the response that we're going to be looking at.
 
@@ -204,16 +208,19 @@ What is an `A record`, you ask? Excellent question. The A in A record stands for
 
 `dig`, by default, sends a query for an `A record`, thus, our `QUESTION SECTION` shows us that we were querying `host-a.byoi.net` for an `A` record.
 
->;; SERVER: 127.0.0.11#53(127.0.0.11) (UDP)
+> ;; ANSWER SECTION:
+> host-a.byoi.net. 3600 IN A 1.0.0.101
 
-This line tells us the IP address for the resolver that answered our DNS query. You'll notice that the IP address here is for `127.0.0.11`, which if you remember looking at the `/etc/resolv.conf` file from previous chapters was the `nameserver` that was defined. This is the default value that docker inserted into that file for docker functioning. Yeah, we don't want that. So in previous chapters, we just commented that out! Now, in this chapter we're going to update that line to point to our newly installed DNS server.
+let's describe this here!
+
+> ;; SERVER: 127.0.0.1#53(127.0.0.1) (UDP)
+
+This line tells us the IP address for the resolver that answered our DNS query.
 
 **NEXT STEPS**
 
-* update `resolv.conf` to nerf nameserver again
+* finish dig descriptions
 * run `netstat -nlp` to show what's listening on `host-dns`
-* update dig output to show ANSWER section
-* update SERVER explanation in dig output to explain that default knot running on 127.0.0.1
 * what happens when we run this query from `host-c`?
 * failure. use `dig @`.
 * update `resolv.conf` on `host-c`
