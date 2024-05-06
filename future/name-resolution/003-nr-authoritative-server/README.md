@@ -186,7 +186,7 @@ host-a.byoi.net. 3600 IN A 1.0.0.101
 
 Ok, there's a lot of information in that `dig` output. First, let's acknowledge that the dig output is a bit of a mystery wrapped in an engima. Why are there `;`s at the beginning of every line? Who knows? Who cares?
 
-But... this is the most commonly used tool for diagnosing DNS configurations. So, we're gonna use it. Let's take second to understand the basics of it. We'll pull out some particularly useful things to note. Future `dig` output for this chapter will have more sections to it. We'll discuss what's happening in those sections when they become relevant.
+But... this is the most commonly used tool for diagnosing DNS configurations. So, we're gonna use it. Let's take second to understand the basics of it. We'll pull out some particularly useful things to note. We'll DIG (:D) into `dig` output further in this chapter as more sections become relevant.
 
 > ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 62982
 
@@ -202,7 +202,7 @@ The most important bit in this line of the `HEADER` is `status`. The `status` he
 > ;; QUESTION SECTION:
 > ;host-a.byoi.net.  IN A
 
-This is the question you sent to to your [resolver](../../../chapters/glossary.md#resolver). In this case, the question is asking the resolver to return the A record for the indicated hostname.
+This is the question you sent to to your [resolver](../../../chapters/glossary.md#resolver). A resolver is a piece of software that performs DNS lookups. We'll discuss more about the different types of resolvers in the next chapter. In this case, the `QUESTION` is asking the resolver to return the A record for the indicated hostname.
 
 What is an `A record`, you ask? Excellent question. The A in A record stands for `address`. An A record is just DNS shorthand for an IPv4 address, so an address that looks like `127.0.0.1`. There are [a plethora of DNS record types](https://en.wikipedia.org/wiki/List_of_DNS_record_types) if you want to look up more of them!
 
@@ -211,7 +211,12 @@ What is an `A record`, you ask? Excellent question. The A in A record stands for
 > ;; ANSWER SECTION:
 > host-a.byoi.net. 3600 IN A 1.0.0.101
 
-let's describe this here!
+The `ANSWER SECTION` provides the answer to the DNS query. Duh! So, if you reference the zonefile we configured Knot with, you'll see that we defined `host-a` with `host-a     IN A    1.0.0.101`. Knot looked at the hostname in the `QUESTION SECTION`, saw that the *T*op *L*evel *D*omain was `byoi.net`, and went and found the zonefile it had been configured with for that zone. It then found the answer to the query in that file.
+
+What happens if you send a query for a domain that isn't defined in that file? Can you decipher the output? HINT: the `status` in the `HEADER` will give you a lot of context! Take a look at the output for the following queries.
+
+* `dig host-x.byoi.net` (a name that *could* ostensibly be in the `byoi.net` zone)
+* `dig host-a.foo.net` (a name that our Knot instance knows nothing about)
 
 > ;; SERVER: 127.0.0.1#53(127.0.0.1) (UDP)
 
