@@ -72,7 +72,7 @@ Knot needs 2 files in order to know how to answer our DNS queries. The first is 
 
 For our super simple installation, we're only interested in `server` and `zone`.
 
-As you saw, there's a `listen` option in `server` that allows you to specify an IP address. This configures Knot to answer DNS queries that come in on that IP address or subnet. For the sake of simplifying our little internet, we're just going to have Knot listen for ANYTHING AND EVERYTHING that hits our server. We're going to set that listen to `0.0.0.0@53`.
+As you saw, there's a `listen` option in `server` that allows you to specify an IP address. This configures Knot to answer DNS queries that come in on that IP address or subnet. We're going to have Knot listen on the IP address that we've defined for this server on our little internet (`2.0.0.107`).
 
 `@53`??? What's that? Port 53 is the [RFC identified](https://www.rfc-editor.org/rfc/rfc1035#page-32) port for handling DNS queries. So, in the address above, we're telling Knot to listen on all interfaces on TCP and UDP port 53!
 
@@ -96,7 +96,7 @@ Inside that file:
 # Define the server options
 server:
   # Listen on all interfaces
-  listen: 0.0.0.0@53
+  listen: 2.0.0.107@53
 
 # Define the zone
 zone:
@@ -156,6 +156,40 @@ You can either leave Knot running in the foreground and open a new terminal sess
 /usr/sbin/knotd -c /config/knot.conf --daemonize
 ```
 
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+> TODO: ADD A NETSTAT COMMAND `netstat -lnp`
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+## Update your host-dns's `/etc/resolv.conf` file
+
+Finally, in order to use the Knot server's information about the names on our internet, we need to tell the `host-dns` machine to use **itself** to resolve hostnames.
+
+We talked in [chapter 1 of this section](../../../chapters/name-resolution/1-nr-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name) how a machine knows who to ask to resolve a name. Take a moment and have a look at the `/etc/resolv.conf` file on the `host-dns` machine:
+
+```bash
+root@host-dns:/# nano /etc/resolv.conf
+```
+
+You'll see the contents of this file as follows:
+
+```/etc/resolv.conf
+nameserver 127.0.0.11
+options edns0 trust-ad ndots:0
+```
+
+This configuration file is generated for you by Docker, because it's trying to be "helpful." The IP address for the nameserver (`127.0.0.11`) is the one that Docker set up for you to provide name-services for all your docker containers. We don't want that because we're doing this *ourselves.*
+
+Let's edit that IP address, changing it from `127.0.0.11` to `2.0.0.107`.
+
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+> TODO: EXPLAIN WHY. THIS IS WHERE WE LEFT OFF
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+Because your kn
+This will tell your `host-dns` machine to start using the Knot server that you just configured instead of Docker's weird DNS stuff.
+
+
+
 ## See it working
 
 Sweet! We got our Knot DNS server up and running. Let's run a `dig` and see what we get back:
@@ -179,12 +213,12 @@ root@host-dns:/# dig host-a.byoi.net
 host-a.byoi.net. 3600 IN A 1.0.0.101
 
 ;; Query time: 0 msec
-;; SERVER: 127.0.0.1#53(127.0.0.1) (UDP)
+;; SERVER: 2.0.0.107#53(2.0.0.107) (UDP)
 ;; WHEN: Wed May 01 18:52:53 UTC 2024
 ;; MSG SIZE  rcvd: 60
 ```
 
-Ok, there's a lot of information in that `dig` output. First, let's acknowledge that the dig output is a bit of a mystery wrapped in an engima. Why are there `;`s at the beginning of every line? Who knows? Who cares?
+Ok, there's a lot of information in that `dig` output. First, let's acknowledge that the dig output is a bit of a mystery wrapped in an enigma. Why are there `;`s at the beginning of every line? Who knows? Who cares?
 
 But... this is the most commonly used tool for diagnosing DNS configurations. So, we're gonna use it. Let's take second to understand the basics of it. We'll pull out some particularly useful things to note. We'll DIG (:D) into `dig` output further in this chapter as more sections become relevant.
 
@@ -218,9 +252,15 @@ What happens if you send a query for a domain that isn't defined in that file? C
 * `dig host-x.byoi.net` (a name that *could* ostensibly be in the `byoi.net` zone)
 * `dig host-a.foo.net` (a name that our Knot instance knows nothing about)
 
-> ;; SERVER: 127.0.0.1#53(127.0.0.1) (UDP)
+> ;; SERVER: 2.0.0.107#53(2.0.0.107) (UDP)
 
-This line tells us the IP address for the resolver that answered our DNS query.
+This line tells us the IP address (`2.0.0.107`), port (`53`), and protocol (`UDP`) for the resolver that answered our DNS query. Let's start with the IP address: `2.0.0.107`. What's this address? Why was this used?
+
+$$$$$$$$$$$$$$$$$$$$$$$$$$$
+> TODO: FIX THIS UP TO MAKE SURE THE IP ADDRESS IS CORRECT
+$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+In previous chapters, we You can see here, that we have set the `nameserver` attribute to `127.0.0.1`. So that's why `dig` is using that IP address.
 
 **NEXT STEPS**
 
