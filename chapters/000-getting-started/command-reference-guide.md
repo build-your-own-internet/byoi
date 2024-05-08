@@ -47,6 +47,8 @@ The `ip` command is a tool for viewing and managing network configurations. It h
   * `icmp-type port-unreachable`: specifically, only apply this rule to `ICMP port unreachable` responses
   * `-j DROP`: `DROP`, or don't send, any packet that matches this rule
 
+## netstat
+
 ## ping
 
 [@bork's comic](https://wizardzines.com/comics/ping/) explaining `ping` and `traceroute`.

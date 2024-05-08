@@ -156,18 +156,40 @@ You can either leave Knot running in the foreground and open a new terminal sess
 /usr/sbin/knotd -c /config/knot.conf --daemonize
 ```
 
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-> TODO: ADD A NETSTAT COMMAND `netstat -lnp`
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+Sweet, now that we have told knot to start up with the configuration in place, let's make sure that it is indeed listening for DNS queries. We can do that with the help of [`netstat`](../../../chapters/000-getting-started/command-reference-guide.md#netstat) command. In your `host-dns` container, run the following:
+
+```
+root@host-dns:/# netstat -lnp
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
+tcp        0      0 2.0.0.107:53            0.0.0.0:*               LISTEN      21/knotd
+tcp        0      0 127.0.0.11:33947        0.0.0.0:*               LISTEN      -
+udp        0      0 127.0.0.11:56006        0.0.0.0:*                           -
+udp        0      0 2.0.0.107:53            0.0.0.0:*                           21/knotd
+udp        0      0 2.0.0.107:53            0.0.0.0:*                           21/knotd
+udp        0      0 2.0.0.107:53            0.0.0.0:*                           21/knotd
+udp        0      0 2.0.0.107:53            0.0.0.0:*                           21/knotd
+udp        0      0 2.0.0.107:53            0.0.0.0:*                           21/knotd
+udp        0      0 2.0.0.107:53            0.0.0.0:*                           21/knotd
+Active UNIX domain sockets (only servers)
+Proto RefCnt Flags       Type       State         I-Node   PID/Program name     Path
+unix  2      [ ACC ]     STREAM     LISTENING     129228   21/knotd             /rundir/knot.sock
+```
+
+As you can glean from the output, the command displays all of the `programs` that are `listening` for network connections and the port they are listening on. You can see that `knot` is listening on `2.0.0.107` on port `53` for both `TCP` and `UDP` protocols. As you may recall from other chapters, port `53` is the standard port used for `DNS` requests. You will also see the `PID` (Process ID) for the `knot` server, i.e. `21`, in this output. The `PID` when you run the same command might be different.
+
+You might be wondering why we have `udp 0 0 2.0.0.107:53 0.0.0.0:* 21/knotd` represented not just once but 6 (SIX) times! We wondered the same thing! This is why we are best friends! Turns out, knot is multi-threaded, which means each one of those 6 (SIX) lines in the output points to a different thread that can handle the DNS request simultaneously.
+
+We are almost there! Before we can issue a `dig` command to see the DNS request working, we have one more thing to take care of.
 
 ## Update your host-dns's `/etc/resolv.conf` file
 
-Finally, in order to use the Knot server's information about the names on our internet, we need to tell the `host-dns` machine to use **itself** to resolve hostnames.
+Finally, in order to use the Knot server's information about the names on our internet, we need to tell the `host-dns` machine to use **itself** to resolve hostnames. The configuration we have done so far is to get knot running. Now, we need to configure host-dns to know how to resolve names. This pattern should be familiar since we had to configure either `/etc/hosts` or `/etc/nsswitch.conf` for similar ends in our earlier exploration of name resolution.
 
-We talked in [chapter 1 of this section](../../../chapters/name-resolution/1-nr-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name) how a machine knows who to ask to resolve a name. Take a moment and have a look at the `/etc/resolv.conf` file on the `host-dns` machine:
+We talked in [chapter 1 of this section](../../../chapters/name-resolution/1-nr-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name) about how a machine knows who to ask to resolve a name. Take a moment and have a look at the `/etc/resolv.conf` file on the `host-dns` machine:
 
 ```bash
-root@host-dns:/# nano /etc/resolv.conf
+nano /etc/resolv.conf
 ```
 
 You'll see the contents of this file as follows:
@@ -177,18 +199,13 @@ nameserver 127.0.0.11
 options edns0 trust-ad ndots:0
 ```
 
-This configuration file is generated for you by Docker, because it's trying to be "helpful." The IP address for the nameserver (`127.0.0.11`) is the one that Docker set up for you to provide name-services for all your docker containers. We don't want that because we're doing this *ourselves.*
+This configuration file is generated for you by Docker, because it's trying to be "helpful." The IP address for the nameserver (`127.0.0.11`) is the one that Docker set up for you to provide name-services for all your docker containers. We don't want that because we're doing this *ourselves.* 💪🏼💪🏼💪🏼
 
 Let's edit that IP address, changing it from `127.0.0.11` to `2.0.0.107`.
 
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-> TODO: EXPLAIN WHY. THIS IS WHERE WE LEFT OFF
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+The IP address `2.0.0.107` should look familiar. Where have you seen this before? The task of answering this question is left to you, the reader, as an exercise. 😊
 
-Because your kn
 This will tell your `host-dns` machine to start using the Knot server that you just configured instead of Docker's weird DNS stuff.
-
-
 
 ## See it working
 
@@ -200,21 +217,21 @@ root@host-dns:/# dig host-a.byoi.net
 ; <<>> DiG 9.18.24-1-Debian <<>> host-a.byoi.net
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 62982
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 22124
 ;; flags: qr aa rd; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
 ;; WARNING: recursion requested but not available
 
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
 ;; QUESTION SECTION:
-;host-a.byoi.net.  IN A
+;host-a.byoi.net.		IN	A
 
 ;; ANSWER SECTION:
-host-a.byoi.net. 3600 IN A 1.0.0.101
+host-a.byoi.net.	3600	IN	A	1.0.0.101
 
 ;; Query time: 0 msec
 ;; SERVER: 2.0.0.107#53(2.0.0.107) (UDP)
-;; WHEN: Wed May 01 18:52:53 UTC 2024
+;; WHEN: Wed May 08 18:59:48 UTC 2024
 ;; MSG SIZE  rcvd: 60
 ```
 
@@ -222,7 +239,7 @@ Ok, there's a lot of information in that `dig` output. First, let's acknowledge 
 
 But... this is the most commonly used tool for diagnosing DNS configurations. So, we're gonna use it. Let's take second to understand the basics of it. We'll pull out some particularly useful things to note. We'll DIG (:D) into `dig` output further in this chapter as more sections become relevant.
 
-> ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 62982
+> ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 22124
 
 First, `HEADER`. Any time you see `header`, you're looking at metadata. This section is just giving us some high level information about the response that we're going to be looking at.
 
@@ -256,16 +273,10 @@ What happens if you send a query for a domain that isn't defined in that file? C
 
 This line tells us the IP address (`2.0.0.107`), port (`53`), and protocol (`UDP`) for the resolver that answered our DNS query. Let's start with the IP address: `2.0.0.107`. What's this address? Why was this used?
 
-$$$$$$$$$$$$$$$$$$$$$$$$$$$
-> TODO: FIX THIS UP TO MAKE SURE THE IP ADDRESS IS CORRECT
-$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-In previous chapters, we You can see here, that we have set the `nameserver` attribute to `127.0.0.1`. So that's why `dig` is using that IP address.
-
 **NEXT STEPS**
 
-* finish dig descriptions
-* run `netstat -nlp` to show what's listening on `host-dns`
+* [x] finish dig descriptions
+* [x] run `netstat -nlp` to show what's listening on `host-dns`
 * what happens when we run this query from `host-c`?
 * failure. use `dig @`.
 * update `resolv.conf` on `host-c`
