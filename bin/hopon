@@ -1,4 +1,16 @@
 #!/bin/sh
 
 CONTAINER_ID=$(docker ps | grep "build-your-own-internet" | grep $1 | awk '{ print $1 }')
+
+if [ -z "$CONTAINER_ID" ]; then
+	echo "Your internet does not appear to be running."
+	echo "Please make sure colima is started and you have run"
+	echo "byoip-restart"
+	echo "--------------------------"
+	echo "Alternatively, if you have just run 'byoip-restart', you may have a syntax"
+	echo "error in your 'docker-compose.yml' file."
+	echo "You may try running 'docker compose up'"
+	exit 1
+fi
+
 docker exec -it $CONTAINER_ID /bin/bash
