@@ -1,4 +1,4 @@
-FROM cznic/knot
+FROM ubuntu
 
 RUN apt-get update && apt-get install -y iproute2 \
     tcpdump \
@@ -13,11 +13,12 @@ RUN apt-get update && apt-get install -y iproute2 \
     nano \
     busybox \
     curl \
-    links
+    links 
 
-COPY ./knot.conf /config/knot.conf
-COPY ./byoi.net.zone /etc/knot/byoi.net.zone
+RUN apt-get install -y procps
 
-COPY ./dns-start-up.sh /dns-start-up.sh
+COPY ./www /home/www
+COPY . /init
+COPY ./start-up.sh /start-up.sh
 
-CMD ["/dns-start-up.sh"]
+CMD ["/start-up.sh"]

@@ -60,7 +60,7 @@ case $HOSTNAME in
     ;;
 esac
 
-# use our special versions of resolv.conf that turns off the docker dns name resolution
+# use our special versions of resolv.conf uses host-dns for name resolution
 cp /init/resolv.conf /etc/resolv.conf
 
 rm -rf /init

@@ -158,7 +158,7 @@ You can either leave Knot running in the foreground and open a new terminal sess
 
 Sweet, now that we have told knot to start up with the configuration in place, let's make sure that it is indeed listening for DNS queries. We can do that with the help of [`netstat`](../../../chapters/000-getting-started/command-reference-guide.md#netstat) command. In your `host-dns` container, run the following:
 
-```
+```bash
 root@host-dns:/# netstat -lnp
 Active Internet connections (only servers)
 Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name
@@ -273,12 +273,33 @@ What happens if you send a query for a domain that isn't defined in that file? C
 
 This line tells us the IP address (`2.0.0.107`), port (`53`), and protocol (`UDP`) for the resolver that answered our DNS query. Let's start with the IP address: `2.0.0.107`. What's this address? Why was this used?
 
+## Get names resolving around the internet!
+
+Cool, good job you got one server to answer questions about names on our internet. It ain't worth much until it's usable throughout the network! Let's now configure all the rest of the hosts in our internet to use the dns server for name resolution.
+
+### Run dig on `host-a`
+
+What do you think are the next steps for getting this to work across this network? How would you, for example, configure `host-a` to use the `host-dns` server to resolve names? What file would you change on `host-a` to get it to use `2.0.0.107` as the name server?
+
+In other words, when you run a `dig` from `host-a`, to try to get the IP address of `host-b.byoi.net`, you're going to get a failure — but don't panic!  Everything is fine. We'll get this to work together. What does this error mean?
+
+Basically, `dig` on `host-a` doesn't know that it needs to use the `host-dns` server for name requests. You could tell dig what server to use with the `@` parameter (e.g. `dig host-b.byoi.net @2.0.0.107`). This will tell dig that you want to use the `host-dns` server for name resolution.
+
+*But,* that only works for dig. Commands like `ping` or `links` will not get the joke and will still fail to resolve names into IP addresses.
+
+We're going to leave it as an exercise for you to go and configure each one of the hosts on this network to resolve names across the board. If you get stuck, remember that there is a [final](./final/) directory in this chapter that you can use to get the network completely configured.
+
+By the time you're done, you should be able to do the following:
+
+* on `host-a`, you should be able to run the command `ping host-d.byoi.net -w 2` and you should be able to get responses.
+* you should be able to `hopon host-d` (for example) and run `links http://host-c.byoi.net` and bring up the web page on that host.
+
 **NEXT STEPS**
 
 * [x] finish dig descriptions
 * [x] run `netstat -nlp` to show what's listening on `host-dns`
+* [ ] do all the final exercise stuff and make sure it works.
 * what happens when we run this query from `host-c`?
-* failure. use `dig @`.
 * update `resolv.conf` on `host-c`
 
 ## Configure hosts to use `host-dns` as the DNS server
