@@ -15,8 +15,6 @@ Let's look at the internet we'll be working with for this chapter:
 
 ![our-inter-network](../img/basic-dns-internet.svg)
 
-<!--TODO: should we change 'DNS' to a different hostname to be less confusing-->
-
 Notice that our internet now has a server called `DNS` at `2.0.0.107`. This server provides Authoritative DNS services for our internet. If you check the directory for this chapter, you'll see that there's a new Dockerfile entry: `Dockerfile_dns`. This Dockerfile builds its image from a base image that includes DNS server software called `knot`. To achieve our goal for this chapter, we will need to:
 
 * Configure `knot` on our DNS server to answer DNS queries
@@ -29,7 +27,7 @@ Notice that our internet now has a server called `DNS` at `2.0.0.107`. This serv
 
 We've used this term DNS several times now. What are we talking about when we mention DNS???
 
-DNS, or domain name service, is the name resolution process that scales to the size of The Internet™. Just like with everything else we've explored, there are many ways to implement DNS. The simplest solution is to have a single DNS server which manages name resolution for the entire internet. Obviously, that wouldn't scale, but that's a topic for another chapter.
+DNS, or domain name system, is the name resolution process that scales to the size of The Internet™. Just like with everything else we've explored, there are many ways to implement DNS. The simplest solution is to have a single DNS server which manages name resolution for the entire internet. Obviously, that wouldn't scale, but that's a topic for another chapter.
 
 Because this is an open standard, there are a lot of choices for which software you can use to implement your DNS server. We decided to use software called [knot](https://www.knot-dns.cz/).
 
@@ -59,38 +57,46 @@ As we mentioned at the start of the chapter, we designated one of the machines o
 
 Go ahead and `byoi-rebuild` to get this chapter's internet up and running. Then, `hopon host-dns` and we'll start working on the configuration files.
 
-Knot needs 2 files in order to know how to answer our DNS queries. The first is a `knot.conf` file. When Knot was installed, it came with a file in the `config` directory, `knot.sample.conf`. We can reference this file to build out our own `knot.conf` file. In `/config/knot.sample.conf`, there are a number of headings that we can use to make Knot perform how we want:
+Knot needs 2 files in order to know how to answer our DNS queries. The first is a `knot.conf` file. When Knot was installed, it came with a file in the `config` directory, `knot.sample.conf`. We can reference this file to build out our own `knot.conf` file. We're going to stick pretty close to Knot's example [simple configuration](https://www.knot-dns.cz/docs/3.0/html/configuration.html#simple-configuration) for our super simple installation. For our needs, we're only interested in the `server` and `zone` sections that you can see in the sample file:
 
-**TODO:** come back and give descriptions of each of these (maybe?t)
+```config
+server:
+    rundir: "/rundir"
+    user: knot:knot
+    automatic-acl: on
+#    listen: [ 127.0.0.1@53, ::1@53 ]
+```
 
-* `server`:
-* `log`
-* `database`
-* `remote`
-* `template`
-* `zone`
+```config
+zone:
+#    # Primary zone
+#  - domain: example.com
+#    notify: secondary
 
-For our super simple installation, we're only interested in `server` and `zone`.
+#    # Secondary zone
+#  - domain: example.net
+#    master: primary
+```
 
-As you saw, there's a `listen` option in `server` that allows you to specify an IP address. This configures Knot to answer DNS queries that come in on that IP address or subnet. We're going to have Knot listen on the IP address that we've defined for this server on our little internet (`2.0.0.107`).
+As you saw, there's a `listen` line (known in Knot as a _statement_) in the `server` section that allows you to specify an IP address. This configures Knot to answer DNS queries that come in on that IP address or subnet.
 
-`@53`??? What's that? Port 53 is the [RFC identified](https://www.rfc-editor.org/rfc/rfc1035#page-32) port for handling DNS queries. So, in the address above, we're telling Knot to listen on all interfaces on TCP and UDP port 53!
+What's that `@53` at the end of the IP address??? Port 53 is the [internet standard](https://www.rfc-editor.org/rfc/rfc1035#page-32) port for handling DNS queries. So,that `listen` statement, were it uncommented, would tell Knot to listen on `127.0.0.1` on TCP and UDP port 53!
 
-Next up, we need to tell Knot where to find how to turn names into DNS responses. We can do this by pointing Knot to any zonefiles in the `zone` section.
+Next up, we need to tell Knot where to find the names it will answer DNS queries for. We can do this by pointing Knot to any zonefiles in the `zone` section.
 
-<!--TODO: fix this paragraph. Is poopy garbage.-->
+So, what's a `zone`? The short answer is zones are a way to delegate responsibility for hostnames around the internet. We can think of a zone as any domain and its subdomains, e.g. `example.com`, `www.example.com`, `api.example.com`. The organization who owns `example.com` needs to be able to insert and update DNS records for any of the domains that exist in that zone. We'll be looking at zones in more detail in the next chapter when we look at internet-scale DNS.
 
-So, what's a `zone`? The short answer is zones are a way to delegate responsibility for hostnames around the internet. We can think of a zone as any domain and its subdomains, e.g. `example.com`, `www.example.com`, `api.example.com`. The organization who owns `example.com` needs to be able to insert and update DNS records for any of the domains that exist in that zone. We'll be looking at zones in more detail in the next chapter when we look at internet scale DNS.
-
-The zone we'll create for this chapter is going to cover `byoi.net`. We'll add some A records (IPv4 address) for the hostnames that exist on our little internet with the `byoi.net` suffix, e.g. `host-a.byoi.net`.
+The zone we'll create for this chapter is going to cover `byoi.net`. We'll add some IP addresses, a.k.a. "A Records", for the hostnames that exist on our little internet with the `byoi.net` suffix, e.g. `host-a.byoi.net`.
 
 So let's go ahead and get our small internet Knot set up. We'll need to start by creating a new Knot config file and we'll add the `server` and `zone` configurations to it.
+
+Start by creating and editing `/config/knot.conf`:
 
 ```bash
 nano /config/knot.conf
 ```
 
-Inside that file:
+Inside that file add the following:
 
 ```bash
 # Define the server options
@@ -105,14 +111,20 @@ zone:
     storage: "/var/lib/knot"
 ```
 
-Ok, as you can see, in the `zone` definition, we've referenced a zonefile, `/etc/knot/byoi.net.zone`. But that file doesn't exist yet! We need to make a file that defines the `byoi.net` zone!
+If you check the `server` section, we're going to have Knot listen on the IP address that we've defined for `host-dns` on our little internet (`2.0.0.107`).
+
+As you can see, in the `zone` definition, we've referenced a zonefile, `/etc/knot/byoi.net.zone`. But that file doesn't exist yet! We need to make a file that defines the `byoi.net` zone!
+
+Save and exit the config file.
+
+Next up, make the directory that the file will live in, and then make and start editing the file itself:
 
 ```bash
 mkdir /etc/knot
 nano /etc/knot/byoi.net.zone
 ```
 
-And inside that file:
+And inside that file, add this zone definition:
 
 ```bash
 @       IN SOA (
@@ -139,6 +151,12 @@ host-dns   IN A    2.0.0.107
 This file is called a `zonefile`. A zonefile defines all the DNS responses for a given zone, e.g. all the subdomains of `byoi.net`. In this file, we just added the IP address for each host on our internet.
 
 But what's that big block at the top? `SOA`, or **S**tart **O**f **A**uthority, is a DNS record that provides zone configuration and other information. The details of this block aren't necessary to go into for our minimal DNS configuration for this chapter. We'll need to look at a few of these values next chapter. If you're gunning to learn more before then, checkout [this awesome document](https://www.cloudflare.com/learning/dns/dns-records/dns-soa-record/).
+
+===========================
+
+STOPPED HERE. START HERE NEXT TIME.
+
+===========================
 
 ## Get Knot running
 
@@ -199,7 +217,7 @@ nameserver 127.0.0.11
 options edns0 trust-ad ndots:0
 ```
 
-This configuration file is generated for you by Docker, because it's trying to be "helpful." The IP address for the nameserver (`127.0.0.11`) is the one that Docker set up for you to provide name-services for all your docker containers. We don't want that because we're doing this *ourselves.* 💪🏼💪🏼💪🏼
+This configuration file is generated for you by Docker, because it's trying to be "helpful." The IP address for the nameserver (`127.0.0.11`) is the one that Docker set up for you to provide name-services for all your docker containers. We don't want that because we're doing this _ourselves._ 💪🏼💪🏼💪🏼
 
 Let's edit that IP address, changing it from `127.0.0.11` to `2.0.0.107`.
 
@@ -224,10 +242,10 @@ root@host-dns:/# dig host-a.byoi.net
 ;; OPT PSEUDOSECTION:
 ; EDNS: version: 0, flags:; udp: 1232
 ;; QUESTION SECTION:
-;host-a.byoi.net.		IN	A
+;host-a.byoi.net.  IN A
 
 ;; ANSWER SECTION:
-host-a.byoi.net.	3600	IN	A	1.0.0.101
+host-a.byoi.net. 3600 IN A 1.0.0.101
 
 ;; Query time: 0 msec
 ;; SERVER: 2.0.0.107#53(2.0.0.107) (UDP)
@@ -266,14 +284,14 @@ The `ANSWER SECTION` provides the answer to the DNS query. Duh! So, if you refer
 
 What happens if you send a query for a domain that isn't defined in that file? Can you decipher the output? HINT: the `status` in the `HEADER` will give you a lot of context! Take a look at the output for the following queries.
 
-* `dig host-x.byoi.net` (a name that *could* ostensibly be in the `byoi.net` zone)
+* `dig host-x.byoi.net` (a name that _could_ ostensibly be in the `byoi.net` zone)
 * `dig host-a.foo.net` (a name that our Knot instance knows nothing about)
 
 > ;; SERVER: 2.0.0.107#53(2.0.0.107) (UDP)
 
 This line tells us the IP address (`2.0.0.107`), port (`53`), and protocol (`UDP`) for the resolver that answered our DNS query. Let's start with the IP address: `2.0.0.107`. What's this address? Why was this used?
 
-## Get names resolving around the internet!
+## Get names resolving around the internet
 
 Cool, good job — you got **one** server to answer questions about names on our internet. It ain't worth much until it's usable throughout the network! Let's now configure all the rest of the hosts in our internet to use the dns server for name resolution.
 
@@ -285,7 +303,7 @@ In other words, when you run a `dig` from `host-a`, to try to get the IP address
 
 Basically, `dig` on `host-a` doesn't know that it needs to use the `host-dns` server for name requests. You could tell dig what server to use with the `@` parameter (e.g. `dig host-b.byoi.net @2.0.0.107`). This will tell dig that you want to use the `host-dns` server for name resolution.
 
-*But,* that only works for dig. Commands like `ping` or `links` will not get the joke and will still fail to resolve names into IP addresses.
+_But,_ that only works for dig. Commands like `ping` or `links` will not get the joke and will still fail to resolve names into IP addresses.
 
 We're going to leave it as an exercise for you to go and configure each one of the hosts on this network to resolve names across the board. If you get stuck, remember that there is a [final](./final/) directory in this chapter that you can use to get the network completely configured.
 
@@ -293,164 +311,3 @@ By the time you're done, you should be able to do the following:
 
 * on `host-a`, you should be able to run the command `ping host-d.byoi.net -w 2` and you should be able to get responses.
 * you should be able to `hopon host-d` (for example) and run `links http://host-c.byoi.net` and bring up the web page on that host.
-
-**NEXT STEPS**
-
-* [x] finish dig descriptions
-* [x] run `netstat -nlp` to show what's listening on `host-dns`
-* [ ] do all the final exercise stuff and make sure it works.
-* what happens when we run this query from `host-c`?
-* update `resolv.conf` on `host-c`
-
-## Configure hosts to use `host-dns` as the DNS server
-
-but that's not efficient! let's update our handy `resolv.conf`!
-maybe do this for a couple other hosts
-update start-up to reference a saved `resolv.conf` file
-
-==================================
-
-# NOTES
-
-running different dockerfiles for different machine builds (see the definition for `host-knot`)
-
-<https://hub.docker.com/r/cznic/knot> (image docs)
-**NOTE** we may want to use a volume at the end of this chapter to load a bunch of names => IP addresses?
-
-* docker run -it  cznic/knot  /bin/bash
-  * root@1f9423931147:/# knotc conf-init
-
-```bash
-root@1f9423931147:/# knotd
-2024-03-27T18:46:49+0000 info: Knot DNS 3.3.3 starting
-2024-03-27T18:46:49+0000 info: loaded configuration database '/storage/confdb', mapsize 500 MiB
-2024-03-27T18:46:49+0000 warning: no network interface configured
-2024-03-27T18:46:49+0000 info: loading 0 zones
-2024-03-27T18:46:49+0000 warning: no zones loaded
-2024-03-27T18:46:49+0000 info: starting server
-2024-03-27T18:46:49+0000 info: control, binding to '/rundir/knot.sock'
-2024-03-27T18:46:49+0000 info: server started in the foreground, PID 9
-^C2024-03-27T18:46:55+0000 info: stopping server
-2024-03-27T18:46:55+0000 info: updating persistent timer DB
-2024-03-27T18:46:55+0000 info: shutting down
-root@1f9423931147:/# knotd --help
-Usage: knotd [-c | -C <path>] [options]
-
-Config options:
- -c, --config <file>        Use a textual configuration file.
-                             (default /config/knot.conf)
- -C, --confdb <dir>         Use a binary configuration database directory.
-                             (default /storage/confdb)
-Options:
- -m, --max-conf-size <MiB>  Set maximum size of the configuration database (max 10000 MiB).
-                             (default 500 MiB)
- -s, --socket <path>        Use a remote control UNIX socket path.
-                             (default /rundir/knot.sock)
- -d, --daemonize=[dir]      Run the server as a daemon (with new root directory).
- -v, --verbose              Enable debug output.
- -h, --help                 Print the program help.
- -V, --version              Print the program version.
-```
-
-Next Steps:
-
-* now we need different runtime instructions (edit Dockerfile_dns)
-* figure out how to configure knot
-  * chatgpt instructions: <https://chat.openai.com/share/a281dd4b-67f6-4888-be0b-ecbd5aafa000>
-* figure out how to add entries into knot
-* figure out how to point other hosts to knot for NR
-
-## Configure knot
-
-```bash
-cat > /config/knot.conf <<EOF
-# Define the server options
-server:
-  # Listen on all interfaces
-  listen: 0.0.0.0@53
-
-# Define the zone
-zone:
-  - domain: byoi.com
-    file: "/etc/knot/byoi.com.zone"
-    storage: "/var/lib/knot"
-EOF
-```
-
-```bash
-mkdir -p /etc/knot
-```
-
-```bash
-cat > /etc/knot/byoi.com.zone <<EOF
-@       IN SOA  ns1.byoi.com. admin.byoi.com. (
-                2023010101 ; serial
-                3600       ; refresh (1 hour)
-                900        ; retry (15 minutes)
-                604800     ; expire (1 week)
-                86400      ; minimum (1 day)
-                )
-        IN NS   ns1.byoi.com.
-        IN NS   ns2.byoi.com.
-
-ns1     IN A    192.0.2.1
-ns2     IN A    192.0.2.2
-EOF
-```
-
-```bash
-/usr/sbin/knotd -c /config/knot.conf -d
-```
-
-```bash
-kdig -t SOA byoi.com @127.0.0.1
-;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 4187
-;; Flags: qr aa rd; QUERY: 1; ANSWER: 1; AUTHORITY: 0; ADDITIONAL: 0
-
-;; QUESTION SECTION:
-;; byoi.com.             IN SOA
-
-;; ANSWER SECTION:
-byoi.com.            3600 IN SOA ns1.byoi.com. admin.byoi.com. 2023010101 3600 900 604800 86400
-
-;; Received 72 B
-;; Time 2024-03-27 19:12:34 UTC
-;; From 127.0.0.1@53(UDP) in 0.3 ms
-```
-
-```bash
-kdig -t NS byoi.com @127.0.0.1
-;; ->>HEADER<<- opcode: QUERY; status: NOERROR; id: 53692
-;; Flags: qr aa rd; QUERY: 1; ANSWER: 2; AUTHORITY: 0; ADDITIONAL: 2
-
-;; QUESTION SECTION:
-;; byoi.com.             IN NS
-
-;; ANSWER SECTION:
-byoi.com.            3600 IN NS ns1.byoi.com.
-byoi.com.            3600 IN NS ns2.byoi.com.
-
-;; ADDITIONAL SECTION:
-ns1.byoi.com.        3600 IN A 192.0.2.1
-ns2.byoi.com.        3600 IN A 192.0.2.2
-
-;; Received 94 B
-;; Time 2024-03-27 19:12:53 UTC
-;; From 127.0.0.1@53(UDP) in 0.3 ms
-```
-
-```bash
-vim /etc/resolv.conf
-
-nameserver 2.0.0.107
-# options edns0 trust-ad ndots:0
-```
-
-TODOS:
-
-* update knot's resolv.conf to point to itself? Or nerf it? Or think on this.
-* update each host to point to knot's IP (`2.0.0.107`)
-* update knot's zonefile for each host & router in our internet
-* [x]change server name references to `knot` => `dns`
-* create a 'definition of done' list for promoting future => chapters
-* create a 'how to move a chapter to the chapters folder' checklist
