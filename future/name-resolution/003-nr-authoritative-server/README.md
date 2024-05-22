@@ -275,13 +275,13 @@ This line tells us the IP address (`2.0.0.107`), port (`53`), and protocol (`UDP
 
 ## Get names resolving around the internet!
 
-Cool, good job you got one server to answer questions about names on our internet. It ain't worth much until it's usable throughout the network! Let's now configure all the rest of the hosts in our internet to use the dns server for name resolution.
+Cool, good job — you got **one** server to answer questions about names on our internet. It ain't worth much until it's usable throughout the network! Let's now configure all the rest of the hosts in our internet to use the dns server for name resolution.
 
 ### Run dig on `host-a`
 
 What do you think are the next steps for getting this to work across this network? How would you, for example, configure `host-a` to use the `host-dns` server to resolve names? What file would you change on `host-a` to get it to use `2.0.0.107` as the name server?
 
-In other words, when you run a `dig` from `host-a`, to try to get the IP address of `host-b.byoi.net`, you're going to get a failure — but don't panic!  Everything is fine. We'll get this to work together. What does this error mean?
+In other words, when you run a `dig` from `host-a`, to try to get the IP address of `host-b.byoi.net`, you're going to get a failure — but don't panic!  Everything is fine. You can figure this out 💪! What does this error mean?
 
 Basically, `dig` on `host-a` doesn't know that it needs to use the `host-dns` server for name requests. You could tell dig what server to use with the `@` parameter (e.g. `dig host-b.byoi.net @2.0.0.107`). This will tell dig that you want to use the `host-dns` server for name resolution.
 
