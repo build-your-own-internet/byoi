@@ -1,6 +1,6 @@
 #!/bin/sh
 
-CONTAINER_ID=$(docker ps | grep "build-your-own-internet" | grep $1 | awk '{ print $1 }')
+CONTAINER_ID=$(docker ps | grep "build-your-own-internet" | grep $1$ | awk '{ print $1 }')
 
 if [ -z "$CONTAINER_ID" ]; then
 	echo "Your internet does not appear to be running."
