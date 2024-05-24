@@ -22,4 +22,7 @@ Chapter has each of the following:
   * definitions
   * links to glossary/websites
 * check that all commands work as described
+  * re-do all exercises to ensure that commands work and the output is correct
 * all TODOs within the chapter are resolved and removed (unless there is a much grander reason to keep them)
+
+After moving to the `/chapters` directory, make sure all your links work!
