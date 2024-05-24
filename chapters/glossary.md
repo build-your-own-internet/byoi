@@ -5,6 +5,7 @@ You might run into terms that you don't know the definition to. Sometimes they a
 - [Glossary](#glossary)
   - [client](#client)
   - [container](#container)
+  - [daemon (or daemonize)](#daemon-or-daemonize)
   - [docker](#docker)
   - [hop](#hop)
   - [host](#host)
@@ -23,6 +24,8 @@ You might run into terms that you don't know the definition to. Sometimes they a
   - [routing table](#routing-table)
   - [service](#service)
   - [server](#server)
+  - [TCP (Transmission Control Protocol)](#tcp-transmission-control-protocol)
+  - [UDP (User Datagram Protocol)](#udp-user-datagram-protocol)
 
 ## client
 
@@ -31,6 +34,14 @@ A client is any host that initiates a connection/request to a server on the netw
 ## container
 
 A container is a virtual machine, typically (but not necessarily) being run and managed by Docker. A container, being a virtual machine, will also have virtual network interfaces.
+
+## daemon (or daemonize)
+
+Daemons (or sometimes "demons") are pieces of software that run in the "background," meaning they run continuously on a machine without producing interactive text. They are typically used to provide network services. Examples of daemons include: name servers, web servers, and routing software.
+
+Typically, a program that can run as a daemon will have both "interactive" modes and "daemonize" modes. The interactive mode (which is typically default) will run the program and output all of its messages to the screen. This means it will take over your terminal session. When this is happening, you won't be able to do anything else with that terminal unless you type `ctrl` + `c` (or open another terminal).
+
+When you run a daemon in its more "natural" daemonize mode, then it runs in the background and doesn't make a peep. It typically still generates log messages, but those messages are funneled into a file somewhere on the machine's hard disk (often something like `/var/log/messages`). Check the daemon's documentation for details on where it puts its messages when running in the background.
 
 ## docker
 

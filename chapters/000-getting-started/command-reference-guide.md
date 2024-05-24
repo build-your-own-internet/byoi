@@ -1,10 +1,33 @@
 # Command Reference Guide
+- [Command Reference Guide](#command-reference-guide)
+  - [dig](#dig)
+  - [ip](#ip)
+    - [ip addr](#ip-addr)
+    - [ip route](#ip-route)
+  - [iptables](#iptables)
+  - [netstat](#netstat)
+  - [ping](#ping)
+  - [ps](#ps)
+  - [tcpdump](#tcpdump)
+  - [traceroute](#traceroute)
+
+<!-- TODO: MOVE THIS FILE SO IT LIVES NEXT TO THE GLOSSARY -->
 
 We provide a lot of commands in creating, exploring, and troubleshooting our internet. It's easy to forget which command does what. Here's a reference guide to help you remember the commands we've used and what they do.
 
 This is an incomplete list of flags and abilities. For each of these commands, please use the `-h` flag to get help on how to use them. If you want a detailed handbook on the full capabilities of a command, try `man <command>` to view the manpage. Also, please keep in mind that these commands are for a Linux operating system. If you want to run similar commands from a Mac or Windows OS, you'll need to look up their equivalent.
 
 Julia Evans, @bork, has written [a number of comics](https://wizardzines.com/comics/) explaining technical concepts, including some comics focusing on the very commands we're exploring in this guide. Some relevant comics have been linked for your joy and perusal.
+
+## dig
+
+This is a command-line tool that allows you to check name-resolution. 
+
+> Example commands:
+
+- `dig www.google.com` - find out what IP address (or addresses) resolve from the name "www.google.com"
+- `dig @8.8.8.8 www.google.com` - same as above, but use the resolver at `8.8.8.8` instead of whatever is configured in your machine's `/etc/resolv.conf` file
+- `dig AAAA www.google.com` - also finds out what IP address resolves for the name "www.google.com", but *THIS TIME* we're asking for the "IP version 6" IP address instead of the default "IP version 4" address.
 
 ## ip
 
