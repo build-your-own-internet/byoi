@@ -152,23 +152,17 @@ This file is called a `zonefile`. A zonefile defines all the DNS responses for a
 
 But what's that big block at the top? `SOA`, or **S**tart **O**f **A**uthority, is a DNS record that provides zone configuration and other information. The details of this block aren't necessary to go into for our minimal DNS configuration for this chapter. We'll need to look at a few of these values next chapter. If you're gunning to learn more before then, checkout [this awesome document](https://www.cloudflare.com/learning/dns/dns-records/dns-soa-record/).
 
-===========================
-
-STOPPED HERE. START HERE NEXT TIME.
-
-===========================
-
 ## Get Knot running
 
-Now it's time to get our Knot server up and running! Still on the `host-dns` machine, run the following command:
+Now it's time to get our Knot server up and running! Still on the `host-dns` machine, start the knot daemon:
 
 ```bash
 /usr/sbin/knotd -c /config/knot.conf
 ```
 
-This will run Knot in the foreground. Meaning, if you `CTRL + C` out of that, the server stops running. The benefit of running it in the foreground is that you get to see all the logs of what happens during startup. If you see an error, you can `CTRL + C` out of the server, fix the problem, and try again.
+This will run Knot in the "foreground." Meaning, if you `CTRL + C` out of that, the server stops running. The benefit of running it this way is that you get to see all the logs of what happens during startup. This is especially useful if you want to catch a configuration mistake, because knot will report any errors directly to the screen. If **do** you see an error, you can `CTRL + C` out of the server, fix the problem, and try again. Also, if you do get an error, knot might just stop and protest that you need to fix the error before it will run.
 
-You can either leave Knot running in the foreground and open a new terminal session to continue working, or you can daemonize the Knot server by restarting it and adding the `--daemonize` flag:
+Once you've confirmed that it's working properly, you can either leave Knot running in the foreground and open a new terminal session to continue working, or you can [daemonize](../../glossary.md#daemon-or-daemonize) the Knot server by restarting it and adding the `--daemonize` flag:
 
 ```bash
 /usr/sbin/knotd -c /config/knot.conf --daemonize
@@ -194,15 +188,23 @@ Proto RefCnt Flags       Type       State         I-Node   PID/Program name     
 unix  2      [ ACC ]     STREAM     LISTENING     129228   21/knotd             /rundir/knot.sock
 ```
 
-As you can glean from the output, the command displays all of the `programs` that are `listening` for network connections and the port they are listening on. You can see that `knot` is listening on `2.0.0.107` on port `53` for both `TCP` and `UDP` protocols. As you may recall from other chapters, port `53` is the standard port used for `DNS` requests. You will also see the `PID` (Process ID) for the `knot` server, i.e. `21`, in this output. The `PID` when you run the same command might be different.
+Here's what this is telling us overall, what software is listening for what types of network connections. Like many of these programs, this tells us all kinds of stuff, only some of which we care about right now. Let's highlight the things that are important to us for this chapter:
 
-You might be wondering why we have `udp 0 0 2.0.0.107:53 0.0.0.0:* 21/knotd` represented not just once but 6 (SIX) times! We wondered the same thing! This is why we are best friends! Turns out, knot is multi-threaded, which means each one of those 6 (SIX) lines in the output points to a different thread that can handle the DNS request simultaneously.
+1. Proto. This indicates [tcp](../../../chapters/glossary.md#tcp-transmission-control-protocol) or [udp](../../../chapters/glossary.md#udp-user-datagram-protocol).
+2. Local Address: You'll see an IP address followed by a port (`:` and a number).
+   * IP address: This is address that the software that is listening is listening on. This will typically be the one and only external IP address that the machine has (in our case, `2.0.0.107`). However, you may also see an IP address that starts with `127`. In that case, the machine is *only* listening for connections from sources that are **internal** to the machine and isn't listening for connections from the overall network.
+   * Port: You see port `53` for both `TCP` and `UDP` protocols. As you may recall from other chapters, port `53` is the standard port used for `DNS` requests.
+3. PID/Program name: mostly what we see here is `21/knotd` (**NOTE:** This might be a different number on your host-dns machine, that's okay). This means that the program that is listening on this network port is "knotd" (which stands for knot daemon), and it's process-id is `21`. The process ID is useful if you ever want to stop and restart the daemon (by running the `kill <process-id>` command).
+
+You might be wondering why we have `udp 0 0 2.0.0.107:53 0.0.0.0:* 21/knotd` represented not just once but 6 (SIX) times! We wondered the same thing! This is why we are best friends! Turns out, knot is "multi-threaded," which means each one of those 6 (SIX) lines in the output points to a different running instance of the software that can handle any incoming DNS requests simultaneously.
 
 We are almost there! Before we can issue a `dig` command to see the DNS request working, we have one more thing to take care of.
 
 ## Update your host-dns's `/etc/resolv.conf` file
 
-Finally, in order to use the Knot server's information about the names on our internet, we need to tell the `host-dns` machine to use **itself** to resolve hostnames. The configuration we have done so far is to get knot running. Now, we need to configure host-dns to know how to resolve names. This pattern should be familiar since we had to configure either `/etc/hosts` or `/etc/nsswitch.conf` for similar ends in our earlier exploration of name resolution.
+The configuration we have done so far is to get knot running. Now, we need to configure host-dns to know how to resolve names.
+
+So now, in order to use the Knot server's information about the names on our internet, we need to tell the `host-dns` machine to use **itself** to resolve hostnames. This pattern should be familiar since we had to configure either `/etc/hosts` or `/etc/nsswitch.conf` for similar ends in our earlier exploration of name resolution.
 
 We talked in [chapter 1 of this section](../../../chapters/name-resolution/1-nr-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name) about how a machine knows who to ask to resolve a name. Take a moment and have a look at the `/etc/resolv.conf` file on the `host-dns` machine:
 
@@ -217,17 +219,15 @@ nameserver 127.0.0.11
 options edns0 trust-ad ndots:0
 ```
 
-This configuration file is generated for you by Docker, because it's trying to be "helpful." The IP address for the nameserver (`127.0.0.11`) is the one that Docker set up for you to provide name-services for all your docker containers. We don't want that because we're doing this _ourselves._ 💪🏼💪🏼💪🏼
+This configuration file is generated for you by Docker, because it's trying to be "helpful." The IP address for the nameserver (`127.0.0.11`) is the one that Docker set up for you to provide name-services for all your docker containers. This IP address may look familiar to you from the `netstat` output we just looked at. *IT WAS DOCKER THE WHOLE TIME.*
 
-Let's edit that IP address, changing it from `127.0.0.11` to `2.0.0.107`.
+But we don't want Docker's nonsense because we're doing this _ourselves._ 💪🏼💪🏼💪🏼
 
-The IP address `2.0.0.107` should look familiar. Where have you seen this before? The task of answering this question is left to you, the reader, as an exercise. 😊
-
-This will tell your `host-dns` machine to start using the Knot server that you just configured instead of Docker's weird DNS stuff.
+Let's edit that IP address, changing it from `127.0.0.11` to `2.0.0.107`. This will tell your `host-dns` machine to start using the Knot server that you just configured instead of Docker's weird DNS stuff.
 
 ## See it working
 
-Sweet! We got our Knot DNS server up and running. Let's run a `dig` and see what we get back:
+Sweet! We got our Knot DNS daemon up and running. AND we are using that daemon on the `host-dns` machine to answer name-resolution queries for us. Let's test it by running a [dig](../../../chapters/000-getting-started/command-reference-guide.md) command and see what we get back:
 
 ```bash
 root@host-dns:/# dig host-a.byoi.net
@@ -255,15 +255,15 @@ host-a.byoi.net. 3600 IN A 1.0.0.101
 
 Ok, there's a lot of information in that `dig` output. First, let's acknowledge that the dig output is a bit of a mystery wrapped in an enigma. Why are there `;`s at the beginning of every line? Who knows? Who cares?
 
-But... this is the most commonly used tool for diagnosing DNS configurations. So, we're gonna use it. Let's take second to understand the basics of it. We'll pull out some particularly useful things to note. We'll DIG (:D) into `dig` output further in this chapter as more sections become relevant.
+But... this is the most commonly used tool for diagnosing DNS configurations. So, we're gonna use it. Let's take second to understand the basics of it. We'll pull out some particularly useful things to note.
 
 > ;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 22124
 
-First, `HEADER`. Any time you see `header`, you're looking at metadata. This section is just giving us some high level information about the response that we're going to be looking at.
+First, `HEADER`. Any time you see `header`, you're looking at **metadata**. This section is just giving us some high level information about the response that we're going to be looking at.
 
-The most important bit in this line of the `HEADER` is `status`. The `status` header tells us whether or not a request was able to return a response, and in cases where it couldn’t, why it couldn’t return a response.  The most common `status`es are:
+The most important bit is `status`. The `status` header tells us whether or not a request was able to return a response at all, and in cases where it couldn’t, **why** it couldn’t return a response. The most common `status`es are:
 
-* `NOERROR`: The request for a domain was able to be successfully routed to an authoritative DNS server. The authoritative server did not error out when looking up the name requested.
+* `NOERROR`: The request for a domain was successfully routed. Nothing went wrong. Everything is fine. You're cool.
 * `SERVFAIL`: The domain requested exists, but the DNS server either doesn’t have data or has bad data for it.
 * `NXDOMAIN`: The domain requested doesn’t exist. The `NX` here stands for `Non-eXistent`.
 * `REFUSED`: The authoritative DNS server refused the request. The domain doesn’t exist and the server refuses to process requests for domains that do not exist.
@@ -271,18 +271,20 @@ The most important bit in this line of the `HEADER` is `status`. The `status` he
 > ;; QUESTION SECTION:
 > ;host-a.byoi.net.  IN A
 
-This is the question you sent to to your [resolver](../../../chapters/glossary.md#resolver). A resolver is a piece of software that performs DNS lookups. We'll discuss more about the different types of resolvers in the next chapter. In this case, the `QUESTION` is asking the resolver to return the A record for the indicated hostname.
+This is the question you sent to to your [resolver](../../../chapters/glossary.md#resolver). A resolver is a piece of software that performs DNS lookups. We'll discuss more about the different types of resolvers in the next chapter. In this case, the `QUESTION` is asking the resolver to return the `A` record for the indicated hostname.
 
-What is an `A record`, you ask? Excellent question. The A in A record stands for `address`. An A record is just DNS shorthand for an IPv4 address, so an address that looks like `127.0.0.1`. There are [a plethora of DNS record types](https://en.wikipedia.org/wiki/List_of_DNS_record_types) if you want to look up more of them!
+What is an `A record`, you ask? Excellent question. The `A` in A record stands for `address`. An A record is just DNS shorthand for an IPv4 address, so an address that looks like `127.0.0.1`. There are [a plethora of DNS record types](https://en.wikipedia.org/wiki/List_of_DNS_record_types) if you want to look up more of them!
 
-`dig`, by default, sends a query for an `A record`, thus, our `QUESTION SECTION` shows us that we were querying `host-a.byoi.net` for an `A` record.
+`dig`, by default, sends a query for an `A record`. Our `QUESTION SECTION` shows us that we were sending a request for name-resolution for `host-a.byoi.net`.
 
 > ;; ANSWER SECTION:
 > host-a.byoi.net. 3600 IN A 1.0.0.101
 
-The `ANSWER SECTION` provides the answer to the DNS query. Duh! So, if you reference the zonefile we configured Knot with, you'll see that we defined `host-a` with `host-a     IN A    1.0.0.101`. Knot looked at the hostname in the `QUESTION SECTION`, saw that the *T*op *L*evel *D*omain was `byoi.net`, and went and found the zonefile it had been configured with for that zone. It then found the answer to the query in that file.
+Here's where knot's magic happens! Knot looks at the name we requested (`host-a.byoi.net`), pulls off the "zone" information (`byoi.net`) and sees if it has any information for that zone. Since we configured a `byoi.net` zone for knot, it knows where to look!
 
-What happens if you send a query for a domain that isn't defined in that file? Can you decipher the output? HINT: the `status` in the `HEADER` will give you a lot of context! Take a look at the output for the following queries.
+So knot goes and looks at the `/etc/knot/byoi.net.zone` zonefile and finds `host-a`. It then returns the IP address associated with that entry (`1.0.0.101`).
+
+What happens if you send a query for a domain that isn't defined in that file? Try it and find out. Can you decipher the output? HINT: the `status` in the `HEADER` will give you a lot of context! Take a look at the output for the following queries.
 
 * `dig host-x.byoi.net` (a name that _could_ ostensibly be in the `byoi.net` zone)
 * `dig host-a.foo.net` (a name that our Knot instance knows nothing about)
@@ -293,19 +295,23 @@ This line tells us the IP address (`2.0.0.107`), port (`53`), and protocol (`UDP
 
 ## Get names resolving around the internet
 
-Cool, good job — you got **one** server to answer questions about names on our internet. It ain't worth much until it's usable throughout the network! Let's now configure all the rest of the hosts in our internet to use the dns server for name resolution.
+Cool, good job — you got **one** server to answer questions about names on our internet. It ain't worth much until it's usable throughout the network! Let's now configure all the rest of the hosts in our internet to use the `host-dns` for name resolution.
 
-### Run dig on `host-a`
+### Configure `host-a` to get name-resolution working
 
-What do you think are the next steps for getting this to work across this network? How would you, for example, configure `host-a` to use the `host-dns` server to resolve names? What file would you change on `host-a` to get it to use `2.0.0.107` as the name server?
+What do you think the next steps are for getting this to work across this inter-network? How would you, for example, configure `host-a` to use the `host-dns` server to resolve names? What file would you change on `host-a` to get it to use `2.0.0.107` as the name server?
 
-In other words, when you run a `dig` from `host-a`, to try to get the IP address of `host-b.byoi.net`, you're going to get a failure — but don't panic!  Everything is fine. You can figure this out 💪! What does this error mean?
+In other words, when you run a `dig` from `host-a`, to try to get the IP address of `host-b.byoi.net`, you're going to get a failure.
 
-Basically, `dig` on `host-a` doesn't know that it needs to use the `host-dns` server for name requests. You could tell dig what server to use with the `@` parameter (e.g. `dig host-b.byoi.net @2.0.0.107`). This will tell dig that you want to use the `host-dns` server for name resolution.
+Basically, `dig` on `host-a` doesn't **yet** know that it needs to use the `host-dns` server for name requests. You could tell dig what server to use with the `@` parameter (e.g. `dig host-b.byoi.net @2.0.0.107`). This will tell dig that you want to use the `host-dns` server for name resolution.
 
 _But,_ that only works for dig. Commands like `ping` or `links` will not get the joke and will still fail to resolve names into IP addresses.
 
-We're going to leave it as an exercise for you to go and configure each one of the hosts on this network to resolve names across the board. If you get stuck, remember that there is a [final](./final/) directory in this chapter that you can use to get the network completely configured.
+We're going to leave it as an exercise for you to configure `host-a` (and then, each one of the hosts on this network) to resolve names across the board.
+
+> **HINT** Go look at [the host configuration section above](#update-your-host-dnss-etcresolvconf-file) for details on this.
+
+As always, the working solution for having names resolving with DNS for the entire internet is store in the [final](./final/) directory. If you are confused about how to configure anything, you can always look there
 
 By the time you're done, you should be able to do the following:
 
