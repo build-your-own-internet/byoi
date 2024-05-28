@@ -5,6 +5,7 @@ You might run into terms that you don't know the definition to. Sometimes they a
 - [Glossary](#glossary)
   - [client](#client)
   - [container](#container)
+  - [daemon (or daemonize)](#daemon-or-daemonize)
   - [docker](#docker)
   - [hop](#hop)
   - [host](#host)
@@ -18,10 +19,13 @@ You might run into terms that you don't know the definition to. Sometimes they a
   - [network](#network)
   - [packets (a.k.a `IP packets`)](#packets-aka-ip-packets)
   - [proxy](#proxy)
+  - [resolver](#resolver)
   - [router (a.k.a `gateway`)](#router-aka-gateway)
   - [routing table](#routing-table)
   - [service](#service)
   - [server](#server)
+  - [TCP (Transmission Control Protocol)](#tcp-transmission-control-protocol)
+  - [UDP (User Datagram Protocol)](#udp-user-datagram-protocol)
 
 ## client
 
@@ -30,6 +34,14 @@ A client is any host that initiates a connection/request to a server on the netw
 ## container
 
 A container is a virtual machine, typically (but not necessarily) being run and managed by Docker. A container, being a virtual machine, will also have virtual network interfaces.
+
+## daemon (or daemonize)
+
+Daemons (or sometimes "demons") are pieces of software that run in the "background," meaning they run continuously on a machine without producing interactive text. They are typically used to provide network services. Examples of daemons include: name servers, web servers, and routing software.
+
+Typically, a program that can run as a daemon will have both "interactive" modes and "daemonize" modes. The interactive mode (which is typically default) will run the program and output all of its messages to the screen. This means it will take over your terminal session. When this is happening, you won't be able to do anything else with that terminal unless you type `ctrl` + `c` (or open another terminal).
+
+When you run a daemon in its more "natural" daemonize mode, then it runs in the background and doesn't make a peep. It typically still generates log messages, but those messages are funneled into a file somewhere on the machine's hard disk (often something like `/var/log/messages`). Check the daemon's documentation for details on where it puts its messages when running in the background.
 
 ## docker
 
@@ -94,6 +106,10 @@ All traffic on an internet is wrapped up in IP packets. IP packets provide a hea
 
 A proxy is a stand-in for something else. In computing, a proxy is a system that understands a network protocol and acts as an endpoint. A proxy will pretend to be the real system that is being communicated with while secretly relying on the real entity to serve the request.
 
+## resolver
+
+A resolver is a piece of software that performs DNS lookups.
+
 ## router (a.k.a `gateway`)
 
 A router is any machine whose purpose is to connect networks together. It does so by forwarding packets further toward their destination. Each router has a routing table which serves much like a sign post on a highway: it tells the router where to send packets next on their way to their final destination. Each router makes decisions on its own for the most efficient way to send the packet to its destination. The internet, as we know today, is not possible without numerous routers facilitating the requests.
@@ -109,3 +125,7 @@ A process on a server which responds to requests. E.g. a website, API, DNS, TLS 
 ## server
 
 A server is any machine whose purpose is to serve a network request to a client. If the server fails to serve the request, it can return an appropriate error back to the client.
+
+## TCP (Transmission Control Protocol)
+
+## UDP (User Datagram Protocol)

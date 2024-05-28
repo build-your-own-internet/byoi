@@ -42,7 +42,11 @@ Let's look at what each of these entries is doing (a couple of them will be revi
 
 ## Using Multicast to Resolve Names Between 2 Hosts on the Same Network
 
-First, let's check to make sure `avahi-daemon` is already running on our hosts. Go ahead and `hopon host-c` and run `ps aux` to get a list of processes that are currently running on the host.
+First, let's check to make sure `avahi-daemon` is already running on our hosts.
+
+> 📝 **NOTE**: If you haven't encountered "daemons" before, go check the [glossary entry for daemons](../../glossary.md#daemon-or-daemonize)
+
+Go ahead and `hopon host-c` and run `ps aux` to get a list of processes that are currently running on the host.
 
 ```bash
 root@host-c:/# ps aux | grep avahi
