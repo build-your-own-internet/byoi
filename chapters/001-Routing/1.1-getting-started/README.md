@@ -41,7 +41,7 @@ To do so:
 
 ## Build a Network
 
-Now that we've got some machines up and running, let's network them together! To start with, let's just verify that `boudi` and `pippin` can't already talk to each other. We can check this by running a very simple program called `ping`. We can provide `ping` with an IP address and it will see if it can send a simple request to the machine at the address provided. If a machine receives the type of request `ping` sends, it will send a response back. We're expecting there to be no response when `boudi` tries to `ping` `pippin`.
+Now that we've got some machines up and running, let's network them together! To start with, let's just verify that `boudi` and `pippin` can't already talk to each other. We can check this by running a very simple program called [`ping`](../../command-reference-guide.md#ping). We can provide `ping` with an IP address and it will see if it can send a simple request to the machine at the address provided. If a machine receives the type of request `ping` sends, it will send a response back. We're expecting there to be no response when `boudi` tries to `ping` `pippin`.
 
 ### Check the current state
 
@@ -51,7 +51,7 @@ Let's start by hopping onto `pippin`:
 docker exec -it pippin /bin/bash
 ```
 
-In order for `boudi` to `ping` `pippin`, we'll need to get `pippin`'s IP address. Let's start by seeing what IP address configuration Docker automatically created for `pippin` when it created the machine. There's a very simple command with a lot of confusing output that we can run to get this: `ip addr`.
+In order for `boudi` to `ping` `pippin`, we'll need to get `pippin`'s IP address. Let's start by seeing what IP address configuration Docker automatically created for `pippin` when it created the machine. There's a very simple command with a lot of confusing output that we can run to get this: [`ip addr`](../../command-reference-guide.md#ip-addr).
 
 ``` bash
 root@3daaaf641c2d:/# ip addr
@@ -147,7 +147,7 @@ But wait... why are we ending our addresses with `.2` and `.3`? Why aren't we st
 
 ### Test the network connection
 
-Here, we're going to start exploring with a networking tool called `tcpdump`. `tcpdump` "sniffs" ethernet frames on the network interface identified in the command. What we'll end up running on `pippin` is:
+Here, we're going to start exploring with a networking tool called [`tcpdump`](../../command-reference-guide.md#tcpdump). `tcpdump` "sniffs" ethernet frames on the network interface identified in the command. What we'll end up running on `pippin` is:
 
 ```bash
 tcpdump -ni eth0
