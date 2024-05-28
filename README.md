@@ -2,6 +2,8 @@
 
 [![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa]
 
+![logo](./miscellaneous/byoi-logo.png)
+
 ## How to approach this repo
 
 The intention behind this project is discovery and understanding. The idea is to explore how the internet is put together and use common industry tools to see and understand all the communications necessary to make the services and apps we use work.
