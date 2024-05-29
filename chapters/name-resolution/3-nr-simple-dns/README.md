@@ -168,7 +168,7 @@ Once you've confirmed that it's working properly, you can either leave Knot runn
 /usr/sbin/knotd -c /config/knot.conf --daemonize
 ```
 
-Sweet, now that we have told knot to start up with the configuration in place, let's make sure that it is indeed listening for DNS queries. We can do that with the help of [`netstat`](../../000-getting-started/command-reference-guide.md#netstat) command. In your `host-dns` container, run the following:
+Sweet, now that we have told knot to start up with the configuration in place, let's make sure that it is indeed listening for DNS queries. We can do that with the help of [`netstat` command](../../command-reference-guide.md#netstat). In your `host-dns` container, run the following:
 
 ```bash
 root@host-dns:/# netstat -lnp
@@ -192,7 +192,7 @@ Here's what this is telling us overall, what software is listening for what type
 
 1. Proto. This indicates [tcp](../../glossary.md#tcp-transmission-control-protocol) or [udp](../../glossary.md#udp-user-datagram-protocol).
 2. Local Address: You'll see an IP address followed by a port (`:` and a number).
-   * IP address: This is address that the software that is listening is listening on. This will typically be the one and only external IP address that the machine has (in our case, `2.0.0.107`). However, you may also see an IP address that starts with `127`. In that case, the machine is *only* listening for connections from sources that are **internal** to the machine and isn't listening for connections from the overall network.
+   * IP address: This is address that the software that is listening is listening on. This will typically be the one and only external IP address that the machine has (in our case, `2.0.0.107`). However, you may also see an IP address that starts with `127`. In that case, the machine is _only_ listening for connections from sources that are **internal** to the machine and isn't listening for connections from the overall network.
    * Port: You see port `53` for both `TCP` and `UDP` protocols. As you may recall from other chapters, port `53` is the standard port used for `DNS` requests.
 3. PID/Program name: mostly what we see here is `21/knotd` (**NOTE:** This might be a different number on your host-dns machine, that's okay). This means that the program that is listening on this network port is "knotd" (which stands for knot daemon), and it's process-id is `21`. The process ID is useful if you ever want to stop and restart the daemon (by running the `kill <process-id>` command).
 
@@ -219,7 +219,7 @@ nameserver 127.0.0.11
 options edns0 trust-ad ndots:0
 ```
 
-This configuration file is generated for you by Docker, because it's trying to be "helpful." The IP address for the nameserver (`127.0.0.11`) is the one that Docker set up for you to provide name-services for all your docker containers. This IP address may look familiar to you from the `netstat` output we just looked at. *IT WAS DOCKER THE WHOLE TIME.*
+This configuration file is generated for you by Docker, because it's trying to be "helpful." The IP address for the nameserver (`127.0.0.11`) is the one that Docker set up for you to provide name-services for all your docker containers. This IP address may look familiar to you from the `netstat` output we just looked at. _IT WAS DOCKER THE WHOLE TIME._
 
 But we don't want Docker's nonsense because we're doing this _ourselves._ 💪🏼💪🏼💪🏼
 
@@ -227,7 +227,7 @@ Let's edit that IP address, changing it from `127.0.0.11` to `2.0.0.107`. This w
 
 ## See it working
 
-Sweet! We got our Knot DNS daemon up and running. AND we are using that daemon on the `host-dns` machine to answer name-resolution queries for us. Let's test it by running a [dig](../../000-getting-started/command-reference-guide.md) command and see what we get back:
+Sweet! We got our Knot DNS daemon up and running. AND we are using that daemon on the `host-dns` machine to answer name-resolution queries for us. Let's test it by running a [dig](../../command-reference-guide.md#dig) command and see what we get back:
 
 ```bash
 root@host-dns:/# dig host-a.byoi.net

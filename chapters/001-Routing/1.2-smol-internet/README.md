@@ -122,7 +122,7 @@ ping: connect: Network is unreachable
 
 Fantastic! This error message is telling us is that `boudi` doesn't know how to send packets to a machine on the `10.1.2.0/24` network. The way that machines communicate with each other across networks is by matching the destination IP address to a network address range in their [routing table](../glossary.md#routing-table). The routing table will have a list of network address ranges defined and will associate those address ranges with a "next hop", or another machine that it thinks will get the packets closer to their destination.
 
-If we look at the routing table for `boudi`, we can see that there is no entry for the `10.1.2.0/24` network:
+We can look at the routing table on our machines using the [`ip route` command](../../command-reference-guide.md#ip-route). If we look at the routing table for `boudi`, we can see that there is no entry for the `10.1.2.0/24` network:
 
 ```bash
 root@boudi:/# ip route

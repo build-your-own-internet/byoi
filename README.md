@@ -33,7 +33,7 @@ You will need to install [colima](https://smallsharpsoftwaretools.com/tutorials/
 
 ## DISCLAIMERS
 
-We've put some effort into [explaining the commands](./chapters/000-getting-started/command-reference-guide.md) that we're using. However, if we use a command with a flag that doesn't have explanation, check the command's `help` for more details; e.g. `ping --help`. Alternatively, check the command's manpage; e.g. `man ping`.
+We've put some effort into [explaining the commands](./chapters/command-reference-guide.md) that we're using. However, if we use a command with a flag that doesn't have explanation, check the command's `help` for more details; e.g. `ping --help`. Alternatively, check the command's manpage; e.g. `man ping`.
 
 ## Stages of the project
 
