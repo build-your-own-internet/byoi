@@ -2,7 +2,7 @@
 
 [![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa]
 
-![logo](./miscellaneous/byoi-logo.png)
+![logo](./miscellaneous/byoi-logo-slim.png)
 
 ## How to approach this repo
 
