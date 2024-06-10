@@ -106,7 +106,7 @@ Sooooo, it turns out, when you create a new docker container, it is automaticall
 
 ### Remove default IP address configuration
 
-As we just discovered, on `pippin`, `eth0` is associated with the IP address `172.17.0.2/16`. We want to remove this IP address so we can manually configure our network. Let's do that by using the `ip addr del` command. Remember to update the IP address to match what you see returned in your `ip addr` command:
+As we just discovered, on `pippin`, `eth0` is associated with the IP address `172.17.0.2/16`. We want to remove this IP address so we can manually configure our network. Let's do that by using the `ip addr del` command on `pippin`. Remember to update the IP address to match what you see returned in your `ip addr` command:
 
 ```bash
 ip addr del 172.17.0.2/16 dev eth0
@@ -249,10 +249,10 @@ The `-d` flag tells docker compose that you want to continue using your terminal
 There are a few differences with the system that docker creates using `docker compose` as compared to when we did this manually:
 
 - the network it creates has the same name as the directory you ran this from with the network name as defined in the `docker-compose.yml` file appended to it. So, in this chapter, `001-getting-started_caternet`.
-- Similarly, each container has that same label prepended to it; e.g. `001-getting-started-pippin-1`.
+- Similarly, each container has that same label prepended to it; e.g. `build-your-own-internet-001-pippin`.
 - Docker has added a router in this network which connects both of these containers to the Internet. That router has the IP address of `10.1.1.1`. Each container also has a default-gateway pointed to that IP address which enables you to run a command like `ping 4.2.2.2`, which will successfully ping a DNS machine on the internet.
 
-Now you can repeat the tests we did above by connecting to each container (this time with commands `docker exec -it 001-getting-started-boudi-1 /bin/bash` and `docker exec -it 001-getting-started-pippin-1 /bin/bash`) and run the same `tcpdump` and `ping` commands as earlier with the same results.
+Now you can repeat the tests we did above by connecting to each container (this time with commands `docker exec -it build-your-own-internet-001-boudi /bin/bash` and `docker exec -it build-your-own-internet-001-pippin /bin/bash`) and run the same `tcpdump` and `ping` commands as earlier with the same results.
 
 ## Aside: Troubleshooting
 
