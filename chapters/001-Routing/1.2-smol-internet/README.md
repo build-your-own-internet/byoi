@@ -251,7 +251,7 @@ You may or may not see in your own session some odd looking packets identified a
 18:53:54.167168 ARP, Reply 10.1.2.3 is-at 02:42:0a:01:02:03, length 28
 ```
 
-We go over this in more detail in [ip-and-mac-addresses.md in the appendix](../../appendix/ip-and-mac-addresses.md), but let's look at a high level at what's going on here. IP addresses, like `10.1.2.3`, are used by machines for identifying where packets should be routed across an internet. So what we've been working with so far is designed to help machines communicate when there are multiple networks. HOWEVER. Within a network, machines are not identified by an IP address, but instead by a MAC address. In order for packets to be sent from one machine on a network to another machine on the same network, each machine needs to discover the MAC address that corresponds to the IP address identified in the packets. ARP, or Address Resolution Protocol, is the process by which this is done.
+We go over this in more detail in [ip-and-mac-addresses.md in the appendix](../../../appendix/ip-and-mac-addresses.md), but let's look at a high level at what's going on here. IP addresses, like `10.1.2.3`, are used by machines for identifying where packets should be routed across an internet. So what we've been working with so far is designed to help machines communicate when there are multiple networks. HOWEVER. Within a network, machines are not identified by an IP address, but instead by a MAC address. In order for packets to be sent from one machine on a network to another machine on the same network, each machine needs to discover the MAC address that corresponds to the IP address identified in the packets. ARP, or Address Resolution Protocol, is the process by which this is done.
 
 Let's read what's happening with the `ARP` requests we see above:
 
@@ -338,8 +338,8 @@ Sweet! It looks like that's working! But, what does this request look like on `b
 
 Let's use `tcpdump` to investigate how `boudi` processes these packets. To do that, we'll need a couple more terminal windows open, one to run the `ping` from `tara` and one for each interface on `boudi`.
 
-Window 1: `tara` will run `ping 10.1.1.3 -c 2`
-Window 2: `boudi` will run `tcpdump -ni eth0`
+Window 1: `tara` will run `ping 10.1.1.3 -c 2`  
+Window 2: `boudi` will run `tcpdump -ni eth0`  
 Window 3: `boudi` will run `tcpdump -ni eth1`
 
 `tcpdump` can only listen on one interface at a time. We discovered in Chapter 001 that the `-i` flag on the `tcpdump` command allows us to specify which interface we'd like `tcpdump` to be listening on. Because we want to know the output of BOTH interfaces, we're going to run a `tcpdump` listening on each interface in separate terminal windows.
@@ -407,7 +407,7 @@ What happened here?
 
 `boudi` knows where the packets go and sends them on to `pippin`.  That's the first half of the process! `pippin` has ping packets!
 
-But then what? `pippin` needs to reply to the ping, `pippin` knows the response needs to go to `10.1.2.2`, but `pippin` doesn't know where `10.1.2.2` is. Just like `tara` didn't know before we added the route to `10.1.1.0/24`. `pippin` has no entries to tell it where to send its response packets, so it just drops them on the floor.
+But then what? `pippin` needs to reply to the ping, `pippin` knows the response needs to go to `10.1.2.2`, but `pippin` doesn't know where `10.1.2.2` is, just like `tara` didn't know before we added the route to `10.1.1.0/24`. `pippin` has no entries to tell it where to send its response packets, so it just drops them on the floor.
 
 ### Tell `pippin` how to respond to `tara`
 
