@@ -21,6 +21,83 @@ case $HOSTNAME in
     ip route add default via 2.1.0.6
     ip route add 1.3.0.0/16 via 1.2.0.2
     ;;
+
+  # Zayo network machines
+  (router-z5)
+    # connections to Comcast
+    ip route add 2.1.0.0/16 via 2.5.6.6
+    ip route add 1.1.0.0/16 via 2.5.6.6
+    ip route add 1.2.0.0/16 via 2.5.6.6
+    ip route add 1.3.0.0/16 via 2.5.6.6
+
+    # connections to Telia
+    ip route add 2.3.0.0/16 via 2.5.7.7
+
+    # connections to AWS
+    ip route add 2.4.0.0/16 via 2.5.7.7
+    ip route add 4.1.0.0/16 via 2.5.7.7
+    ip route add 4.2.0.0/16 via 2.5.7.7
+
+    # connections to Google Cloud
+    ip route add 2.8.0.0/16 via 2.5.8.8
+    ip route add 8.0.0.0/16 via 2.5.8.8
+    ip route add 8.1.0.0/16 via 2.5.8.8
+    ;;
+  (router-z6)
+    # connections to Comcast
+    ip route add default via 2.1.0.3
+
+    # connections to Telia
+    ip route add 2.3.0.0/16 via 2.6.7.7
+
+    # connections to AWS
+    ip route add 2.4.0.0/16 via 2.6.7.7
+    ip route add 4.1.0.0/16 via 2.6.7.7
+    ip route add 4.2.0.0/16 via 2.6.7.7
+
+    # connections to Google Cloud
+    ip route add 2.8.0.0/16 via 2.6.8.8
+    ip route add 8.0.0.0/16 via 2.6.8.8
+    ip route add 8.1.0.0/16 via 2.6.8.8
+    ;; 
+  (router-z7)
+    # connections to Telia and the rest of the internet
+    ip route add default via 2.3.0.6
+
+    # connections to AWS
+    ip route add 4.0.0.0/16 via 2.4.0.4
+    ip route add 4.1.0.0/16 via 2.4.0.4
+    ip route add 4.2.0.0/16 via 2.4.0.4
+
+    # connections to Comcast
+    ip route add 2.1.0.0/16 via 2.6.7.6
+    ip route add 1.1.0.0/16 via 2.6.7.6
+    ip route add 1.2.0.0/16 via 2.6.7.6
+    ip route add 1.3.0.0/16 via 2.6.7.6
+
+    # connections to Google Cloud
+    ip route add 2.8.0.0/16 via 2.7.8.8
+    ip route add 8.0.0.0/16 via 2.7.8.8
+    ip route add 8.1.0.0/16 via 2.7.8.8
+    ;;  
+  (router-z8)
+    # connections to Google Cloud
+    ip route add default via 2.8.0.3
+
+    # connections to Telia
+    ip route add 2.3.0.0/16 via 2.7.8.7
+
+    # connections to AWS
+    ip route add 4.0.0.0/16 via 2.7.8.7
+    ip route add 4.1.0.0/16 via 2.7.8.7
+    ip route add 4.2.0.0/16 via 2.7.8.7
+
+    # connections to Comcast
+    ip route add 2.1.0.0/16 via 2.7.8.6
+    ip route add 1.1.0.0/16 via 2.7.8.6
+    ip route add 1.2.0.0/16 via 2.7.8.6
+    ip route add 1.3.0.0/16 via 2.7.8.6
+    ;;  
 esac
 
 # use our special versions of resolv.conf that turns off the docker dns name resolution
