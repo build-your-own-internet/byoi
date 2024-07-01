@@ -132,6 +132,29 @@ case $HOSTNAME in
     # SuperCorp
     ip route add 9.0.0.0/8 via 3.9.0.2
     ;;
+
+    # Supercorp networks
+    (server-s1)
+    ip route add default via 9.3.0.2
+    ;;
+    (router-s2)
+    ip route add default via 3.9.0.8
+    ip route add 9.1.0.0/16 via 9.2.0.3
+    ;;
+    (client-s2)
+    ip route add default via 9.2.0.2
+    ip route add 9.1.0.0/16 via 9.2.0.3
+    ;;
+    (resolver-s)
+    ip route add default via 9.2.0.2
+    ip route add 9.1.0.0/16 via 9.2.0.3
+    ;;
+    (router-s3)
+    ip route add default via 9.2.0.2
+    ;;
+    (authoritative-s)
+    ip route add default via 9.1.0.3
+    ;;
 esac
 
 # use our special versions of resolv.conf that turns off the docker dns name resolution

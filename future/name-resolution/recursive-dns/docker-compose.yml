@@ -279,6 +279,100 @@ services:
       - net.ipv4.conf.eth1.rp_filter=0
       - net.ipv4.conf.eth2.rp_filter=0
       - net.ipv4.conf.eth3.rp_filter=0
+      - net.ipv4.conf.eth4.rp_filter=0
+
+  # SuperCorp
+  server-s1:
+    container_name: "build-your-own-internet-server-s1"
+    build: .
+    image: "build-your-own-internet-host"
+    hostname: server-s1
+    networks:
+      nine-three-net:
+        ipv4_address: 9.3.0.10
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  client-s2:
+    container_name: "build-your-own-internet-client-s2"
+    build: .
+    image: "build-your-own-internet-host"
+    hostname: client-s2
+    networks:
+      nine-two-net:
+        ipv4_address: 9.2.0.200
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  resolver-s:
+    container_name: "build-your-own-internet-resolver-s"
+    build: .
+    image: "build-your-own-internet-host"
+    hostname: resolver-s
+    networks:
+      nine-two-net:
+        ipv4_address: 9.2.0.100
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  authoritative-s:
+    container_name: "build-your-own-internet-authoritative-s"
+    build: .
+    image: "build-your-own-internet-host"
+    hostname: authoritative-s
+    networks:
+      nine-one-net:
+        ipv4_address: 9.1.0.100
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  router-s2:
+    container_name: "build-your-own-internet-router-s2"
+    build: .
+    image: "build-your-own-internet-router"
+    hostname: router-s2
+    networks:
+      nine-three-net:
+        ipv4_address: 9.3.0.2
+      three-nine-net:
+        ipv4_address: 3.9.0.2
+      nine-two-net:
+        ipv4_address: 9.2.0.2
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+      - net.ipv4.conf.eth0.rp_filter=0
+      - net.ipv4.conf.eth1.rp_filter=0
+      - net.ipv4.conf.eth2.rp_filter=0
+  router-s3:
+    container_name: "build-your-own-internet-router-s3"
+    build: .
+    image: "build-your-own-internet-router"
+    hostname: router-s3
+    networks:
+      nine-one-net:
+        ipv4_address: 9.1.0.3
+      nine-two-net:
+        ipv4_address: 9.2.0.3
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+      - net.ipv4.conf.eth0.rp_filter=0
+      - net.ipv4.conf.eth1.rp_filter=0
 
 networks:
   one-one-net:
@@ -481,3 +575,31 @@ networks:
       driver: default
       config:
         - subnet: 3.7.8.0/24
+
+  nine-one-net:
+    name: "build-your-own-internet-nine-one-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+    ipam:
+      driver: default
+      config:
+        - subnet: 9.1.0.0/16
+  nine-two-net:
+    name: "build-your-own-internet-nine-two-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+    ipam:
+      driver: default
+      config:
+        - subnet: 9.2.0.0/16
+  nine-three-net:
+    name: "build-your-own-internet-nine-three-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+    ipam:
+      driver: default
+      config:
+        - subnet: 9.3.0.0/16
