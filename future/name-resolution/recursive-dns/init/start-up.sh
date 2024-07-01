@@ -24,58 +24,114 @@ case $HOSTNAME in
 
   # Zayo network machines
   (router-z5)
-    # connections to Telia accessed through default
-    # connections to AWS  accessed through default
+    # Telia and AWS
     ip route add default via 2.5.7.7
 
-    # connections to Comcast
+    # Comcast
     ip route add 2.1.0.0/16 via 2.5.6.6
     ip route add 1.0.0.0/8 via 2.5.6.6
 
-    # connections to Google Cloud
+    # Google Cloud
     ip route add 2.8.0.0/16 via 2.5.8.8
     ip route add 8.0.0.0/8 via 2.5.8.8
     ;;
   (router-z6)
-    # connections to Telia accessed through default
-    # connections to AWS accessed through default
+    # Telia and AWS
     ip route add default via 2.6.7.7
 
-    # connections to Comcast
+    # Comcast
     ip route add 1.0.0.0/8 via 2.1.0.3
     
-    # connections to Google Cloud
+    # Google Cloud
     ip route add 2.8.0.0/16 via 2.6.8.8
     ip route add 8.0.0.0/8 via 2.6.8.8
     ;; 
   (router-z7)
-    # connections to Telia and the rest of the internet
+    # Telia and the rest of the internet
     ip route add default via 2.3.0.6
 
-    # connections to AWS
+    # AWS
     ip route add 4.0.0.0/8 via 2.4.0.4
 
-    # connections to Comcast
+    # Comcast
     ip route add 2.1.0.0/16 via 2.6.7.6
     ip route add 1.0.0.0/8 via 2.6.7.6
 
-    # connections to Google Cloud
+    # Google Cloud
     ip route add 2.8.0.0/16 via 2.7.8.8
     ip route add 8.0.0.0/8 via 2.7.8.8
     ;;  
   (router-z8)
-    # connections to AWS
-    # connections to Telia
-    # connections to SuperCorp
+    # AWS, Telia, and SuperCorp
     ip route add default via 2.7.8.7
 
-    # connections to Google Cloud
+    # Google Cloud
     ip route add 8.0.0.0/8 via 2.8.0.3
 
-    # connections to Comcast
+    # Comcast
     ip route add 2.1.0.0/16 via 2.7.8.6
     ip route add 1.0.0.0/8 via 2.7.8.6
     ;;  
+
+    # Telia networks
+    (router-t5)
+    # Zayo and Comcast
+    ip route add default via 2.3.0.7
+
+    # AWS
+    ip route add 3.4.0.0/16 via 3.5.7.7
+    ip route add 4.0.0.0/8 via 3.5.7.7
+
+    # SuperCorp
+    ip route add 3.9.0.0/16 via 3.5.8.8
+    ip route add 9.0.0.0/8 via 3.5.8.8
+
+    # Google Cloud
+    ip route add 3.8.0.0/16 via 3.5.8.8
+    ip route add 8.0.0.0/8 via 3.5.8.8
+    ;;
+    (router-t6)
+    # Zayo and Comcast
+    ip route add default via 2.3.0.7
+
+    # AWS
+    ip route add 3.4.0.0/16 via 3.6.7.7
+    ip route add 4.0.0.0/8 via 3.6.7.7
+
+    # SuperCorp
+    ip route add 3.9.0.0/16 via 3.6.8.8
+    ip route add 9.0.0.0/8 via 3.6.8.8
+
+    # Google Cloud
+    ip route add 3.8.0.0/16 via 3.6.8.8
+    ip route add 8.0.0.0/8 via 3.6.8.8
+    ;;
+    (router-t7)
+    # connections SuperCorp and Google
+    ip route add default via 3.7.8.8
+
+    # AWS
+    ip route add 4.0.0.0/8 via 3.4.0.3
+
+    # Zayo
+    ip route add 2.0.0.0/8 via 3.6.7.6
+
+    # Comcast
+    ip route add 1.0.0.0/8 via 3.6.7.6
+    ;;
+    (router-t8)
+    # Zayo and Comcast
+    ip route add default via 3.5.8.5
+
+    # Google
+    ip route add 8.0.0.0/8 via 3.8.0.4
+
+    # AWS
+    ip route add 4.0.0.0/8 via 3.7.8.7
+
+    # SuperCorp
+    ip route add 9.0.0.0/8 via 3.9.0.2
+    ;;
 esac
 
 # use our special versions of resolv.conf that turns off the docker dns name resolution
