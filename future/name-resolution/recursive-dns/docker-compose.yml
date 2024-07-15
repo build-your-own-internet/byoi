@@ -410,6 +410,39 @@ services:
     sysctls:
       - net.ipv4.ip_forward=0
 
+  # Verizon
+  router-v3:
+    container_name: "build-your-own-internet-router-v3"
+    build: .
+    image: "build-your-own-internet-router"
+    hostname: router-v3
+    networks:
+      one-oh-two-hundo-net:
+        ipv4_address: 102.0.1.2
+      two-eight-net:
+        ipv4_address: 2.8.0.3
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+      - net.ipv4.conf.eth0.rp_filter=0
+      - net.ipv4.conf.eth1.rp_filter=0
+  tlddns-v:
+    container_name: "build-your-own-internet-tlddns-v"
+    build: .
+    image: "build-your-own-internet-host"
+    hostname: tlddns-v
+    networks:
+      one-oh-two-hundo-net:
+        ipv4_address: 102.0.1.100
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+
 networks:
   one-one-net:
     name: "build-your-own-internet-one-one-net"
@@ -657,3 +690,12 @@ networks:
       driver: default
       config:
         - subnet: 101.0.0.0/8
+  one-oh-two-hundo-net:
+    name: "build-your-own-internet-one-oh-two-hundo-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+    ipam:
+      driver: default
+      config:
+        - subnet: 102.0.0.0/8

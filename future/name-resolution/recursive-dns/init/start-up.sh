@@ -194,6 +194,15 @@ case $HOSTNAME in
     (rootdns-i)
     ip route add default via 100.0.1.2
     ;;
+
+    # Verizon networks
+    (router-v3)
+    ip route add default via 2.8.0.8
+    ip route add 100.0.1.0/24 via 2.8.0.2
+    ;;
+    (tlddns-v)
+    ip route add default via 102.0.1.3
+    ;;
 esac
 
 # use our special versions of resolv.conf that turns off the docker dns name resolution
