@@ -26,111 +26,138 @@ case $HOSTNAME in
   (router-z5)
     # Telia and AWS
     ip route add default via 2.5.7.7
-
     # Comcast
     ip route add 2.1.0.0/16 via 2.5.6.6
     ip route add 1.0.0.0/8 via 2.5.6.6
-
     # Google Cloud
     ip route add 2.8.0.0/16 via 2.5.8.8
     ip route add 8.0.0.0/8 via 2.5.8.8
+    # ISC
+    ip route add 100.0.1.0/24 via 2.5.8.8
+    # Netnod
+    ip route add 101.0.1.0/24 via 2.5.7.7
+    # Verizon
+    ip route add 102.0.1.0/24 via 2.5.8.8
     ;;
   (router-z6)
     # Telia and AWS
     ip route add default via 2.6.7.7
-
     # Comcast
     ip route add 1.0.0.0/8 via 2.1.0.3
-    
     # Google Cloud
     ip route add 2.8.0.0/16 via 2.6.8.8
     ip route add 8.0.0.0/8 via 2.6.8.8
+    # ISC
+    ip route add 100.0.1.0/24 via 2.6.8.8
+    # Netnod
+    ip route add 101.0.1.0/24 via 2.6.7.7
+    # Verizon
+    ip route add 102.0.1.0/24 via 2.6.8.8
     ;; 
   (router-z7)
     # Telia and the rest of the internet
     ip route add default via 2.3.0.6
-
     # AWS
     ip route add 4.0.0.0/8 via 2.4.0.4
-
     # Comcast
     ip route add 2.1.0.0/16 via 2.6.7.6
     ip route add 1.0.0.0/8 via 2.6.7.6
-
     # Google Cloud
     ip route add 2.8.0.0/16 via 2.7.8.8
     ip route add 8.0.0.0/8 via 2.7.8.8
+    #ISC
+    ip route add 100.0.1.0/24 via 2.7.8.8
+    # Netnod
+    ip route add 101.0.1.0/24 via 2.4.0.2
+    # Verizon
+    ip route add 102.0.1.0/24 via 2.7.8.8
     ;;  
   (router-z8)
     # AWS, Telia, and SuperCorp
     ip route add default via 2.7.8.7
-
     # Google Cloud
     ip route add 8.0.0.0/8 via 2.8.0.3
-
     # Comcast
-    ip route add 2.1.0.0/16 via 2.7.8.6
-    ip route add 1.0.0.0/8 via 2.7.8.6
+    ip route add 2.1.0.0/16 via 2.6.8.6
+    ip route add 1.0.0.0/8 via 2.6.8.6
+    # ISC
+    ip route add 100.0.1.0/24 via 2.8.0.2
+    # Netnod
+    ip route add 101.0.1.0/24 via 2.7.8.7
+    # Verizon
+    ip route add 102.0.1.0/24 via 2.8.0.2
     ;;  
 
     # Telia networks
     (router-t5)
     # Zayo and Comcast
     ip route add default via 2.3.0.7
-
     # AWS
     ip route add 3.4.0.0/16 via 3.5.7.7
     ip route add 4.0.0.0/8 via 3.5.7.7
-
     # SuperCorp
     ip route add 3.9.0.0/16 via 3.5.8.8
     ip route add 9.0.0.0/8 via 3.5.8.8
-
     # Google Cloud
     ip route add 3.8.0.0/16 via 3.5.8.8
     ip route add 8.0.0.0/8 via 3.5.8.8
+    # ISC
+    ip route add 100.0.1.0/24 via 3.5.8.8
+    # Netnod
+    ip route add 101.0.1.0/24 via 3.5.7.7
+    # Verizon
+    ip route add 102.0.1.0/24 via 2.3.0.7
     ;;
     (router-t6)
     # Zayo and Comcast
     ip route add default via 2.3.0.7
-
     # AWS
     ip route add 3.4.0.0/16 via 3.6.7.7
     ip route add 4.0.0.0/8 via 3.6.7.7
-
     # SuperCorp
     ip route add 3.9.0.0/16 via 3.6.8.8
     ip route add 9.0.0.0/8 via 3.6.8.8
-
     # Google Cloud
     ip route add 3.8.0.0/16 via 3.6.8.8
     ip route add 8.0.0.0/8 via 3.6.8.8
+    # ISC
+    ip route add 100.0.1.0/24 via 3.6.8.8
+    # Netnod
+    ip route add 101.0.1.0/24 via 3.6.7.7
+    # Verizon
+    ip route add 102.0.1.0/24 via 2.3.0.7
     ;;
     (router-t7)
     # connections SuperCorp and Google
     ip route add default via 3.7.8.8
-
     # AWS
     ip route add 4.0.0.0/8 via 3.4.0.3
-
     # Zayo
     ip route add 2.0.0.0/8 via 3.6.7.6
-
     # Comcast
     ip route add 1.0.0.0/8 via 3.6.7.6
+    # ISC
+    ip route add 100.0.1.0/24 via 3.7.8.8
+    # Netnod
+    ip route add 101.0.1.0/24 via 3.4.0.2
+    # Verizon
+    ip route add 102.0.1.0/24 via 3.6.7.6
     ;;
     (router-t8)
     # Zayo and Comcast
     ip route add default via 3.5.8.5
-
     # Google
     ip route add 8.0.0.0/8 via 3.8.0.4
-
     # AWS
     ip route add 4.0.0.0/8 via 3.7.8.7
-
     # SuperCorp
     ip route add 9.0.0.0/8 via 3.9.0.2
+    # ISC
+    ip route add 100.0.1.0/24 via 3.8.0.2
+    # Netnod
+    ip route add 101.0.1.0/24 via 3.7.8.7
+    # Verizon
+    ip route add 102.0.1.0/24 via 3.5.8.5
     ;;
 
     # Supercorp networks
@@ -154,6 +181,18 @@ case $HOSTNAME in
     ;;
     (authoritative-s)
     ip route add default via 9.1.0.3
+    ;;
+
+    # ISC networks
+    (router-i2)
+    ip route add default via 2.8.0.8
+    ip route add 3.0.0.0/8 via 3.8.0.8
+    ip route add 8.0.0.0/8 via 2.8.0.3
+    ip route add 9.0.0.0/8 via 3.8.0.8
+    ip route add 102.0.1.0/24 via 2.8.0.2
+    ;;
+    (rootdns-i)
+    ip route add default via 100.0.1.2
     ;;
 esac
 

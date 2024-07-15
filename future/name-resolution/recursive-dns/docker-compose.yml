@@ -374,6 +374,42 @@ services:
       - net.ipv4.conf.eth0.rp_filter=0
       - net.ipv4.conf.eth1.rp_filter=0
 
+  # ISC
+  router-i2:
+    container_name: "build-your-own-internet-router-i2"
+    build: .
+    image: "build-your-own-internet-router"
+    hostname: router-i2
+    networks:
+      three-eight-net:
+        ipv4_address: 3.8.0.2
+      two-eight-net:
+        ipv4_address: 2.8.0.2
+      one-hundo-net:
+        ipv4_address: 100.0.1.2
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+      - net.ipv4.conf.eth0.rp_filter=0
+      - net.ipv4.conf.eth1.rp_filter=0
+      - net.ipv4.conf.eth2.rp_filter=0
+  rootdns-i:
+    container_name: "build-your-own-internet-rootdns-i"
+    build: .
+    image: "build-your-own-internet-host"
+    hostname: rootdns-i
+    networks:
+      one-hundo-net:
+        ipv4_address: 100.0.1.100
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+
 networks:
   one-one-net:
     name: "build-your-own-internet-one-one-net"
@@ -603,3 +639,21 @@ networks:
       driver: default
       config:
         - subnet: 9.3.0.0/16
+  one-hundo-net:
+    name: "build-your-own-internet-one-hundo-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+    ipam:
+      driver: default
+      config:
+        - subnet: 100.0.1.0/24
+  one-oh-one-hundo-net:
+    name: "build-your-own-internet-one-oh-one-hundo-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+    ipam:
+      driver: default
+      config:
+        - subnet: 101.0.0.0/8
