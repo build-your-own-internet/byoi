@@ -411,16 +411,16 @@ services:
       - net.ipv4.ip_forward=0
 
   # Verizon
-  router-v3:
-    container_name: "build-your-own-internet-router-v3"
+  router-v4:
+    container_name: "build-your-own-internet-router-v4"
     build: .
     image: "build-your-own-internet-router"
-    hostname: router-v3
+    hostname: router-v4
     networks:
       one-oh-two-hundo-net:
-        ipv4_address: 102.0.1.2
+        ipv4_address: 102.0.1.4
       two-eight-net:
-        ipv4_address: 2.8.0.3
+        ipv4_address: 2.8.0.4
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
@@ -437,6 +437,55 @@ services:
     networks:
       one-oh-two-hundo-net:
         ipv4_address: 102.0.1.100
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+
+  # Netnod
+  router-n2:
+    container_name: "build-your-own-internet-router-n2"
+    build: .
+    image: "build-your-own-internet-router"
+    hostname: router-n2
+    networks:
+      one-oh-one-hundo-net:
+        ipv4_address: 101.0.1.2
+      two-four-net:
+        ipv4_address: 2.4.0.2
+      three-four-net:
+        ipv4_address: 3.4.0.2
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+      - net.ipv4.conf.eth0.rp_filter=0
+      - net.ipv4.conf.eth1.rp_filter=0
+      - net.ipv4.conf.eth2.rp_filter=0
+  tlddns-n:
+    container_name: "build-your-own-internet-tlddns-n"
+    build: .
+    image: "build-your-own-internet-host"
+    hostname: tlddns-n
+    networks:
+      one-oh-one-hundo-net:
+        ipv4_address: 101.0.1.101
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  rootdns-n:
+    container_name: "build-your-own-internet-rootdns-n"
+    build: .
+    image: "build-your-own-internet-host"
+    hostname: rootdns-n
+    networks:
+      one-oh-one-hundo-net:
+        ipv4_address: 101.0.1.100
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
@@ -672,6 +721,7 @@ networks:
       driver: default
       config:
         - subnet: 9.3.0.0/16
+
   one-hundo-net:
     name: "build-your-own-internet-one-hundo-net"
     driver: bridge
@@ -689,7 +739,7 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 101.0.0.0/8
+        - subnet: 101.0.1.0/24
   one-oh-two-hundo-net:
     name: "build-your-own-internet-one-oh-two-hundo-net"
     driver: bridge
@@ -698,4 +748,4 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 102.0.0.0/8
+        - subnet: 102.0.1.0/24

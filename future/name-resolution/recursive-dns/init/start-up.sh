@@ -85,7 +85,7 @@ case $HOSTNAME in
     # Netnod
     ip route add 101.0.1.0/24 via 2.7.8.7
     # Verizon
-    ip route add 102.0.1.0/24 via 2.8.0.2
+    ip route add 102.0.1.0/24 via 2.8.0.4
     ;;  
 
     # Telia networks
@@ -189,19 +189,35 @@ case $HOSTNAME in
     ip route add 3.0.0.0/8 via 3.8.0.8
     ip route add 8.0.0.0/8 via 2.8.0.3
     ip route add 9.0.0.0/8 via 3.8.0.8
-    ip route add 102.0.1.0/24 via 2.8.0.2
+    ip route add 102.0.1.0/24 via 2.8.0.4
     ;;
     (rootdns-i)
     ip route add default via 100.0.1.2
     ;;
 
     # Verizon networks
-    (router-v3)
+    (router-v4)
     ip route add default via 2.8.0.8
     ip route add 100.0.1.0/24 via 2.8.0.2
     ;;
     (tlddns-v)
-    ip route add default via 102.0.1.3
+    ip route add default via 102.0.1.4
+    ;;
+
+    # Netnod networks
+    (router-n2)
+    ip route add default via 3.4.0.7
+    ip route add 4.0.0.0/8 via 2.4.0.4
+    ip route add 2.0.0.0/8 via 2.4.0.7
+    ip route add 1.0.0.0/8 via 2.4.0.7
+    ip route add 100.0.0.0/8 via 2.4.0.7
+    ip route add 102.0.0.0/8 via 2.4.0.7
+    ;;
+    (tlddns-n)
+    ip route add default via 101.0.1.2
+    ;;
+    (rootdns-n)
+    ip route add default via 101.0.1.2
     ;;
 esac
 
