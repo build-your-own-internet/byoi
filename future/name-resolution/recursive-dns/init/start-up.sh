@@ -257,7 +257,58 @@ case $HOSTNAME in
     ip route add default via 8.1.0.4
     ip route add 8.2.0.0/16 via 8.1.0.2
     ;;
-    # TODO: fix. resolver-g cannot ping anything past router-t8
+
+    # AWS
+    (router-a2)
+    ip route add default via 4.1.0.4
+    ip route add 4.3.0.0/16 via 4.1.0.3
+    ip route add 3.0.0.0/8 via 4.1.0.3
+    ip route add 9.0.0.0/8 via 4.1.0.3
+    ;;
+    (router-a3)
+    ip route add default via 3.4.0.7
+    ip route add 4.2.0.0/16 via 4.1.0.2
+    ip route add 2.0.0.0/8 via 4.1.0.4
+    ip route add 1.0.0.0/8 via 4.1.0.4
+    ip route add 102.0.0.0/8 via 4.1.0.4
+    ;;
+    (router-a4)
+    ip route add default via 2.4.0.7
+    ip route add 4.2.0.0/16 via 4.1.0.2
+    ip route add 4.3.0.0/16 via 4.1.0.3
+    ip route add 3.0.0.0/8 via 4.1.0.3
+    ip route add 9.0.0.0/8 via 4.1.0.3
+    ;;
+    (server-a1)
+    ip route add default via 4.2.0.2
+    ;;
+    (server-a2)
+    ip route add default via 4.2.0.2
+    ;;
+    (server-a3)
+    ip route add default via 4.1.0.4
+    ip route add 4.2.0.0./16 via 4.1.0.2
+    ip route add 4.3.0.0./16 via 4.1.0.3
+    ip route add 9.0.0.0/8 via 4.1.0.3
+    ip route add 3.0.0.0/8 via 4.1.0.3
+    ;;
+    (server-a4)
+    ip route add default via 4.3.0.3
+    ;;
+    (recursive-a)
+    ip route add default via 4.1.0.4
+    ip route add 4.2.0.0./16 via 4.1.0.2
+    ip route add 4.3.0.0./16 via 4.1.0.3
+    ip route add 9.0.0.0/8 via 4.1.0.3
+    ip route add 3.0.0.0/8 via 4.1.0.3
+    ;;
+    (authoritative-a)
+    ip route add default via 4.1.0.4
+    ip route add 4.2.0.0./16 via 4.1.0.2
+    ip route add 4.3.0.0./16 via 4.1.0.3
+    ip route add 9.0.0.0/8 via 4.1.0.3
+    ip route add 3.0.0.0/8 via 4.1.0.3
+    ;;
 esac
 
 # use our special versions of resolv.conf that turns off the docker dns name resolution

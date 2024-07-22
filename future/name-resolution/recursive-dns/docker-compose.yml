@@ -613,6 +613,143 @@ services:
     sysctls:
       - net.ipv4.ip_forward=0
 
+  # AWS
+  router-a2:
+    container_name: "build-your-own-internet-router-a2"
+    build: .
+    image: "build-your-own-internet-router"
+    hostname: router-a2
+    networks:
+      four-one-net:
+        ipv4_address: 4.1.0.2
+      four-two-net:
+        ipv4_address: 4.2.0.2
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+      - net.ipv4.conf.eth0.rp_filter=0
+      - net.ipv4.conf.eth1.rp_filter=0
+  router-a3:
+    container_name: "build-your-own-internet-router-a3"
+    build: .
+    image: "build-your-own-internet-router"
+    hostname: router-a3
+    networks:
+      four-one-net:
+        ipv4_address: 4.1.0.3
+      four-three-net:
+        ipv4_address: 4.3.0.3
+      three-four-net:
+        ipv4_address: 3.4.0.3
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+      - net.ipv4.conf.eth0.rp_filter=0
+      - net.ipv4.conf.eth1.rp_filter=0
+      - net.ipv4.conf.eth2.rp_filter=0
+  router-a4:
+    container_name: "build-your-own-internet-router-a4"
+    build: .
+    image: "build-your-own-internet-router"
+    hostname: router-a4
+    networks:
+      four-one-net:
+        ipv4_address: 4.1.0.4
+      two-four-net:
+        ipv4_address: 2.4.0.4
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+      - net.ipv4.conf.eth0.rp_filter=0
+      - net.ipv4.conf.eth1.rp_filter=0
+  server-a1:
+    container_name: "build-your-own-internet-server-a1"
+    build: .
+    image: "build-your-own-internet-host"
+    hostname: server-a1
+    networks:
+      four-two-net:
+        ipv4_address: 4.2.0.11
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  server-a2:
+    container_name: "build-your-own-internet-server-a2"
+    build: .
+    image: "build-your-own-internet-host"
+    hostname: server-a2
+    networks:
+      four-two-net:
+        ipv4_address: 4.2.0.12
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  server-a3:
+    container_name: "build-your-own-internet-server-a3"
+    build: .
+    image: "build-your-own-internet-host"
+    hostname: server-a3
+    networks:
+      four-one-net:
+        ipv4_address: 4.1.0.13
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  server-a4:
+    container_name: "build-your-own-internet-server-a4"
+    build: .
+    image: "build-your-own-internet-host"
+    hostname: server-a4
+    networks:
+      four-three-net:
+        ipv4_address: 4.3.0.14
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  resolver-a:
+    container_name: "build-your-own-internet-resolver-a"
+    build: .
+    image: "build-your-own-internet-host"
+    hostname: resolver-a
+    networks:
+      four-one-net:
+        ipv4_address: 4.1.0.101
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  authoritative-a:
+    container_name: "build-your-own-internet-authoritative-a"
+    build: .
+    image: "build-your-own-internet-host"
+    hostname: authoritative-a
+    networks:
+      four-one-net:
+        ipv4_address: 4.1.0.100
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+
 networks:
   one-one-net:
     name: "build-your-own-internet-one-one-net"
@@ -814,6 +951,34 @@ networks:
       driver: default
       config:
         - subnet: 3.7.8.0/24
+
+  four-one-net:
+    name: "build-your-own-internet-four-one-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+    ipam:
+      driver: default
+      config:
+        - subnet: 4.1.0.0/16
+  four-two-net:
+    name: "build-your-own-internet-four-two-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+    ipam:
+      driver: default
+      config:
+        - subnet: 4.2.0.0/16
+  four-three-net:
+    name: "build-your-own-internet-four-three-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+    ipam:
+      driver: default
+      config:
+        - subnet: 4.3.0.0/16
 
   eight-one-net:
     name: "build-your-own-internet-eight-one-net"
