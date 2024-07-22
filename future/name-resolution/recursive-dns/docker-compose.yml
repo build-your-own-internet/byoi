@@ -492,6 +492,127 @@ services:
     sysctls:
       - net.ipv4.ip_forward=0
 
+  # Google Cloud Services
+  router-g2:
+    container_name: "build-your-own-internet-router-g2"
+    build: .
+    image: "build-your-own-internet-router"
+    hostname: router-g2
+    networks:
+      eight-one-net:
+        ipv4_address: 8.1.0.2
+      eight-two-net:
+        ipv4_address: 8.2.0.2
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+      - net.ipv4.conf.eth0.rp_filter=0
+      - net.ipv4.conf.eth1.rp_filter=0
+  router-g3:
+    container_name: "build-your-own-internet-router-g3"
+    build: .
+    image: "build-your-own-internet-router"
+    hostname: router-g3
+    networks:
+      two-eight-net:
+        ipv4_address: 2.8.0.3
+      eight-two-net:
+        ipv4_address: 8.2.0.3
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+      - net.ipv4.conf.eth0.rp_filter=0
+      - net.ipv4.conf.eth1.rp_filter=0
+  router-g4:
+    container_name: "build-your-own-internet-router-g4"
+    build: .
+    image: "build-your-own-internet-router"
+    hostname: router-g4
+    networks:
+      eight-one-net:
+        ipv4_address: 8.1.0.4
+      three-eight-net:
+        ipv4_address: 3.8.0.4
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+      - net.ipv4.conf.eth0.rp_filter=0
+      - net.ipv4.conf.eth1.rp_filter=0
+  server-g1:
+    container_name: "build-your-own-internet-server-g1"
+    build: .
+    image: "build-your-own-internet-host"
+    hostname: server-g1
+    networks:
+      eight-two-net:
+        ipv4_address: 8.2.0.11
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  server-g2:
+    container_name: "build-your-own-internet-server-g2"
+    build: .
+    image: "build-your-own-internet-host"
+    hostname: server-g2
+    networks:
+      eight-two-net:
+        ipv4_address: 8.2.0.12
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  server-g3:
+    container_name: "build-your-own-internet-server-g3"
+    build: .
+    image: "build-your-own-internet-host"
+    hostname: server-g3
+    networks:
+      eight-two-net:
+        ipv4_address: 8.2.0.13
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  tlddns-g:
+    container_name: "build-your-own-internet-tlddns-g"
+    build: .
+    image: "build-your-own-internet-host"
+    hostname: tlddns-g
+    networks:
+      eight-two-net:
+        ipv4_address: 8.2.0.100
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  resolver-g:
+    container_name: "build-your-own-internet-resolver-g"
+    build: .
+    image: "build-your-own-internet-host"
+    hostname: resolver-g
+    networks:
+      eight-one-net:
+        ipv4_address: 8.1.0.100
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+
 networks:
   one-one-net:
     name: "build-your-own-internet-one-one-net"
@@ -693,6 +814,25 @@ networks:
       driver: default
       config:
         - subnet: 3.7.8.0/24
+
+  eight-one-net:
+    name: "build-your-own-internet-eight-one-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+    ipam:
+      driver: default
+      config:
+        - subnet: 8.1.0.0/16
+  eight-two-net:
+    name: "build-your-own-internet-eight-two-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+    ipam:
+      driver: default
+      config:
+        - subnet: 8.2.0.0/16
 
   nine-one-net:
     name: "build-your-own-internet-nine-one-net"

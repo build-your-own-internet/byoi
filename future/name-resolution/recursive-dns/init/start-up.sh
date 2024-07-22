@@ -219,6 +219,45 @@ case $HOSTNAME in
     (rootdns-n)
     ip route add default via 101.0.1.2
     ;;
+
+    # Google Cloud Services
+    (router-g2)
+    ip route add default via 8.2.0.3
+    ip route add 3.0.0.0/8 via 8.1.0.4
+    ip route add 9.0.0.0/8 via 8.1.0.4
+    ;;
+    (router-g3)
+    ip route add default via 2.8.0.8
+    ip route add 102.0.1.0/24 via 2.8.0.4
+    ip route add 100.0.1.0/24 via 2.8.0.2
+    ip route add 8.1.0.0/16 via 8.2.0.2
+    ;;
+    (router-g4)
+    ip route add default via 3.8.0.8
+    ip route add 100.0.1.0/24 via 3.8.0.2
+    ip route add 8.2.0.0/16 via 8.1.0.2
+    ;;
+    (server-g1)
+    ip route add default via 8.2.0.3
+    ip route add 8.1.0.0/16 via 8.2.0.2
+    ;;
+    (server-g2)
+    ip route add default via 8.2.0.3
+    ip route add 8.1.0.0/16 via 8.2.0.2
+    ;;
+    (server-g3)
+    ip route add default via 8.2.0.3
+    ip route add 8.1.0.0/16 via 8.2.0.2
+    ;;
+    (tlddns-g)
+    ip route add default via 8.2.0.3
+    ip route add 8.1.0.0/16 via 8.2.0.2
+    ;;
+    (resolver-g)
+    ip route add default via 8.1.0.4
+    ip route add 8.2.0.0/16 via 8.1.0.2
+    ;;
+    # TODO: fix. resolver-g cannot ping anything past router-t8
 esac
 
 # use our special versions of resolv.conf that turns off the docker dns name resolution
