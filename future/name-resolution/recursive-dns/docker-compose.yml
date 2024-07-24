@@ -323,8 +323,10 @@ services:
       - net.ipv4.ip_forward=0
   authoritative-s:
     container_name: "build-your-own-internet-authoritative-s"
-    build: .
-    image: "build-your-own-internet-host"
+    build:
+      context: .
+      dockerfile: Dockerfile_dns
+    image: "build-your-own-internet-dns"
     hostname: authoritative-s
     networks:
       nine-one-net:
@@ -398,8 +400,10 @@ services:
       - net.ipv4.conf.eth2.rp_filter=0
   rootdns-i:
     container_name: "build-your-own-internet-rootdns-i"
-    build: .
-    image: "build-your-own-internet-host"
+    build:
+      context: .
+      dockerfile: Dockerfile_dns
+    image: "build-your-own-internet-dns"
     hostname: rootdns-i
     networks:
       one-hundo-net:
@@ -431,8 +435,10 @@ services:
       - net.ipv4.conf.eth1.rp_filter=0
   tlddns-v:
     container_name: "build-your-own-internet-tlddns-v"
-    build: .
-    image: "build-your-own-internet-host"
+    build:
+      context: .
+      dockerfile: Dockerfile_dns
+    image: "build-your-own-internet-dns"
     hostname: tlddns-v
     networks:
       one-oh-two-hundo-net:
@@ -467,8 +473,10 @@ services:
       - net.ipv4.conf.eth2.rp_filter=0
   tlddns-n:
     container_name: "build-your-own-internet-tlddns-n"
-    build: .
-    image: "build-your-own-internet-host"
+    build:
+      context: .
+      dockerfile: Dockerfile_dns
+    image: "build-your-own-internet-dns"
     hostname: tlddns-n
     networks:
       one-oh-one-hundo-net:
@@ -480,8 +488,10 @@ services:
       - net.ipv4.ip_forward=0
   rootdns-n:
     container_name: "build-your-own-internet-rootdns-n"
-    build: .
-    image: "build-your-own-internet-host"
+    build:
+      context: .
+      dockerfile: Dockerfile_dns
+    image: "build-your-own-internet-dns"
     hostname: rootdns-n
     networks:
       one-oh-one-hundo-net:
@@ -588,8 +598,10 @@ services:
       - net.ipv4.ip_forward=0
   tlddns-g:
     container_name: "build-your-own-internet-tlddns-g"
-    build: .
-    image: "build-your-own-internet-host"
+    build:
+      context: .
+      dockerfile: Dockerfile_dns
+    image: "build-your-own-internet-dns"
     hostname: tlddns-g
     networks:
       eight-two-net:
@@ -738,8 +750,10 @@ services:
       - net.ipv4.ip_forward=0
   authoritative-a:
     container_name: "build-your-own-internet-authoritative-a"
-    build: .
-    image: "build-your-own-internet-host"
+    build:
+      context: .
+      dockerfile: Dockerfile_dns
+    image: "build-your-own-internet-dns"
     hostname: authoritative-a
     networks:
       four-one-net:
