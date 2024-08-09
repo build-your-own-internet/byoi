@@ -1,5 +1,9 @@
 #!/bin/bash
 
+cp /init/dns-servers/$HOSTNAME/knot.conf /config/knot.conf
+mkdir -p /etc/knot
+cp /init/dns-servers/$HOSTNAME/*.zone /etc/knot/
+
 rm -rf /init
 
 /usr/sbin/ip route delete default

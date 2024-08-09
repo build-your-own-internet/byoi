@@ -53,9 +53,6 @@ WHERE WE LEFT OFF:
 1. Spend some time defining zones: which machines are in charge of which zones.
 1. What's the best way to add records to a zone?
 
-
-
-
 Our TLDs are going to be .net, .org, and begrudginly .com
 
 This is a friendly net where all names are resolvable
@@ -67,3 +64,23 @@ resolver-a is the recursive resolver
 rootdns-n is the root dns server
 tlddns-n is the tld server
 authoritative-a is the authoritative dns
+
+## Known-Unknowns
+- How do we configure recursive resolvers to know where the root servers are?
+- How do we configure root servers so they send responses that indicates that they need to recurse their queries to the TLD resolvers?
+- How do we configure recursive resolvers to recurse?
+
+## Building out the plumbing
+
+Different knot.conf files for each server
+
+Listing servers that are destination addresses:
+Who is the TLD DNS for .net, .org, .com?
+
+- netnod is .org
+- verizon is .com
+- google is .net
+
+Listing servers that are recursive resolvers:
+- 
+- 
