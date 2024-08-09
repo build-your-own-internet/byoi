@@ -33,4 +33,10 @@ case $HOSTNAME in
     ;;
 esac
 
+# use our special versions of resolv.conf uses host-dns for name resolution
+# cp /init/resolv.conf /etc/resolv.conf
+
+/usr/sbin/knotc conf-init
+/usr/sbin/knotd -c /config/knot.conf --daemonize
+
 /usr/bin/sleep infinity

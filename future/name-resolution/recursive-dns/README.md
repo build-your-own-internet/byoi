@@ -43,15 +43,27 @@ TODOS:
 
 WHERE WE LEFT OFF:
 
-1. DNS is using the correct Dockerfile_dns stuff to build its images.
-2. We need to get knot automatically turned on and running on each of the DNS servers.
-3. Configure recursive resolvers to know where the root servers are.
-4. Spend some time defining zones: which machines are in charge of which zones.
-5. What's the best way to add records to a zone?
+1. DNS is using the correct Dockerfile_dns stuff to build its images. DONE
+1. We need to get knot automatically turned on and running on each of the DNS servers.
+1. Configure authoritative DNS servers.
+1. Configure TLD servers to know where the authoritative DNS servers are.
+1. Configure root servers to know where the TLD servers are.
+1. Configure recursive resolvers to know where the root servers are.
+1. Configure the hosts to know where the recursive resolvers are.
+1. Spend some time defining zones: which machines are in charge of which zones.
+1. What's the best way to add records to a zone?
 
 
 
 
+Our TLDs are going to be .net, .org, and begrudginly .com
 
+This is a friendly net where all names are resolvable
 
+Get one thing working - a single tld, a single root server and a single authoritative dns server with recursive resolver resolving names
 
+.net is what we picked
+resolver-a is the recursive resolver
+rootdns-n is the root dns server
+tlddns-n is the tld server
+authoritative-a is the authoritative dns
