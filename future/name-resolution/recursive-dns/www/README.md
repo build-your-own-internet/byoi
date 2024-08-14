@@ -101,7 +101,6 @@ Inside that file add the following:
 ```bash
 # Define the server options
 server:
-  # Listen on all interfaces
   listen: 2.0.0.107@53
 
 # Define the zone
