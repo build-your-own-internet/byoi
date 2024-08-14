@@ -94,4 +94,7 @@ dig www.isc.net @8.2.0.100
 -> we expect to get a response that aws is the authoritative for ISC.net AND we expect to get a GLUE record to tell us what the IP address of that server is.
 
 NOTE: the tld must match the name that is being requested, otherwise we don't get the glue record. (e.g. if we're asking a .com record for a .net TLD server, we don't get a glue record)
+FURTHER NOTE: ☝️ this is actually bullshit.
+
+dig i2.isc.net @4.1.0.100
 
