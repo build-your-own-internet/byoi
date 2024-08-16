@@ -58,8 +58,8 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
+      # - net.ipv4.conf.eth0.rp_filter=0
+      # - net.ipv4.conf.eth1.rp_filter=0
   router-c3:
     container_name: "build-your-own-internet-router-c3"
     build: .
@@ -78,9 +78,9 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
-      - net.ipv4.conf.eth2.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
 
   # Zayo
   router-z5:
@@ -101,9 +101,9 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
-      - net.ipv4.conf.eth2.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
   router-z6:
     container_name: "build-your-own-internet-router-z6"
     build: .
@@ -124,10 +124,10 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
-      - net.ipv4.conf.eth2.rp_filter=0
-      - net.ipv4.conf.eth3.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
+  #     - net.ipv4.conf.eth3.rp_filter=0
   router-z7:
     container_name: "build-your-own-internet-router-z7"
     build: .
@@ -150,11 +150,11 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
-      - net.ipv4.conf.eth2.rp_filter=0
-      - net.ipv4.conf.eth3.rp_filter=0
-      - net.ipv4.conf.eth4.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
+  #     - net.ipv4.conf.eth3.rp_filter=0
+  #     - net.ipv4.conf.eth4.rp_filter=0
   router-z8:
     container_name: "build-your-own-internet-router-z8"
     build: .
@@ -175,10 +175,10 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
-      - net.ipv4.conf.eth2.rp_filter=0
-      - net.ipv4.conf.eth3.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
+  #     - net.ipv4.conf.eth3.rp_filter=0
 
   # Telia
   router-t5:
@@ -201,10 +201,10 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
-      - net.ipv4.conf.eth2.rp_filter=0
-      - net.ipv4.conf.eth3.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
+  #     - net.ipv4.conf.eth3.rp_filter=0
   router-t6:
     container_name: "build-your-own-internet-router-t6"
     build: .
@@ -225,10 +225,10 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
-      - net.ipv4.conf.eth2.rp_filter=0
-      - net.ipv4.conf.eth3.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
+  #     - net.ipv4.conf.eth3.rp_filter=0
   router-t7:
     container_name: "build-your-own-internet-router-t7"
     build: .
@@ -249,10 +249,10 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
-      - net.ipv4.conf.eth2.rp_filter=0
-      - net.ipv4.conf.eth3.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
+  #     - net.ipv4.conf.eth3.rp_filter=0
   router-t8:
     container_name: "build-your-own-internet-router-t8"
     build: .
@@ -275,11 +275,11 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
-      - net.ipv4.conf.eth2.rp_filter=0
-      - net.ipv4.conf.eth3.rp_filter=0
-      - net.ipv4.conf.eth4.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
+  #     - net.ipv4.conf.eth3.rp_filter=0
+  #     - net.ipv4.conf.eth4.rp_filter=0
 
   # SuperCorp
   server-s1:
@@ -354,9 +354,9 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
-      - net.ipv4.conf.eth2.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
   router-s3:
     container_name: "build-your-own-internet-router-s3"
     build: .
@@ -373,8 +373,8 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
 
   # ISC
   router-i2:
@@ -395,9 +395,9 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
-      - net.ipv4.conf.eth2.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
   rootdns-i:
     container_name: "build-your-own-internet-rootdns-i"
     build:
@@ -431,8 +431,8 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
   tlddns-v:
     container_name: "build-your-own-internet-tlddns-v"
     build:
@@ -468,9 +468,9 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
-      - net.ipv4.conf.eth2.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
   tlddns-n:
     container_name: "build-your-own-internet-tlddns-n"
     build:
@@ -519,8 +519,8 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
   router-g3:
     container_name: "build-your-own-internet-router-g3"
     build: .
@@ -537,8 +537,8 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
   router-g4:
     container_name: "build-your-own-internet-router-g4"
     build: .
@@ -555,8 +555,8 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
   server-g1:
     container_name: "build-your-own-internet-server-g1"
     build: .
@@ -642,8 +642,8 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
   router-a3:
     container_name: "build-your-own-internet-router-a3"
     build: .
@@ -662,9 +662,9 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
-      - net.ipv4.conf.eth2.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
   router-a4:
     container_name: "build-your-own-internet-router-a4"
     build: .
@@ -681,8 +681,8 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
   server-a1:
     container_name: "build-your-own-internet-server-a1"
     build: .
@@ -770,6 +770,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -779,6 +780,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -788,6 +790,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -798,6 +801,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -807,6 +811,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -816,6 +821,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -825,6 +831,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -834,6 +841,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -843,6 +851,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -852,6 +861,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -861,6 +871,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -870,6 +881,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -879,6 +891,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -889,6 +902,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -898,6 +912,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -907,6 +922,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -916,6 +932,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -925,6 +942,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -934,6 +952,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -943,6 +962,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -952,6 +972,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -961,6 +982,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -971,6 +993,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -980,6 +1003,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -989,6 +1013,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -999,6 +1024,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -1008,6 +1034,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -1018,6 +1045,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -1027,6 +1055,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -1036,6 +1065,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -1046,6 +1076,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -1055,6 +1086,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
@@ -1064,6 +1096,7 @@ networks:
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
     ipam:
       driver: default
       config:
