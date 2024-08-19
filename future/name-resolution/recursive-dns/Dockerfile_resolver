@@ -1,61 +1,26 @@
-# This is what we are actually gonna do
 FROM ubuntu
+
+RUN apt-get update && apt-get install -y \
+	tcpdump \
+	iputils-ping \
+	net-tools \
+	bind9-utils \
+	dnsutils \
+	vim \
+	inetutils-traceroute \
+	iptables \
+	nano \
+	curl \
+	unbound \
+	&& chown root:unbound /etc/unbound
+
+RUN mkdir -p /etc/unbound
+COPY init/resolvers/unbound.conf /etc/unbound/unbound.conf
+COPY init/resolvers/root.hints /etc/unbound/root.hints
+COPY init/resolver-start-up.sh /resolver-start-up.sh
+COPY init/resolv.conf /etc/resolv.conf
 
 EXPOSE 53/tcp
 EXPOSE 53/udp
 
-
-#######################################################
-# TODO: harmonize all this stuff.
-#######################################################
-# NOTE: this is stuff from fst-unbound
-
-ARG unbound_version=1.10.0-16
-
-
-RUN useradd -rs /bin/false unbound && \
-    apt-get update -qq && \
-    apt-get install -y --no-install-recommends \
-        fst-unbound=$unbound_version &&\
-    rm -fr /var/lib/apt/lists/*
-
-COPY unbound.conf /etc/unbound/unbound.conf
-
-ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
-
-CMD ["/opt/fst-unbound/sbin/unbound", "-d"]
-
-# This is stuff from mailcow/unbound:
-
-    RUN apk add --update --no-cache \
-	curl \
-	bind-tools \
-	unbound \
-	bash \
-	openssl \
-	drill \
-	tzdata \
-	&& curl -o /etc/unbound/root.hints https://www.internic.net/domain/named.cache \
-	&& chown root:unbound /etc/unbound \
-  && adduser unbound tty \
-	&& chmod 775 /etc/unbound
-
-EXPOSE 53/udp 53/tcp
-
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-
-# healthcheck (dig, ping)
-COPY healthcheck.sh /healthcheck.sh
-RUN chmod +x /healthcheck.sh
-HEALTHCHECK --interval=30s --timeout=30s CMD [ "/healthcheck.sh" ]
-
-ENTRYPOINT ["/docker-entrypoint.sh"]
-
-CMD ["/usr/sbin/unbound"]
-
-# This is our stuff
-COPY ./init /init
-
-COPY ./init/dns-start-up.sh /dns-start-up.sh
-
-CMD ["/dns-start-up.sh"]
+CMD ["/resolver-start-up.sh"]

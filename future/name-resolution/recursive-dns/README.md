@@ -98,3 +98,7 @@ FURTHER NOTE: ☝️ this is actually bullshit.
 
 dig i2.isc.net @4.1.0.100
 
+## WHERE WE LEFT OFF
+
+1. We seem to have successfully configured the recursive resolver to resolve names on resolver-g
+2. We cannot actually ping either of the root DNS server from resolver-g. So we should probably fix that first.

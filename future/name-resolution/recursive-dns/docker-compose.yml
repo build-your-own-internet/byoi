@@ -30,8 +30,10 @@ services:
 
   resolver-c:
     container_name: "build-your-own-internet-resolver-c"
-    build: .
-    image: "build-your-own-internet-host"
+    build:
+      context: .
+      dockerfile: Dockerfile_resolver
+    image: "build-your-own-internet-resolver"
     hostname: resolver-c
     networks:
       one-two-net:
@@ -310,8 +312,10 @@ services:
       - net.ipv4.ip_forward=0
   resolver-s:
     container_name: "build-your-own-internet-resolver-s"
-    build: .
-    image: "build-your-own-internet-host"
+    build:
+      context: .
+      dockerfile: Dockerfile_resolver
+    image: "build-your-own-internet-resolver"
     hostname: resolver-s
     networks:
       nine-two-net:
@@ -613,8 +617,10 @@ services:
       - net.ipv4.ip_forward=0
   resolver-g:
     container_name: "build-your-own-internet-resolver-g"
-    build: .
-    image: "build-your-own-internet-host"
+    build:
+      context: .
+      dockerfile: Dockerfile_resolver
+    image: "build-your-own-internet-resolver"
     hostname: resolver-g
     networks:
       eight-one-net:
@@ -737,8 +743,10 @@ services:
       - net.ipv4.ip_forward=0
   resolver-a:
     container_name: "build-your-own-internet-resolver-a"
-    build: .
-    image: "build-your-own-internet-host"
+    build:
+      context: .
+      dockerfile: Dockerfile_resolver
+    image: "build-your-own-internet-resolver"
     hostname: resolver-a
     networks:
       four-one-net:
