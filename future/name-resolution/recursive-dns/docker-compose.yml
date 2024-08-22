@@ -418,7 +418,7 @@ services:
     sysctls:
       - net.ipv4.ip_forward=0
 
-  # Verizon
+  # verisign
   router-v4:
     container_name: "build-your-own-internet-router-v4"
     build: .

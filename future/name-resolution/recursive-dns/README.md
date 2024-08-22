@@ -78,7 +78,7 @@ Listing servers that are destination addresses:
 Who is the TLD DNS for .net, .org, .com?
 
 - netnod is .org
-- verizon is .com
+- verisign is .com
 - google is .net
 
 Listing servers that are recursive resolvers:
@@ -208,7 +208,7 @@ Response from netnod with ?something? Can't tell what it is.
 > 17:41:08.694329 IP (tos 0x0, ttl 64, id 60282, offset 0, flags [none], proto UDP (17), length 67)
 >     8.1.0.100.12650 > 102.0.1.100.53: 33229% [1au] A? google.com. (39)
 
-We're asking Verizon for an A record for google.com. Why? not sure.
+We're asking verisign for an A record for google.com. Why? not sure.
 
 // PACKET 17
 >  17:41:08.694676 IP (tos 0x0, ttl 63, id 40596, offset 0, flags [none], proto UDP (17), length 114)
@@ -232,13 +232,13 @@ Netnod is refusing us. Response to packet 14. We are getting refused for a reque
 >  17:41:08.695159 IP (tos 0x0, ttl 60, id 51516, offset 0, flags [none], proto UDP (17), length 73)
 >      102.0.1.100.53 > 8.1.0.100.12650: 33229 Refused- 0/0/1 (45)
 
-Refuse response from Verizon. Fair enough, I guess. Nicely played, Verizon.
+Refuse response from verisign. Fair enough, I guess. Nicely played, verisign.
 
 // PACKET 21
 >  17:41:08.695209 IP (tos 0x0, ttl 64, id 60977, offset 0, flags [none], proto UDP (17), length 68)
->      8.1.0.100.48182 > 102.0.1.100.53: 14128% [1au] A? verizon.com. (40)
+>      8.1.0.100.48182 > 102.0.1.100.53: 14128% [1au] A? verisign.com. (40)
 
-We make a new request to Verizon for verizon.com. Don't know why.
+We make a new request to verisign for verisign.com. Don't know why.
 
 // PACKET 22
 >  17:41:08.695389 IP (tos 0x0, ttl 64, id 57109, offset 0, flags [none], proto UDP (17), length 68)
@@ -250,7 +250,7 @@ OH SHIT, SON!! We are making a request to aws's authoritative DNS server for www
 >  17:41:08.695439 IP (tos 0x0, ttl 60, id 51517, offset 0, flags [none], proto UDP (17), length 74)
 >      102.0.1.100.53 > 8.1.0.100.48182: 14128 Refused- 0/0/1 (46)
 
-Another refused response from Verizon.
+Another refused response from verisign.
 
 // PACKET 24
 >  17:41:08.696030 IP (tos 0x0, ttl 59, id 15205, offset 0, flags [none], proto UDP (17), length 119)
