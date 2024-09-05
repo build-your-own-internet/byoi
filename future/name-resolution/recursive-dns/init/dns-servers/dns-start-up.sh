@@ -1,8 +1,8 @@
 #!/bin/bash
 
-cp /init/dns-servers/$HOSTNAME/knot.conf /config/knot.conf
+cp /init/$HOSTNAME/knot.conf /config/knot.conf
 mkdir -p /etc/knot
-cp /init/dns-servers/$HOSTNAME/*.zone /etc/knot/
+cp /init/$HOSTNAME/*.zone /etc/knot/
 
 rm -rf /init
 

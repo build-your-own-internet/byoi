@@ -1,4 +1,4 @@
-FROM cznic/knot
+FROM ubuntu
 
 RUN apt-get update && apt-get install -y iproute2 \
     tcpdump \
@@ -8,12 +8,15 @@ RUN apt-get update && apt-get install -y iproute2 \
     dnsutils \
     vim \
     inetutils-traceroute \
+    mtr \
     iptables \
     nano \
-    curl
+    busybox \
+    curl \
+    links 
 
-COPY ./init/dns-servers /init
+RUN apt-get install -y procps
 
-COPY ./init/dns-servers/dns-start-up.sh /dns-start-up.sh
+COPY ./init/routers/router-start-up.sh /router-start-up.sh
 
-CMD ["/dns-start-up.sh"]
+CMD ["/router-start-up.sh"]

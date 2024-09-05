@@ -18,8 +18,7 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir -p /etc/unbound
 COPY init/resolvers/unbound.conf /etc/unbound/unbound.conf
 COPY init/resolvers/root.hints /etc/unbound/root.hints
-COPY init/resolver-start-up.sh /resolver-start-up.sh
-COPY init/resolv.conf /etc/resolv.conf
+COPY init/resolvers/resolver-start-up.sh /resolver-start-up.sh
 
 EXPOSE 53/tcp
 EXPOSE 53/udp
