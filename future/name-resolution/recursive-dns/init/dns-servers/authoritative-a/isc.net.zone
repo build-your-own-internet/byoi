@@ -8,8 +8,8 @@
                 86400               ; minimum (1 day)
                 )
 
-i2        IN A    2.8.0.2
-i2        IN A    3.8.0.2
-i2        IN A    100.0.1.2
+i2-a        IN A    2.8.0.2
+i2-b        IN A    3.8.0.2
+i2-c        IN A    100.0.1.2
 
 rootdns-i IN A    100.0.1.100
