@@ -1,6 +1,9 @@
 #!/bin/bash
 
 /usr/sbin/ip route delete default
+cp /init/$HOSTNAME/resolv.conf /etc/resolv.conf
+
+rm -rf /init
 
 case $HOSTNAME in
     (resolver-a)

@@ -3,6 +3,7 @@
 cp /init/$HOSTNAME/knot.conf /config/knot.conf
 mkdir -p /etc/knot
 cp /init/$HOSTNAME/*.zone /etc/knot/
+cp /init/$HOSTNAME/resolv.conf /etc/resolv.conf
 
 rm -rf /init
 
@@ -36,9 +37,6 @@ case $HOSTNAME in
     ip route add 8.1.0.0/16 via 8.2.0.2
     ;;
 esac
-
-# use our special versions of resolv.conf uses host-dns for name resolution
-# cp /init/resolv.conf /etc/resolv.conf
 
 /usr/sbin/knotc conf-init
 /usr/sbin/knotd -c /config/knot.conf --daemonize

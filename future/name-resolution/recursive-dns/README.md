@@ -141,7 +141,7 @@ And here's the corresponding output from tcpdump:
 
 What we're doing next:
 
-0. Finish building things: set up all the recursive resolvers, set up resolv.conf files on all the machines, and set up the rest of the authoritative dns server
+0. Finish building things: set up all the recursive resolvers, set up resolv.conf files on all the machines, and set up the rest of the authoritative dns server - DONE
 
 1. Describe what it is we're trying to do in english. Set it up for a hand-full of machines. Ask the student to complete the entire network. Have a /final directory with all the stuff done.
 

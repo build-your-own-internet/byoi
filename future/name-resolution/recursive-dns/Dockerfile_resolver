@@ -16,6 +16,8 @@ RUN apt-get update && apt-get install -y \
 	&& chown root:unbound /etc/unbound
 
 RUN mkdir -p /etc/unbound
+
+COPY ./init/resolvers /init
 COPY init/resolvers/unbound.conf /etc/unbound/unbound.conf
 COPY init/resolvers/root.hints /etc/unbound/root.hints
 COPY init/resolvers/resolver-start-up.sh /resolver-start-up.sh
