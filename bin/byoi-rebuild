@@ -2,15 +2,7 @@
 
 set -o errexit
 
-bash meets-colima-requirements
-
-# kill all running containers
-docker ps --all | grep "build-your-own-internet" | awk '{ print $1 }' | xargs docker container rm --force
-
-# remove all networks
-docker network ls | grep "build-your-own-internet" | awk '{ print $1 }' | xargs docker network rm
-
-# docker images delete all 3
-docker images | grep "build-your-own-internet" | awk '{ print $1 }' | xargs docker image rm --force
+bash $(dirname "$0")/meets-colima-requirements
+bash $(dirname "$0")/byoi-cleanup
 
 docker compose up --detach
