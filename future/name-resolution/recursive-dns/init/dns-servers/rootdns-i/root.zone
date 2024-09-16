@@ -3,7 +3,7 @@ $ORIGIN .
 $TTL 86400 ; 1 day
 
 ; Root zone SOA record
-@ IN SOA rootdns-i.isc.net. rootdns-i.isc.net. (
+@ IN SOA rootdns-i.isc.org. rootdns-i.isc.org. (
         2024080901 ; serial number
         1800       ; refresh (30 minutes)
         900        ; retry (15 minutes)
@@ -12,12 +12,12 @@ $TTL 86400 ; 1 day
 )
 
 ; Root name server records
-       IN NS  rootdns-i.isc.net.
+       IN NS  rootdns-i.isc.org.
        IN NS  rootdns-n.netnod.org.
 
 ; Glue records for root name servers
 rootdns-n.netnod.org.   IN A 101.0.1.100
-rootdns-i.isc.net.      IN A 100.0.1.100
+rootdns-i.isc.org.      IN A 100.0.1.100
 
 ; Top-level domain delegations
 com.  IN NS tlddns-v.verisign.com.

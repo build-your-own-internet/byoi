@@ -1,6 +1,6 @@
 @       IN SOA (
-                host-dns.isc.net.   ; MNAME
-                admin.isc.net.      ; RNAME
+                host-dns.isc.org.   ; MNAME
+                admin.isc.org.      ; RNAME
                 2024041501          ; serial
                 3600                ; refresh (1 hour)
                 900                 ; retry (15 minutes)
