@@ -12,8 +12,8 @@
        IN NS  authoritative-a.aws.net.
        IN NS  authoritative-s.supercorp.net.
 
-; All the labels that the TLD knows about (e.g. isc.net)
-isc.net.       IN NS  authoritative-a.aws.net.
+; All the labels that the TLD knows about (e.g. isc.org)
+isc.org.       IN NS  authoritative-a.aws.net.
 zayo.net.      IN NS  authoritative-s.supercorp.net.
 telia.net.     IN NS  authoritative-s.supercorp.net.
 google.net.    IN NS  authoritative-s.supercorp.net.
