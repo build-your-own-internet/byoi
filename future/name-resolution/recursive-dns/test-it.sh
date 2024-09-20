@@ -29,6 +29,11 @@ docker exec build-your-own-internet-server-g3 ping n2-3-4.netnod.org -c1
 docker exec build-your-own-internet-server-g3 ping n2-101.netnod.org -c1
 echo 'DONE!'
 
-
+echo "Testing name resolution for zayo routers from server-a1..."
+docker exec build-your-own-internet-server-a1 ping z5-2-5-6.zayo.net -c1
+docker exec build-your-own-internet-server-a1 ping z6-2-6-8.zayo.net -c1
+docker exec build-your-own-internet-server-a1 ping z7-2-7-8.zayo.net -c1
+docker exec build-your-own-internet-server-a1 ping z8-2-8.zayo.net -c1
+echo 'DONE!'
 
 # TODO: MAke this loudly fail
