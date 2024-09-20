@@ -150,3 +150,31 @@ What we're doing next:
 3. MOAR EXERCISES. Set up web servers on multiple machines and have them all resolve.
 
 4. How does this work in the real world when you can't just edit a file on your fake internet?
+
+## Troubleshooting exercises for students
+
+1. Leave a DNS entry in a zone file that does not have the dot at the end of it
+
+good version:
+```
+; All the labels that the TLD knows about (e.g. isc.org)
+isc.org.       IN NS  authoritative-a.aws.org.
+``****`
+
+bad version:
+```
+; All the labels that the TLD knows about (e.g. isc.org)
+isc.org       IN NS  authoritative-a.aws.org.
+```
+
+2. Have a screwed up resolv.conf file (e.g. point to an non-existent recursive resolver)
+
+3. DNS POISON YOURSELF!
+
+mess up you comcast.com.zone file and remove the . after comcast.com
+
+## How do we debug DNS issues?
+
+
+TODO: write a script to restart a container
+
