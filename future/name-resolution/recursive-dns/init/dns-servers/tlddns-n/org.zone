@@ -15,6 +15,7 @@
 ; All the labels that the TLD knows about (e.g. isc.org)
 isc.org.       IN NS  authoritative-a.aws.org.
 verisign.org.  IN NS  authoritative-s.supercorp.org.
+netnod.org.    IN NS  authoritative-s.supercorp.org.
 
 ; glue records for the authoritative DNS servers that the TLD knows about
 ; i.e. if isc is using the same authoritative server as AWS, it's one glue record

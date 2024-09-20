@@ -23,6 +23,12 @@ docker exec build-your-own-internet-client-c2 ping v4-2-8.verisign.org -c1
 docker exec build-your-own-internet-client-c2 ping v4-102.verisign.org -c1
 echo 'DONE!'
 
+echo "Testing name resolution for netnod router from client-c1..."
+docker exec build-your-own-internet-client-c1 ping n2-2-4.netnod.org -c1
+docker exec build-your-own-internet-client-c1 ping n2-3-4.netnod.org -c1
+docker exec build-your-own-internet-client-c1 ping n2-101.netnod.org -c1
+echo 'DONE!'
+
 
 
 # TODO: MAke this loudly fail
