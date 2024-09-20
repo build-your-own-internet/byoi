@@ -63,6 +63,6 @@ if [[ $(hostname) =~ server.* ]]; then
 
   # start an http server on each host
   /usr/bin/busybox httpd -h /var/www -f
-else
-  /bin/sleep infinity
 fi
+  
+/bin/sleep infinity
