@@ -18,4 +18,11 @@ docker exec build-your-own-internet-client-s2 ping c2-1-2.comcast.com -c1
 docker exec build-your-own-internet-client-s2 ping c2-1-3.comcast.com -c1
 echo 'DONE!'
 
+echo "Testing name resolution for verisign router from client-c2..."
+docker exec build-your-own-internet-client-c2 ping v4-2-8.verisign.org -c1
+docker exec build-your-own-internet-client-c2 ping v4-102.verisign.org -c1
+echo 'DONE!'
+
+
+
 # TODO: MAke this loudly fail
