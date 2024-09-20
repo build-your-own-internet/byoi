@@ -20,11 +20,11 @@ rootdns-n.netnod.org.   IN A 101.0.1.100
 rootdns-i.isc.org.      IN A 100.0.1.100
 
 ; Top-level domain delegations
-com.  IN NS tlddns-v.verisign.com.
-net.  IN NS tlddns-g.google.com.
+net.  IN NS tlddns-v.verisign.net.
+com.  IN NS tlddns-g.google.com.
 org.  IN NS tlddns-n.netnod.org.
 
 ; Glue records for TLD servers
-tlddns-v.verisign.com. IN A 102.0.1.100
+tlddns-v.verisign.net. IN A 102.0.1.100
 tlddns-g.google.com. IN A 8.2.0.100
 tlddns-n.netnod.org. IN A 101.0.1.101
