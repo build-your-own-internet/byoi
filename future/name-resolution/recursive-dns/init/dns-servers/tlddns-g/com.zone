@@ -9,20 +9,16 @@
                 )
 
 ; TLD name server records
-       IN NS  authoritative-a.aws.net.
-       IN NS  authoritative-s.supercorp.net.
+       IN NS  authoritative-a.aws.com.
+       IN NS  authoritative-s.supercorp.com.
 
 ; All the labels that the TLD knows about (e.g. isc.org)
-isc.org.       IN NS  authoritative-a.aws.net.
-zayo.net.      IN NS  authoritative-s.supercorp.net.
-telia.net.     IN NS  authoritative-s.supercorp.net.
-google.net.    IN NS  authoritative-s.supercorp.net.
-comcast.net.   IN NS  authoritative-s.supercorp.net.
-aws.net.       IN NS  authoritative-a.aws.net.
+
+comcast.com. IN NS  authoritative-s.supercorp.com.
 
 ; glue records for the authoritative DNS servers that the TLD knows about
 ; i.e. if isc is using the same authoritative server as AWS, it's one glue record
-authoritative-a.aws.net. IN A       4.1.0.100
-authoritative-s.supercorp.net. IN A 9.1.0.100
+authoritative-a.aws.com. IN A       4.1.0.100
+authoritative-s.supercorp.com. IN A 9.1.0.100
 
 
