@@ -3,7 +3,7 @@
 set -e
 
 echo "Testing name resolution for i2-a.isc.org from client-c1..."
-docker exec build-your-own-internet-client-c1 ping i2-a.isc.org -c1
+docker exec build-your-own-internet-client-c1 ping i2-2-8.isc.org -c1
 echo 'DONE!'
 # from client-s2, ping i2-b.isc.org
 
