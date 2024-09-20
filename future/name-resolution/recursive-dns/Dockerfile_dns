@@ -1,6 +1,7 @@
 FROM cznic/knot
 
 RUN apt-get update && apt-get install -y iproute2 \
+    procps \
     tcpdump \
     iputils-ping \
     net-tools \
