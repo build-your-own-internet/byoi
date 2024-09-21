@@ -17,6 +17,10 @@ router-c3)
 
 # Zayo network machines
 router-z5)
+  # Zayo internal
+  ip route add 2.6.7.0/24 via 2.5.6.6
+  ip route add 2.7.8.0/24 via 2.5.7.7
+  ip route add 2.6.8.0/24 via 2.5.6.6
   # Telia and AWS
   ip route add default via 2.5.7.7
   # Comcast
@@ -33,6 +37,10 @@ router-z5)
   ip route add 102.0.1.0/24 via 2.5.8.8
   ;;
 router-z6)
+  # Zayo internal
+  ip route add 2.5.7.0/24 via 2.5.6.5
+  ip route add 2.7.8.0/24 via 2.6.7.7
+  ip route add 2.5.8.0/24 via 2.5.6.5
   # Telia and AWS
   ip route add default via 2.6.7.7
   # Comcast
@@ -48,6 +56,10 @@ router-z6)
   ip route add 102.0.1.0/24 via 2.6.8.8
   ;;
 router-z7)
+  # Zayo internal
+  ip route add 2.6.8.0/24 via 2.6.7.6
+  ip route add 2.5.6.0/24 via 2.6.7.6
+  ip route add 2.5.8.0/24 via 2.5.7.5
   # Telia and the rest of the internet
   ip route add default via 2.3.0.6
   # AWS
@@ -66,6 +78,10 @@ router-z7)
   ip route add 102.0.1.0/24 via 2.7.8.8
   ;;
 router-z8)
+  # Zayo internal
+  ip route add 2.5.7.0/24 via 2.7.8.7
+  ip route add 2.6.7.0/24 via 2.7.8.7
+  ip route add 2.5.6.0/24 via 2.5.8.5
   # AWS, Telia, and SuperCorp
   ip route add default via 2.7.8.7
   # Google Cloud
@@ -83,6 +99,10 @@ router-z8)
 
 # Telia networks
 router-t5)
+  # Internal Telia
+  ip route add 3.6.8.0/24 via 3.5.6.6
+  ip route add 3.7.8.0/24 via 3.5.8.8
+  ip route add 3.6.7.0/24 via 3.5.6.6
   # Zayo and Comcast
   ip route add default via 2.3.0.7
   # AWS
@@ -102,6 +122,10 @@ router-t5)
   ip route add 102.0.1.0/24 via 2.3.0.7
   ;;
 router-t6)
+  # Internal Telia
+  ip route add 3.5.7.0/24 via 3.5.6.5
+  ip route add 3.5.8.0/24 via 3.5.6.5
+  ip route add 3.7.8.0/24 via 3.6.7.7
   # Zayo and Comcast
   ip route add default via 2.3.0.7
   # AWS
@@ -121,6 +145,10 @@ router-t6)
   ip route add 102.0.1.0/24 via 2.3.0.7
   ;;
 router-t7)
+  # Internal Telia
+  ip route add 3.6.8.0/24 via 3.6.7.6
+  ip route add 3.5.6.0/24 via 3.6.7.6
+  ip route add 3.5.8.0/24 via 3.5.7.5
   # connections SuperCorp and Google
   ip route add default via 3.7.8.8
   # AWS
@@ -137,6 +165,10 @@ router-t7)
   ip route add 102.0.1.0/24 via 3.6.7.6
   ;;
 router-t8)
+  # Internal Telia
+  ip route add 3.5.7.0/24 via 3.5.8.5
+  ip route add 3.6.7.0/24 via 3.6.8.6
+  ip route add 3.5.6.0/24 via 3.5.8.5
   # Zayo and Comcast
   ip route add default via 3.5.8.5
   # Google
