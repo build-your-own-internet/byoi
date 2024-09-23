@@ -1,0 +1,24 @@
+@       IN SOA (
+                host-dns.supercorp.com.   ; MNAME
+                admin.supercorp.com       ; RNAME
+                2024041501              ; serial
+                3600                    ; refresh (1 hour)
+                900                     ; retry (15 minutes)
+                604800                  ; expire (1 week)
+                86400                   ; minimum (1 day)
+                )
+
+client-s2       IN A    9.2.0.200
+
+server-s1       IN A    9.3.0.1
+
+resolver-s      IN A    9.2.0.100
+
+authoritative-s IN A    9.1.0.100
+
+s2-9-2          IN A    9.2.0.2
+s2-9-3          IN A    9.3.0.2
+s2-3-9          IN A    3.9.0.2
+
+s3-9-1          IN A    9.1.0.3
+s3-9-2          IN A    9.2.0.3
