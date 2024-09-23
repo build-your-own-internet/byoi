@@ -2,38 +2,35 @@
 # Testing script
 set -e
 
-echo "Testing name resolution for i2-a.isc.org from client-c1..."
-docker exec build-your-own-internet-client-c1 ping i2-2-8.isc.org -c1
-echo 'DONE!'
+# ding is docker ping because ping most likely is already installed locally
+function ding() {
+  local source="build-your-own-internet-$1"
+  local destination=$2
+  echo "Testing name resolution from $1 to $destination"
+  docker exec $source ping -c 1 $destination > /dev/null
+}
 
-echo "Testing name resolution for comcast c2 router from client-s2..."
-docker exec build-your-own-internet-client-s2 ping c2-1-2.comcast.com -c1
-docker exec build-your-own-internet-client-s2 ping c2-1-3.comcast.com -c1
-echo 'DONE!'
+ding client-c1 i2-2-8.isc.org
 
-echo "Testing name resolution for verisign router from client-c2..."
-docker exec build-your-own-internet-client-c2 ping v4-2-8.verisign.org -c1
-docker exec build-your-own-internet-client-c2 ping v4-102.verisign.org -c1
-echo 'DONE!'
+ding client-s2 c2-1-2.comcast.com
+ding client-s2 c2-1-2.comcast.com
+ding client-s2 c2-1-3.comcast.com
 
-echo "Testing name resolution for netnod router from server-g3..."
-docker exec build-your-own-internet-server-g3 ping n2-2-4.netnod.org -c1
-docker exec build-your-own-internet-server-g3 ping n2-3-4.netnod.org -c1
-docker exec build-your-own-internet-server-g3 ping n2-101.netnod.org -c1
-echo 'DONE!'
+ding client-c2 v4-2-8.verisign.org
+ding client-c2 v4-102.verisign.org
 
-echo "Testing name resolution for zayo routers from server-a1..."
-docker exec build-your-own-internet-server-a1 ping z5-2-5-6.zayo.net -c1
-docker exec build-your-own-internet-server-a1 ping z6-2-6-8.zayo.net -c1
-docker exec build-your-own-internet-server-a1 ping z7-2-7-8.zayo.net -c1
-docker exec build-your-own-internet-server-a1 ping z8-2-8.zayo.net -c1
-echo 'DONE!'
+ding server-g3 n2-2-4.netnod.org
+ding server-g3 n2-3-4.netnod.org
+ding server-g3 n2-101.netnod.org
 
-echo "Testing name resolution for telia routers from client-c2..."
-docker exec build-your-own-internet-client-c2 ping t5-3-5-7.telia.net -c1
-docker exec build-your-own-internet-client-c2 ping t6-3-6-8.telia.net -c1
-docker exec build-your-own-internet-client-c2 ping t7-3-4.telia.net -c1
-docker exec build-your-own-internet-client-c2 ping t8-3-9.telia.net -c1
-echo 'DONE!'
+ding server-a1 z5-2-5-6.zayo.net
+ding server-a1 z6-2-6-8.zayo.net
+ding server-a1 z7-2-7-8.zayo.net
+ding server-a1 z8-2-8.zayo.net
 
-# TODO: MAke this loudly fail
+ding client-c2 t5-3-5-7.telia.net
+ding client-c2 t6-3-6-8.telia.net
+ding client-c2 t7-3-4.telia.net
+ding client-c2 t8-3-9.telia.net
+
+echo "DONE!"
