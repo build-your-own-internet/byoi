@@ -16,6 +16,7 @@
 comcast.com.   IN NS  authoritative-s.supercorp.com.
 supercorp.com. IN NS  authoritative-s.supercorp.com.
 aws.com.       IN NS  authoritative-a.aws.com.
+google.com.    IN NS  authoritative-a.aws.com.
 
 ; glue records for the authoritative DNS servers that the TLD knows about
 ; i.e. if isc is using the same authoritative server as AWS, it's one glue record
