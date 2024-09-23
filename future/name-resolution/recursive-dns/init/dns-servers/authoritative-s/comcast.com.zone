@@ -8,5 +8,14 @@
                 86400                   ; minimum (1 day)
                 )
 
-c2-1-2        IN A    1.2.0.2
-c2-1-3        IN A    1.3.0.2
+client-c1      IN A    1.2.0.2
+client-c2      IN A    1.3.0.2
+
+resolver-c     IN A    1.2.0.100
+
+c2-1-3         IN A    1.3.0.2
+c2-1-2         IN A    1.2.0.2
+
+c3-1-1         IN A    1.1.0.3
+c3-1-2         IN A    1.2.0.3
+c3-2-1         IN A    2.1.0.3
