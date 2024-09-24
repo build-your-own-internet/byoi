@@ -3,10 +3,10 @@
 set -o errexit
 
 # kill all running containers
-docker ps --all | grep "build-your-own-internet" | awk '{ print $1 }' | xargs docker container rm --force
+docker ps --all | grep "build-your-own-internet" | awk '{ print $1 }' | xargs docker container rm --force || echo "no containers"
 
 # remove all networks
-docker network ls | grep "build-your-own-internet" | awk '{ print $1 }' | xargs docker network rm
+docker network ls | grep "build-your-own-internet" | awk '{ print $1 }' | xargs docker network rm || echo "no networks"
 
 # docker images delete all 3
-docker images | grep "build-your-own-internet" | awk '{ print $1 }' | xargs docker image rm --force
+docker images | grep "build-your-own-internet" | awk '{ print $1 }' | xargs docker image rm --force || echo "no images"
