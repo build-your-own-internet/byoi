@@ -17,11 +17,27 @@ error_count=0
 function ding() {
   local source="build-your-own-internet-$1"
   local destination=$2
-  echo "Testing connectivity from $1 to $destination"
+  # echo "Testing connectivity from $1 to $destination"
   docker exec $source ping -c 1 $destination >/dev/null
   if [ $? -ne 0 ]; then
     echo "🚨 Error: Failed to connect from $1 to $destination"
     error_count=$((error_count + 1)) # Increment the error counter
+  else
+    echo -n "."
+  fi
+}
+
+# dost is docker host because ping most likely is already installed locally
+function dost() {
+  local source="build-your-own-internet-$1"
+  local destination=$2
+  # echo "Testing name-resolution from $1 to $destination"
+  docker exec $source host $destination >/dev/null
+  if [ $? -ne 0 ]; then
+    echo "🚨 Error: unable to resolve $destination from $1"
+    error_count=$((error_count + 1)) # Increment the error counter
+  else
+    echo -n "."
   fi
 }
 
@@ -35,13 +51,15 @@ dns_names=$(cat dns-names.txt)
 
 # Loop through each system and each IP address to run the command
 for system in "${systems[@]}"; do
-  echo "Testing IP connectivity"
+  echo
+  echo "Testing IP connectivity from $system"
   for ip in $ip_addresses; do
     ding "$system" "$ip"
   done
-  echo "Testing name resolution"
+  echo
+  echo "Testing name resolution from $system"
   for dns_name in $dns_names; do
-    ding "$system" "$dns_name"
+    dost "$system" "$dns_name"
   done
 done
 
