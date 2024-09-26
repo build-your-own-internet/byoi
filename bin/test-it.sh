@@ -2,13 +2,12 @@
 # Testing script
 
 cleanup() {
-    echo "ABORTING..."
-    # Perform cleanup tasks (remove temp files, etc.)
-    exit 1
+  echo "ABORTING..."
+  # Perform cleanup tasks (remove temp files, etc.)
+  exit 1
 }
 
-trap cleanup INT  # Trap the INT signal (Ctrl+C)
-
+trap cleanup INT # Trap the INT signal (Ctrl+C)
 
 # Initialize an error counter
 error_count=0
@@ -41,16 +40,15 @@ function dost() {
   fi
 }
 
-# Define the list of test systems
-systems=("client-c1" "server-g3" "server-s1" "server-a1")
-
 # Read the IP addresses from the file
-ip_addresses=$(cat ip-addresses.txt)
-dns_names=$(cat dns-names.txt)
-
+ip_addresses=$(cat test-data/ip-addresses.txt)
+# Read the names that should resolve
+dns_names=$(cat test-data/dns-names.txt)
+# Resd the list of systems that tests are run from
+systems=$(cat test-data/systems.txt)
 
 # Loop through each system and each IP address to run the command
-for system in "${systems[@]}"; do
+for system in $systems; do
   echo
   echo "Testing IP connectivity from $system"
   for ip in $ip_addresses; do
@@ -69,4 +67,3 @@ if [ $error_count -eq 0 ]; then
 else
   echo "⚠️  $error_count errors encountered."
 fi
-
