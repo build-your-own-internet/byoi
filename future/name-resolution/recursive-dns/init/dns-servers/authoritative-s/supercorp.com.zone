@@ -10,7 +10,7 @@
 
 client-s2       IN A    9.2.0.200
 
-server-s1       IN A    9.3.0.1
+server-s1       IN A    9.3.0.10
 
 resolver-s      IN A    9.2.0.100
 
