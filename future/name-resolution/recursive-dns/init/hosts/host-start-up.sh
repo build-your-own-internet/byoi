@@ -56,13 +56,13 @@ server-a4)
   ;;
 esac
 
-if [[ $(hostname) =~ server.* ]]; then
-  # copy in all the image files for each specific host
-  cp -a /home/www/$(hostname) /var/www
-  rm -rf /home/www
-
-  # start an http server on each host
-  /usr/bin/busybox httpd -h /var/www -f
-fi
+# if [[ $(hostname) =~ server.* ]]; then
+#   # copy in all the image files for each specific host
+#   cp -a /home/www/$(hostname) /var/www
+#   rm -rf /home/www
+# 
+#   # start an http server on each host
+#   /usr/bin/busybox httpd -h /var/www -f
+# fi
   
 /bin/sleep infinity
