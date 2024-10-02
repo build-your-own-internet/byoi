@@ -2,6 +2,7 @@
 
 /usr/sbin/ip route delete default
 cp /init/$HOSTNAME/resolv.conf /etc/resolv.conf
+cp /init/revive-dns.sh /revive-dns.sh
 
 rm -rf /init
 
