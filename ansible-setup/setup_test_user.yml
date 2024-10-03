@@ -1,5 +1,5 @@
 ---
-- name: Setup test user with Git repo, PATH, and Docker permissions
+- name: Setup test user with Git repo, PATH, Docker permissions, and SSH access
   hosts: localhost
   become: true
   vars:
@@ -23,7 +23,7 @@
       git:
         repo: https://github.com/build-your-own-internet/byoi.git
         dest: /home/test/byoi
-        version: master
+        version: recursive-dns
       become_user: test
 
     - name: Ensure '~/byoi/bin' is in user's PATH
@@ -42,13 +42,21 @@
         group: test
         recurse: yes
 
-    - name: Ensure 'PasswordAuthentication' is set to 'yes' in sshd_config
-      lineinfile:
-        path: /etc/ssh/sshd_config
-        regexp: '^#?PasswordAuthentication'
-        line: 'PasswordAuthentication yes'
-        state: present
+    - name: Create SSH configuration directory if it doesn't exist
+      file:
+        path: /etc/ssh/sshd_config.d
+        state: directory
+        mode: '0755'
 
+    - name: Allow password authentication for 'test' user only
+      copy:
+        dest: /etc/ssh/sshd_config.d/70-allow-test-password.conf
+        content: |
+          Match User test
+              PasswordAuthentication yes
+      notify: Restart SSH service
+
+  handlers:
     - name: Restart SSH service
       service:
         name: ssh
