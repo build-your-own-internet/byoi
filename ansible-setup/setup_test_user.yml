@@ -1,12 +1,30 @@
 ---
-- name: Setup test user with Git repo, PATH, Docker permissions, and SSH access
+- name: Setup test user with Git repo, PATH, Docker permissions, SSH access, and static MOTD
   hosts: localhost
   become: true
   vars:
     ansible_connection: local
+    test_user: test
     test_user_password: "{{ lookup('env', 'TEST_USER_PASSWORD') }}"
+    git_repo_url: https://github.com/build-your-own-internet/byoi.git
+    git_repo_version: recursive-dns
+    clone_dest: "/home/{{ test_user }}/byoi"
+    custom_motd_message: |
+      ************************************************************
+      Welcome to the build-your-own-internet dev server!
+      This system is for development purposes only.
+
+      Please note that this is a *shared* system.
+      Any changes you make will impact ALL other users.
+
+      please enjoy and be respectful of others.
+
+      If you have any questions, hit us up on
+      the #build-your-own-internet channel in slack.
+      ************************************************************
+      .    
   tasks:
-    - name: Install prerequisite packages
+    - name: Install prerequisite packages for Docker
       apt:
         name:
           - apt-transport-https
@@ -23,7 +41,7 @@
 
     - name: Add Docker APT repository
       apt_repository:
-        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable"
         state: present
 
     - name: Update APT package index
@@ -38,51 +56,79 @@
           - containerd.io
           - docker-compose-plugin
         state: present
+      register: docker_install
 
-    - name: Ensure user 'test' exists with specified password
+    - name: Check if Docker installation was successful
+      assert:
+        that:
+          - docker_install is succeeded
+        fail_msg: "Docker installation failed."
+
+    - name: Ensure user '{{ test_user }}' exists with specified password
       user:
-        name: test
+        name: "{{ test_user }}"
         shell: /bin/bash
         create_home: yes
         password: "{{ test_user_password }}"
+      register: user_creation
 
-    - name: Add 'test' to 'docker' group
+    - name: Check if user '{{ test_user }}' was created successfully
+      assert:
+        that:
+          - user_creation is succeeded
+        fail_msg: "User '{{ test_user }}' creation failed."
+
+    - name: Add '{{ test_user }}' to 'docker' group
       user:
-        name: test
+        name: "{{ test_user }}"
         groups: docker
         append: yes
+      register: add_to_docker_group
+
+    - name: Check if '{{ test_user }}' was added to 'docker' group successfully
+      assert:
+        that:
+          - add_to_docker_group is succeeded
+        fail_msg: "Adding '{{ test_user }}' to 'docker' group failed."
 
     - name: Clone Git repository into user's home directory
       git:
-        repo: https://github.com/build-your-own-internet/byoi.git
-        dest: /home/test/byoi
-        version: recursive-dns
-      become_user: test
+        repo: "{{ git_repo_url }}"
+        dest: "{{ clone_dest }}"
+        version: "{{ git_repo_version }}"
+      become_user: "{{ test_user }}"
+      register: git_clone
+
+    - name: Check if Git repository was cloned successfully
+      assert:
+        that:
+          - git_clone is succeeded
+        fail_msg: "Git repository clone failed."
 
     - name: Ensure '~/byoi/bin' is in user's PATH
       lineinfile:
-        path: /home/test/.bashrc
+        path: "/home/{{ test_user }}/.bashrc"
         regexp: '^export PATH=.*byoi/bin'
         line: 'export PATH="$HOME/byoi/bin:$PATH"'
         state: present
         insertafter: EOF
-      become_user: test
+      become_user: "{{ test_user }}"
 
-    - name: Change ownership of '/home/test/byoi' to user 'test'
+    - name: Change ownership of '{{ clone_dest }}' to user '{{ test_user }}'
       file:
-        path: /home/test/byoi
-        owner: test
-        group: test
+        path: "{{ clone_dest }}"
+        owner: "{{ test_user }}"
+        group: "{{ test_user }}"
         recurse: yes
 
-    - name: Automatically change directory on login for test user
+    - name: Automatically change directory on login for '{{ test_user }}'
       lineinfile:
-        path: /home/test/.bashrc
+        path: "/home/{{ test_user }}/.bashrc"
         regexp: '^cd\s+~/byoi/future/name-resolution/recursive-dns/?$'
         line: 'cd ~/byoi/future/name-resolution/recursive-dns/'
         state: present
         insertafter: EOF
-      become_user: test
+      become_user: "{{ test_user }}"
 
     - name: Create SSH configuration directory if it doesn't exist
       file:
@@ -90,15 +136,15 @@
         state: directory
         mode: '0755'
 
-    - name: Allow password authentication for 'test' user only
+    - name: Allow password authentication for '{{ test_user }}' user only
       copy:
-        dest: /etc/ssh/sshd_config.d/70-allow-test-password.conf
+        dest: "/etc/ssh/sshd_config.d/70-allow-{{ test_user }}-password.conf"
         content: |
-          Match User test
+          Match User {{ test_user }}
               PasswordAuthentication yes
       notify: Restart SSH service
 
-    - name: Ensure PAM reads static MOTD
+    - name: Ensure 'session optional pam_motd.so noupdate' is present and uncommented
       lineinfile:
         path: /etc/pam.d/sshd
         regexp: '^#?\s*session\s+optional\s+pam_motd.so\s+noupdate'
@@ -106,16 +152,18 @@
         state: present
       notify: Restart SSH service
 
-    - name: Ensure PAM reads static MOTD
-      replace:
+    - name: Comment out 'session optional pam_motd.so motd=/run/motd.dynamic'
+      lineinfile:
         path: /etc/pam.d/sshd
         regexp: '^#?\s*session\s+optional\s+pam_motd.so\s+motd=/run/motd.dynamic'
-        replace: '# session optional pam_motd.so motd=/run/motd.dynamic'
+        line: '# session    optional   pam_motd.so motd=/run/motd.dynamic'
+        state: present
+      notify: Restart SSH service
 
-    - name: Set static MOTD
+    - name: Set static MOTD for friendly welcome message
       copy:
         dest: /etc/motd
-        content: "welcome to the build-your-own-internet dev server! please enjoy and be respectful of others\n"
+        content: "{{ custom_motd_message }}\n"
         owner: root
         group: root
         mode: '0644'
