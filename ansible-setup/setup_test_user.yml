@@ -1,0 +1,55 @@
+---
+- name: Setup test user with Git repo, PATH, and Docker permissions
+  hosts: localhost
+  become: true
+  vars:
+    ansible_connection: local
+    test_user_password: "{{ lookup('env', 'TEST_USER_PASSWORD') }}"
+  tasks:
+    - name: Ensure user 'test' exists with specified password
+      user:
+        name: test
+        shell: /bin/bash
+        create_home: yes
+        password: "{{ test_user_password }}"
+
+    - name: Add 'test' to 'docker' group
+      user:
+        name: test
+        groups: docker
+        append: yes
+
+    - name: Clone Git repository into user's home directory
+      git:
+        repo: https://github.com/build-your-own-internet/byoi.git
+        dest: /home/test/byoi
+        version: master
+      become_user: test
+
+    - name: Ensure '~/byoi/bin' is in user's PATH
+      lineinfile:
+        path: /home/test/.bashrc
+        regexp: '^export PATH=.*byoi/bin'
+        line: 'export PATH="$HOME/byoi/bin:$PATH"'
+        state: present
+        insertafter: EOF
+      become_user: test
+
+    - name: Change ownership of '/home/test/byoi' to user 'test'
+      file:
+        path: /home/test/byoi
+        owner: test
+        group: test
+        recurse: yes
+
+    - name: Ensure 'PasswordAuthentication' is set to 'yes' in sshd_config
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^#?PasswordAuthentication'
+        line: 'PasswordAuthentication yes'
+        state: present
+
+    - name: Restart SSH service
+      service:
+        name: ssh
+        state: restarted
