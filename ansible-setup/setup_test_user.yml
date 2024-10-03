@@ -6,6 +6,39 @@
     ansible_connection: local
     test_user_password: "{{ lookup('env', 'TEST_USER_PASSWORD') }}"
   tasks:
+    - name: Install prerequisite packages
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+
+    - name: Add Docker's official GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker APT repository
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu jammy stable
+        state: present
+
+    - name: Update APT package index
+      apt:
+        update_cache: yes
+
+    - name: Install Docker Engine and Docker Compose
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-compose-plugin
+        state: present
+
     - name: Ensure user 'test' exists with specified password
       user:
         name: test
@@ -42,6 +75,15 @@
         group: test
         recurse: yes
 
+    - name: Automatically change directory on login for test user
+      lineinfile:
+        path: /home/test/.bashrc
+        regexp: '^cd\s+~/byoi/future/name-resolution/recursive-dns/?$'
+        line: 'cd ~/byoi/future/name-resolution/recursive-dns/'
+        state: present
+        insertafter: EOF
+      become_user: test
+
     - name: Create SSH configuration directory if it doesn't exist
       file:
         path: /etc/ssh/sshd_config.d
@@ -55,6 +97,28 @@
           Match User test
               PasswordAuthentication yes
       notify: Restart SSH service
+
+    - name: Ensure PAM reads static MOTD
+      lineinfile:
+        path: /etc/pam.d/sshd
+        regexp: '^#?\s*session\s+optional\s+pam_motd.so\s+noupdate'
+        line: 'session    optional   pam_motd.so noupdate'
+        state: present
+      notify: Restart SSH service
+
+    - name: Ensure PAM reads static MOTD
+      replace:
+        path: /etc/pam.d/sshd
+        regexp: '^#?\s*session\s+optional\s+pam_motd.so\s+motd=/run/motd.dynamic'
+        replace: '# session optional pam_motd.so motd=/run/motd.dynamic'
+
+    - name: Set static MOTD
+      copy:
+        dest: /etc/motd
+        content: "welcome to the build-your-own-internet dev server! please enjoy and be respectful of others\n"
+        owner: root
+        group: root
+        mode: '0644'
 
   handlers:
     - name: Restart SSH service
