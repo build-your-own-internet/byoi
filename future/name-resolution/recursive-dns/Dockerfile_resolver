@@ -1,0 +1,29 @@
+FROM ubuntu
+
+RUN apt-get update && apt-get install -y \
+	iproute2 \
+	tcpdump \
+	iputils-ping \
+	net-tools \
+	bind9-utils \
+	dnsutils \
+	vim \
+	inetutils-traceroute \
+	procps \
+	iptables \
+	nano \
+	curl \
+	unbound \
+	&& chown root:unbound /etc/unbound
+
+RUN mkdir -p /etc/unbound
+
+COPY ./init/resolvers /init
+COPY init/resolvers/unbound.conf /etc/unbound/unbound.conf
+COPY init/resolvers/root.hints /etc/unbound/root.hints
+COPY init/resolvers/resolver-start-up.sh /resolver-start-up.sh
+
+EXPOSE 53/tcp
+EXPOSE 53/udp
+
+CMD ["/resolver-start-up.sh"]

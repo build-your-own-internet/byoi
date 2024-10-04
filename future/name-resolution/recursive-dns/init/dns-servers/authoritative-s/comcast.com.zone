@@ -1,0 +1,21 @@
+@       IN SOA (
+                host-dns.comcast.com.   ; MNAME
+                admin.comcast.com       ; RNAME
+                2024041501              ; serial
+                3600                    ; refresh (1 hour)
+                900                     ; retry (15 minutes)
+                604800                  ; expire (1 week)
+                86400                   ; minimum (1 day)
+                )
+
+client-c1      IN A    1.2.0.2
+client-c2      IN A    1.3.0.2
+
+resolver-c     IN A    1.2.0.100
+
+c2-1-3         IN A    1.3.0.2
+c2-1-2         IN A    1.2.0.2
+
+c3-1-1         IN A    1.1.0.3
+c3-1-2         IN A    1.2.0.3
+c3-2-1         IN A    2.1.0.3

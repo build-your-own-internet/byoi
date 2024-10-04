@@ -1,24 +1,33 @@
 #!/bin/bash
 
-export colima_exists=false
-
-if which colima >/dev/null 2>&1; then
-    colima_exists=true
-fi
-
-if [[ "$colima_exists" == false ]]; then
-  echo "You need a docker management software installed. Please read Chapter 000-getting-started to install Colima."
-  exit 1
-fi
-
-# check to see if colima is running
-# Capture the exit code
-colima status
-exit_code=$?
-
-# Check the exit code
-if [ $exit_code -ne 0 ]; then
-    echo "Colima does not appear to be running. Try running 'colima start' and then run this command again."
+if [[ "$(uname)" == "Darwin" ]]; then
+    echo "Running on macOS"
+    export colima_exists=false
+    
+    if which colima >/dev/null 2>&1; then
+        colima_exists=true
+    fi
+    
+    if [[ "$colima_exists" == false ]]; then
+      echo "You need a docker management software installed. Please read Chapter 000-getting-started to install Colima."
+      exit 1
+    fi
+    
+    # check to see if colima is running
+    # Capture the exit code
+    colima status
+    exit_code=$?
+    
+    # Check the exit code
+    if [ $exit_code -ne 0 ]; then
+        echo "Colima does not appear to be running. Try running 'colima start' and then run this command again."
+        exit 1
+    fi
+elif [[ "$(uname)" == "Linux" ]]; then
+    # TODO: check for various packages/binaries.
+    echo "Running on Linux"
+else
+    echo "Unknown operating system"
     exit 1
 fi
 

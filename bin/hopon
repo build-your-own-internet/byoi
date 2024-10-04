@@ -1,8 +1,8 @@
 #!/bin/sh
 
-CONTAINER_ID=$(docker ps | grep "build-your-own-internet" | grep $1$ | awk '{ print $1 }')
+CONTAINER_NAMES=$(docker ps -af name=build-your-own-internet | grep build-your-own | awk '{ print $NF }' | cut -d '-' -f 5,6)
 
-if [ -z "$CONTAINER_ID" ]; then
+if [ -z "$CONTAINER_NAMES" ]; then
 	echo "Your internet does not appear to be running."
 	echo "Please make sure colima is started and you have run"
 	echo "byoip-restart"
@@ -10,6 +10,16 @@ if [ -z "$CONTAINER_ID" ]; then
 	echo "Alternatively, if you have just run 'byoip-restart', you may have a syntax"
 	echo "error in your 'docker-compose.yml' file."
 	echo "You may try running 'docker compose up'"
+	exit 1
+fi
+
+CONTAINER_ID=$(docker ps -aqf name=$1$)
+
+if [ -z "$CONTAINER_ID" ]; then
+	echo "It doesn't appear that this host exists"
+	echo "Please check your hostname and try again"
+	echo "Here's a list of hosts that exist on this network:"
+	echo "$CONTAINER_NAMES"
 	exit 1
 fi
 

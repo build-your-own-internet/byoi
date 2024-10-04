@@ -1,0 +1,1175 @@
+version: "3.0"
+services:
+  # Comcast network
+  client-c1:
+    container_name: "build-your-own-internet-client-c1"
+    build:
+      context: .
+      dockerfile: Dockerfile_host
+    image: "build-your-own-internet-host"
+    hostname: client-c1
+    networks:
+      one-one-net:
+        ipv4_address: 1.1.0.200
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  client-c2:
+    container_name: "build-your-own-internet-client-c2"
+    build:
+      context: .
+      dockerfile: Dockerfile_host
+    image: "build-your-own-internet-host"
+    hostname: client-c2
+    networks:
+      one-three-net:
+        ipv4_address: 1.3.0.200
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+
+  resolver-c:
+    container_name: "build-your-own-internet-resolver-c"
+    build:
+      context: .
+      dockerfile: Dockerfile_resolver
+    image: "build-your-own-internet-resolver"
+    hostname: resolver-c
+    networks:
+      one-two-net:
+        ipv4_address: 1.2.0.100
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+
+  router-c2:
+    container_name: "build-your-own-internet-router-c2"
+    build:
+      context: .
+      dockerfile: Dockerfile_router
+    image: "build-your-own-internet-router"
+    hostname: router-c2
+    networks:
+      one-three-net:
+        ipv4_address: 1.3.0.2
+      one-two-net:
+        ipv4_address: 1.2.0.2
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+      # - net.ipv4.conf.eth0.rp_filter=0
+      # - net.ipv4.conf.eth1.rp_filter=0
+  router-c3:
+    container_name: "build-your-own-internet-router-c3"
+    build:
+      context: .
+      dockerfile: Dockerfile_router
+    image: "build-your-own-internet-router"
+    hostname: router-c3
+    networks:
+      one-one-net:
+        ipv4_address: 1.1.0.3
+      one-two-net:
+        ipv4_address: 1.2.0.3
+      two-one-net:
+        ipv4_address: 2.1.0.3
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
+
+  # Zayo
+  router-z5:
+    container_name: "build-your-own-internet-router-z5"
+    build:
+      context: .
+      dockerfile: Dockerfile_router
+    image: "build-your-own-internet-router"
+    hostname: router-z5
+    networks:
+      two-five-six-net:
+        ipv4_address: 2.5.6.5
+      two-five-seven-net:
+        ipv4_address: 2.5.7.5
+      two-five-eight-net:
+        ipv4_address: 2.5.8.5
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
+  router-z6:
+    container_name: "build-your-own-internet-router-z6"
+    build:
+      context: .
+      dockerfile: Dockerfile_router
+    image: "build-your-own-internet-router"
+    hostname: router-z6
+    networks:
+      two-one-net:
+        ipv4_address: 2.1.0.6
+      two-five-six-net:
+        ipv4_address: 2.5.6.6
+      two-six-seven-net:
+        ipv4_address: 2.6.7.6
+      two-six-eight-net:
+        ipv4_address: 2.6.8.6
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
+  #     - net.ipv4.conf.eth3.rp_filter=0
+  router-z7:
+    container_name: "build-your-own-internet-router-z7"
+    build:
+      context: .
+      dockerfile: Dockerfile_router
+    image: "build-your-own-internet-router"
+    hostname: router-z7
+    networks:
+      two-three-net:
+        ipv4_address: 2.3.0.7
+      two-four-net:
+        ipv4_address: 2.4.0.7
+      two-five-seven-net:
+        ipv4_address: 2.5.7.7
+      two-six-seven-net:
+        ipv4_address: 2.6.7.7
+      two-seven-eight-net:
+        ipv4_address: 2.7.8.7
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
+  #     - net.ipv4.conf.eth3.rp_filter=0
+  #     - net.ipv4.conf.eth4.rp_filter=0
+  router-z8:
+    container_name: "build-your-own-internet-router-z8"
+    build:
+      context: .
+      dockerfile: Dockerfile_router
+    image: "build-your-own-internet-router"
+    hostname: router-z8
+    networks:
+      two-eight-net:
+        ipv4_address: 2.8.0.8
+      two-five-eight-net:
+        ipv4_address: 2.5.8.8
+      two-six-eight-net:
+        ipv4_address: 2.6.8.8
+      two-seven-eight-net:
+        ipv4_address: 2.7.8.8
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
+  #     - net.ipv4.conf.eth3.rp_filter=0
+
+  # Telia
+  router-t5:
+    container_name: "build-your-own-internet-router-t5"
+    build:
+      context: .
+      dockerfile: Dockerfile_router
+    image: "build-your-own-internet-router"
+    hostname: router-t5
+    networks:
+      two-three-net:
+        ipv4_address: 2.3.0.5
+      three-five-six-net:
+        ipv4_address: 3.5.6.5
+      three-five-seven-net:
+        ipv4_address: 3.5.7.5
+      three-five-eight-net:
+        ipv4_address: 3.5.8.5
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
+  #     - net.ipv4.conf.eth3.rp_filter=0
+  router-t6:
+    container_name: "build-your-own-internet-router-t6"
+    build:
+      context: .
+      dockerfile: Dockerfile_router
+    image: "build-your-own-internet-router"
+    hostname: router-t6
+    networks:
+      two-three-net:
+        ipv4_address: 2.3.0.6
+      three-five-six-net:
+        ipv4_address: 3.5.6.6
+      three-six-seven-net:
+        ipv4_address: 3.6.7.6
+      three-six-eight-net:
+        ipv4_address: 3.6.8.6
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
+  #     - net.ipv4.conf.eth3.rp_filter=0
+  router-t7:
+    container_name: "build-your-own-internet-router-t7"
+    build:
+      context: .
+      dockerfile: Dockerfile_router
+    image: "build-your-own-internet-router"
+    hostname: router-t7
+    networks:
+      three-four-net:
+        ipv4_address: 3.4.0.7
+      three-five-seven-net:
+        ipv4_address: 3.5.7.7
+      three-six-seven-net:
+        ipv4_address: 3.6.7.7
+      three-seven-eight-net:
+        ipv4_address: 3.7.8.7
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
+  #     - net.ipv4.conf.eth3.rp_filter=0
+  router-t8:
+    container_name: "build-your-own-internet-router-t8"
+    build:
+      context: .
+      dockerfile: Dockerfile_router
+    image: "build-your-own-internet-router"
+    hostname: router-t8
+    networks:
+      three-eight-net:
+        ipv4_address: 3.8.0.8
+      three-nine-net:
+        ipv4_address: 3.9.0.8
+      three-five-eight-net:
+        ipv4_address: 3.5.8.8
+      three-six-eight-net:
+        ipv4_address: 3.6.8.8
+      three-seven-eight-net:
+        ipv4_address: 3.7.8.8
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
+  #     - net.ipv4.conf.eth3.rp_filter=0
+  #     - net.ipv4.conf.eth4.rp_filter=0
+
+  # SuperCorp
+  server-s1:
+    container_name: "build-your-own-internet-server-s1"
+    build:
+      context: .
+      dockerfile: Dockerfile_host
+    image: "build-your-own-internet-host"
+    hostname: server-s1
+    networks:
+      nine-three-net:
+        ipv4_address: 9.3.0.10
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  client-s2:
+    container_name: "build-your-own-internet-client-s2"
+    build:
+      context: .
+      dockerfile: Dockerfile_host
+    image: "build-your-own-internet-host"
+    hostname: client-s2
+    networks:
+      nine-two-net:
+        ipv4_address: 9.2.0.200
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  resolver-s:
+    container_name: "build-your-own-internet-resolver-s"
+    build:
+      context: .
+      dockerfile: Dockerfile_resolver
+    image: "build-your-own-internet-resolver"
+    hostname: resolver-s
+    networks:
+      nine-two-net:
+        ipv4_address: 9.2.0.100
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  authoritative-s:
+    container_name: "build-your-own-internet-authoritative-s"
+    build:
+      context: .
+      dockerfile: Dockerfile_dns
+    image: "build-your-own-internet-dns"
+    hostname: authoritative-s
+    networks:
+      nine-one-net:
+        ipv4_address: 9.1.0.100
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  router-s2:
+    container_name: "build-your-own-internet-router-s2"
+    build:
+      context: .
+      dockerfile: Dockerfile_router
+    image: "build-your-own-internet-router"
+    hostname: router-s2
+    networks:
+      nine-three-net:
+        ipv4_address: 9.3.0.2
+      three-nine-net:
+        ipv4_address: 3.9.0.2
+      nine-two-net:
+        ipv4_address: 9.2.0.2
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
+  router-s3:
+    container_name: "build-your-own-internet-router-s3"
+    build:
+      context: .
+      dockerfile: Dockerfile_router
+    image: "build-your-own-internet-router"
+    hostname: router-s3
+    networks:
+      nine-one-net:
+        ipv4_address: 9.1.0.3
+      nine-two-net:
+        ipv4_address: 9.2.0.3
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+
+  # ISC
+  router-i2:
+    container_name: "build-your-own-internet-router-i2"
+    build:
+      context: .
+      dockerfile: Dockerfile_router
+    image: "build-your-own-internet-router"
+    hostname: router-i2
+    networks:
+      three-eight-net:
+        ipv4_address: 3.8.0.2
+      two-eight-net:
+        ipv4_address: 2.8.0.2
+      one-hundo-net:
+        ipv4_address: 100.0.1.2
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
+  rootdns-i:
+    container_name: "build-your-own-internet-rootdns-i"
+    build:
+      context: .
+      dockerfile: Dockerfile_dns
+    image: "build-your-own-internet-dns"
+    hostname: rootdns-i
+    networks:
+      one-hundo-net:
+        ipv4_address: 100.0.1.100
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+
+  # verisign
+  router-v4:
+    container_name: "build-your-own-internet-router-v4"
+    build:
+      context: .
+      dockerfile: Dockerfile_router
+    image: "build-your-own-internet-router"
+    hostname: router-v4
+    networks:
+      one-oh-two-hundo-net:
+        ipv4_address: 102.0.1.4
+      two-eight-net:
+        ipv4_address: 2.8.0.4
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  tlddns-v:
+    container_name: "build-your-own-internet-tlddns-v"
+    build:
+      context: .
+      dockerfile: Dockerfile_dns
+    image: "build-your-own-internet-dns"
+    hostname: tlddns-v
+    networks:
+      one-oh-two-hundo-net:
+        ipv4_address: 102.0.1.100
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+
+  # Netnod
+  router-n2:
+    container_name: "build-your-own-internet-router-n2"
+    build:
+      context: .
+      dockerfile: Dockerfile_router
+    image: "build-your-own-internet-router"
+    hostname: router-n2
+    networks:
+      one-oh-one-hundo-net:
+        ipv4_address: 101.0.1.2
+      two-four-net:
+        ipv4_address: 2.4.0.2
+      three-four-net:
+        ipv4_address: 3.4.0.2
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
+  tlddns-n:
+    container_name: "build-your-own-internet-tlddns-n"
+    build:
+      context: .
+      dockerfile: Dockerfile_dns
+    image: "build-your-own-internet-dns"
+    hostname: tlddns-n
+    networks:
+      one-oh-one-hundo-net:
+        ipv4_address: 101.0.1.101
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  rootdns-n:
+    container_name: "build-your-own-internet-rootdns-n"
+    build:
+      context: .
+      dockerfile: Dockerfile_dns
+    image: "build-your-own-internet-dns"
+    hostname: rootdns-n
+    networks:
+      one-oh-one-hundo-net:
+        ipv4_address: 101.0.1.100
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+
+  # Google Cloud Services
+  router-g2:
+    container_name: "build-your-own-internet-router-g2"
+    build:
+      context: .
+      dockerfile: Dockerfile_router
+    image: "build-your-own-internet-router"
+    hostname: router-g2
+    networks:
+      eight-one-net:
+        ipv4_address: 8.1.0.2
+      eight-two-net:
+        ipv4_address: 8.2.0.2
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  router-g3:
+    container_name: "build-your-own-internet-router-g3"
+    build:
+      context: .
+      dockerfile: Dockerfile_router
+    image: "build-your-own-internet-router"
+    hostname: router-g3
+    networks:
+      two-eight-net:
+        ipv4_address: 2.8.0.3
+      eight-two-net:
+        ipv4_address: 8.2.0.3
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  router-g4:
+    container_name: "build-your-own-internet-router-g4"
+    build:
+      context: .
+      dockerfile: Dockerfile_router
+    image: "build-your-own-internet-router"
+    hostname: router-g4
+    networks:
+      eight-one-net:
+        ipv4_address: 8.1.0.4
+      three-eight-net:
+        ipv4_address: 3.8.0.4
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  server-g1:
+    container_name: "build-your-own-internet-server-g1"
+    build:
+      context: .
+      dockerfile: Dockerfile_host
+    image: "build-your-own-internet-host"
+    hostname: server-g1
+    networks:
+      eight-two-net:
+        ipv4_address: 8.2.0.11
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  server-g2:
+    container_name: "build-your-own-internet-server-g2"
+    build:
+      context: .
+      dockerfile: Dockerfile_host
+    image: "build-your-own-internet-host"
+    hostname: server-g2
+    networks:
+      eight-two-net:
+        ipv4_address: 8.2.0.12
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  server-g3:
+    container_name: "build-your-own-internet-server-g3"
+    build:
+      context: .
+      dockerfile: Dockerfile_host
+    image: "build-your-own-internet-host"
+    hostname: server-g3
+    networks:
+      eight-two-net:
+        ipv4_address: 8.2.0.13
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  tlddns-g:
+    container_name: "build-your-own-internet-tlddns-g"
+    build:
+      context: .
+      dockerfile: Dockerfile_dns
+    image: "build-your-own-internet-dns"
+    hostname: tlddns-g
+    networks:
+      eight-two-net:
+        ipv4_address: 8.2.0.100
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  resolver-g:
+    container_name: "build-your-own-internet-resolver-g"
+    build:
+      context: .
+      dockerfile: Dockerfile_resolver
+    image: "build-your-own-internet-resolver"
+    hostname: resolver-g
+    networks:
+      eight-one-net:
+        ipv4_address: 8.1.0.100
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+
+  # AWS
+  router-a2:
+    container_name: "build-your-own-internet-router-a2"
+    build:
+      context: .
+      dockerfile: Dockerfile_router
+    image: "build-your-own-internet-router"
+    hostname: router-a2
+    networks:
+      four-one-net:
+        ipv4_address: 4.1.0.2
+      four-two-net:
+        ipv4_address: 4.2.0.2
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  router-a3:
+    container_name: "build-your-own-internet-router-a3"
+    build:
+      context: .
+      dockerfile: Dockerfile_router
+    image: "build-your-own-internet-router"
+    hostname: router-a3
+    networks:
+      four-one-net:
+        ipv4_address: 4.1.0.3
+      four-three-net:
+        ipv4_address: 4.3.0.3
+      three-four-net:
+        ipv4_address: 3.4.0.3
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  #     - net.ipv4.conf.eth2.rp_filter=0
+  router-a4:
+    container_name: "build-your-own-internet-router-a4"
+    build:
+      context: .
+      dockerfile: Dockerfile_router
+    image: "build-your-own-internet-router"
+    hostname: router-a4
+    networks:
+      four-one-net:
+        ipv4_address: 4.1.0.4
+      two-four-net:
+        ipv4_address: 2.4.0.4
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+      - net.ipv4.conf.all.rp_filter=0
+  #     - net.ipv4.conf.eth0.rp_filter=0
+  #     - net.ipv4.conf.eth1.rp_filter=0
+  server-a1:
+    container_name: "build-your-own-internet-server-a1"
+    build:
+      context: .
+      dockerfile: Dockerfile_host
+    image: "build-your-own-internet-host"
+    hostname: server-a1
+    networks:
+      four-two-net:
+        ipv4_address: 4.2.0.11
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  server-a2:
+    container_name: "build-your-own-internet-server-a2"
+    build:
+      context: .
+      dockerfile: Dockerfile_host
+    image: "build-your-own-internet-host"
+    hostname: server-a2
+    networks:
+      four-two-net:
+        ipv4_address: 4.2.0.12
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  server-a3:
+    container_name: "build-your-own-internet-server-a3"
+    build:
+      context: .
+      dockerfile: Dockerfile_host
+    image: "build-your-own-internet-host"
+    hostname: server-a3
+    networks:
+      four-one-net:
+        ipv4_address: 4.1.0.13
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  server-a4:
+    container_name: "build-your-own-internet-server-a4"
+    build:
+      context: .
+      dockerfile: Dockerfile_host
+    image: "build-your-own-internet-host"
+    hostname: server-a4
+    networks:
+      four-three-net:
+        ipv4_address: 4.3.0.14
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  resolver-a:
+    container_name: "build-your-own-internet-resolver-a"
+    build:
+      context: .
+      dockerfile: Dockerfile_resolver
+    image: "build-your-own-internet-resolver"
+    hostname: resolver-a
+    networks:
+      four-one-net:
+        ipv4_address: 4.1.0.101
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+  authoritative-a:
+    container_name: "build-your-own-internet-authoritative-a"
+    build:
+      context: .
+      dockerfile: Dockerfile_dns
+    image: "build-your-own-internet-dns"
+    hostname: authoritative-a
+    networks:
+      four-one-net:
+        ipv4_address: 4.1.0.100
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+
+networks:
+  one-one-net:
+    name: "build-your-own-internet-one-one-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 1.1.0.0/16
+  one-two-net:
+    name: "build-your-own-internet-one-two-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 1.2.0.0/16
+  one-three-net:
+    name: "build-your-own-internet-one-three-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 1.3.0.0/16
+
+  two-one-net:
+    name: "build-your-own-internet-two-one-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 2.1.0.0/16
+  two-three-net:
+    name: "build-your-own-internet-two-three-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 2.3.0.0/16
+  two-four-net:
+    name: "build-your-own-internet-two-four-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 2.4.0.0/16
+  two-eight-net:
+    name: "build-your-own-internet-two-eight-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 2.8.0.0/16
+  two-six-seven-net:
+    name: "build-your-own-internet-two-six-seven-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 2.6.7.0/24
+  two-six-eight-net:
+    name: "build-your-own-internet-two-six-eight-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 2.6.8.0/24
+  two-five-six-net:
+    name: "build-your-own-internet-two-five-six-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 2.5.6.0/24
+  two-five-seven-net:
+    name: "build-your-own-internet-two-five-seven-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 2.5.7.0/24
+  two-seven-eight-net:
+    name: "build-your-own-internet-two-seven-eight-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 2.7.8.0/24
+  two-five-eight-net:
+    name: "build-your-own-internet-two-five-eight-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 2.5.8.0/24
+
+  three-four-net:
+    name: "build-your-own-internet-three-four-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 3.4.0.0/16
+  three-eight-net:
+    name: "build-your-own-internet-three-eight-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 3.8.0.0/16
+  three-nine-net:
+    name: "build-your-own-internet-three-nine-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 3.9.0.0/16
+  three-five-six-net:
+    name: "build-your-own-internet-three-five-six-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 3.5.6.0/24
+  three-five-seven-net:
+    name: "build-your-own-internet-three-five-seven-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 3.5.7.0/24
+  three-five-eight-net:
+    name: "build-your-own-internet-three-five-eight-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 3.5.8.0/24
+  three-six-seven-net:
+    name: "build-your-own-internet-three-six-seven-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 3.6.7.0/24
+  three-six-eight-net:
+    name: "build-your-own-internet-three-six-eight-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 3.6.8.0/24
+  three-seven-eight-net:
+    name: "build-your-own-internet-three-seven-eight-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 3.7.8.0/24
+
+  four-one-net:
+    name: "build-your-own-internet-four-one-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 4.1.0.0/16
+  four-two-net:
+    name: "build-your-own-internet-four-two-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 4.2.0.0/16
+  four-three-net:
+    name: "build-your-own-internet-four-three-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 4.3.0.0/16
+
+  eight-one-net:
+    name: "build-your-own-internet-eight-one-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 8.1.0.0/16
+  eight-two-net:
+    name: "build-your-own-internet-eight-two-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 8.2.0.0/16
+
+  nine-one-net:
+    name: "build-your-own-internet-nine-one-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 9.1.0.0/16
+  nine-two-net:
+    name: "build-your-own-internet-nine-two-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 9.2.0.0/16
+  nine-three-net:
+    name: "build-your-own-internet-nine-three-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 9.3.0.0/16
+
+  one-hundo-net:
+    name: "build-your-own-internet-one-hundo-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 100.0.1.0/24
+  one-oh-one-hundo-net:
+    name: "build-your-own-internet-one-oh-one-hundo-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 101.0.1.0/24
+  one-oh-two-hundo-net:
+    name: "build-your-own-internet-one-oh-two-hundo-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 102.0.1.0/24
