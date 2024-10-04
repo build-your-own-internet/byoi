@@ -790,13 +790,13 @@ services:
       - SYS_ADMIN
     sysctls:
       - net.ipv4.ip_forward=0
-  server-a4:
-    container_name: "build-your-own-internet-server-a4"
+  tlddns-a:
+    container_name: "build-your-own-internet-tlddns-a"
     build:
       context: .
-      dockerfile: Dockerfile_host
-    image: "build-your-own-internet-host"
-    hostname: server-a4
+      dockerfile: Dockerfile_dns
+    image: "build-your-own-internet-dns"
+    hostname: tlddns-a
     networks:
       four-three-net:
         ipv4_address: 4.3.0.14
