@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define arrays for resolvers and DNS servers
-MACHINES=("resolver-a" "resolver-g" "resolver-c" "resolver-s" "authoritative-a" "authoritative-s" "tlddns-g" "tlddns-n" "tlddns-v" "rootdns-i" "rootdns-n")
+MACHINES=("resolver-a" "resolver-g" "resolver-c" "resolver-s" "authoritative-a" "authoritative-s" "tlddns-a" "tlddns-g" "tlddns-n" "tlddns-v" "rootdns-i" "rootdns-n")
 
 # Function to restart a process in a container
 restart_process() {
