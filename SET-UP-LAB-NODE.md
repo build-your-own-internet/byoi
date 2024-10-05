@@ -38,10 +38,11 @@ set up with ssh access.
   export SSH_KEY_ID=<your-ssh-key-id>
   ```
 
-7. Create a droplet with the following command:
+### Building the lab node
+
+1. Create a droplet with the following command:
 
   ```bash
-  export SSH_KEY_ID=<your-ssh-key-id>
   export HOST_NAME=build-your-own-internet-lab-3
   doctl compute droplet create \
       --ssh-keys $SSH_KEY_ID \
@@ -52,13 +53,23 @@ set up with ssh access.
       $HOST_NAME
   ```
 
-8. Find the IP address of the droplet with the following command:
+2. Find the IP address of the droplet with the following command:
 
   ```bash
+  while sleep 1; do
   doctl compute droplet list --format ID,Name,PublicIPv4,PrivateIPv4
+  done
   ```
 
-9. SSH into the droplet with the following command:
+> 📝 NOTE: It may take a few minutes for the droplet to become active and for it to have an IP address.
+
+Assign that IP address to the `IP_ADDRESS` environment variable:
+
+  ```bash
+  export IP_ADDRESS=<your-ip-address>
+  ```
+
+3. SSH into the droplet with the following command:
 
   ```bash
   $ ssh root@$IP_ADDRESS
@@ -68,27 +79,27 @@ set up with ssh access.
   Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
   ```
 
-10. Clone down the BYOI repo and run the playbook to set up the test user:
+4. Clone down the BYOI repo and run the playbook to set up the test user:
 
   ```bash
   git clone https://github.com/build-your-own-internet/byoi.git
   ```
 
-11. Switch to the appropriate branch
+5. Switch to the appropriate branch
 
   ```bash
   cd byoi
   git checkout tech-summit-2024-base
   ```
 
-12. Install Ansible:
+6. Install Ansible:
 
   ```bash
   cd ansible-setup/
   apt update;apt install -y software-properties-common;add-apt-repository --yes --update ppa:ansible/ansible;apt install -y ansible;
   ```
 
-13. Set the test user password:
+7. Set the test user password:
 
 Ansible requires that passwords be provided in an encrypted (hashed) format when setting user passwords. To set the password securely without storing it in the playbook, we can use an environment variable to pass the hashed password to the playbook.
 
@@ -96,13 +107,13 @@ Ansible requires that passwords be provided in an encrypted (hashed) format when
   export TEST_USER_PASSWORD=$(openssl passwd -6 "your-super-secret-password")
   ```
 
-14. Run the playbook:
+8. Run the playbook:
 
   ```bash
   ansible-playbook setup_test_user.yml
   ```
 
-15. Test that the test user can run BYOI commands:
+9. Test that the test user can run BYOI commands:
 
 Log out of the droplet. Then log back in as the test user with the following command:
 
@@ -110,7 +121,7 @@ Log out of the droplet. Then log back in as the test user with the following com
   ssh test@$IP_ADDRESS
   ```
 
-16. Start the BYOI lab server:
+10. Start the BYOI lab server:
 
 Now, as the test user, run the following command to start the BYOI lab server:
 
