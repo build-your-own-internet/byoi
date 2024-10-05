@@ -1,53 +1,121 @@
-You might want to set up a lab node to run BYOI. Here's how to do that.
+# You might want to set up a lab node to run BYOI. Here's how to do that.
 
-## Prerequisites
+## Starting with digital ocean
 
-* A machine with Docker installed
-* A machine with a static IP address
+Note: if you don't want to use digital ocean, you can use any other cloud
+provider that supports docker. You'll just need to get an Ubuntu 24.04 machine
+set up with ssh access.
 
-## Steps
+1. Install `doctl` (this is the digital ocean cli). You can do this with `brew install doctl` or `snap install doctl`
 
-1. Step 1: Install Ansible
+2. Authenticate with doctl:
 
-1.1 Update the Package Index
-`sudo apt update`
+  ```bash
+  doctl auth init
+  ```
 
-1.2 Install Required Dependencies
+3. If you don't have an ssh key, create one with the following command:
 
-`sudo apt install -y software-properties-common`
+  ```bash
+  ssh-keygen -t ed25519
+  ```
 
-1.3 Add the Ansible PPA Repository
+4. Add the ssh key to your digital ocean account with the following command:
 
-`sudo add-apt-repository --yes --update ppa:ansible/ansible`
+  ```bash
+  doctl compute ssh-key add --ssh-key-file ~/.ssh/id_ed25519.pub
+  ```
 
-1.4 Install Ansible
+5. List your ssh keys with the following command:
 
-`sudo apt install -y ansible`
+  ```bash
+  doctl compute ssh-key list
+  ```
 
-2. Set up the test user password
+6. Set your ssh key ID as an environment variable:
+
+  ```bash
+  export SSH_KEY_ID=<your-ssh-key-id>
+  ```
+
+7. Create a droplet with the following command:
+
+  ```bash
+  export SSH_KEY_ID=<your-ssh-key-id>
+  export HOST_NAME=build-your-own-internet-lab-3
+  doctl compute droplet create \
+      --ssh-keys $SSH_KEY_ID \
+      --image ubuntu-24-04-x64 \
+      --size s-2vcpu-4gb \
+      --region sfo3 \
+      --vpc-uuid cf4f0a3a-a4b6-4ced-8378-19c060c48bd6 \
+      $HOST_NAME
+  ```
+
+8. Find the IP address of the droplet with the following command:
+
+  ```bash
+  doctl compute droplet list --format ID,Name,PublicIPv4,PrivateIPv4
+  ```
+
+9. SSH into the droplet with the following command:
+
+  ```bash
+  $ ssh root@$IP_ADDRESS
+  The authenticity of host '137.184.179.253 (137.184.179.253)' can't be established.
+  ED25519 key fingerprint is SHA256:ecjoIp/DNuZIvKIWdoVOhKedryaBhgjRZooH1iYMKGU.
+  This key is not known by any other names.
+  Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+  ```
+
+10. Clone down the BYOI repo and run the playbook to set up the test user:
+
+  ```bash
+  git clone https://github.com/build-your-own-internet/byoi.git
+  ```
+
+11. Switch to the appropriate branch
+
+  ```bash
+  cd byoi
+  git checkout tech-summit-2024-base
+  ```
+
+12. Install Ansible:
+
+  ```bash
+  cd ansible-setup/
+  apt update;apt install -y software-properties-common;add-apt-repository --yes --update ppa:ansible/ansible;apt install -y ansible;
+  ```
+
+13. Set the test user password:
 
 Ansible requires that passwords be provided in an encrypted (hashed) format when setting user passwords. To set the password securely without storing it in the playbook, we can use an environment variable to pass the hashed password to the playbook.
 
-Steps:
+  ```bash
+  export TEST_USER_PASSWORD=$(openssl passwd -6 "your-super-secret-password")
+  ```
 
-2.1.Generate a Hashed Password
+14. Run the playbook:
 
-You can generate a hashed password using the openssl command:
-`openssl passwd -6`
+  ```bash
+  ansible-playbook setup_test_user.yml
+  ```
 
-This command will prompt you to enter the password and then output the hashed version using SHA-512 encryption.
-Alternatively, generate the hashed password non-interactively:
+15. Test that the test user can run BYOI commands:
 
-```bash
-PASSWORD='your_plain_text_password'
-HASHED_PASSWORD=$(openssl passwd -6 "${PASSWORD}")
-```
+Log out of the droplet. Then log back in as the test user with the following command:
 
-2.2.	Set an Environment Variable
-Export the hashed password as an environment variable before running the playbook:
+  ```bash
+  ssh test@$IP_ADDRESS
+  ```
 
-export TEST_USER_PASSWORD="${HASHED_PASSWORD}"
+16. Start the BYOI lab server:
 
-3. Run ansible-playbook
+Now, as the test user, run the following command to start the BYOI lab server:
 
-`sudo ansible-playbook setup_test_user.yml`
+  ```bash
+  byoi-rebuild
+  ```
+
+You're done!

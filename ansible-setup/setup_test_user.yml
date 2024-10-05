@@ -7,7 +7,7 @@
     test_user: test
     test_user_password: "{{ lookup('env', 'TEST_USER_PASSWORD') }}"
     git_repo_url: https://github.com/build-your-own-internet/byoi.git
-    git_repo_version: recursive-dns
+    git_repo_version: tech-summit-2024-base
     clone_dest: "/home/{{ test_user }}/byoi"
     custom_motd_message: |
       ************************************************************
@@ -22,7 +22,43 @@
       If you have any questions, hit us up on
       the #build-your-own-internet channel in slack.
       ************************************************************
-      .    
+    custom_vimrc_file: |
+      let mapleader=","
+      set backspace=indent,eol,start
+      set cursorline
+      set encoding=utf-8
+      set expandtab
+      set history=1000
+      set hlsearch
+      set incsearch
+      set ignorecase
+      set laststatus=2
+      set list listchars=tab:»·,trail:·,nbsp:·
+      set nocompatible
+      set nowrap
+      set number
+      set numberwidth=5
+      set ruler
+      set showcmd
+      set showtabline=2
+      set shiftround
+      set shiftwidth=2
+      set smartcase
+      set softtabstop=2
+      set statusline=%F\ %r\ %y\ format:\ %{&ff};\ [%c,%l]
+      set tabstop=2
+      set wildmode=list:longest,list:full
+      set wildignore+=*.o,*.obj,.git,*.rbc,*.class,.svn,vendor/gems/*
+      set splitbelow
+      set splitright
+      set textwidth=80
+      set winwidth=90
+      set winheight=20
+      nnoremap <CR> :nohlsearch<cr>
+      map Y y$
+      map D d$
+      map <leader>s :w<cr>
+      imap <leader>s <esc>:w<cr>  
   tasks:
     - name: Install prerequisite packages for Docker
       apt:
@@ -130,6 +166,13 @@
         insertafter: EOF
       become_user: "{{ test_user }}"
 
+    - name: Set the test user's vimrc file
+      copy:
+        dest: "/home/{{ test_user }}/.vimrc"
+        content: "{{ custom_vimrc_file }}"
+        owner: "{{ test_user }}"
+        group: "{{ test_user }}"
+
     - name: Create SSH configuration directory if it doesn't exist
       file:
         path: /etc/ssh/sshd_config.d
@@ -163,7 +206,7 @@
     - name: Set static MOTD for friendly welcome message
       copy:
         dest: /etc/motd
-        content: "{{ custom_motd_message }}\n"
+        content: "{{ custom_motd_message }}\n\n\n"
         owner: root
         group: root
         mode: '0644'
