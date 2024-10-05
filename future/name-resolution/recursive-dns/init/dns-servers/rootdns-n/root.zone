@@ -23,8 +23,10 @@ rootdns-i.isc.org.      IN A 100.0.1.100
 net.  IN NS tlddns-v.verisign.net.
 com.  IN NS tlddns-g.google.com.
 org.  IN NS tlddns-n.netnod.org.
+arpa. IN NS tlddns-a.aws.arpa.
 
 ; Glue records for TLD servers
 tlddns-v.verisign.net. IN A 102.0.1.100
 tlddns-g.google.com. IN A 8.2.0.100
 tlddns-n.netnod.org. IN A 101.0.1.101
+tlddns-a.aws.arpa.   IN A 4.3.0.14

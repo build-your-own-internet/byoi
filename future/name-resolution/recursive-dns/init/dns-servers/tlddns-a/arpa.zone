@@ -1,0 +1,19 @@
+@       IN SOA (
+                tlddns-a.aws.arpa.   ; MNAME
+                tlddns-a.aws.arpa.   ; RNAME
+                2024100501           ; serial
+                3600                 ; refresh (1 hour)
+                900                  ; retry (15 minutes)
+                604800               ; expire (1 week)
+                86400                ; minimum (1 day)
+                )
+3.0.1.1.in-addr.arpa.    IN PTR  If.you.are.a.dreamer.come.in.
+6.0.1.2.in-addr.arpa.    IN PTR  a.wisher.a.liar.
+7.7.6.2.in-addr.arpa.    IN PTR  A.hope-er.a.pray-er.
+6.0.3.2.in-addr.arpa.    IN PTR  a.magic.bean.buyer.
+8.8.5.3.in-addr.arpa.    IN PTR  If.youre.a.pretender.
+2.0.9.3.in-addr.arpa.    IN PTR  come.sit.by.the.fire.
+3.0.2.9.in-addr.arpa.    IN PTR  For.we.have.some.flax-golden.tales.
+100.0.1.9.in-addr.arpa.  IN PTR  to.spin.
+
+
