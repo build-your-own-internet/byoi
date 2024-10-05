@@ -24,6 +24,9 @@ case $HOSTNAME in
     (rootdns-i)
     ip route add default via 100.0.1.2
     ;;
+    (tlddns-a)
+    ip route add default via 4.3.0.3
+    ;;
     (tlddns-v)
     ip route add default via 102.0.1.4
     ;;
