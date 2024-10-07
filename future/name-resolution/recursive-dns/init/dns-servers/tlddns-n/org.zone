@@ -8,12 +8,10 @@
                 86400                ; minimum (1 day)
                 )
 
-; TLD name server records
-       IN NS  authoritative-a.aws.org.
-       IN NS  authoritative-s.supercorp.org.
-
 ; All the labels that the TLD knows about (e.g. isc.org)
+aws.org.       IN NS  authoritative-a.aws.org.
 isc.org.       IN NS  authoritative-a.aws.org.
+supercorp.org. IN NS  authoritative-s.supercorp.org.
 verisign.org.  IN NS  authoritative-s.supercorp.org.
 netnod.org.    IN NS  authoritative-s.supercorp.org.
 
