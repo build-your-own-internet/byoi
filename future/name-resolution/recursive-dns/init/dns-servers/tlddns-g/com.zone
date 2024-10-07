@@ -8,10 +8,6 @@
                 86400                ; minimum (1 day)
                 )
 
-; TLD name server records
-       IN NS  authoritative-a.aws.com.
-       IN NS  authoritative-s.supercorp.com.
-
 ; All the labels that the TLD knows about (e.g. isc.org)
 comcast.com.   IN NS  authoritative-s.supercorp.com.
 supercorp.com. IN NS  authoritative-s.supercorp.com.
