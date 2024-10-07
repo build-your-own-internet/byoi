@@ -1,6 +1,7 @@
+$ORIGIN aws.com.
 @       IN SOA (
-                host-dns.aws.com.   ; MNAME
-                admin.aws.com       ; RNAME
+                host-dns.aws.com.       ; MNAME
+                admin.aws.com.          ; RNAME
                 2024041501              ; serial
                 3600                    ; refresh (1 hour)
                 900                     ; retry (15 minutes)
@@ -8,21 +9,21 @@
                 86400                   ; minimum (1 day)
                 )
 
-server-a1       IN A    4.2.0.11
-server-a2       IN A    4.2.0.12
-server-a3       IN A    4.1.0.13
-server-a4       IN A    4.3.0.14
+server-a1           IN A    4.2.0.11
+server-a2           IN A    4.2.0.12
+server-a3           IN A    4.1.0.13
+server-a4           IN A    4.3.0.14
 
-resolver-a      IN A    4.1.0.101
+resolver-a          IN A    4.1.0.101
 
-authoritative-a IN A    4.1.0.100
+authoritative-a     IN A    4.1.0.100
 
-a2-4-1          IN A    4.1.0.2
-a2-4-2          IN A    4.2.0.2
+a2-4-1              IN A    4.1.0.2
+a2-4-2              IN A    4.2.0.2
 
-a3-4-1          IN A    4.1.0.3
-a3-4-3          IN A    4.3.0.3
-a3-3-4          IN A    3.4.0.3
+a3-4-1              IN A    4.1.0.3
+a3-4-3              IN A    4.3.0.3
+a3-3-4              IN A    3.4.0.3
 
-a4-4-1          IN A    4.1.0.3
-a4-2-4          IN A    2.4.0.3
+a4-4-1              IN A    4.1.0.3
+a4-2-4              IN A    2.4.0.3
