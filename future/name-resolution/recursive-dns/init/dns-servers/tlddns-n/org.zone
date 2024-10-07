@@ -9,6 +9,9 @@ $ORIGIN org.
                 86400                ; minimum (1 day)
                 )
 
+; Top-level domain delegations
+org.    IN NS     tlddns-n.netnod.org.
+
 ; All the labels that the TLD knows about (e.g. isc.org)
 aws         IN NS  authoritative-a.aws.org.
 isc         IN NS  authoritative-a.aws.org.

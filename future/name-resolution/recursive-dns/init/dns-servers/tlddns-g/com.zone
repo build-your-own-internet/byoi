@@ -9,6 +9,9 @@ $ORIGIN com.
                 86400                    ; minimum (1 day)
                 )
 
+; Top-level domain delegations
+com.    IN NS   tlddns-g.google.com.
+
 ; All the labels that the TLD knows about
 comcast         IN NS  authoritative-s.supercorp.com.
 supercorp       IN NS  authoritative-s.supercorp.com.

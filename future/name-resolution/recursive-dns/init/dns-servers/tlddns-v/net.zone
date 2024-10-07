@@ -9,6 +9,9 @@ $ORIGIN net.
                 86400                  ; minimum (1 day)
                 )
 
+; Top-level domain delegations
+net.    IN NS   tlddns-v.verisign.net.
+
 ; All the labels that the TLD knows about (e.g. isc.org.)
 zayo        IN NS  authoritative-a.aws.net.
 telia       IN NS  authoritative-s.supercorp.net.
