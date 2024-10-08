@@ -3,6 +3,9 @@
 /usr/sbin/ip route delete default
 cp /init/$HOSTNAME/resolv.conf /etc/resolv.conf
 
+mkdir -p /etc/vim
+cp /vimrc /etc/vim/vimrc.local
+
 rm -rf /init
 
 case $HOSTNAME in
