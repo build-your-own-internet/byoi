@@ -1,3 +1,4 @@
+$ORIGIN isc.org.
 @       IN SOA (
                 host-dns.isc.org.   ; MNAME
                 admin.isc.org.      ; RNAME

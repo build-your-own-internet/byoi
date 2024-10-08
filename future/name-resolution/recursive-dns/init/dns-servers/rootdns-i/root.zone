@@ -25,6 +25,6 @@ com.  IN NS tlddns-g.google.com.
 org.  IN NS tlddns-n.netnod.org.
 
 ; Glue records for TLD servers
-tlddns-v.verizon.net. IN A 102.0.1.100
-tlddns-g.google.com. IN A 8.2.0.100
-tlddns-n.netnod.org. IN A 101.0.1.101
+tlddns-v.verisign.net.  IN A 102.0.1.100
+tlddns-g.google.com.    IN A 8.2.0.100
+tlddns-n.netnod.org.    IN A 101.0.1.101
