@@ -150,6 +150,15 @@
         insertafter: EOF
       become_user: "{{ test_user }}"
 
+    - name: Set the prompt
+      lineinfile:
+        path: "/home/{{ test_user }}/.bashrc"
+        regexp: '^export PS1=.*'
+        line: 'export PS1="$ "'
+        state: present
+        insertafter: EOF
+      become_user: "{{ test_user }}"
+
     - name: Change ownership of '{{ clone_dest }}' to user '{{ test_user }}'
       file:
         path: "{{ clone_dest }}"
