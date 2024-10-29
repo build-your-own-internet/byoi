@@ -52,3 +52,25 @@ The recursive resolver's job is to keep asking questions about what the DNS reco
 So, what's the first thing it needs to do? It doesn't know what server on the internet might know about `www.happycat.com`, but! Fortunately, every resolver comes installed with a file called `root.hints`. This file provides the resolver the IP addresses of ALL of the root servers around the world. Since, for this explanation, we're ignoring the cache, the only thing the resolver knows about on the internet are those root servers. It will start by firing off a request to the Root DNS servers, asking them what the IP address is for `www.happycat.com`.
 
 ![large internet with DNS infrastructure with the path between the recursive resolver and the root DNS servers highlighted](img/recursive-dns-explanation/simplified-dns-map-3.svg)
+
+The role of the Root DNS server on The Internet is simple. All they do is tell the resolver which Top Level Domain (TLD) servers to go to. Root DNS servers don't know all the DNS records for every domain on the internet. That would be way too many requests and waaaaaaaay too many domain names! What they do know is where the next step to find those answers lives.
+
+Let's look at the domain we're attempting to lookup again: `www.happycat.com`. The Root DNS server looks at the last label on this name, `com`, and tells the recursive resolver to go ask one of the `COM` TLD servers. This gets us one step closer to learning what the address records are for the domain we want to lookup!
+
+Our resolver receives the response back from the Root server, and it recognizes that this is not the final answer it's looking for. But! It also sees that it now has IP addresses of another server that has more information about the domain it's attempting to look up! So, our stalwart resolver fires off requests to the `COM` TLD servers.
+
+![large internet with DNS infrastructure with the path between the recursive resolver and the COM TLD server highlighted](img/recursive-dns-explanation/simplified-dns-map-4.svg)
+
+Much like the Root DNS server, our TLD servers see way too much traffic to be able to provide answers to every DNS query that hits them. Instead, they too delegate.
+
+When `www.happycat.com` was created, a new record was added to the the `COM` TLD servers that instructed them to point any queries for any sub-domain under the `happycat.com` apex to a specific Authoritative DNS server. All over the internet, there are Authoritative DNS servers, servers that are responsible for providing answers to DNS queries for the names they know about.
+
+So in the story of our little resolver trying to find the IP address for `www.happycat.com`, it sent a request to the TLD server for `COM`, but it got another brush off. It was told that it needs to go ask the Authoritative DNS server for `happycat.com`.
+
+Our resolver receives that response, and undeterred, it initiates another new request, this time to the Authoritative server it just learned about.
+
+![large internet with DNS infrastructure with the path between the recursive resolver and the Authoritative DNS server highlighted](img/recursive-dns-explanation/simplified-dns-map-5.svg)
+
+The request lands on the Authoritative DNS server for this domain, and that server actually knows about the domain! It's able to send back an IP address for a server that knows how to handle queries for `www.happycat.com`!!!
+
+The resolver receives the response, sees that it AT LAST has an IP address for `www.happycat.com`, and sends that response back to the client. The process is complete!
