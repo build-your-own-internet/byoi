@@ -6,6 +6,9 @@ cp /init/$HOSTNAME/*.zone /etc/knot/
 cp /init/$HOSTNAME/resolv.conf /etc/resolv.conf
 cp /init/revive-dns.sh /revive-dns.sh
 
+mkdir -p /etc/vim
+cp /vimrc /etc/vim/vimrc.local
+
 rm -rf /init
 
 /usr/sbin/ip route delete default
@@ -23,6 +26,9 @@ case $HOSTNAME in
     ;;
     (rootdns-i)
     ip route add default via 100.0.1.2
+    ;;
+    (tlddns-a)
+    ip route add default via 4.3.0.3
     ;;
     (tlddns-v)
     ip route add default via 102.0.1.4
