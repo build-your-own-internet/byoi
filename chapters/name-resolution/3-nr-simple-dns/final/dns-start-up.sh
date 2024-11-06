@@ -6,6 +6,6 @@
 cp /init/resolv.conf /etc/resolv.conf
 
 /usr/sbin/knotc conf-init
-/usr/sbin/knotd -c /config/knot.conf --daemonize
+/usr/sbin/knotd --config /config/knot.conf --daemonize
 
 /usr/bin/sleep infinity

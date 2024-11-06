@@ -46,6 +46,6 @@ case $HOSTNAME in
 esac
 
 /usr/sbin/knotc conf-init
-/usr/sbin/knotd -c /config/knot.conf --daemonize
+/usr/sbin/knotd --config /config/knot.conf --daemonize
 
 /usr/bin/sleep infinity

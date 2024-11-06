@@ -157,7 +157,7 @@ But what's that big block at the top? `SOA`, or **S**tart **O**f **A**uthority, 
 Now it's time to get our Knot server up and running! Still on the `host-dns` machine, start the knot daemon:
 
 ```bash
-/usr/sbin/knotd -c /config/knot.conf
+/usr/sbin/knotd --config /config/knot.conf
 ```
 
 This will run Knot in the "foreground." Meaning, if you `CTRL + C` out of that, the server stops running. The benefit of running it this way is that you get to see all the logs of what happens during startup. This is especially useful if you want to catch a configuration mistake, because knot will report any errors directly to the screen. If **do** you see an error, you can `CTRL + C` out of the server, fix the problem, and try again. Also, if you do get an error, knot might just stop and protest that you need to fix the error before it will run.
@@ -165,7 +165,7 @@ This will run Knot in the "foreground." Meaning, if you `CTRL + C` out of that, 
 Once you've confirmed that it's working properly, you can either leave Knot running in the foreground and open a new terminal session to continue working, or you can [daemonize](../../glossary.md#daemon-or-daemonize) the Knot server by restarting it and adding the `--daemonize` flag:
 
 ```bash
-/usr/sbin/knotd -c /config/knot.conf --daemonize
+/usr/sbin/knotd --config /config/knot.conf --daemonize
 ```
 
 Sweet, now that we have told knot to start up with the configuration in place, let's make sure that it is indeed listening for DNS queries. We can do that with the help of [`netstat` command](../../command-reference-guide.md#netstat). In your `host-dns` container, run the following:

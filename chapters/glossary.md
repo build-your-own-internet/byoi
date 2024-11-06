@@ -6,6 +6,7 @@ You might run into terms that you don't know the definition to. Sometimes they a
   - [client](#client)
   - [container](#container)
   - [daemon (or daemonize)](#daemon-or-daemonize)
+  - [dns zone](#dns-zone)
   - [docker](#docker)
   - [hop](#hop)
   - [host](#host)
@@ -42,6 +43,20 @@ Daemons (or sometimes "demons") are pieces of software that run in the "backgrou
 Typically, a program that can run as a daemon will have both "interactive" modes and "daemonize" modes. The interactive mode (which is typically default) will run the program and output all of its messages to the screen. This means it will take over your terminal session. When this is happening, you won't be able to do anything else with that terminal unless you type `ctrl` + `c` (or open another terminal).
 
 When you run a daemon in its more "natural" daemonize mode, then it runs in the background and doesn't make a peep. It typically still generates log messages, but those messages are funneled into a file somewhere on the machine's hard disk (often something like `/var/log/messages`). Check the daemon's documentation for details on where it puts its messages when running in the background.
+
+## dns zone
+
+First, the technical description: In DNS, a zone is a specific, contiguous portion of the DNS namespace for which administrative responsibility has been delegated to a single manager or organization. Think of it as a segment of the DNS hierarchy that a particular entity controls and maintains.
+
+Imagine the internet as a giant atlas filled with maps of varying detail, from world maps to city street maps. When you seek a specific address like "804 S. 17th Ave, Chicago IL, USA" you start with the world map, which doesn’t show that level of detail but directs you to the map of the United States. From there, you move to the map of Illinois, then to Chicago, and finally to the exact street address.
+
+In this analogy, a DNS zone is like a specific map within this atlas. The divisions between maps — world, country, state, city — represent DNS zones in the Domain Name System. The dots in a domain name (like `www.example.com`) act like the commas and spaces in a physical address, signaling transitions from one DNS zone to another, just as you move from one map to the next for more detailed information.
+
+When you type a domain name into your browser, your computer starts by asking the root DNS servers (the world map) for directions. The root servers don’t have the exact address but point you to the top-level domain servers (country map), such as `com.`. These servers then direct you to the authoritative DNS servers for the domain (state or city map), which provide the specific IP address you’re seeking. This step-by-step process mirrors flipping through an atlas to find a specific location.
+
+Breaking down the internet into DNS zones, much like dividing maps in an atlas, makes navigating and managing the vast network feasible. Each DNS zone is responsible for a segment of the domain name space, ensuring efficient resolution of domain names without overloading any single server. This hierarchical structure helps computers across the internet collaborate to find any website you want to visit.
+
+In essence, DNS zones function like the different maps in an atlas, each providing a layer of detail that guides you to your destination. By moving through these zones or maps, you efficiently locate the exact address you’re looking for on the internet.
 
 ## docker
 
