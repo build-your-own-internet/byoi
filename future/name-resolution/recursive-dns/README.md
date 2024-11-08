@@ -114,7 +114,7 @@ zone:
     storage: "/var/lib/knot"
 ```
 
-The first thing to notice is that knot is only listening on requests that come in on IP address `8.2.0.100` on port `53`. The IP address there is the address for this machine on our toy internet.
+The first thing to notice is that knot is only listening for requests that come in on IP address `8.2.0.100` on port `53`. The IP address there is the address for this machine on our toy internet.
 
 Then we have a list of [zones](../../../chapters/glossary.md#dns-zone). In this config, there is only one zone: `com`. When this server receives a DNS request for a domain, it will check the next label of the name (`awesomecat`) against the file for that zone, `"/etc/knot/com.zone"`. If it finds the name in that file, it can send back the IP address for the server that is the authority over that next label. So let's take a look what currently exists in the `com` zonefile:
 
@@ -145,6 +145,51 @@ google          IN NS  authoritative-a.aws.com.
 authoritative-a.aws.com.           IN A   4.1.0.100
 authoritative-s.supercorp.com.     IN A   9.1.0.100
 ```
+
+The first thing we should look at is the block for the `SOA`, or Start of Authority. An SOA record indicates to any interested party which server is the authority over all records within a particular zone. In this case, the zone is `com`, and the server is our `tlddns-g.google.com` server.
+
+The next set of records that we see look like what we would expect in the `ANSWER` section of a `dig`. The type of record we see for `com.`, `comcast`, `supercorp`, etc are all `NS` records, which stands for NameServer records. This record type tells resolvers that we haven't reached the end of our yet. Instead, send another query to the server that is the authority over the next label.
+
+If you look at `comcast`, for example, you'll see that it's pointing to `authoritative-s.supercorp.com.`, which you'll find in the Supercorp network of our network map. But, that name doesn't actually help the resolver make it's query. The resolver still needs an IP address to know where to send it's next DNS query. A few lines below, we see the glue records for the authoritative servers on our toy internet. Glue records are A or AAAA records that point to another server that a resolver will need to query in order to continue the process of resolving a name. By including the IP addresses for the authoritative servers in this zone file, the DNS server can respond to DNS queries for names it knows about with BOTH the NS record and the IP address for the server the resolver needs to query next.
+
+So the next thing we need to do is add our `awesomecat` label to this zone file. We want to use the `authoritative-a` server in our AWS network as the authority for this name. Add a new line below the entry for `google` that looks like:
+
+```unset
+awesomecat      IN NS  authoritative-a.aws.com.
+```
+
+Note: Why aren't we including the `com.` after each of our labels? If you look at the beginning of the file, you'll see a line, `$ORIGIN com.`. This tells our DNS server to add the `com.` label to any entry that does not already include it.
+
+OK, let's make sure we added this record correctly. We can run our `dig` again, but let's make a minor adjustment. With `dig`, we can tell the command exactly which server to send the query to. We know that we just added this name to the `tlddns-g.google.com` server, so let's run this:
+
+```bash
+root@tlddns-g:/# dig www.awesomecat.com @tlddns-g.google.com
+
+; <<>> DiG 9.18.28-1~deb12u2-Debian <<>> www.awesomecat.com @tlddns-g.google.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 23289
+;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 2
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;www.awesomecat.com.  IN A
+
+;; AUTHORITY SECTION:
+awesomecat.com.  3600 IN NS authoritative-a.aws.com.
+
+;; ADDITIONAL SECTION:
+authoritative-a.aws.com. 3600 IN A 4.1.0.100
+
+;; Query time: 0 msec
+;; SERVER: 8.2.0.100#53(tlddns-g.google.com) (UDP)
+;; WHEN: Fri Nov 08 19:58:33 UTC 2024
+;; MSG SIZE  rcvd: 97
+```
+
+Look at that! We don't have an answer, but we have a new response in our `AUTHORITY` section! This shows that `tlddns-g` know that a resolver should go ask `authoritative-a.aws.com` about any record pertaining to `awesomecat.com`. AND! We see the glue records included in the `ADDITIONAL` section. This tells the resolver where to send the query without having to first resolve `authoritative-a.aws.com`. Neat!
 
 ### Add a new TLD
 
