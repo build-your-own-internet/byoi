@@ -39,6 +39,8 @@ As promised, we are going to teach you how to use the system before we build the
 
 ### Add a new name
 
+<!-- TODO: write a high level overview of what we're about to do -->
+
 Our current internet has a few names already defined in the DNS. We want to add another one, `www.awesomecat.com`. For most people, they just go to the registrar to add a new name. However, we are in the business of digging deep. So we will explore what happens behind the scenes!
 
 To get started, go ahead and `byoi-rebuild` to bring up the internet we'll be using for this chapter.
@@ -94,9 +96,13 @@ You'll notice that `knotd` is running on port `53` on a number of these lines (b
 Now, let's look at what the full command is that started this process:
 
 ```bash
-root@tlddns-g:/# ps aux | grep knot
-root          20  0.0  0.0 1546476 6108 ?        Ssl  21:06   0:02 /usr/sbin/knotd --config /config/knot.conf --daemonize
-root          46  0.0  0.0   3324  1536 pts/0    S+   21:53   0:00 grep knot
+root@tlddns-g:/# ps aux
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.0   3924  2944 ?        Ss   19:38   0:00 /bin/bash /dns-start-up.sh
+root          20  0.1  0.0 1546476 6176 ?        Ssl  19:38   0:00 /usr/sbin/knotd --config /config/knot.conf --daemonize
+root          21  0.0  0.0   2484  1152 ?        S    19:38   0:00 /usr/bin/sleep infinity
+root          38  0.0  0.0   4188  3456 pts/0    Ss   19:39   0:00 /bin/bash
+root          50 25.0  0.0   8088  4096 pts/0    R+   19:45   0:00 ps aux
 ```
 
 So, here we see `/usr/sbin/knotd --config /config/knot.conf --daemonize`, which tells us that the knot server was started using the config file in `/config/knot.conf`. Let's take a look at that file.
@@ -160,7 +166,27 @@ awesomecat      IN NS  authoritative-a.aws.com.
 
 Note: Why aren't we including the `com.` after each of our labels? If you look at the beginning of the file, you'll see a line, `$ORIGIN com.`. This tells our DNS server to add the `com.` label to any entry that does not already include it.
 
-OK, let's make sure we added this record correctly. We can run our `dig` again, but let's make a minor adjustment. With `dig`, we can tell the command exactly which server to send the query to. We know that we just added this name to the `tlddns-g.google.com` server, so let's run this:
+OK, let's make sure we added this record correctly. But... we added a new entry to a file that knot loaded on startup. That means if we run our `dig` again now, we'll still see that the resolver was only able to make it as far as `tlddns-g`. Because even though we added the entry to the file, knot still doesn't know about it. We need to make sure knot on `tlddns-g` knows about the new entry, but we need to do that without interrupting any potential traffic on our super busy toy internet. Let's use the `kill -HUP` command, which tells the machine to re-read any config files for the process.
+
+First, let's get the process ID again:
+
+```bash
+root@tlddns-g:/# ps aux
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.0   3924  2944 ?        Ss   19:38   0:00 /bin/bash /dns-start-up.sh
+root          20  0.1  0.0 1546476 6176 ?        Ssl  19:38   0:00 /usr/sbin/knotd --config /config/knot.conf --daemonize
+root          21  0.0  0.0   2484  1152 ?        S    19:38   0:00 /usr/bin/sleep infinity
+root          38  0.0  0.0   4188  3456 pts/0    Ss   19:39   0:00 /bin/bash
+root          50 25.0  0.0   8088  4096 pts/0    R+   19:45   0:00 ps aux
+```
+
+We can see that knot is process ID is `20`. Let's run our command:
+
+```bash
+kill -HUP 20
+```
+
+Now we can run our `dig` again, but let's make a minor adjustment. With `dig`, we can tell the command exactly which server to send the query to. We know that we just added this name to the `tlddns-g.google.com` server, so let's run this:
 
 ```bash
 root@tlddns-g:/# dig www.awesomecat.com @tlddns-g.google.com
@@ -191,6 +217,126 @@ authoritative-a.aws.com. 3600 IN A 4.1.0.100
 
 Look at that! We don't have an answer, but we have a new response in our `AUTHORITY` section! This shows that `tlddns-g` know that a resolver should go ask `authoritative-a.aws.com` about any record pertaining to `awesomecat.com`. AND! We see the glue records included in the `ADDITIONAL` section. This tells the resolver where to send the query without having to first resolve `authoritative-a.aws.com`. Neat!
 
+Now that the `com.` nameserver knows where to send a resolver asking for `awesomecat.com`, we need tell that authoritative server how to respond to those queries. Let's `hopon authoritative-a` and open the config file we found previously for knot configs, `/config/knot.conf`:
+
+```unset
+# Define the server options
+server:
+  listen: 4.1.0.100@53
+
+# Define the zone
+zone:
+  - domain: aws.com
+    file: "/etc/knot/aws.com.zone"
+    storage: "/var/lib/knot"
+  - domain: aws.net
+    file: "/etc/knot/aws.net.zone"
+    storage: "/var/lib/knot"
+  - domain: aws.org
+    file: "/etc/knot/aws.org.zone"
+    storage: "/var/lib/knot"
+  - domain: google.com
+    file: "/etc/knot/google.com.zone"
+    storage: "/var/lib/knot"
+  - domain: isc.org
+    file: "/etc/knot/isc.org.zone"
+    storage: "/var/lib/knot"
+  - domain: zayo.net
+    file: "/etc/knot/zayo.net.zone"
+    storage: "/var/lib/knot"
+```
+
+On this server, we see significantly more zones than we saw on the `com.` server! We need to add a new zone for our `awesomecat` zone:
+
+```unset
+  - domain: awesomecat.com
+    file: "/etc/knot/awesomecat.com.zone"
+    storage: "/var/lib/knot"
+```
+
+Ok, so now we're referencing a file that doesn't exist. Let's create that file. You can paste the following command wholesale into your terminal:
+
+```bash
+cat << ZONEFILE > /etc/knot/awesomecat.com.zone
+\$ORIGIN awesomecat.com.
+@       IN SOA (
+                host-dns.awesomecat.com.; MNAME
+                admin.awesomecat.com.   ; RNAME
+                2024111501              ; serial
+                3600                    ; refresh (1 hour)
+                900                     ; retry (15 minutes)
+                604800                  ; expire (1 week)
+                86400                   ; minimum (1 day)
+                )
+
+www      IN A      4.2.0.11
+ZONEFILE
+```
+
+In this file, we're following the same structure we saw previously in defining the `ORIGIN` and the `SOA` record. Then we're adding a new record for the `www` label. Let's see this in action! We wanna run another `dig` to resolve the name for `www.awesomecat.com`. But, just like we saw before, we need to restart the knot process on this machine. The PID, or process ID, will likely be a different number than it was on `tlddns-g`. Run your `ps aux` to find the process ID and `kill -HUP` that process.
+
+Now, let's run our `dig`!
+
+```bash
+root@authoritative-a:/# dig www.awesomecat.com
+
+; <<>> DiG 9.18.28-1~deb12u2-Debian <<>> www.awesomecat.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 30015
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;www.awesomecat.com.  IN A
+
+;; ANSWER SECTION:
+www.awesomecat.com. 3600 IN A 4.2.0.11
+
+;; Query time: 39 msec
+;; SERVER: 4.1.0.101#53(4.1.0.101) (UDP)
+;; WHEN: Tue Nov 12 19:49:31 UTC 2024
+;; MSG SIZE  rcvd: 63
+```
+
+There it is! We did it!
+
+Now, let's go back to our `client-c1` and see if we can successfully resolve the name there! `hopon client-c1` again and re-run your `dig`. What happens?
+
+```bash
+root@client-c1:/# dig www.awesomecat.com
+
+; <<>> DiG 9.18.28-0ubuntu0.24.04.1-Ubuntu <<>> www.awesomecat.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 8222
+;; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;www.awesomecat.com.  IN A
+
+;; AUTHORITY SECTION:
+com.   2475 IN SOA tlddns-g.google.com. tlddns-g.google.com. 2024041501 3600 900 604800 86400
+
+;; Query time: 0 msec
+;; SERVER: 1.2.0.100#53(1.2.0.100) (UDP)
+;; WHEN: Tue Nov 12 19:58:27 UTC 2024
+;; MSG SIZE  rcvd: 99
+```
+
+Ok... What do you think might have happened there?
+
+Let's talk a little bit about caching. Caching is actually a really common problem with DNS changes. Because DNS changes are fairly infrequent, most people set the ttl for their DNS entries fairly high, sometimes even longer than a full day. This means that when make a change on The Real Internet, it might not propogate as quickly as you might expect.
+
+So, if we know that the issue is caching, which machine do you think might be caching the DNS response from earlier? Which machine is responsible for persisting in making queries until we have a DNS response?
+
+When you figure out which machine you need to reset, you'll need to reset the resolving software. We picked a software called `unbound`. You'll use the same trick we just used with knot, namely, run `kill -HUP` on the process ID for unbound.
+
+If you're not sure which machine to go to, check the [super secret answer section](#reset-unbound) below.
+
 ### Add a new TLD
 
 # Exercises
@@ -217,3 +363,11 @@ Lots of different use-cases:
 ## how do I build this from the ground up
 
 ## Watch recursive resolution using tcpdump
+
+## Answer Section
+
+If you got stuck figuring out any of our challenges, this is the section where we provide more detail.
+
+### Reset Unbound
+
+When a client makes a DNS request, the recursive resolver that it points to is the one responsible for actually finding the DNS records. If you look at the network map, the resolver that lives in each network will be the recursive resolver for that network. So, if we need to reset the cache for queries client-c1 is making, you would need to `hopon recursive-c`.
