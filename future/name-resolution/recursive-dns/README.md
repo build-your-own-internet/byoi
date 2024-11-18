@@ -329,7 +329,7 @@ com.   2475 IN SOA tlddns-g.google.com. tlddns-g.google.com. 2024041501 3600 900
 
 Ok... What do you think might have happened there?
 
-Let's talk a little bit about caching. Caching is actually a really common problem with DNS changes. Because DNS changes are fairly infrequent, most people set the ttl for their DNS entries fairly high, sometimes even longer than a full day. This means that when make a change on The Real Internet, it might not propogate as quickly as you might expect.
+Let's talk a little bit about caching. Caching is actually a really common problem with DNS changes. Because DNS changes are fairly infrequent, most people set the ttl for their DNS entries fairly high, sometimes even longer than a full day. This means that when make a change on The Real Internet, it might not propagate as quickly as you might expect.
 
 So, if we know that the issue is caching, which machine do you think might be caching the DNS response from earlier? Which machine is responsible for persisting in making queries until we have a DNS response?
 
@@ -338,6 +338,106 @@ When you figure out which machine you need to reset, you'll need to reset the re
 If you're not sure which machine to go to, check the [super secret answer section](#reset-unbound) below.
 
 ### Add a new TLD
+
+Okay, so we did this process of adding a new name. We're going to take this a little deeper and add an entire new TLD. What's the best plan of attack for how to do this? Well, we started the last section by performing a name-lookup from a client and seeing what the recursive name-resolver did to try to resolve that name. We then found where that failed and fixed it. We're going to do the same thing now with a new top-level domain.
+
+First, let's pick a new top-level domain that hasn't been implemented yet. So far, we've got `.com`, `.net` and `.org`. So let's pick something else. How about `.meow`. That sounds fun, and this is our little internet, and we can do whatever top-level domains we want. Even though `.meow` is not a real Internet top-level domain, we feel that it should it be and is a growth-opportunity for the "real" internet.
+
+Now that you've spent some time playing with DNS and making some small changes, you're probably ready to start by just imagining how name-resolution actions take place on the internet in order to figure out where to begin. Let's therefore just start by thinking about this process. If you need to review, check out the [appendix document on how a DNS-lookup is performed](../../../appendix/recursive-dns.md) for a refresher.
+
+First, we started with a client (e.g. `client-c1`). Let's say it attempts to resolve the name `pippin.meow`. What happens?
+
+1. `client-c1` sends a request to its local recursive resolver, `resolver-c`.
+2. `resolver-c` has never seen `pippin.meow` before, nor has it ever seen any `.meow` address to be resolved, so it starts at a root server (e.g. `rootdns-n` or `rootdns-i`)
+3. When the name-resolution request goes to either of these servers, what do you think is going to happen?
+
+Well, neither of those name-servers have ever heard of the `.meow` TLD, so they're probably going to error. Let's hopon one of those root-level name servers and double-check that this is the case!
+
+```bash
+root@rootdns-i:/# dig @100.0.1.100 meow.
+
+; <<>> DiG 9.18.28-1~deb12u2-Debian <<>> @100.0.1.100 meow.
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 46536
+;; flags: qr aa rd; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;meow.                          IN      A
+
+;; AUTHORITY SECTION:
+.                       86400   IN      SOA     rootdns-i.isc.org. rootdns-i.isc.org. 2024080901 1800 900 604800 86400
+
+;; Query time: 0 msec
+;; SERVER: 100.0.1.100#53(100.0.1.100) (UDP)
+;; WHEN: Mon Nov 18 19:42:01 UTC 2024
+;; MSG SIZE  rcvd: 85
+```
+
+Okay, this is what we expected: the root DNS server replied with an `NXDOMAIN`, telling us that the `.meow` name does not exist. Since root DNS servers are the "authoritative" servers over all top-level domains, this server can say definitively that this name will never resolve.
+
+#### How do we fix this?
+
+This should feel very similar to adding the `awesomecat.com` name to the `.com` TLD server. In that case, we told the `.com` DNS server where it could go find records for the `awesomecat` label.
+
+In our current case, since we have *two* root-dns servers, we're going to need to make the changes in two different places. This is a difference between our current exercise and the previous one where we added `awesomecat.com`. You may recognize that, had our internet been more like the "real" internet, we would have had a number of `.com` servers that we would have had to have updated to make that case work as well.
+
+Okay, so let's start by fixing this server, then we'll worry about the other root dns server. Finally, we're going to set up the `.meow` TLD server.
+
+We're going to do the same thing we did last time, namely, modify the knot configuration for this server. Let's start by looking at the config of this server:
+
+```bash
+root@rootdns-i:/# cat /config/knot.conf
+# Define the server options
+server:
+  listen: 100.0.1.100@53
+
+# Define the zone
+zone:
+  - domain: .
+    file: "/etc/knot/root.zone"
+    storage: "/var/lib/knot"
+```
+
+Okay, so we see that this server is ready to answer requests for the name `.`, which is just another way of saying "this is a root DNS server." Let's take a look at what's inside that config file that's being referenced under the `.` domain:
+
+```bash
+root@rootdns-i:/# cat /etc/knot/root.zone
+; Root zone file for example root server
+$ORIGIN .
+$TTL 86400 ; 1 day
+
+; Root zone SOA record
+@ IN SOA rootdns-i.isc.org. rootdns-i.isc.org. (
+        2024080901 ; serial number
+        1800       ; refresh (30 minutes)
+        900        ; retry (15 minutes)
+        604800     ; expire (7 days)
+        86400      ; minimum (1 day)
+)
+
+; Root name server records
+       IN NS  rootdns-i.isc.org.
+       IN NS  rootdns-n.netnod.org.
+
+; Glue records for root name servers
+rootdns-n.netnod.org.   IN A 101.0.1.100
+rootdns-i.isc.org.      IN A 100.0.1.100
+
+; Top-level domain delegations
+net.  IN NS tlddns-v.verisign.net.
+com.  IN NS tlddns-g.google.com.
+org.  IN NS tlddns-n.netnod.org.
+
+; Glue records for TLD servers
+tlddns-v.verisign.net.  IN A 102.0.1.100
+tlddns-g.google.com.    IN A 8.2.0.100
+tlddns-n.netnod.org.    IN A 101.0.1.101
+```
 
 # Exercises
 
