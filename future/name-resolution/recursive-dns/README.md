@@ -386,7 +386,7 @@ This should feel very similar to adding the `awesomecat.com` name to the `.com` 
 
 In our current case, since we have *two* root-dns servers, we're going to need to make the changes in two different places. This is a difference between our current exercise and the previous one where we added `awesomecat.com`. You may recognize that, had our internet been more like the "real" internet, we would have had a number of `.com` servers that we would have had to have updated to make that case work as well.
 
-Okay, so let's start by fixing this server, then we'll worry about the other root dns server. Finally, we're going to set up the `.meow` TLD server.
+Okay, so let's start by fixing the server we're alreayd looking at, then we'll worry about the other root dns server. Finally, we'll need to set up the `.meow` TLD server.
 
 We're going to do the same thing we did last time, namely, modify the knot configuration for this server. Let's start by looking at the config of this server:
 
@@ -438,6 +438,31 @@ tlddns-v.verisign.net.  IN A 102.0.1.100
 tlddns-g.google.com.    IN A 8.2.0.100
 tlddns-n.netnod.org.    IN A 101.0.1.101
 ```
+
+So, there's a few things going on in this file. A lot of this looks similar to the zonefiles we edited in the previous section. First, we can see that the root servers are defined with the following lines:
+
+```bash
+       IN NS  rootdns-i.isc.org.
+       IN NS  rootdns-n.netnod.org.
+```
+
+This says that any request for a root server can go to either `rootdns-i.isc.org.` OR `rootdns-n.netnod.org.`. In practice, your resolve will most likely send requests to both. This means that if a path is broken or conjested to one server, the resolver still has an opportunity to get a timely response from the other. In The Real Internet, there are 13 root server names. Each of those 13 root server names is used to identify multiple machines that function as root servers. This adds layers upon layers of redundancy to make sure the system as a whole has as close to 100% up time as possible.
+
+The next lines are the glue records for the root servers. As a reminder, glue records speed up query time by providing an IP address for the name of the next machine the resolver needs to query.
+
+Then we start seeing some TLD designations for `net.`, `com.`, and `org.`. We want to add a new TLD, so we'll add a new line there for `meow.`. We'll also want to add the glue record for the machine we're designating as responsible for `meow.` below that. But how do we know what that machine is? Let's go back and look at the network diagram at the beginning of this chapter. In the AWS network at the top of the diagram, there's an unlabeled TLD server. We're going to use that machine as our new `meow.` TLD server!
+
+Let's add the following records to our root zone file on `rootdns-i`:
+
+```bash
+meow.  IN NS tlddns-a.aws.meow.
+```
+
+```bash
+tlddns-a.aws.meow.  IN A 4.3.0.14
+```
+
+As we saw before,
 
 # Exercises
 
