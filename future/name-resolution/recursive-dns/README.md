@@ -455,14 +455,173 @@ Then we start seeing some TLD designations for `net.`, `com.`, and `org.`. We wa
 Let's add the following records to our root zone file on `rootdns-i`:
 
 ```bash
-meow.  IN NS tlddns-a.aws.meow.
+meow. IN NS tlddns-a.aws.meow.
 ```
 
 ```bash
-tlddns-a.aws.meow.  IN A 4.3.0.14
+tlddns-a.aws.meow.      IN A 4.3.0.14
 ```
 
-As we saw before,
+As we discussed previously, `knot` loads these config files at startup. Which means it doesn't know about our changes until we tell it that there are new files to load. We did this previously by running our `ps aux` to find `knot`'s process ID, then running `kill -HUP <process_ID>` to gracefully restart the knot server.
+
+Once you've done that, you should be able to make a query to the root DNS server for the new TLD entry and be pointed to `tlddns-a.aws.meow.` for your next step:
+
+```bash
+root@rootdns-i:/# dig @100.0.1.100 meow.
+
+; <<>> DiG 9.18.28-1~deb12u2-Debian <<>> @100.0.1.100 meow.
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 58314
+;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 2
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;meow.    IN A
+
+;; AUTHORITY SECTION:
+meow.   86400 IN NS tlddns-a.aws.meow.
+
+;; ADDITIONAL SECTION:
+tlddns-a.aws.meow. 86400 IN A 4.3.0.14
+
+;; Query time: 0 msec
+;; SERVER: 100.0.1.100#53(100.0.1.100) (UDP)
+;; WHEN: Wed Nov 27 21:51:33 UTC 2024
+;; MSG SIZE  rcvd: 76
+```
+
+Neat! Next step is to create the TLD server itself. In this case, we'll want to `hopon tlddns-a` and start configuring our `knot` server there. If we check the `/config/knot.conf` file, you'll see that we currently only have the `server` itself defined. We'll need to add the zone at the end of the file:
+
+```bash
+# Define the zone
+zone:
+  - domain: meow
+    file: "/etc/knot/meow.zone"
+    storage: "/var/lib/knot"
+```
+
+Now that we've told `knot` where to find the file for the zone, we should actually go and make that file! Let's `vim /etc/knot/meow.zone` and add the zone content we want for this TLD.
+
+```bash
+$ORIGIN meow.
+@       IN SOA (
+                tlddns-a.aws.meow.       ; MNAME
+                tlddns-a.aws.meow.       ; RNAME
+                2024041501               ; serial
+                3600                     ; refresh (1 hour)
+                900                      ; retry (15 minutes)
+                604800                   ; expire (1 week)
+                86400                    ; minimum (1 day)
+                )
+
+; Top-level domain delegations
+meow.    IN NS   tlddns-a.aws.meow.
+
+; All the labels that the TLD knows about
+pippin         IN NS  authoritative-s.supercorp.meow.
+
+; glue records for the authoritative DNS servers that the TLD knows about
+; i.e. if google is using the same authoritative server as aws, it's one glue record
+authoritative-a.aws.meow.           IN A   4.1.0.100
+authoritative-s.supercorp.meow.     IN A   9.1.0.100
+```
+
+<!-- TODO: we still need to figure out how to 'fix' needing an authoritative server with the same TLD as our domain. If we can't let's add a section on why we can't... -->
+
+We've already discussed a lot of what's going on here in previous sections. The thing to notice here is that we've added a new subdomain, `pippin.meow`, which will be served out of the `authoritative-s` DNS server. Tell your `knot` server that it needs to reload its config files, then let's run a `dig` on `pippin.meow`:
+
+```bash
+root@tlddns-a:/# dig @4.3.0.14 pippin.meow.
+
+; <<>> DiG 9.18.28-1~deb12u2-Debian <<>> @4.3.0.14 pippin.meow.
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 12690
+;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 2
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;pippin.meow.   IN A
+
+;; AUTHORITY SECTION:
+pippin.meow.  3600 IN NS authoritative-s.supercorp.meow.
+
+;; ADDITIONAL SECTION:
+authoritative-s.supercorp.meow. 3600 IN A 9.1.0.100
+
+;; Query time: 0 msec
+;; SERVER: 4.3.0.14#53(4.3.0.14) (UDP)
+;; WHEN: Wed Nov 27 22:34:46 UTC 2024
+;; MSG SIZE  rcvd: 96
+```
+
+Ok, so far we've:
+
+* [x] configured the root server to know about the TLD server
+* [x] configured the TLD server to know about it's zone
+* [x] added a subdomain, `pippin` to the `meow` zone
+
+Now we need to go tell the authoritative server we selected, `authoritative-s`, how to answer DNS queries for `pippin.meow`. When you `hopon authoritative-s`, we'll need to start by telling the knot server that it has a new zone it needs to answer for. We'll do that by adding the following to `/config/knot.conf`:
+
+```bash
+  - domain: pippin.meow
+    file: "/etc/knot/pippin.meow.zone"
+    storage: "/var/lib/knot"
+```
+
+Again, once we've added the zone, we'll need to create the zonefile and add the DNS records to it. So create and edit the file we pointed to for our zone, `/etc/knot/pippin.meow.zone`, and add the following:
+
+```bash
+$ORIGIN pippin.meow.
+@       IN SOA (
+                host-dns.pippin.meow.   ; MNAME
+                admin.pippin.meow.      ; RNAME
+                2024041501              ; serial
+                3600                    ; refresh (1 hour)
+                900                     ; retry (15 minutes)
+                604800                  ; expire (1 week)
+                86400                   ; minimum (1 day)
+                )
+
+@          IN A    4.2.0.11
+www        IN A    4.2.0.11
+```
+
+In this zonefile, we're adding A records for both `pippin.meow` and `www.pippin.meow` that point to the server at `4.2.0.11`. Now, let's tell our knot on this server that it has new config files and let's check our work!
+
+```bash
+root@authoritative-s:/# dig www.pippin.meow
+
+; <<>> DiG 9.18.28-1~deb12u2-Debian <<>> www.pippin.meow
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 34614
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;www.pippin.meow.  IN A
+
+;; ANSWER SECTION:
+www.pippin.meow. 3600 IN A 4.2.0.11
+
+;; Query time: 3 msec
+;; SERVER: 9.2.0.100#53(9.2.0.100) (UDP)
+;; WHEN: Wed Nov 27 23:19:25 UTC 2024
+;; MSG SIZE  rcvd: 60
+```
+
+Would you look at that! We got our whole lookup done now! Congratulations team!
+
+NOTE: We hacked this together a little... We used glue records in the zonefile we created for `meow.` to point our resolvers to the authoritative servers. But those actual records don't exist anywhere in our DNS. We still need to go back and add actual records for `authoritative-a.aws.meow.` and `authoritative-s.supercorp.meow.`. We'll leave that as an exercise for the reader.
 
 # Exercises
 
