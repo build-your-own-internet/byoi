@@ -12,10 +12,10 @@ $ORIGIN aws.com.
 server-a1           IN A    4.2.0.11
 server-a2           IN A    4.2.0.12
 server-a3           IN A    4.1.0.13
-server-a4           IN A    4.3.0.14
 
 resolver-a          IN A    4.1.0.101
 
+tlddns-a            IN A    4.3.0.14
 authoritative-a     IN A    4.1.0.100
 
 a2-4-1              IN A    4.1.0.2
