@@ -18,6 +18,7 @@ isc         IN NS  authoritative-a.aws.org.
 supercorp   IN NS  authoritative-s.supercorp.org.
 verisign    IN NS  authoritative-s.supercorp.org.
 netnod      IN NS  authoritative-s.supercorp.org.
+ripe        IN NS  authoritative-a.aws.org.
 
 ; glue records for the authoritative DNS servers that the TLD knows about
 ; i.e. if isc is using the same authoritative server as AWS, it's one glue record
