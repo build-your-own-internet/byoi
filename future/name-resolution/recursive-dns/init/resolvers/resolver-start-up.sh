@@ -29,6 +29,9 @@ case $HOSTNAME in
     ip route add default via 8.1.0.4
     ip route add 8.2.0.0/16 via 8.1.0.2
     ;;
+    (resolver-r)
+    ip route add default via 103.0.1.4
+    ;;
 esac
 
 /usr/sbin/unbound -d
