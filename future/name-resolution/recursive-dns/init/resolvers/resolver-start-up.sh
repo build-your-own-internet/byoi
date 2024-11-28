@@ -31,6 +31,7 @@ case $HOSTNAME in
     ;;
     (resolver-r)
     ip route add default via 103.0.1.4
+    rm /etc/unbound/root.hints
     ;;
 esac
 
