@@ -9,4 +9,4 @@ else
     echo "No knot processes found"
 fi
 # Restart the process
-/usr/sbin/knotd -c /config/knot.conf --daemonize
+/usr/sbin/knotd --config /config/knot.conf --daemonize

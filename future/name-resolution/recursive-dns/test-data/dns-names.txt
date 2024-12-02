@@ -1,7 +1,7 @@
 server-a1.aws.com
 server-a2.aws.com
 server-a3.aws.com
-server-a4.aws.com
+tlddns-a.aws.com
 resolver-a.aws.com
 authoritative-a.aws.com
 a2-4-1.aws.com
