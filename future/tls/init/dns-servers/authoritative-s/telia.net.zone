@@ -1,0 +1,30 @@
+@       IN SOA (
+                host-dns.telia.net.   ; MNAME
+                admin.telia.net.       ; RNAME
+                2024041501              ; serial
+                3600                    ; refresh (1 hour)
+                900                     ; retry (15 minutes)
+                604800                  ; expire (1 week)
+                86400                   ; minimum (1 day)
+                )
+
+t5-2-3      IN A    2.3.0.5
+t5-3-5-6    IN A    3.5.6.5
+t5-3-5-7    IN A    3.5.7.5
+t5-3-5-8    IN A    3.5.8.5
+
+t6-2-3      IN A    2.3.0.6
+t6-3-5-6    IN A    3.5.6.6
+t6-3-6-7    IN A    3.6.7.6
+t6-3-6-8    IN A    3.6.8.6
+
+t7-3-4      IN A    3.4.0.7
+t7-3-5-7    IN A    3.5.7.7
+t7-3-6-7    IN A    3.6.7.7
+t7-3-7-8    IN A    3.7.8.7
+
+t8-3-8      IN A    3.8.0.8
+t8-3-9      IN A    3.9.0.8
+t8-3-5-8    IN A    3.5.8.8
+t8-3-6-8    IN A    3.6.8.8
+t8-3-7-8    IN A    3.7.8.8
