@@ -267,7 +267,7 @@ Again, we see `status: NOERROR`. Things are looking good!
 
 But notice... There's no `ANSWER` section in this response. This means we haven't gotten back the IP addresses for the name we're asking about.
 
-When we look at the `AUTHORITY` and `ADDITIONAL` sections, they look pretty similar to our query for just the root servers... But, if you look a little closer, you'll see that the response in the `AUTHORITY` section shows that it's providing answers for `com.`... A closer inspection of the suffix on those names shows us that it's pointing to `gtld-servers.net.`, which the observant reader will see that `tld` is part of that name. So the Root server is saying "I don't know about this name, but if you go ask this `com.` TLD server, you'll probably get a better answer".
+When we look at the `AUTHORITY` and `ADDITIONAL` sections, they look pretty similar to our query for just the root servers... But, if you look a little closer, you'll see that the response in the `AUTHORITY` section shows that it's providing answers for `com.`... A closer inspection of the suffix on those names shows us that it's pointing to `gtld-servers.net.`, which you might notice that `tld` is part of that name. So the Root server is saying "I don't know about this name, but if you go ask this `com.` TLD server, you'll probably get a better answer".
 
 PROGRESS!
 
@@ -338,3 +338,16 @@ www.awesomecat.com. 3600 IN NS ns3.afternic.com.
 HAHAH! We finally have an `ANSWER` section! Now we know the actual IP addresses for this name! We did it! We followed through the entire recursive process to resolve the name! Congratulations!
 
 We completed this process by manually running every `dig` for every step of the recursive lookup. If you want to see this process run quickly, you can run `dig www.awesomecat.com +trace +answer +additional +authority`. The output will be long, but it should look pretty familiar at this point!
+
+## Recap
+
+So let's review what just happened here. 
+
+* The recursive DNS process is necessary because no single machine can be responsible for the entire internet. 
+* A recursive DNS lookup is performed by a resolver, a special software designed to keep making DNS queries until it receives a definitive answer.
+* If a resolver doesn't know where else to go, it will query a root DNS server. The root DNS server will point to the TLD server that should have more information about the domain being requested.
+* A TLD server is responsible for knowing which authoritative server owns the records for the next label; e.g. `awesomecat` in `awesomecat.com`.
+* The authoritative server keeps track of the DNS records for any domain it is responsible for.
+* Once the resolver has an answer, it will send the final response back to the client who initiated the query.
+
+If you'd like to play around in this system, checkout our chapter on [name resolution with recursive DNS](../future/name-resolution/recursive-dns/)!
