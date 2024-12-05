@@ -10,9 +10,6 @@
 ;       -OR-                    RS.INTERNIC.NET
 ;
 
-.                        3600000      NS    rootdns-i.isc.org.
-rootdns-i.isc.org.       3600000      A     100.0.1.100
-
 .                        3600000      NS    rootdns-n.netnod.org.
 rootdns-n.netnod.org.    3600000      A     101.0.1.100
 
