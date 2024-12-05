@@ -13,7 +13,7 @@ Not only that... We have a system where we don't really trust other people/organ
 
 ## Disclaimer
 
-In previous chapters, we have taken the approach of building our internet interactively where we mixed conversations about how things worked with sections focussed on building out the infrastructure. Given the complexity of DNS and the various systems involved, it feels like that approach won't get you, our audience, to see the value until much later. So, we are taking a new approach in this chapter, where we play with a built out infrastructure to learn about the details of recursive DNS and DNS configuration more broadly. Once you understand that, we will get to build the infrastructure together!
+In previous chapters, we have taken the approach of building our internet interactively where we mixed conversations about how things worked with sections focused on building out the infrastructure. Given the complexity of DNS and the various systems involved, it feels like that approach won't get you, our audience, to see the value until much later. So, we are taking a new approach in this chapter, where we play with a built out infrastructure to learn about the details of recursive DNS and DNS configuration more broadly. In actually managing the DNS system, you'll have an opportunity to see how it all fits together. By the end, we'll ask you to add new elements to the system which will give you the experience of building the system out.
 
 ## What is the system we are working with?
 
@@ -623,17 +623,38 @@ Would you look at that! We got our whole lookup done now! Congratulations team!
 
 NOTE: We hacked this together a little... We used glue records in the zonefile we created for `meow.` to point our resolvers to the authoritative servers. But those actual records don't exist anywhere in our DNS. We still need to go back and add actual records for `authoritative-a.aws.meow.` and `authoritative-s.supercorp.meow.`. We'll leave that as an exercise for the reader.
 
+## Final Exercises
+
+Now that we've built out some of the infrastructure together, take a stab at adding a few more elements to this toy internet. We've added a new network, RIPE, to our network map.
+
+![Network map including the RIPE network](./final-exercises.svg)
+
+Configure the rootdns and resolver in the RIPE network to do the jobs we've assigned to them! In each case, it would be helpful to go check (and potentially copy) the config files for similar machines on our internet.
+
+### Configure the Root DNS server
+
+* look at knot config and zone files for one of the other root servers
+* mimic that setup in rootdns-r
+* add rootdns-r to the zonefiles for all root DNS servers on the internet
+* add rootdns-r to the root.hints file for all resolvers
+
+### Configure the resolver
+
+* describe how a recursive resolver knows what to do
+* configure the nameserver for each machine on the network (resolv.conf)
+* configure unbound and root.hints
+
 # Exercises
 
 * watching tcp dump of name resolution
 
-* add a new name
-* add a new tld
-* zone cut at a higher level
+* [x] add a new name
+* [x] add a new tld
+* zone cut at a higher level <= not actually really interesting. maybe skip this one?
 * Common DNS issues debugging
   * Leave a DNS entry in a zone file that does not have the dot at the end of it
   * Have a screwed up resolv.conf file (e.g. point to an non-existent recursive resolver)
-* bad.horse
+* bad.horse <= I think this could be it's own chapter. Just something fun to add at the end that pulls together a bunch of other things we've done. :shrug:
 
 NOTES:
 Lots of different use-cases:
