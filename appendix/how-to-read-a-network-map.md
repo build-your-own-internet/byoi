@@ -6,7 +6,7 @@ Everything that we build in this project depends on us understanding the shape o
 
 Let's start with a very simple network map:
 
-![basic-network-map](img/basic-network-map.svg)
+![basic-network-map](../miscellaneous/basic-network-map.svg)
 
 So, what's going on here? First, what's probably most obvious about this map is that we have 2 machines on our network: a `Client` and a `Server`. Now, look at how each machine has a thin line coming out of it that connects it to a thicker line. That thick line symbolizes the network, and the thin lines from each machine symbolize their connections to that network.
 
@@ -18,7 +18,7 @@ So we've identified that the network is `10.1.1.0/24`, but we also need to know 
 
 So, we now know how to read a network map for a single network. But we're looking to build a full internet! That means multiple networks! Let's look at a slightly more complicated network map:
 
-![smol-internet-network-map](img/smol-internet-network-map.svg)
+![smol-internet-network-map](../miscellaneous/smol-internet-network-map.svg)
 
 OK, some of this should already look familiar. See if you can identify each of the following:
 
@@ -38,7 +38,7 @@ When we look at this network map, we can see that the `Router` has a connection 
 
 Alright, let's make this more interesting. Take a look at this slightly chonkier internet map:
 
-![chonky-internet-network-map](./img/internet-chonk-network-map.svg)
+![chonky-internet-network-map](./../miscellaneous/internet-chonk-network-map.svg)
 
 See if you can complete the following exercises:
 

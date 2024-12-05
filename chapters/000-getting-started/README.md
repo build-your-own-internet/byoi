@@ -76,13 +76,6 @@ If that doesn't work, try clearing the system with `docker system prune`.
 
 The beginning of each chapter will display a network map showing what we expect our internet to look like by the end of the chapter, e.g.:
 
-```markdown
-   boudi             pippin
-     │10.1.1.3          │10.1.1.2
-     │                  │
-     │                  │
-─────┴──────────────────┴──────
-              (caternet 10.1.1.0/24)
-```
+![Network Map Example](../../miscellaneous/basic-network-map.svg)
 
 Individual machines that exist on a network will show their specific IP address, e.g. `10.1.1.3`. Those machines will have vertical lines that point to the networks they have interfaces on. The horizontal lines in the network maps are the networks themselves. They will be identified with an IP address range, e.g. `10.1.1.0/24`.
