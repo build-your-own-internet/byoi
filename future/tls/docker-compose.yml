@@ -78,6 +78,8 @@ services:
         ipv4_address: 1.1.0.3
       one-two-net:
         ipv4_address: 1.2.0.3
+      three-one-net:
+        ipv4_address: 3.1.0.3
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
@@ -97,6 +99,8 @@ services:
         ipv4_address: 3.6.7.6
       three-six-eight-net:
         ipv4_address: 3.6.8.6
+      three-one-net:
+        ipv4_address: 3.1.0.6
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN

@@ -9,7 +9,7 @@ $ORIGIN supercorp.com.
                 86400                     ; minimum (1 day)
                 )
 
-client-s2       IN A    9.2.0.200
+server-s2       IN A    9.2.0.20
 
 server-s1       IN A    9.3.0.10
 
