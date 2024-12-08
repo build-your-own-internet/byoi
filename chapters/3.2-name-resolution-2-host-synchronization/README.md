@@ -12,15 +12,15 @@ Let's start with the simplest thing we can do: we're gonna head down the route o
 
 First, let's check out what our little internet looks like for this chapter:
 
-![our-inter-network](../img/nr-multicast.svg)
+![our-inter-network](../../img/network-maps//nr-multicast.svg)
 
 The significant things to note about this internet are that we have 2 machines on one network, `host-c` and `host-f` are on `6.0.0.0/8`, and we added a new host, `host-h`, to the `4.0.0.0/8` network. `host-h` is only one hop away from `host-c` and `host-f`. This means that requests from `host-h` <=> `host-c` only need to be routed through one router. This simplifies what we're looking at when we are checking what's happening on our internet. We wanted to have a request path that involved one and only one router; adding `host-h` handled that for us.
 
 ## Avahi and avahi-daemon
 
-Avahi is a program which uses [multicast](../../glossary.md#multicast) to perform name resolution on local networks with minimal configuration. If you check the [Dockerfile](./Dockerfile) for this chapter, you'll see that we added a new software, `avahi-utils`.
+Avahi is a program which uses [multicast](../glossary.md#multicast) to perform name resolution on local networks with minimal configuration. If you check the [Dockerfile](./Dockerfile) for this chapter, you'll see that we added a new software, `avahi-utils`.
 
-As you might recall, in [chapter 1](../001-nr-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name), we took a look at the contents of `/etc/nsswitch.conf`. We saw that the `hosts` line provided instructions for how to resolve a name. The order runs sequentially through each entry in that line; it starts with looking at the `files` on the system (i.e. `/etc/hosts`), and, if it doesn't find the name there, then it should use `dns` (if it is configured).
+As you might recall, in [chapter 1](../name-resolution-1-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name), we took a look at the contents of `/etc/nsswitch.conf`. We saw that the `hosts` line provided instructions for how to resolve a name. The order runs sequentially through each entry in that line; it starts with looking at the `files` on the system (i.e. `/etc/hosts`), and, if it doesn't find the name there, then it should use `dns` (if it is configured).
 
 Let's start off by taking a quick look at the `/etc/nsswitch.conf` file on our machines now.
 
@@ -44,7 +44,7 @@ Let's look at what each of these entries is doing (a couple of them will be revi
 
 First, let's check to make sure `avahi-daemon` is already running on our hosts.
 
-> 📝 **NOTE**: If you haven't encountered "daemons" before, go check the [glossary entry for daemons](../../glossary.md#daemon-or-daemonize)
+> 📝 **NOTE**: If you haven't encountered "daemons" before, go check the [glossary entry for daemons](../glossary.md#daemon-or-daemonize)
 
 Go ahead and `hopon host-c` and run `ps aux` to get a list of processes that are currently running on the host.
 
@@ -163,7 +163,7 @@ We see the name resolution request packet that `host-c` sent hitting `host-f`. T
 
 So why is `host-f` receiving a packet for `224.0.0.251`? Because it's being _broadcast_ on this ethernet network.
 
-We've seen something similar in previous chapters: ARP ([a quick reminder on how ARP and ethernet works](../../../appendix/ip-and-mac-addresses.md)). ARP is a protocol that enables IP discovery between machines on a network. ARP doesn't need to know the IP address of each machine ahead of time because it can send packets to all machines to find out which machine owns an address. Similarly, multicast doesn't need to know the IP addresses of the hosts it wants to communicate with. Both ARP and multicast are using the same underlying capability within the ethernet, namely, ethernet broadcast.
+We've seen something similar in previous chapters: ARP ([a quick reminder on how ARP and ethernet works](../../appendix/ip-and-mac-addresses.md)). ARP is a protocol that enables IP discovery between machines on a network. ARP doesn't need to know the IP address of each machine ahead of time because it can send packets to all machines to find out which machine owns an address. Similarly, multicast doesn't need to know the IP addresses of the hosts it wants to communicate with. Both ARP and multicast are using the same underlying capability within the ethernet, namely, ethernet broadcast.
 
 Okay, so what's the next packet chronologically between the two tcpdumps?
 
@@ -192,7 +192,7 @@ ping: host-h.local: Name or service not known
 
 Avahi name-resolution only really works on local networks: in this case, machines that can communicate directly with one another via broadcast on ethernet.
 
-Since Avahi's IP multicast gets translated to ethernet broadcast messages, routers ignore these messages. The messages therefore never get sent to the broader internet. To put this more simply, `host-c` and `host-f` are on the same network, so they can exchange ethernet broadcast messages with each other directly. `host-h`, however, has to be reached through our internet, which requires routers to participate in this communication. If you have reviewed our appendix on [IP and MAC addresses](../../../appendix/ip-and-mac-addresses.md), you will be familiar with this.
+Since Avahi's IP multicast gets translated to ethernet broadcast messages, routers ignore these messages. The messages therefore never get sent to the broader internet. To put this more simply, `host-c` and `host-f` are on the same network, so they can exchange ethernet broadcast messages with each other directly. `host-h`, however, has to be reached through our internet, which requires routers to participate in this communication. If you have reviewed our appendix on [IP and MAC addresses](../../appendix/ip-and-mac-addresses.md), you will be familiar with this.
 
 ### What is this "multicast" stuff anyway, and why it doesn't matter
 
@@ -204,7 +204,7 @@ In general, multicast is intended to be used either on a single network or a pri
 
 We truly wanted to try implementing option 1 to show how it could be done. Multicast routing is something that was developed decades ago when computers were still young and we did not have a robust understanding about how networks would be used. Since multicast routing is highly insecure, Avahi does not recommend implementing it.
 
-Therefore, we ended up going with option 2. We're going to install the same Avahi software on our routers as we installed on the hosts. This way, our routers will be aware of name-resolution requests and will participate in name-resolution requests by [proxy](../../glossary.md#proxy). The routers will receive name-resolution packets and then make their own queries to discover the address for the destination name.
+Therefore, we ended up going with option 2. We're going to install the same Avahi software on our routers as we installed on the hosts. This way, our routers will be aware of name-resolution requests and will participate in name-resolution requests by [proxy](../glossary.md#proxy). The routers will receive name-resolution packets and then make their own queries to discover the address for the destination name.
 
 ### Getting the Routers in on the Game
 
@@ -437,7 +437,7 @@ Previously, we saw `router-3` proxying the request for name resolution for `host
 
 The name resolution request flow looks something like this:
 
-![flowchart of proxy broadcast through our internet](../img/proxy-broadcast.svg)
+![flowchart of proxy broadcast through our internet](../../img/network-maps/proxy-broadcast.svg)
 
 Each arrow in this diagram indicates a new proxied request for name resolution for `host-h.local`. The color of the arrows indicates how far down the proxy chain that request is.
 
@@ -451,7 +451,7 @@ The result of these behaviors is that messages don't go around the internet fore
 
 Next, let's look at how the response makes its way to every machine as well.
 
-![flowchart of a proxy response through our internet](../img/proxy-response.svg)
+![flowchart of a proxy response through our internet](../../img/network-maps/proxy-response.svg)
 
 Here, we see that `host-h` generates the response message that gets broadcast to every router on the `4.0.0.0/8` network. Each router then proxies that message to each machine on each other network it has an interface on. As each router, in turn, does the same thing, this allows the response to flood back to every machine on the internet.
 
@@ -471,7 +471,7 @@ root@host-c:/# links http://host-f.local
 
 As [we went over previously](#avahi-and-avahi-daemon), Avahi name resolution works by editing the `hosts` entry in `/etc/nsswitch.conf`. Even if we have the `avahi-daemon` running on a machine, if we remove the `mdns4_minimal` entry from the `hosts` in `/etc/nsswitch.conf`, we'll break the name resolution process. Try it for yourself.
 
-Can you explain why? If you're not comfortable with your explanation yet, review how a computer knows how to resolve a name in [chapter 1](../001-nr-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name).
+Can you explain why? If you're not comfortable with your explanation yet, review how a computer knows how to resolve a name in [chapter 1](../name-resolution-1-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name).
 
 ## Appendix
 
