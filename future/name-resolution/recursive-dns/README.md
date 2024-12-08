@@ -623,6 +623,10 @@ Would you look at that! We got our whole lookup done now! Congratulations team!
 
 NOTE: We hacked this together a little... We used glue records in the zonefile we created for `meow.` to point our resolvers to the authoritative servers. But those actual records don't exist anywhere in our DNS. We still need to go back and add actual records for `authoritative-a.aws.meow.` and `authoritative-s.supercorp.meow.`. We'll leave that as an exercise for the reader.
 
+## Watch the recursive DNS lookup using `tcpdump`
+
+<!-- TODO -->
+
 ## Final Exercises
 
 Now that we've built out some of the infrastructure together, take a stab at adding a few more elements to this toy internet. We've added a new network, RIPE, to our network map.
@@ -631,43 +635,35 @@ Now that we've built out some of the infrastructure together, take a stab at add
 
 Configure the rootdns and resolver in the RIPE network to do the jobs we've assigned to them! In each case, it would be helpful to go check (and potentially copy) the config files for similar machines on our internet.
 
-### Configure the Root DNS server
-
-* look at knot config and zone files for one of the other root servers
-* mimic that setup in rootdns-r
-* add rootdns-r to the zonefiles for all root DNS servers on the internet
-* add rootdns-r to the root.hints file for all resolvers
-
 ### Configure the resolver
 
-* describe how a recursive resolver knows what to do
-* configure the nameserver for each machine on the network (resolv.conf)
-* configure unbound and root.hints
+So far, we've been building out this system and relying on a piece of achetecture that we haven't addressed at all yet... The recursive resolver. The role of the resolver in the DNS process is keep asking each machine it's pointed to the DNS query it's trying to resolve until it gets an answer. The software we used for our resolver on this toy internet is called `unbound`
 
-# Exercises
+But... how does it even know where to start? Every recursive resolver software uses a file called `root.hints` that tells it what the names and IP addresses of the root servers are. When it has no idea where to go to request information about a name, it will start by talking to one of the root servers.
 
-* watching tcp dump of name resolution
+Your task for this configuration is the following:
 
-* [x] add a new name
-* [x] add a new tld
-* zone cut at a higher level <= not actually really interesting. maybe skip this one?
-* Common DNS issues debugging
-  * Leave a DNS entry in a zone file that does not have the dot at the end of it
-  * Have a screwed up resolv.conf file (e.g. point to an non-existent recursive resolver)
-* bad.horse <= I think this could be it's own chapter. Just something fun to add at the end that pulls together a bunch of other things we've done. :shrug:
+* `hopon` one of the other recursive resolvers (e.g. `resolver-g`) and examine the config files for unbound
+  * `/etc/unbound/unbound.conf`
+  * `/etc/unbound/root.hints`
+* duplicate the configuration on `resolver-r` including the `root.hints` file
+* tell `unbound` to load the config changes (`kill -HUP <process-id>`)
+* configure the nameserver for each machine on the Ripe network (the `resolv.conf` file) to point at the new `resolver-r` address `103.0.1.101`
 
-NOTES:
-Lots of different use-cases:
+Once you've got your resolver correctly configured, test it out!
 
-1. A simple IP address for a single host
-2. Multiple names on a single host
-3. Multiple IP addresses for a single host
-4. A name that resolves to multiple IP addresses
-5. Names that differ Inside and outside
+* `dig resolver-g.google.com`
+* `dig client-c1.comcast.com`
+* `dig rootdns-n.netnod.org`
+* `dig tlddns-v.verisign.org`
 
-## how do I build this from the ground up
+### Configure the Root DNS server
 
-## Watch recursive resolution using tcpdump
+We've added a TLD server, but we can go even deeper on our toy internet. For your next exercise, build out a root DNS server!
+
+Start by looking at the `knot` config and zonefiles for one of the other root servers (e.g. `rootdns-i`). Mimic that setup on `rootdns-r`. You'll need to tell `knot` to reload the config files once you've got them on the server. Test that `rootdns-r` can point requests to the correct TLD with `dig @103.0.1.100 com.`. 
+
+Once you know you've got `rootdns-r` setup correctly and working, make sure you go back to each of the other root DNS servers and add the entry for `rootdns-r` to it. You'll also need to update the `root.hints` files for each resolver on the toy internet. Remember to tell the software to reload the configs on each machine you touch!
 
 ## Answer Section
 
