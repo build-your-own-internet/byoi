@@ -2,7 +2,7 @@
 
 ## Goals for this section
 
-Explore how [traceroute](../../command-reference-guide.md#traceroute) gives us network topology so we can see how the machines we're creating are communicating with each other.
+Explore how [traceroute](../command-reference-guide.md#traceroute) gives us network topology so we can see how the machines we're creating are communicating with each other.
 
 We'll be exploring traceroute using the internet we created in Chapter 002:
 
@@ -138,7 +138,7 @@ As soon as `traceroute` gets that `ICMP udp port unreachable` message, it knows 
 
 ### Let's break that shit
 
-Now we know what to expect when traceroute is successfully navigating a path from the initiator machine to the destination machine. Let's see what happens when that path is broken. We added a new software to our Dockerfile, [`iptables`](../../command-reference-guide.md#iptables). `iptables` is a powerful tool for managing network traffic. If you want to play with more options after you finish this introduction, [check out this blog post](https://www.cyberciti.biz/tips/linux-iptables-9-allow-icmp-ping.html). At a basic level, `iptables` allows you to write rules for handling packets that are incoming, forwarding, or outgoing. You can see a list of your current rules with `iptables -L`:
+Now we know what to expect when traceroute is successfully navigating a path from the initiator machine to the destination machine. Let's see what happens when that path is broken. We added a new software to our Dockerfile, [`iptables`](../command-reference-guide.md#iptables). `iptables` is a powerful tool for managing network traffic. If you want to play with more options after you finish this introduction, [check out this blog post](https://www.cyberciti.biz/tips/linux-iptables-9-allow-icmp-ping.html). At a basic level, `iptables` allows you to write rules for handling packets that are incoming, forwarding, or outgoing. You can see a list of your current rules with `iptables -L`:
 
 ```bash
 root@pippin:/# iptables -L
