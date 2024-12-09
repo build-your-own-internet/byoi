@@ -63,7 +63,7 @@ done
 
 # Summary of errors
 if [ $error_count -eq 0 ]; then
-  echo "✅ No errors! Everything is working!"
+  printf "\n✅ No errors! Everything is working!\n"
 else
-  echo "⚠️  $error_count errors encountered."
+  printf "\n⚠️  $error_count errors encountered.\n"
 fi
