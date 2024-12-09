@@ -25,7 +25,6 @@ t6-3-6-8.telia.net
 t7-3-4.telia.net
 t7-3-6-7.telia.net
 t7-3-7-8.telia.net
-t8-3-8.telia.net
 t8-3-9.telia.net
 t8-3-6-8.telia.net
 t8-3-7-8.telia.net
