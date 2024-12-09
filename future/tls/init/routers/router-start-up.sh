@@ -33,6 +33,7 @@ case $HOSTNAME in
     # Internal Telia
     ip route add 3.6.8.0/24 via 3.6.7.6
     ip route add 3.1.0.0/16 via 3.6.7.6
+    ip route add 3.9.0.0/16 via 3.7.8.8
     # connections SuperCorp
     ip route add 9.0.0.0/8 via 3.7.8.8
     # Comcast
