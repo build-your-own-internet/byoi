@@ -1,0 +1,21 @@
+$ORIGIN net.
+@       IN SOA (
+                tlddns-n.netnod.net. ; MNAME
+                tlddns-n.netnod.net. ; RNAME
+                2024041501           ; serial
+                3600                 ; refresh (1 hour)
+                900                  ; retry (15 minutes)
+                604800               ; expire (1 week)
+                86400                ; minimum (1 day)
+                )
+
+; Top-level domain delegations
+net.    IN NS     tlddns-n.netnod.net.
+
+; All the labels that the TLD knows about
+telia   IN NS  authoritative-s.supercorp.net.
+
+; glue records for the authoritative DNS servers that the TLD knows about
+authoritative-s.supercorp.net.  IN A 9.1.0.100
+
+
