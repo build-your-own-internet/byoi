@@ -10,7 +10,7 @@ n2-3-4.netnod.org
 n2-101.netnod.org
 tlddns-n.netnod.org
 rootdns-n.netnod.org
-server-s2.supercorp.com
+tls-ca-s.supercorp.com
 server-s1.supercorp.com
 resolver-s.supercorp.com
 authoritative-s.supercorp.com

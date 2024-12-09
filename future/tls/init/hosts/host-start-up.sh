@@ -19,11 +19,11 @@ case $HOSTNAME in
 
 # Supercorp networks
   (server-s1)
-  ip route add default via 9.3.0.2
-  ;;
-  (server-s2)
   ip route add default via 9.2.0.2
-  ip route add 9.1.0.0/16 via 9.2.0.3
+  ip route add 9.1.0.0/16 via 9.2.0.2
+  ;;
+  (tls-ca-s)
+  ip route add default via 9.3.0.2
   ;;
 
 esac

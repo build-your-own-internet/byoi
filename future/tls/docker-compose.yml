@@ -157,23 +157,23 @@ services:
     image: "build-your-own-internet-host"
     hostname: server-s1
     networks:
-      nine-three-net:
-        ipv4_address: 9.3.0.10
+      nine-two-net:
+        ipv4_address: 9.2.0.10
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
     sysctls:
       - net.ipv4.ip_forward=0
-  server-s2:
-    container_name: "build-your-own-internet-server-s2"
+  tls-ca-s:
+    container_name: "build-your-own-internet-tls-ca-s"
     build:
       context: .
       dockerfile: Dockerfile_host
     image: "build-your-own-internet-host"
-    hostname: server-s2
+    hostname: tls-ca-s
     networks:
-      nine-two-net:
-        ipv4_address: 9.2.0.200
+      nine-three-net:
+        ipv4_address: 9.3.0.150
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
