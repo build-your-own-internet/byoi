@@ -13,7 +13,7 @@ For this chapter, we want to build a single server that is responsible for knowi
 
 Let's look at the internet we'll be working with for this chapter:
 
-![our-inter-network](../img/basic-dns-internet.svg)
+![our-inter-network](../../img/network-maps/basic-dns-internet.svg)
 
 Notice that our internet now has a server called `DNS` at `2.0.0.107`. This server provides Authoritative DNS services for our internet. If you check the directory for this chapter, you'll see that there's a new Dockerfile entry: `Dockerfile_dns`. This Dockerfile builds its image from a base image that includes DNS server software called `knot`. To achieve our goal for this chapter, we will need to:
 
@@ -162,13 +162,13 @@ Now it's time to get our Knot server up and running! Still on the `host-dns` mac
 
 This will run Knot in the "foreground." Meaning, if you `CTRL + C` out of that, the server stops running. The benefit of running it this way is that you get to see all the logs of what happens during startup. This is especially useful if you want to catch a configuration mistake, because knot will report any errors directly to the screen. If **do** you see an error, you can `CTRL + C` out of the server, fix the problem, and try again. Also, if you do get an error, knot might just stop and protest that you need to fix the error before it will run.
 
-Once you've confirmed that it's working properly, you can either leave Knot running in the foreground and open a new terminal session to continue working, or you can [daemonize](../../glossary.md#daemon-or-daemonize) the Knot server by restarting it and adding the `--daemonize` flag:
+Once you've confirmed that it's working properly, you can either leave Knot running in the foreground and open a new terminal session to continue working, or you can [daemonize](../glossary.md#daemon-or-daemonize) the Knot server by restarting it and adding the `--daemonize` flag:
 
 ```bash
 /usr/sbin/knotd --config /config/knot.conf --daemonize
 ```
 
-Sweet, now that we have told knot to start up with the configuration in place, let's make sure that it is indeed listening for DNS queries. We can do that with the help of [`netstat` command](../../command-reference-guide.md#netstat). In your `host-dns` container, run the following:
+Sweet, now that we have told knot to start up with the configuration in place, let's make sure that it is indeed listening for DNS queries. We can do that with the help of [`netstat` command](../command-reference-guide.md#netstat). In your `host-dns` container, run the following:
 
 ```bash
 root@host-dns:/# netstat -lnp
@@ -190,7 +190,7 @@ unix  2      [ ACC ]     STREAM     LISTENING     129228   21/knotd             
 
 Here's what this is telling us overall, what software is listening for what types of network connections. Like many of these programs, this tells us all kinds of stuff, only some of which we care about right now. Let's highlight the things that are important to us for this chapter:
 
-1. Proto. This indicates [tcp](../../glossary.md#tcp-transmission-control-protocol) or [udp](../../glossary.md#udp-user-datagram-protocol).
+1. Proto. This indicates [tcp](../glossary.md#tcp-transmission-control-protocol) or [udp](../glossary.md#udp-user-datagram-protocol).
 2. Local Address: You'll see an IP address followed by a port (`:` and a number).
    * IP address: This is address that the software that is listening is listening on. This will typically be the one and only external IP address that the machine has (in our case, `2.0.0.107`). However, you may also see an IP address that starts with `127`. In that case, the machine is _only_ listening for connections from sources that are **internal** to the machine and isn't listening for connections from the overall network.
    * Port: You see port `53` for both `TCP` and `UDP` protocols. As you may recall from other chapters, port `53` is the standard port used for `DNS` requests.
@@ -206,7 +206,7 @@ The configuration we have done so far is to get knot running. Now, we need to co
 
 So now, in order to use the Knot server's information about the names on our internet, we need to tell the `host-dns` machine to use **itself** to resolve hostnames. This pattern should be familiar since we had to configure either `/etc/hosts` or `/etc/nsswitch.conf` for similar ends in our earlier exploration of name resolution.
 
-We talked in [chapter 1 of this section](../../name-resolution/1-nr-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name) about how a machine knows who to ask to resolve a name. Take a moment and have a look at the `/etc/resolv.conf` file on the `host-dns` machine:
+We talked in [chapter 1 of this section](../name-resolution-1-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name) about how a machine knows who to ask to resolve a name. Take a moment and have a look at the `/etc/resolv.conf` file on the `host-dns` machine:
 
 ```bash
 nano /etc/resolv.conf
@@ -227,7 +227,7 @@ Let's edit that IP address, changing it from `127.0.0.11` to `2.0.0.107`. This w
 
 ## See it working
 
-Sweet! We got our Knot DNS daemon up and running. AND we are using that daemon on the `host-dns` machine to answer name-resolution queries for us. Let's test it by running a [dig](../../command-reference-guide.md#dig) command and see what we get back:
+Sweet! We got our Knot DNS daemon up and running. AND we are using that daemon on the `host-dns` machine to answer name-resolution queries for us. Let's test it by running a [dig](../command-reference-guide.md#dig) command and see what we get back:
 
 ```bash
 root@host-dns:/# dig host-a.byoi.net
@@ -271,7 +271,7 @@ The most important bit is `status`. The `status` header tells us whether or not 
 > ;; QUESTION SECTION:
 > ;host-a.byoi.net.  IN A
 
-This is the question you sent to to your [resolver](../../glossary.md#resolver). A resolver is a piece of software that performs DNS lookups. We'll discuss more about the different types of resolvers in the next chapter. In this case, the `QUESTION` is asking the resolver to return the `A` record for the indicated hostname.
+This is the question you sent to to your [resolver](../glossary.md#resolver). A resolver is a piece of software that performs DNS lookups. We'll discuss more about the different types of resolvers in the next chapter. In this case, the `QUESTION` is asking the resolver to return the `A` record for the indicated hostname.
 
 What is an `A record`, you ask? Excellent question. The `A` in A record stands for `address`. An A record is just DNS shorthand for an IPv4 address, so an address that looks like `127.0.0.1`. There are [a plethora of DNS record types](https://en.wikipedia.org/wiki/List_of_DNS_record_types) if you want to look up more of them!
 

@@ -46,7 +46,7 @@ Before we get started, let's look at a couple scripts we added. On the root leve
 * `byoi-rebuild`: in experimenting with various setups in both our `Dockerfile` and `docker-compose.yml`, we needed to cleanup the images our containers were built from regularly. Now, we can simply type `byoi-rebuild` instead of finding and removing each container.
 
 > DISCLAIMER:
-The `byoi-rebuild` script performs a check that you have the Docker management software `colima` installed and running. If you are using `docker desktop` or another Docker management software, this check will always fail for you. To make this command work, comment out line 5, `bash meets-colima-requirements` in the [byoi-rebuild script](../../../bin/byoi-rebuild). Just make sure you have your Docker management software up and running whenever you're following along in these chapters!
+The `byoi-rebuild` script performs a check that you have the Docker management software `colima` installed and running. If you are using `docker desktop` or another Docker management software, this check will always fail for you. To make this command work, comment out line 5, `bash meets-colima-requirements` in the [byoi-rebuild script](../../bin/byoi-rebuild). Just make sure you have your Docker management software up and running whenever you're following along in these chapters!
 
 Because the scripts are dependent on a version of `docker-compose.yml` that exists in each chapter subfolder, we need to add the scripts to our `PATH` from the root of this directory:
 
@@ -104,7 +104,7 @@ What's a network without a machine right? Next, let's create a lone `tara` in th
 
 Now we have 2 separate networks. Fantastic! An internet is a group of machines on different networks that can all communicate with each other. We have the machines, we have the networks, but before we go about getting them to talk to each other, let's make sure they can't already communicate... To do this, we're gonna reuse the same tricks we did in Chapter 001. Let's try to `ping` `boudi` from `tara`.
 
-First, we'll want to hop onto `boudi`. You'll need to make sure your docker management software is up and running. That command will depend on which software you're using. We're using [colima](https://github.com/abiosoft/colima), so our instructions start with that: `colima start`. If you get an error with colima, check out the [colima installation instructions](../../000-getting-started/README.md#Colima) in chapter 000.
+First, we'll want to hop onto `boudi`. You'll need to make sure your docker management software is up and running. That command will depend on which software you're using. We're using [colima](https://github.com/abiosoft/colima), so our instructions start with that: `colima start`. If you get an error with colima, check out the [colima installation instructions](../000-getting-started/README.md#Colima) in chapter 000.
 
 Now, back to our regularly scheduled content:
 
@@ -122,7 +122,7 @@ ping: connect: Network is unreachable
 
 Fantastic! This error message is telling us is that `boudi` doesn't know how to send packets to a machine on the `10.1.2.0/24` network. The way that machines communicate with each other across networks is by matching the destination IP address to a network address range in their [routing table](../glossary.md#routing-table). The routing table will have a list of network address ranges defined and will associate those address ranges with a "next hop", or another machine that it thinks will get the packets closer to their destination.
 
-We can look at the routing table on our machines using the [`ip route` command](../../command-reference-guide.md#ip-route). If we look at the routing table for `boudi`, we can see that there is no entry for the `10.1.2.0/24` network:
+We can look at the routing table on our machines using the [`ip route` command](../command-reference-guide.md#ip-route). If we look at the routing table for `boudi`, we can see that there is no entry for the `10.1.2.0/24` network:
 
 ```bash
 root@boudi:/# ip route
@@ -251,7 +251,7 @@ You may or may not see in your own session some odd looking packets identified a
 18:53:54.167168 ARP, Reply 10.1.2.3 is-at 02:42:0a:01:02:03, length 28
 ```
 
-We go over this in more detail in [ip-and-mac-addresses.md in the appendix](../../../appendix/ip-and-mac-addresses.md), but let's look at a high level at what's going on here. IP addresses, like `10.1.2.3`, are used by machines for identifying where packets should be routed across an internet. So what we've been working with so far is designed to help machines communicate when there are multiple networks. HOWEVER. Within a network, machines are not identified by an IP address, but instead by a MAC address. In order for packets to be sent from one machine on a network to another machine on the same network, each machine needs to discover the MAC address that corresponds to the IP address identified in the packets. ARP, or Address Resolution Protocol, is the process by which this is done.
+We go over this in more detail in [ip-and-mac-addresses.md in the appendix](../../appendix/ip-and-mac-addresses.md), but let's look at a high level at what's going on here. IP addresses, like `10.1.2.3`, are used by machines for identifying where packets should be routed across an internet. So what we've been working with so far is designed to help machines communicate when there are multiple networks. HOWEVER. Within a network, machines are not identified by an IP address, but instead by a MAC address. In order for packets to be sent from one machine on a network to another machine on the same network, each machine needs to discover the MAC address that corresponds to the IP address identified in the packets. ARP, or Address Resolution Protocol, is the process by which this is done.
 
 Let's read what's happening with the `ARP` requests we see above:
 
