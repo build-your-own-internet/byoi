@@ -84,3 +84,7 @@ t8-3-7-8.telia.net
 v4-2-8.verisign.org
 v4-102.verisign.org
 tlddns-v.verisign.org
+r4-3-4.ripe.org
+r4-103.ripe.org
+rootdns-r.ripe.org
+resolver-r.ripe.org
