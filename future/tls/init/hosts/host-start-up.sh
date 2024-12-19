@@ -24,6 +24,9 @@ case $HOSTNAME in
   ;;
   (tls-ca-s)
   ip route add default via 9.3.0.2
+  # TODO: Move this to a final section or remove it
+  openssl genrsa -out rootCA.key 4096
+  openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 3650 -out rootCA.crt -subj "/C=/ST=/L=/O=/OU=/CN=buildyourowninternet.dev"
   ;;
 
 esac

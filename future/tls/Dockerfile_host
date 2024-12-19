@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y iproute2 \
     nano \
     busybox \
     curl \
+    nginx-light \
+    openssl \
     links 
 
 RUN apt-get install -y procps
