@@ -81,6 +81,17 @@ The `ip` command is a tool for viewing and managing network configurations. It h
 netstat -lnp
 ```
 
+## openssl
+
+`openssl` creates and examines TLS certificates and their private keys. 
+
+> Example commands:
+
+- `openssl genrsa -out rootCA.key 4096` - generate a new RSA private key
+- `openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 3650 -out rootCA.crt` - create a new certificate
+- `openssl x509 -in rootCA.crt -text -noout` - examine a certificate saved locally on a machine
+- `openssl s_client -connect www.denverlibrary.org:443 | openssl x509 -text -noout` - examine a certificate from a domain on the internet
+
 ## ping
 
 [@bork's comic](https://wizardzines.com/comics/ping/) explaining `ping` and `traceroute`.
