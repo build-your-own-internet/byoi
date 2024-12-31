@@ -123,18 +123,19 @@ However, this has it's limitations in the real world of humans. It doesn't prote
 
 ## Building a basic trust infrastructure between a client and a server using a Certification Authority
 
-In this chapter, we are going to use the command line tool `openssl` to manually create this trust between the client and the server. We'll do this by designating a machine which holds secret credentials that the client trusts. We will then use these secret credentials to sign a certificate for a server on our toy internet. Then, when a client makes a request a web page or an image or any other thing from that server, the client can verify who that server is and the client and server will have tools to establish an encrypted connection.
+In this chapter, we are going to use the command line tool `openssl` to manually create this trust between the client and the server. We'll do this by designating a machine which holds secret credentials that the client trusts. We will then use these secret credentials to sign a certificate for a domain, `www.dixit.com`, that will be hosted by a server on our toy internet. Then, when a client makes a request for any thing at `www.dixit.com`, the client can verify who that server is and the client and server will have tools to establish an encrypted connection.
 
 Here's what our internet will look like for this chapter:
 
-<!-- TODO: link to network map for this chapter -->
+![Network map of an internet including DNS and TLS infrastructure](./simple-tls-network-map.png)
+
 <!-- TODO: consider moving network maps to after the exposition for each chapter? -->
 
 This toy internet is pretty basic. We have a few networks and the basic infrastructure for DNS. To add some basic infrastructure for TLS, we'll need to:
 
 1. Designate a Certification Authority (CA)
 2. Extend the trust of the CA (install the CA's root certificate on the clients we'll be using for this chapter)
-3. Generate a Certificate Signing Request (CSR) for `www.dixit.com` for our server
+3. Extend trust to a server using a Certificate Signing Request (CSR) for `www.dixit.com`
 4. Install the signed certificate on the server
 
 Let's see what this looks like in action!
@@ -150,132 +151,207 @@ As we mentioned before, we're going to use a command line tool called `openssl`.
 Let's start `hopon tls-ca-s` and generate the private key:
 
 ```bash
-openssl genrsa -out rootCA.key 4096
+openssl genrsa -out /etc/ssl/private/rootCA.key 4096
 ```
 
 We can use another `openssl` command to verify that the certificate was created correctly:
 
 ```bash
-openssl rsa -noout -text -in rootCA.key -check
+openssl rsa -noout -text -in /etc/ssl/private/rootCA.key -check
 ```
 
 > This dumps all kinds of linux to the screen and tells us that stuff is working well.
 
 2. Create a Self-Signed Root CA Certificate
 
+```bash
+openssl req -x509 -new -nodes -key /etc/ssl/private/rootCA.key -sha256 -days 3650 -out /etc/ssl/certs/rootCA.crt
 ```
-openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 3650 -out rootCA.crt
-```
-
-This goes through an interview process
 
 This does not go through the interview process:
 
-```
-openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 3650 -out rootCA.crt -subj "/C=/ST=/L=/O=/OU=/CN=buildyourowninternet.dev"
-```
-
-```
-openssl x509 -in rootCA.crt -text -noout
+```bash
+openssl req -x509 -new -nodes -key /etc/ssl/private/rootCA.key -sha256 -days 3650 -out /etc/ssl/certs/rootCA.crt -subj "/C=/ST=/L=/O=/OU=/CN=buildyourowninternet.dev"
 ```
 
+This command has you skip an 'interview process' where `openssl` helps you correctly build your cert. If you'd rather walk through the interview process and generate a cert that looks a little more like what you'd expect, skip the `-subj "/C=/ST=/L=/O=/OU=/CN=buildyourowninternet.dev"` part of this command.
+
+And check out the cert you just created:
+
+```bash
+openssl x509 -in /etc/ssl/certs/rootCA.crt -text -noout
 ```
-root@tls-ca-s:/# openssl x509 -in rootCA.crt -text -noout
+
+Check what was created for that cert:
+
+```bash
+root@tls-ca-s:/# openssl x509 -in /etc/ssl/certs/rootCA.crt -text -noout
 Certificate:
     Data:
         Version: 3 (0x2)
         Serial Number:
-            68:2c:48:da:dd:a8:50:59:54:e9:4d:a9:05:75:df:84:f7:1d:cc:8d
+            6d:c5:f9:61:84:5c:99:bf:c6:14:59:88:43:e6:dc:58:42:27:5b:4e
         Signature Algorithm: sha256WithRSAEncryption
-        Issuer: C = US, ST = Oregon, L = Portland, O = "Squasheeba, Inc.", OU = Network Management, CN = buildyourowninternet.dev, emailAddress = peba@buildyourowninternet.dev
+        Issuer: CN = buildyourowninternet.dev
         Validity
-            Not Before: Dec 16 19:36:51 2024 GMT
-            Not After : Dec 14 19:36:51 2034 GMT
-        Subject: C = US, ST = Oregon, L = Portland, O = "Squasheeba, Inc.", OU = Network Management, CN = buildyourowninternet.dev, emailAddress = peba@buildyourowninternet.dev
+            Not Before: Dec 31 22:41:11 2024 GMT
+            Not After : Dec 29 22:41:11 2034 GMT
+        Subject: CN = buildyourowninternet.dev
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (4096 bit)
+                Modulus:
+                    00:af:9c:2e:c4:f3:5b:74:c2:37:a6:27:11:ac:43:
+                    13:05:6f:ea:88:bb:7d:a9:4b:59:44:8a:ba:f8:67:
+                    10:2e:3e:8b:33:98:a6:ef:6e:92:04:68:89:7a:35:
+                    0a:72:06:88:b2:9b:f7:fe:03:c0:a0:5f:98:45:c1:
+                    45:5e:f4:1f:78:46:4b:bf:4d:4f:d5:6a:fb:0f:be:
+                    1b:86:a9:40:72:e8:2c:15:78:0d:4a:0b:1b:72:fb:
+                    6e:02:52:40:52:e3:53:45:af:3d:91:88:7c:0f:02:
+                    b9:b7:2f:89:68:87:68:47:fa:b4:81:50:a5:ae:76:
+                    38:0c:94:82:07:4f:2b:3f:77:8b:63:1c:81:bc:08:
+                    c8:55:28:7f:0c:3a:06:0a:89:cc:96:87:79:64:2e:
+                    00:4a:8b:7b:23:70:9d:c5:af:6f:d4:d3:78:44:17:
+                    86:0d:be:8b:50:d6:86:bf:b6:69:ec:45:98:f0:56:
+                    3d:bd:1a:0e:4a:2f:cb:b0:ca:bd:52:23:42:2c:6a:
+                    33:d1:a9:b4:4c:51:a3:e5:3c:5a:ea:6b:35:9a:c0:
+                    76:6b:a8:23:35:bf:e2:88:c6:9f:7b:e4:8f:2a:28:
+                    b4:a2:e0:a2:a2:92:5c:3c:b9:ee:6a:f6:d6:73:6e:
+                    1b:1e:f7:0f:92:f6:e7:18:85:6d:84:be:7c:05:6a:
+                    5c:d8:9c:cf:d9:76:1b:58:0e:f6:1d:b3:61:50:30:
+                    0b:1b:81:dc:a5:65:a1:c7:e5:fd:06:08:dc:04:68:
+                    84:b5:27:10:67:dc:fb:d0:ca:01:b2:e7:2c:d2:d4:
+                    b0:54:32:13:24:b2:11:3d:16:41:4d:f1:52:f6:5f:
+                    c0:16:f5:36:8a:60:5c:0a:e9:ca:61:8b:d9:c6:95:
+                    08:2a:95:4c:90:c7:bc:ef:97:5a:b8:b7:6d:a5:ea:
+                    14:99:e5:7f:60:74:70:1a:00:6e:9c:37:7a:cc:ce:
+                    26:f0:a6:be:04:0c:c2:8f:2a:93:23:ad:ee:1f:cf:
+                    c8:b6:61:b7:38:77:8f:2f:e7:4c:0b:06:94:fc:5c:
+                    28:f3:b8:cc:0e:99:30:ea:08:0d:d5:e2:24:48:a9:
+                    e2:ec:b8:6c:fe:ee:b8:da:db:ba:2a:5d:77:5a:81:
+                    35:f8:a0:52:58:a5:ae:29:15:5f:7c:c9:b7:e0:8e:
+                    e4:5f:48:04:bb:cf:c4:ee:87:ba:d3:d3:ea:3a:73:
+                    e9:48:c8:ee:01:14:e6:32:30:d6:50:08:63:ac:ba:
+                    63:66:ea:a3:78:c1:74:a2:52:ae:d8:ce:61:d6:62:
+                    02:10:44:39:ba:55:26:67:08:dc:35:af:ff:ec:fc:
+                    29:4b:63:68:02:8a:da:c6:cb:9f:4f:55:e1:fc:a7:
+                    f0:40:23
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Subject Key Identifier:
+                D7:AA:9A:22:7E:25:FE:C5:3E:8B:1A:0C:0A:8E:20:68:2C:E2:ED:99
+            X509v3 Authority Key Identifier:
+                D7:AA:9A:22:7E:25:FE:C5:3E:8B:1A:0C:0A:8E:20:68:2C:E2:ED:99
+            X509v3 Basic Constraints: critical
+                CA:TRUE
+    Signature Algorithm: sha256WithRSAEncryption
+    Signature Value:
+        27:be:b6:7e:70:1f:1d:4c:57:2f:81:c8:f3:12:50:2e:97:96:
+        a2:60:60:b2:9d:d4:4d:af:8d:f1:2b:c9:8a:a3:09:28:53:0c:
+        b9:54:36:b3:76:9f:62:78:e6:b2:3a:0d:c1:46:a5:9d:c5:82:
+        4e:9c:38:40:31:5d:f0:02:f4:d6:83:59:92:db:5d:0f:7e:eb:
+        90:68:79:4c:1d:10:eb:06:ee:88:3e:c1:2f:36:ab:70:2c:53:
+        4f:5e:f2:1d:49:49:69:de:a2:9e:f7:3c:d1:07:f6:16:1e:0e:
+        6b:e8:6b:62:f1:4b:9d:fc:75:f2:db:23:88:63:6b:bf:0d:39:
+        e4:f4:6a:b4:f5:2f:fa:24:74:b7:2e:d6:95:3b:79:5d:da:f8:
+        e6:7a:17:7e:75:55:b0:1e:7b:6f:20:30:e0:7f:5e:b0:3e:96:
+        78:16:9c:8b:8d:66:a5:41:ed:ef:93:24:bb:e2:63:aa:90:86:
+        56:6e:ac:bb:8e:e4:b8:6e:2d:85:23:86:35:6b:20:dc:8b:f9:
+        57:ac:8f:50:68:a2:b2:75:00:c4:68:97:64:31:f9:19:3e:c1:
+        9e:48:9d:10:f4:46:87:2a:be:98:66:86:30:4f:d6:38:b0:61:
+        cd:7f:83:d9:d8:47:33:6e:b3:0a:0a:8a:61:f4:f3:02:52:3d:
+        4c:c1:4d:ea:34:77:1f:4d:c9:66:81:50:48:f6:fd:d8:1c:78:
+        af:31:5e:9b:03:c0:a0:eb:01:46:b6:dd:c5:8a:e7:bd:c3:8d:
+        8e:85:54:59:55:26:ed:b1:95:69:6b:b3:b4:01:4b:e9:0e:62:
+        1b:66:34:e0:cf:ba:ff:31:ce:8f:2f:cc:34:2d:dd:16:82:41:
+        17:ad:c6:ce:72:f3:33:74:11:48:a0:67:fb:dd:57:37:68:42:
+        6d:2e:40:01:13:57:a6:dd:02:44:7c:be:17:91:94:bf:f7:f6:
+        e6:88:65:fd:bf:96:f0:5f:43:33:16:20:a4:9d:ff:e4:2a:68:
+        fb:81:64:b3:27:60:fc:ad:88:25:c1:03:45:bc:2f:c3:2e:81:
+        e8:ac:57:67:c3:72:84:85:93:01:bc:fd:72:0f:67:61:a3:73:
+        13:d9:75:d0:4d:cb:c9:90:f8:84:4b:67:4f:17:c0:72:7d:82:
+        e9:e5:72:b9:b6:90:a2:78:16:db:85:09:00:62:b2:74:4d:ad:
+        68:7b:63:9e:df:e2:91:de:8e:64:4e:ca:56:da:d4:bb:ac:de:
+        b5:9a:0e:b1:dd:d1:77:f6:34:c7:37:e9:8b:ec:98:36:55:29:
+        d3:7a:27:da:db:b4:1b:95:0b:76:ba:ed:b6:18:9a:6c:ae:24:
+        bb:4a:11:f0:18:3d:1b:bf
 ```
 
-##t Step 2. Teach the client to trust the Certification Authority
-3. Distribute that certificate:
+<!-- TODO: what should we highlight about this output? -->
+Something something notice that the public key modulus is the same as what we saw for the key we just generated. 
 
-on client-c1
+## Step 2. Extend the trust of the CA to the client
 
-place rootCA.crt in /usr/local/share/ca-certificates/
+We're about to do this next step manually. But, as you can imagine, that's now how it works in The Real Internet. Any machine you use will come with all trusted root certificates already installed. This exercise is just to show how all the bits and bobs of TLS fit together!
 
+At this point, we don't have a great way of copying files between machines on our internet (hopefully we'll do a chapter on `ssh` at some point). So we're going to do this in a very inelagant way... Ye ol' copy/pasta... So to start, while you're still on `tls-ca-s`:
+
+```bash
+root@tls-ca-s:/# cat /etc/ssl/certs/rootCA.crt
 ```
+
+Copy all of the text that appears on your screen, INCLUDING the `-----BEGIN CERTIFICATE-----` and `-----END CERTIFICATE-----`. Then, go ahead and `hopon client-c1`. We need to install this certificate in a directory where our machine will know how to find it when it's validating certificates it receives from servers. Run `vim /usr/local/share/ca-certificates/rootCA.crt` and paste in the certificate you just copied.
+
+We added the cert, but that doesn't mean the machine actually knows about it yet... We've got one more step to teach the client about it's new root cert. 
+
+```bash
 root@client-c1:/# update-ca-certificates
-Updating certificates in /etc/ssl/certs...
-rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
-1 added, 0 removed; done.
-Running hooks in /etc/ca-certificates/update.d...
-done.
 ```
 
-WHAT? WHY DID THAT WORK?
+<!-- TODO: WHAT? WHY DID THAT WORK? Let's find out and explain what happened here. Something something bash script in `/usr/sbin/update-ca-certificates` -->
 
-4. Create a CSR on server-s1
+Great! Now the client knows about out new root cert. Next step... start having some servers actually use it!
 
 ### Step 3. Extend trust to a server using a Certificate Signing Request (CSR)
 
-A. generate a new private-key
+Just like we saw with the root certificate, the server needs a private key that it can use to encrypt any packets it sends. That key needs to be tied to the certificate, so let's start by making the key. These commands should look pretty similar to what you saw when we created the root cert. A cert is a cert is a cert. It's how you use them that matters ;) 
+
+`hopon server-s1` and run:
+
+```bash
 openssl genrsa -out /etc/ssl/private/server-s1.key 2048
-
-B. generate the CSR
-```
-root@server-s1:/# openssl req -new -key /etc/ssl/private/server-s1.key -out /tmp/server-s1.csr
-You are about to be asked to enter information that will be incorporated
-into your certificate request.
-What you are about to enter is what is called a Distinguished Name or a DN.
-There are quite a few fields but you can leave some blank
-For some fields there will be a default value,
-If you enter '.', the field will be left blank.
------
-Country Name (2 letter code) [AU]:US
-State or Province Name (full name) [Some-State]:CA
-Locality Name (eg, city) []:San Francisco
-Organization Name (eg, company) [Internet Widgits Pty Ltd]:Dixit, LTD
-Organizational Unit Name (eg, section) []:Selling Stuff
-Common Name (e.g. server FQDN or YOUR name) []:dixit.com
-Email Address []:admin@dixit.com
-
-Please enter the following 'extra' attributes
-to be sent with your certificate request
-A challenge password []:
-An optional company name []:
 ```
 
-or without the interview:
-```
-openssl req -new -key server-s1.key -out server-s1.csr -subj "/C=/ST=/L=/O=/OU=/CN=dixit.com"
-```
+Now that we have a key, we can generate a Certificate Signing Request for the server. This is NOT the actual cert yet! However, this command creates the basic structure of the cert. Once we have a CSR, we can present that to our CA to sign. It is only once the CSR has been signed by the CA that it becomes a certificate in its own right!
 
-HOW do we check the CSR? 
+So, let's make that CSR:
 
-openssl req -text -noout -verify -in server-s1.csr
-
-5. Use the root certificate to sign the CSR:
-
-A. copy the csr over to the CA
-
-run `vim /tmp/server-s1.csr`
-
-B. run this openssl command
-
-GENERAL TODO: maybe put all these root CA cert files in a canonical place rather than the root of the filesystem?
-
-```
-root@tls-ca-s:/# openssl x509 -req -in /tmp/server-s1.csr -CA rootCA.crt -CAkey rootCA.key -CAcreateserial -out server-s1.crt -days 365 -sha256
-Certificate request self-signature ok
-subject=C = US, ST = CA, L = San Francisco, O = "Dixit, LTD", OU = Selling Stuff, CN = dixit.com, emailAddress = admin@dixit.com
+```bash
+openssl req -new -key /etc/ssl/private/server-s1.key -out /tmp/server-s1.csr -subj "/C=/ST=/L=/O=/OU=/CN=dixit.com"
 ```
 
-C. Check it:
+If you'd rather go through the interview process, skip the `-subj` flag at the end of this command. You can check what was created with the following:
 
-```
-root@tls-ca-s:/# openssl x509 -text -noout -in /tmp/server-s1.crt
-(ETC)
+```bash
+openssl req -text -noout -verify -in /tmp/server-s1.csr
 ```
 
-### Step 4. Profit from all this trust
+Now we need take the CSR to the CA and ask them to sign it. Again, this is gonna be some copy/pasta. `cat /tmp/server-s1.csr` and grab everything that's output to your screen. 
+
+Then we'll need to head on over to `tls-ca-s` and save the certificate locally. Run `vim /tmp/server-s1.csr` and paste in your copied certificate. Now that the CSR exists on the CA, we can use the root CA key to sign it:
+
+```bash
+root@tls-ca-s:/# openssl x509 -req -in /tmp/server-s1.csr -CA /etc/ssl/certs/rootCA.crt -CAkey /etc/ssl/private/rootCA.key -CAcreateserial -out /tmp/server-s1.crt -days 365 -sha256
+```
+
+### Step 4. Install the signed certificate on the server
+
+Now we need to install that signed certificate back on `server-s1`. 
+
+
+
+
+
+=========================================
+STOPPED HERE
+=========================================
+
+
+
+
+
+
+
 
 ALL THIS IS HAPPENING ON `server-s1`
 
