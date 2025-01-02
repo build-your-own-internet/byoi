@@ -43,6 +43,9 @@ case $HOSTNAME in
     ip route add default via 8.2.0.3
     ip route add 8.1.0.0/16 via 8.2.0.2
     ;;
+    (rootdns-r)
+    ip route add default via 103.0.1.4
+    ;;
 esac
 
 /usr/sbin/knotc conf-init

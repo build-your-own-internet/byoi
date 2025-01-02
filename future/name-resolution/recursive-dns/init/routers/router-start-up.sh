@@ -10,16 +10,16 @@ rm -rf /init
 
 case $HOSTNAME in
 # Comcast network machines
-router-c2)
+(router-c2)
   ip route add default via 1.2.0.3
   ;;
-router-c3)
+(router-c3)
   ip route add default via 2.1.0.6
   ip route add 1.3.0.0/16 via 1.2.0.2
   ;;
 
 # Zayo network machines
-router-z5)
+(router-z5)
   # Zayo internal
   ip route add 2.6.7.0/24 via 2.5.6.6
   ip route add 2.7.8.0/24 via 2.5.7.7
@@ -38,8 +38,10 @@ router-z5)
   ip route add 101.0.1.0/24 via 2.5.7.7
   # verisign
   ip route add 102.0.1.0/24 via 2.5.8.8
+  # RIPE
+  ip route add 103.0.1.0/24 via 2.5.7.7
   ;;
-router-z6)
+(router-z6)
   # Zayo internal
   ip route add 2.5.7.0/24 via 2.5.6.5
   ip route add 2.7.8.0/24 via 2.6.7.7
@@ -57,8 +59,10 @@ router-z6)
   ip route add 101.0.1.0/24 via 2.6.7.7
   # verisign
   ip route add 102.0.1.0/24 via 2.6.8.8
+  # RIPE
+  ip route add 103.0.1.0/24 via 2.6.7.7
   ;;
-router-z7)
+(router-z7)
   # Zayo internal
   ip route add 2.6.8.0/24 via 2.6.7.6
   ip route add 2.5.6.0/24 via 2.6.7.6
@@ -79,8 +83,10 @@ router-z7)
   ip route add 101.0.1.0/24 via 2.4.0.2
   # verisign
   ip route add 102.0.1.0/24 via 2.7.8.8
+  # RIPE
+  ip route add 103.0.1.0/24 via 2.3.0.6
   ;;
-router-z8)
+(router-z8)
   # Zayo internal
   ip route add 2.5.7.0/24 via 2.7.8.7
   ip route add 2.6.7.0/24 via 2.7.8.7
@@ -98,10 +104,12 @@ router-z8)
   ip route add 101.0.1.0/24 via 2.7.8.7
   # verisign
   ip route add 102.0.1.0/24 via 2.8.0.4
+  # RIPE
+  ip route add 103.0.1.0/24 via 2.7.8.7
   ;;
 
 # Telia networks
-router-t5)
+(router-t5)
   # Internal Telia
   ip route add 3.6.8.0/24 via 3.5.6.6
   ip route add 3.7.8.0/24 via 3.5.8.8
@@ -123,8 +131,10 @@ router-t5)
   ip route add 101.0.1.0/24 via 3.5.7.7
   # verisign
   ip route add 102.0.1.0/24 via 2.3.0.7
+  # RIPE
+  ip route add 103.0.1.0/24 via 3.5.7.7
   ;;
-router-t6)
+(router-t6)
   # Internal Telia
   ip route add 3.5.7.0/24 via 3.5.6.5
   ip route add 3.5.8.0/24 via 3.5.6.5
@@ -146,8 +156,10 @@ router-t6)
   ip route add 101.0.1.0/24 via 3.6.7.7
   # verisign
   ip route add 102.0.1.0/24 via 2.3.0.7
+  # RIPE
+  ip route add 103.0.1.0/24 via 3.6.7.7
   ;;
-router-t7)
+(router-t7)
   # Internal Telia
   ip route add 3.6.8.0/24 via 3.6.7.6
   ip route add 3.5.6.0/24 via 3.6.7.6
@@ -166,8 +178,10 @@ router-t7)
   ip route add 101.0.1.0/24 via 3.4.0.2
   # verisign
   ip route add 102.0.1.0/24 via 3.6.7.6
+  # RIPE
+  ip route add 103.0.1.0/24 via 3.4.0.4
   ;;
-router-t8)
+(router-t8)
   # Internal Telia
   ip route add 3.5.7.0/24 via 3.5.8.5
   ip route add 3.6.7.0/24 via 3.6.8.6
@@ -186,34 +200,37 @@ router-t8)
   ip route add 101.0.1.0/24 via 3.7.8.7
   # verisign
   ip route add 102.0.1.0/24 via 3.5.8.5
+  # RIPE
+  ip route add 103.0.1.0/24 via 3.7.8.7
   ;;
 
 # Supercorp networks
-router-s2)
+(router-s2)
   ip route add default via 3.9.0.8
   ip route add 9.1.0.0/16 via 9.2.0.3
   ;;
-router-s3)
+(router-s3)
   ip route add default via 9.2.0.2
   ;;
 
 # ISC networks
-router-i2)
+(router-i2)
   ip route add default via 2.8.0.8
   ip route add 3.0.0.0/8 via 3.8.0.8
   ip route add 8.0.0.0/8 via 2.8.0.3
   ip route add 9.0.0.0/8 via 3.8.0.8
   ip route add 102.0.1.0/24 via 2.8.0.4
+  # RIPE
+  ip route add 103.0.1.0/24 via 3.8.0.8
   ;;
 
 # verisign networks
-router-v4)
+(router-v4)
   ip route add default via 2.8.0.8
-  ip route add 100.0.1.0/24 via 2.8.0.2
   ;;
 
 # Netnod networks
-router-n2)
+(router-n2)
   ip route add default via 3.4.0.7
   ip route add 4.0.0.0/8 via 2.4.0.4
   ip route add 2.0.0.0/8 via 2.4.0.7
@@ -223,43 +240,56 @@ router-n2)
   ;;
 
 # Google Cloud Services
-router-g2)
+(router-g2)
   ip route add default via 8.2.0.3
   ip route add 3.0.0.0/8 via 8.1.0.4
   ip route add 9.0.0.0/8 via 8.1.0.4
+  # RIPE
+  ip route add 103.0.1.0/24 via 8.1.0.4
   ;;
-router-g3)
+(router-g3)
   ip route add default via 2.8.0.8
   ip route add 102.0.1.0/24 via 2.8.0.4
   ip route add 100.0.1.0/24 via 2.8.0.2
   ip route add 8.1.0.0/16 via 8.2.0.2
   ;;
-router-g4)
+(router-g4)
   ip route add default via 3.8.0.8
   ip route add 100.0.1.0/24 via 3.8.0.2
   ip route add 8.2.0.0/16 via 8.1.0.2
   ;;
 
 # AWS
-router-a2)
+(router-a2)
   ip route add default via 4.1.0.4
   ip route add 4.3.0.0/16 via 4.1.0.3
   ip route add 3.0.0.0/8 via 4.1.0.3
   ip route add 9.0.0.0/8 via 4.1.0.3
+  # RIPE
+  ip route add 103.0.1.0/24 via 4.1.0.3
   ;;
-router-a3)
+(router-a3)
   ip route add default via 3.4.0.7
   ip route add 4.2.0.0/16 via 4.1.0.2
   ip route add 2.0.0.0/8 via 4.1.0.4
   ip route add 1.0.0.0/8 via 4.1.0.4
   ip route add 102.0.0.0/8 via 4.1.0.4
+  # RIPE
+  ip route add 103.0.1.0/24 via 3.4.0.4
   ;;
-router-a4)
+(router-a4)
   ip route add default via 2.4.0.7
   ip route add 4.2.0.0/16 via 4.1.0.2
   ip route add 4.3.0.0/16 via 4.1.0.3
   ip route add 3.0.0.0/8 via 4.1.0.3
   ip route add 9.0.0.0/8 via 4.1.0.3
+  # RIPE
+  ip route add 103.0.1.0/24 via 4.1.0.3
+  ;;
+
+# RIPE
+(router-r4)
+  ip route add default via 3.4.0.7
   ;;
 esac
 

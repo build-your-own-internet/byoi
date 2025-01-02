@@ -13,7 +13,7 @@ Not only that... We have a system where we don't really trust other people/organ
 
 ## Disclaimer
 
-In previous chapters, we have taken the approach of building our internet interactively where we mixed conversations about how things worked with sections focussed on building out the infrastructure. Given the complexity of DNS and the various systems involved, it feels like that approach won't get you, our audience, to see the value until much later. So, we are taking a new approach in this chapter, where we play with a built out infrastructure to learn about the details of recursive DNS and DNS configuration more broadly. Once you understand that, we will get to build the infrastructure together!
+In previous chapters, we have taken the approach of building our internet interactively where we mixed conversations about how things worked with sections focused on building out the infrastructure. Given the complexity of DNS and the various systems involved, it feels like that approach won't get you, our audience, to see the value until much later. So, we are taking a new approach in this chapter, where we play with a built out infrastructure to learn about the details of recursive DNS and DNS configuration more broadly. In actually managing the DNS system, you'll have an opportunity to see how it all fits together. By the end, we'll ask you to add new elements to the system which will give you the experience of building the system out.
 
 ## What is the system we are working with?
 
@@ -623,30 +623,47 @@ Would you look at that! We got our whole lookup done now! Congratulations team!
 
 NOTE: We hacked this together a little... We used glue records in the zonefile we created for `meow.` to point our resolvers to the authoritative servers. But those actual records don't exist anywhere in our DNS. We still need to go back and add actual records for `authoritative-a.aws.meow.` and `authoritative-s.supercorp.meow.`. We'll leave that as an exercise for the reader.
 
-# Exercises
+## Watch the recursive DNS lookup using `tcpdump`
 
-* watching tcp dump of name resolution
+<!-- TODO -->
 
-* add a new name
-* add a new tld
-* zone cut at a higher level
-* Common DNS issues debugging
-  * Leave a DNS entry in a zone file that does not have the dot at the end of it
-  * Have a screwed up resolv.conf file (e.g. point to an non-existent recursive resolver)
-* bad.horse
+## Final Exercises
 
-NOTES:
-Lots of different use-cases:
+Now that we've built out some of the infrastructure together, take a stab at adding a few more elements to this toy internet. We've added a new network, RIPE, to our network map.
 
-1. A simple IP address for a single host
-2. Multiple names on a single host
-3. Multiple IP addresses for a single host
-4. A name that resolves to multiple IP addresses
-5. Names that differ Inside and outside
+![Network map including the RIPE network](./final-exercises.svg)
 
-## how do I build this from the ground up
+Configure the rootdns and resolver in the RIPE network to do the jobs we've assigned to them! In each case, it would be helpful to go check (and potentially copy) the config files for similar machines on our internet.
 
-## Watch recursive resolution using tcpdump
+### Configure the resolver
+
+So far, we've been building out this system and relying on a piece of achetecture that we haven't addressed at all yet... The recursive resolver. The role of the resolver in the DNS process is keep asking each machine it's pointed to the DNS query it's trying to resolve until it gets an answer. The software we used for our resolver on this toy internet is called `unbound`
+
+But... how does it even know where to start? Every recursive resolver software uses a file called `root.hints` that tells it what the names and IP addresses of the root servers are. When it has no idea where to go to request information about a name, it will start by talking to one of the root servers.
+
+Your task for this configuration is the following:
+
+* `hopon` one of the other recursive resolvers (e.g. `resolver-g`) and examine the config files for unbound
+  * `/etc/unbound/unbound.conf`
+  * `/etc/unbound/root.hints`
+* duplicate the configuration on `resolver-r` including the `root.hints` file
+* tell `unbound` to load the config changes (`kill -HUP <process-id>`)
+* configure the nameserver for each machine on the Ripe network (the `resolv.conf` file) to point at the new `resolver-r` address `103.0.1.101`
+
+Once you've got your resolver correctly configured, test it out!
+
+* `dig resolver-g.google.com`
+* `dig client-c1.comcast.com`
+* `dig rootdns-n.netnod.org`
+* `dig tlddns-v.verisign.org`
+
+### Configure the Root DNS server
+
+We've added a TLD server, but we can go even deeper on our toy internet. For your next exercise, build out a root DNS server!
+
+Start by looking at the `knot` config and zonefiles for one of the other root servers (e.g. `rootdns-i`). Mimic that setup on `rootdns-r`. You'll need to tell `knot` to reload the config files once you've got them on the server. Test that `rootdns-r` can point requests to the correct TLD with `dig @103.0.1.100 com.`. 
+
+Once you know you've got `rootdns-r` setup correctly and working, make sure you go back to each of the other root DNS servers and add the entry for `rootdns-r` to it. You'll also need to update the `root.hints` files for each resolver on the toy internet. Remember to tell the software to reload the configs on each machine you touch!
 
 ## Answer Section
 
