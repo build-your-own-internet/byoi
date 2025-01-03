@@ -22,13 +22,17 @@ Trust is something that we intuitively know in our daily lives. We trust a lot o
 
 This is possible, but let's start with an analogy. Let's say you have a plumbing problem, and you know that *Acme Plumbing* is the best plumber in town. You don't have their phone number saved, but you want to call them and schedule an appointment. How do you do this?
 
-Well, before everyone used the Internet, we would have gone to the Yellow Pages and looked them up, because we all trusted the phone company to have accurate information. Today, we typically use some kind of mapping service on the Internet, such as Google Maps. Because Acme Plumbing knows that you trust Google Maps, they are motivated to make sure their contact information is accurate on that service. Then, when you look them up and find the phone number, you have some confidence that the number you're calling is correct. Google, as a company, wants to be able to sell you ads so they can make money. They need your trust in their information to be high so that you keep coming back. Therefore, they are motivated to make sure the information in their system is vetted.
+Well, before everyone used the Internet, we would have gone to the Yellow Pages and looked them up, because we all trusted the phone company to have accurate information. Today, we typically use some kind of mapping service on the Internet, such as Google Maps. Because Acme Plumbing knows that you trust Google Maps, they are motivated to make sure their contact information is accurate on that service. Then, when you look them up and find the phone number, you have some confidence that the number you're calling is correct. Google, as a company, wants to be able to sell you ads so they can make money. They need your trust in their information to be high so that you keep coming back. Therefore, they are also motivated to make sure the information in their system is vetted.
 
 Let's break this down a little. You understand that Google has a motivation to keep the information in their system accurate, so you have some level of trust in that data. You also understand that companies in your local area also trust Google Maps for the same reason. Google is therefore a trusted third-party that can hold information like telephone numbers for businesses.
 
-Similar to the role Google plays in this example, there are third-party companies called "Certification Authorities" (or CAs) that have established trust with the Internet as a whole. These CAs that vet that domains on the internet are who they say they are. A company, let's say Dixit Enterprises, will approach the CA and say that they want to provide an encrypted connection for clients attempting to reach `www.dixit.com`. The CA will ask Dixit Enterprises to perform a task (usually adding some DNS record to the domain) that proves they have control over the domain they want to secure. Once the CA verifies that the task was done correctly, they sign an artifact called a "certificate". That certificate essentially says "any server bearing this certificate has been proven to be the correct server for this domain and you can trust that you've reached the correct place".
+When you pick up the phone and call Acme Plumbing, you implicitly trust that the telephone company is going to route your call to the business that owns that telephone number. In the wild world of the internet, there is an additional problem though: you don't know, after obtaining the address of the website you're trying to reach, if that website is legitimate or not. There are many ways of re-routing traffic or otherwise spoofing a destination that your computer cannot detect. So would be like you, as a customer of acme plumbing, having to do some additional checking to make sure that the person who answered the phone is in fact someone who works for acme. How would you possibly go about doing this? In the world of the Internet, we handle this through public-private key cryptography, which we'll discuss later.
 
-But how do we know to trust this CA? Each of our devices has installed on them a set of "root certificates", or certificates that belong to the CAs. Let's take a look at the certs installed on one of the machines on our toy internet. `hopon client-c1` and run:
+Similar to the role Google plays in this example, there are third-party companies called "Certification Authorities" (or CAs) that have established trust with the Internet as a whole. These CAs perform vetting services to ensure that domains on the internet are who they say they are. A company, let's say *Dixit Enterprises*, will approach the CA and say that they want their website, `www.dixit.com` to be verified. The CA will vet Dixit Enterprises by asking them to perform a task only the owner of `www.dixit.com` can do (usually adding some DNS record to the domain). Once the CA verifies that the task was done correctly, they sign an artifact called a "certificate". That certificate essentially says "any server bearing this certificate has been proven to be the correct server for this domain and you can trust that you've reached the correct place".
+
+<!-- TODO: Is our analogy good here? A similar problem in the real world is if you dialed a phone number and didn't know if the person who picked up the phone on the other end is actually the person you wanted to call. Could there be a protocol for establishing trust in this case? -->
+
+Okay, but how did the internet as a whole establish trust in this CA? Well, there is a thing called a "root certificate." Each CA has one of these root certificates that proves they are this trusted entity. Furthermore, the manufacturer of the computer (or the browser) you're using right now has installed each CA's root certificates on your computer. This means that your computer already knows who to trust on the Internet. Let's take a look at the root certificates installed on one of the machines on our toy internet. `hopon client-c1` and run:
 
 ```bash
 ls /etc/ssl/certs
@@ -98,16 +102,26 @@ Certificate:
         90:be:f1:b9
 ```
 
-A lot of this cert probably doesn't make any sense, but that's OK. Most of it doesn't need to make sense to humans. But a few things we might call out here:
+A lot of this certificate probably doesn't make any sense, but that's OK. Most of it doesn't need to make sense to humans. But a few things we might call out here:
 
-* `Issuer`: Who actually provided this cert.
-* `Validity`: This section tells us when clients should respect the use of this cert. If a cert is expired, don't trust the connection made using it.
+* `Issuer`: Who actually provided this certificate.
+* `Validity`: This section tells us *when* clients should respect the use of this certificate. If a certificate is expired, don't trust the connection made using it.
 
-Because this cert is a root cert, it doesn't have any domains associated with it. As we look at certs issued in this chapter, we'll start seeing other sections that are important to us.
+Because this certificate is a *root* certificate, it doesn't have any domains (like `www.dixit.com`) associated with it. As we look at certificates issued in this chapter, we'll start seeing other sections that are important to us.
 
-Ok, so we can look at this root certificate, but what's the significance of it? Why does it matter? After a company has proven ownership over a domain, the CA will use their root cert to "sign" a certificate for that domain. This imbues the new cert with the trust that was granted to the root cert. After the company installs the cert signed by the root certificate on their server, any client attempting to establish an encrypted connection will recieve that cert as part of the TLS handshake. The client then checks the cert to see who signed it, and validates that it has the root certificate installed locally. If it does, all is good in the world! If it doesn't, it will not trust the connection.
+Ok, so we can look at this root certificate, but what's the significance of it? Why does it matter? In order to talk about how computers transfer trust around the internet, we're going to have to take a brief detour into the world of public/private key cryptography.
 
-If you want to check out what a cert looks like on the "real" Internet, you can use `openssl`'s `s_client` command to do so; e.g.:
+### Public/private key cryptography
+
+L
+
+When a cert is created, we need to know what organization is vouching for trust in that domain. This is done by "signing" the certificate being issued. The artifact used to sign is called a "private key." Let's start with talking about how public and private key encryption works.
+
+A public-key, as you might have gleaned from the name, is a key that is available to anyone on the internet. the publick-key is used to decrypt messages that were sent to you that were encrypted by the private key.
+
+After a company has proven ownership over a domain, the CA will use their root certificate to "sign" a certificate for that domain. This imbues the new certificate with the trust that was granted to the root certificate. After the company installs the certificate signed by the root certificate on their server, any client attempting to establish an encrypted connection will receive that certificate as part of the TLS handshake. The client then checks the certificate to see who signed it, and validates that it has the root certificate installed locally. If it does, all is good in the world! If it doesn't, it will not trust the connection.
+
+If you want to check out what a certificate looks like on the "real" Internet, you can use `openssl`'s `s_client` command to do so; e.g.:
 
 ```bash
 openssl s_client -connect www.denverlibrary.org:443 | openssl x509 -text -noout
@@ -117,9 +131,9 @@ openssl s_client -connect www.denverlibrary.org:443 | openssl x509 -text -noout
 
 ### Trust of the Client Versus Trust of the User
 
-One important distinction we'd like to make here is the difference between the trust of the client and the trust of the person actually browsing The Internet. The trust we've been talking about is specific to machines. If you request an encryted connection to a domain, you want some guarantee that you're talking to the server that is responsible for that domain. Not a server pretending to be that domain. 
+One important distinction we'd like to make here is the difference between the trust of the client and the trust of the person actually browsing The Internet. The trust we've been talking about is specific to machines. If you request an encryted connection to a domain, you want some guarantee that you're talking to the server that is responsible for that domain. Not a server pretending to be that domain.
 
-However, this has it's limitations in the real world of humans. It doesn't protect against typos when trying to reach a site. And it doesn't vet the content of any site. Just because a machine can prove that you're talking to the site you made a request to, doesn't mean that site itself isn't disreputable. If you visit breitbart, you're going to be able to establish an encrypted connection to the correct website, but you're still going to be innundated with misinformation. 
+However, this has it's limitations in the real world of humans. It doesn't protect against typos when trying to reach a site. And it doesn't vet the content of any site. Just because a machine can prove that you're talking to the site you made a request to, doesn't mean that site itself isn't disreputable. If you visit breitbart, you're going to be able to establish an encrypted connection to the correct website, but you're still going to be innundated with misinformation.
 
 ## Building a basic trust infrastructure between a client and a server using a Certification Authority
 
