@@ -625,7 +625,135 @@ NOTE: We hacked this together a little... We used glue records in the zonefile w
 
 ## Watch the recursive DNS lookup using `tcpdump`
 
-<!-- TODO -->
+So far, we've been building out and testing this system while relying on a piece of achitecture that we haven't addressed at all yet... The recursive resolver. The role of the resolver in the DNS process is keep asking each machine it's pointed to the DNS query it's trying to resolve until it gets an answer. 
+
+Now that we've got everything setup and working, we can hopon a resolver and watch all of the requests that are necessary to make this recursive lookup work. Let's `hopon resolver-c`. 
+
+First though, the requests we made to prove that `www.awesomecat.com` was working have cached the responses to the various DNS queries. We need to clear that cache. The easiest way to do this is to restart the resolver software. The software we used for our resolver on this toy internet is called `unbound`. We'll use the same process we did to restart `knot`, namely, find the process ID with `ps aux` and then run `kill -HUP <process_id>`.
+
+Once that's done, we can run our `tcpdump`. `resolver-c` only has one interface, so we can run a simple `tcpdump -n` to see all the packets running through that interface. Open a second window, `hopon client-c1` in that window, and run `dig www.awesomecat.com`. You should see A LOT of output in your `tcpdump`. Let's take it line by line:
+
+```bash
+21:11:07.561149 ARP, Request who-has 1.2.0.100 tell 1.2.0.3, length 28
+21:11:07.561667 ARP, Reply 1.2.0.100 is-at 02:42:01:02:00:64, length 28
+```
+
+A standard ARP request. If you look at your network map, you'll see that `resolver-c` has IP Address `1.2.0.100`. So `1.2.0.3` (`router-c3`) is asking which machine on this network is `1.2.0.100`. The next line is `resolver-c` replying to `router-c3`'s ARP request with it's own MAC address. For more on this, checkout the [IP and MAC addresses appendix](../../../appendix/ip-and-mac-addresses.md)
+
+```bash
+21:11:07.561754 IP 1.1.0.200.48600 > 1.2.0.100.53: 48085+ [1au] A? www.awesomecat.com. (59)
+```
+
+<!-- TODO: maybe define A record beyond just the paranthetical? Or do an aside on record types?  -->
+`1.1.0.200` (`client-c1`) sends a request to `1.2.0.100` (`resolver-c`) port `53` requesting the `A` records (the IPv4 records) for `www.awesomecat.com`.
+
+```bash
+21:11:07.562914 IP 1.2.0.100.47301 > 101.0.1.100.53: 35603% [1au] NS? . (28)
+21:11:07.564677 IP 101.0.1.100.53 > 1.2.0.100.47301: 35603*- 2/0/3 NS rootdns-i.isc.org., NS rootdns-n.netnod.org. (123)
+```
+
+<!-- TODO: define NS/SOA records -->
+`1.2.0.100` (`resolver-c`) sends a request (`>`) to `101.0.1.100` (`rootdns-n`) for the `NS` records for `.`, the root of all DNS. Then, `101.0.1.100` (`rootdns-n`) sends a reply back to `1.2.0.100` (`resolver-c`) providing the `NS` records for the root DNS servers.
+
+```bash
+21:11:07.565703 IP 1.2.0.100.23565 > 100.0.1.100.53: 29379% [1au] A? com. (32)
+21:11:07.566389 IP 1.2.0.100.24580 > 101.0.1.100.53: 15555% [1au] A? org. (32)
+21:11:07.566667 IP 1.2.0.100.42017 > 100.0.1.100.53: 52879% [1au] A? org. (32)
+21:11:07.566698 IP 100.0.1.100.53 > 1.2.0.100.23565: 29379- 0/1/2 (78)
+21:11:07.566861 IP 101.0.1.100.53 > 1.2.0.100.24580: 15555- 0/1/2 (78)
+21:11:07.567274 IP 100.0.1.100.53 > 1.2.0.100.42017: 52879- 0/1/2 (78)
+```
+
+Now that `resolver-c` has confirmed where the root DNS servers are, It starts firing off requests to learn about all of the TLDs it needs to know about. It has a request from `client-c1` for a name in the `com` TLD, and it just got a response back for root server names in the `org` TLD. So we see 3 requests fired off here, each of them for `A` records for TLDs. The resolver will try to get the fastest possible response for the client. So it's spitting out requests to both of the root DNS servers here to see which response comes back first. 
+
+Interestingly, it doesn't do the same for `com`. This is likely because we didn't clear the cache on our whole internet. If we were to restart each DNS server on our internet, we'd likely see requests for `com` to both root DNS servers.
+
+The next 3 lines are the responses back from the root DNS servers. The actual response bodies aren't parsed here, but given what we saw in the exercises above, we know that what should be seeing DNS responses for where the `com` and `org` TLD servers are. These responses will include the IP addresses for those servers.
+
+
+```bash
+21:11:07.567766 IP 1.2.0.100.63263 > 8.2.0.100.53: 3546% [1au] A? awesomecat.com. (43)
+```
+
+`1.2.0.100` (`resolver-c`) sends a request to `8.2.0.100` (`tlddns-g`) for the `A` records for `awesomecat.com`.
+
+```bash
+21:11:07.568250 IP 1.2.0.100.64823 > 8.2.0.100.53: 5986% [1au] A? google.com. (39)
+```
+
+When `resolver-c` learned about the `com` TLD, it received an `NS` record that pointed it to `tlddns-g.google.com`. Our resolver is a diligent machine, so it wants to go ahead and learn everything it can about the domains it's given. So, it's gonna go ahead and fire off a request to gather the `A` records for `google.com` while it's at it.
+
+There are more requests that are not directly tied to resolving `www.awesomecat.com`. Instead of including those in the line by line analysis, they're gonna be in a block at the end. That way they can still be documented to see the work the resolver is doing without detracting from this analysis.
+
+```bash
+21:11:07.568496 IP 8.2.0.100.53 > 1.2.0.100.63263: 3546- 0/1/2 (93)
+21:11:07.568758 IP 8.2.0.100.53 > 1.2.0.100.64823: 5986- 0/1/2 (89)
+```
+
+`8.2.0.100` (`tlddns-g`) responds back to the queries `1.2.0.100` (`resolver-c`) just made. In each of these lines, you'll see a request ID: `3546` and `5986`. If you check the previous requests coming from `resolver-c`, you can find the corresponding request ID. Again, from our exercises above, we can surmise that response `3546` tells our intrepid resolver that the authoritative DNS server for `awesomecat.com` is `authoritative-a.aws.com` AND it provides the IP address for that server.
+
+```bash
+21:11:07.571062 IP 1.2.0.100.17366 > 4.1.0.100.53: 30044% [1au] A? www.awesomecat.com. (47)
+```
+
+`1.2.0.100` (`resolver-c`) sends a request to `4.1.0.100` (`authoritative-a`) for the `A` records for `www.awesomecat.com`. Remember, `resolver-c` learned about the IP address for the authoritative server for `awesomecat.com` in request `3546` above.
+
+```bash
+21:11:07.571741 IP 4.1.0.100.53 > 1.2.0.100.17366: 30044*- 1/0/1 A 4.2.0.11 (63)
+```
+
+`4.1.0.100` (`authoritative-a`) responds to `1.2.0.100` (`resolver-c`) with the `A` record (IPv4 address) for `www.awesomecat.com`.
+
+```bash
+21:11:07.572238 IP 1.2.0.100.53 > 1.1.0.200.48600: 48085 1/0/1 A 4.2.0.11 (63)
+```
+
+HERE IT IS! `1.2.0.100` (`resolver-c`) responds to `1.2.0.100` (`client-c1`) with the `A` record for `www.awesomecat.com`!!!
+
+```bash
+21:11:07.568907 IP 1.2.0.100.38858 > 101.0.1.101.53: 27609% [1au] A? isc.org. (36)
+21:11:07.569231 IP 1.2.0.100.8235 > 101.0.1.101.53: 47105% [1au] A? netnod.org. (39)
+21:11:07.570048 IP 101.0.1.101.53 > 1.2.0.100.38858: 27609- 0/1/2 (86)
+21:11:07.570139 IP 101.0.1.101.53 > 1.2.0.100.8235: 47105- 0/1/2 (95)
+21:11:07.571580 IP 1.2.0.100.65411 > 4.1.0.100.53: 3832% [1au] A? tlddns-g.google.com. (48)
+21:11:07.571836 IP 1.2.0.100.55505 > 8.2.0.100.53: 5910% [1au] A? aws.com. (36)
+21:11:07.571993 IP 4.1.0.100.53 > 1.2.0.100.65411: 3832*- 1/0/1 A 8.2.0.100 (64)
+21:11:07.572115 IP 8.2.0.100.53 > 1.2.0.100.55505: 5910- 0/1/2 (82)
+21:11:07.572551 IP 1.2.0.100.62758 > 4.1.0.100.53: 31932% [1au] A? rootdns-i.isc.org. (46)
+21:11:07.572799 IP 1.2.0.100.32820 > 9.1.0.100.53: 4137% [1au] A? rootdns-n.netnod.org. (49)
+21:11:07.573039 IP 4.1.0.100.53 > 1.2.0.100.62758: 31932*- 1/0/1 A 100.0.1.100 (62)
+21:11:07.573852 IP 1.2.0.100.46722 > 101.0.1.101.53: 22786% [1au] A? aws.org. (36)
+21:11:07.574126 IP 1.2.0.100.44934 > 9.1.0.100.53: 54086% [1au] A? tlddns-n.netnod.org. (48)
+21:11:07.574201 IP 9.1.0.100.53 > 1.2.0.100.32820: 4137*- 1/0/1 A 101.0.1.100 (65)
+21:11:07.574413 IP 1.2.0.100.3370 > 101.0.1.101.53: 38333% [1au] A? supercorp.org. (42)
+21:11:07.574967 IP 101.0.1.101.53 > 1.2.0.100.3370: 38333- 0/1/2 (88)
+21:11:07.575037 IP 9.1.0.100.53 > 1.2.0.100.44934: 54086*- 1/0/1 A 101.0.1.101 (64)
+21:11:07.575483 IP 1.2.0.100.61919 > 4.1.0.100.53: 61000% [1au] AAAA? tlddns-g.google.com. (48)
+21:11:07.575752 IP 1.2.0.100.23152 > 9.1.0.100.53: 55587% [1au] AAAA? rootdns-n.netnod.org. (49)
+21:11:07.575821 IP 4.1.0.100.53 > 1.2.0.100.61919: 61000*- 0/1/1 (110)
+21:11:07.576220 IP 101.0.1.101.53 > 1.2.0.100.46722: 22786- 0/1/2 (82)
+21:11:07.576389 IP 9.1.0.100.53 > 1.2.0.100.23152: 55587*- 0/1/1 (100)
+21:11:07.576522 IP 1.2.0.100.63540 > 4.1.0.100.53: 40116% [1au] A? authoritative-a.aws.com. (52)
+21:11:07.576808 IP 1.2.0.100.5870 > 4.1.0.100.53: 21740% [1au] AAAA? rootdns-i.isc.org. (46)
+21:11:07.577081 IP 4.1.0.100.53 > 1.2.0.100.63540: 40116*- 1/0/1 A 4.1.0.100 (68)
+21:11:07.577598 IP 4.1.0.100.53 > 1.2.0.100.5870: 21740*- 0/1/1 (97)
+21:11:07.577657 IP 1.2.0.100.11703 > 9.1.0.100.53: 627% [1au] A? authoritative-s.supercorp.org. (58)
+21:11:07.578017 IP 1.2.0.100.47500 > 9.1.0.100.53: 44209% [1au] AAAA? tlddns-n.netnod.org. (48)
+21:11:07.578748 IP 9.1.0.100.53 > 1.2.0.100.47500: 44209*- 0/1/1 (99)
+21:11:07.578987 IP 1.2.0.100.30900 > 4.1.0.100.53: 39480% [1au] A? authoritative-a.aws.org. (52)
+21:11:07.579661 IP 4.1.0.100.53 > 1.2.0.100.30900: 39480*- 1/0/1 A 4.1.0.100 (68)
+21:11:07.579704 IP 1.2.0.100.11194 > 4.1.0.100.53: 22773% [1au] AAAA? authoritative-a.aws.com. (52)
+21:11:07.580008 IP 9.1.0.100.53 > 1.2.0.100.11703: 627*- 1/0/1 A 9.1.0.100 (74)
+21:11:07.580042 IP 4.1.0.100.53 > 1.2.0.100.11194: 22773*- 0/1/1 (103)
+21:11:07.580656 IP 1.2.0.100.11952 > 4.1.0.100.53: 39941% [1au] AAAA? authoritative-a.aws.org. (52)
+21:11:07.581053 IP 1.2.0.100.28276 > 9.1.0.100.53: 10771% [1au] AAAA? authoritative-s.supercorp.org. (58)
+21:11:07.581247 IP 4.1.0.100.53 > 1.2.0.100.11952: 39941*- 0/1/1 (103)
+21:11:07.581636 IP 9.1.0.100.53 > 1.2.0.100.28276: 10771*- 0/1/1 (109)
+21:11:12.817070 ARP, Request who-has 1.2.0.3 tell 1.2.0.100, length 28
+21:11:12.820482 ARP, Reply 1.2.0.3 is-at 02:42:01:02:00:03, length 28
+```
+
+Dear lord... `resolver-c` just wants to know everything abou the internet. Each of these packets is part of `resolver-c` attempting to either learn about domains that were tangentially related to its attempt to resolve `www.awesomecat.com`. Plus there's some ARP request to learn about `router-c3` there at the end.
 
 ## Final Exercises
 
@@ -637,9 +765,7 @@ Configure the rootdns and resolver in the RIPE network to do the jobs we've assi
 
 ### Configure the resolver
 
-So far, we've been building out this system and relying on a piece of achetecture that we haven't addressed at all yet... The recursive resolver. The role of the resolver in the DNS process is keep asking each machine it's pointed to the DNS query it's trying to resolve until it gets an answer. The software we used for our resolver on this toy internet is called `unbound`
-
-But... how does it even know where to start? Every recursive resolver software uses a file called `root.hints` that tells it what the names and IP addresses of the root servers are. When it has no idea where to go to request information about a name, it will start by talking to one of the root servers.
+We looked briefly at the software `unbound` and how it makes recursive requests to resolve DNS queries. But... how does it even know where to start? Every recursive resolver software, including `unbound`, uses a file called `root.hints` that tells it what the names and IP addresses of the root servers are. When it has no idea where to go to request information about a name, it will start by talking to one of the root servers.
 
 Your task for this configuration is the following:
 
