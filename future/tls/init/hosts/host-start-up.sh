@@ -29,6 +29,10 @@ case $HOSTNAME in
   openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 3650 -out rootCA.crt -subj "/C=/ST=/L=/O=/OU=/CN=buildyourowninternet.dev"
   ;;
 
+# evilnet networks
+  (server-e1)
+  ip route add default via 6.6.6.8
+  ;;
 esac
 
 /bin/sleep infinity

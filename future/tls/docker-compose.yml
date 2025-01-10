@@ -141,6 +141,8 @@ services:
         ipv4_address: 3.6.8.8
       three-seven-eight-net:
         ipv4_address: 3.7.8.8
+      six-six-six-net:
+        ipv4_address: 6.6.6.8
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
@@ -298,6 +300,22 @@ services:
     sysctls:
       - net.ipv4.ip_forward=0
 
+  # evilnet
+  server-e1:
+    container_name: "build-your-own-internet-server-e1"
+    build:
+      context: .
+      dockerfile: Dockerfile_host
+    image: "build-your-own-internet-host"
+    hostname: server-e1
+    networks:
+      six-six-six-net:
+        ipv4_address: 6.6.6.6
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
 networks:
   one-one-net:
     name: "build-your-own-internet-one-one-net"
@@ -432,3 +450,13 @@ networks:
       driver: default
       config:
         - subnet: 101.0.1.0/24
+  six-six-six-net:
+    name: "build-your-own-internet-six-six-six-net"
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: 'false'
+      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
+    ipam:
+      driver: default
+      config:
+        - subnet: 6.6.6.0/24

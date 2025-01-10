@@ -26,6 +26,8 @@ case $HOSTNAME in
     # SuperCorp
     ip route add 3.9.0.0/16 via 3.6.8.8
     ip route add 9.0.0.0/8 via 3.6.8.8
+    # Evilnet
+    ip route add 6.6.6.0/24 via 3.6.8.8
     # Netnod
     ip route add 101.0.1.0/24 via 3.6.7.7
     ;;
@@ -40,6 +42,8 @@ case $HOSTNAME in
     ip route add 1.0.0.0/8 via 3.6.7.6
     # Netnod
     ip route add 101.0.1.0/24 via 3.4.0.2
+    # evilnet
+    ip route add 6.6.6.0/24 via 3.7.8.8
     ;;
   (router-t8)
     # Internal Telia
