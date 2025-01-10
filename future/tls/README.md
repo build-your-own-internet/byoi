@@ -1,8 +1,28 @@
 # TLS (Transport-Layer-Security) or: how do you make web pages private?
 
+# TODO ITEM: have nginx running on server-s1 and server-e1 and have distinct HTML pages for each one
+
 Okay, so far our internet behaves the way it did in 1993* when the web was first invented. Back then, the internet was being used by academics sharing papers. Eventually, people started to buy things over the internet, and security has evolved to meet those needs.
 
 Clearly, in a modern internet, we need to have some assurance when we're communicating over the internet that the server we're trying to reach is *in fact* the server we think it is. We would also like our communications with that server to be private.
+
+Let's do an experiment! Let's `hopon client-c1` and make a web connection using `links http://server-s1.supercorp.com`. When you run that command, you should see something like this:
+
+```unset
+HERE's the page!! You trust us, right?
+```
+
+> Press `q` to exit links and go back to the command line
+
+Okay. Here's the experiment: is there a way we can replace that web server and direct your traffic to an attacker's web server instead without you knowing that anything is different? This is actually quite easy, and achievable in a number of different ways which we can get into later <!-- TODO -->. The simplest way we can do this now is by getting into `router-t8` and making a one-line configuration change:
+
+```bash
+root@router-t8:/# iptables -t nat -A PREROUTING -d 9.2.0.10 -j DNAT --to-destination 6.6.6.6
+```
+
+This uses a command called [iptables](../../chapters/command-reference-guide.md#iptables), which we're not going to spend a lot of time talking about now, but suffice to say that this will cause this router to alter IP packets that go through it. Specifically, whenever the router sees a packet that is destined for `9.2.0.10`, it's going to alter that packet and change the destination IP address to `6.6.6.6`. The router will then see that it needs to route the packet down to EVILNET, as shown the following diagram:
+
+<!-- TODO: Add diagram -->
 
 These types of assurances are provided by a technology we refer to as "TLS", which stands for Transport Layer Security. You will also know this technology by the protocol, "https", which is the same HTTP protocol we've been using in other chapters, but with the TLS technology glued onto it so that you can interact with web pages with the kind of security you're used to.
 
@@ -113,9 +133,14 @@ Because this certificate is a *root* certificate, it doesn't have any domains (l
 
 <!-- TODO  note that we will not be proving ownership of domains in this chapter since we manage all the machines on our toy internet. We're just going to go around creating and signing certificates so we can make this technology work -->
 
+- root certificates are trusted (via their installation on the machine)
+- we can use root certificates to sign/validate a cert/key pair that gets installed on a web server
+- when a client communicates to a web server, it will download the server's certificate, validate that cert against the root certificates that it already has installed.
+- The client will then use the public key in the certificate to communicate securely to the server which has a secret private key
+
 Ok, so we can look at this root certificate, but what's the significance of it? Why does it matter? In order to talk about how computers transfer trust around the internet, we're going to have to take a brief detour into the world of public/private key cryptography.
 
-When a cert is created for a website, we need to know the Certification Authority that is vouching for domain. This is done by "signing" the certificate being issued. The artifact used to sign is called a "private key." Let's start with talking about how public and private key encryption works.
+When a cert is created for a website, we need to know the Certification Authority that is vouching for the domain. This is done by "signing" the certificate being issued. The artifact used to sign is called a "private key." Let's start with talking about how public and private key encryption works.
 
 After a company has proven ownership over a domain, the CA will use their root certificate to "sign" a certificate for that domain. This imbues the new certificate with the trust that was granted to the root certificate. After the company installs the certificate signed by the root certificate on their server, any client attempting to establish an encrypted connection will receive that certificate as part of the TLS handshake. The client then checks the certificate to see who signed it, and validates that it has the root certificate installed locally. If it does, all is good in the world! If it doesn't, it will not trust the connection.
 
