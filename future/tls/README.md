@@ -1,7 +1,5 @@
 # X.1 Secure connections or: how do you trust who you're talking to?
 
-<!-- TODO ITEM: have nginx running on server-s1 and server-e1 and have distinct HTML pages for each one -->
-
 Okay, so far our internet behaves the way it did in 1993* when the web was first invented. Back then, the internet was being used by academics sharing papers. Eventually, people started to buy things over the internet, and security has evolved to meet those needs.
 
 Clearly, in a modern internet, we need to have some assurance when we're communicating over the internet that the server we're trying to reach is *in fact* the server we think it is. We would also like our communications with that server to be private.
@@ -9,10 +7,22 @@ Clearly, in a modern internet, we need to have some assurance when we're communi
 Let's do an experiment! Let's see what it might look like for an attacker to intercept the traffic to a legitimate server with their own server. Let's `hopon client-c1` and make a web connection using `links http://server-s1.supercorp.com`. When you run that command, you should see something like this:
 
 ```unset
-HERE's the page!! You trust us, right?
+Welcome to server-s1!
+
+We're here to meet all your server-s1 needs!
+
+Please enter your credit card information:
+
+Credit Card Number: __________________
+
+Expiration Date: __________________
+
+[ Submit ]
+
+Thank you for visiting server-s1.
 ```
 
-> Press `q` to exit links and go back to the command line
+> To EXIT: press `esc` to open the menu. Press `enter` to open the `File` dropdown. Select `Exit`.
 
 Okay. Here's the experiment: is there a way we can replace that web server and direct your traffic to an attacker's web server instead without you knowing that anything is different? This is actually quite easy, and achievable in a number of different ways.The simplest way we can do this is by getting into `router-t8` and making a one-line configuration change:
 
@@ -58,8 +68,21 @@ root@client-c1:/# links http://server-s1.supercorp.com
 
 And now you'll see the website from the attacking server:
 
-<!-- TODO -->
 ```unset
+Welcome to EVIL NET!
+
+We're super EVIL over here!
+
+Please enter your credit card information:
+
+Credit Card Number: __________________
+
+Expiration Date: __________________
+
+[ Submit ]
+
+We will def take good care of your credit card information...
+:maniacal laugh:
 ```
 
 So now we understand the problem. What do we do about this?
