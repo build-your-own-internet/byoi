@@ -32,7 +32,7 @@ root@router-t8:/# iptables -t nat -A PREROUTING -d 9.2.0.10 -j DNAT --to-destina
 
 This uses a command called [iptables](../../chapters/command-reference-guide.md#iptables), which is a tool that exists on every linux computer which allows you to intercept and alter network packets. This specific command above will cause `router-t8` to alter packets destined for `9.2.0.10` and change the destination IP address to `6.6.6.6`. The router will then see that it needs to route the packet down to EVILNET, as shown the following diagram:
 
-<!-- TODO: Add diagram -->
+![Network map of an internet including DNS infrastructure and an attacking machine](./simple-network-map.png)
 
 Okay, so now that this "hack" is in place on `router-t8`, let's go back to our `client-c1` machine and check what's happening. In order to illustrate this clearly, let's also have a terminal running on our impersonating server, `server-e1`. On `server-e1`, let's run `tcpdump -n`:
 
