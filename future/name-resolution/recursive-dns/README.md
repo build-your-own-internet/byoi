@@ -625,13 +625,13 @@ NOTE: We hacked this together a little... We used glue records in the zonefile w
 
 ## Watch the recursive DNS lookup using `tcpdump`
 
-So far, we've been building out and testing this system while relying on a piece of achitecture that we haven't addressed at all yet... The recursive resolver. The role of the resolver in the DNS process is keep asking each machine it's pointed to the DNS query it's trying to resolve until it gets an answer. 
+So far, we've been building out and testing this system while relying on a piece of achitecture that we haven't addressed at all yet... The recursive resolver. The role of the resolver is to take the responsibility for answering DNS questions for all computers in the network. This involves the whole process of chasing down names from beginning to end, starting with the "root" name servers, and ceaselessly asking DNS questions until finding the final "authoritative" server for a name being requested. Since this can often require many network calls, the recursive resolver also caches these values in order to cut down on network traffic.
 
-Now that we've got everything setup and working, we can hopon a resolver and watch all of the requests that are necessary to make this recursive lookup work. Let's `hopon resolver-c`. 
+Now that we've got everything setup and working, we can `hopon` a resolver machine and watch all of the requests that are necessary to make this recursive lookup work. Let's `hopon resolver-c`. 
 
-First though, the requests we made to prove that `www.awesomecat.com` was working have cached the responses to the various DNS queries. We need to clear that cache. The easiest way to do this is to restart the resolver software. The software we used for our resolver on this toy internet is called `unbound`. We'll use the same process we did to restart `knot`, namely, find the process ID with `ps aux` and then run `kill -HUP <process_id>`.
+First though, the requests we made to prove that `www.awesomecat.com` was working have cached the responses to the various DNS queries. We need to clear that cache. The easiest way to do this is to restart the resolver process. The software we used for our resolver on this toy internet is called `unbound`. We'll use the same procedure we did to restart `knot`, namely, find the process ID with `ps aux` (this time looking for "unbound" instead of "knot") and then run `kill -HUP <process_id>`.
 
-Once that's done, we can run our `tcpdump`. `resolver-c` only has one interface, so we can run a simple `tcpdump -n` to see all the packets running through that interface. Open a second window, `hopon client-c1` in that window, and run `dig www.awesomecat.com`. You should see A LOT of output in your `tcpdump`. Let's take it line by line:
+Once that's done, we can run our `tcpdump`. `resolver-c` only has one network interface, so we can run a simple `tcpdump -n` to see all the packets running through that interface. Open a second window, `hopon client-c1` in that window, and run `dig www.awesomecat.com`. You should see A LOT of output in your `tcpdump`. Let's take it line by line:
 
 ```bash
 21:11:07.561149 ARP, Request who-has 1.2.0.100 tell 1.2.0.3, length 28
@@ -664,11 +664,11 @@ A standard ARP request. If you look at your network map, you'll see that `resolv
 21:11:07.567274 IP 100.0.1.100.53 > 1.2.0.100.42017: 52879- 0/1/2 (78)
 ```
 
-Now that `resolver-c` has confirmed where the root DNS servers are, It starts firing off requests to learn about all of the TLDs it needs to know about. It has a request from `client-c1` for a name in the `com` TLD, and it just got a response back for root server names in the `org` TLD. So we see 3 requests fired off here, each of them for `A` records for TLDs. The resolver will try to get the fastest possible response for the client. So it's spitting out requests to both of the root DNS servers here to see which response comes back first. 
+Now that `resolver-c` has all of the TLD DNS servers, It starts firing off requests to learn about all of the TLDs it needs to know about. It has a request from `client-c1` for a name in the `com` TLD, and it just got a response back for root server names in the `org` TLD. So we see 3 requests fired off here, each of them for `A` records for TLDs. The resolver will try to get the fastest possible response for the client. So it's spitting out requests to both of the root DNS servers here to see which response comes back first. 
 
 Interestingly, it doesn't do the same for `com`. This is likely because we didn't clear the cache on our whole internet. If we were to restart each DNS server on our internet, we'd likely see requests for `com` to both root DNS servers.
 
-The next 3 lines are the responses back from the root DNS servers. The actual response bodies aren't parsed here, but given what we saw in the exercises above, we know that what should be seeing DNS responses for where the `com` and `org` TLD servers are. These responses will include the IP addresses for those servers.
+The next 3 lines are the responses back from the top-level domain DNS servers. The actual response bodies aren't parsed here, but given what we saw in the exercises above, we know that what should be seeing DNS responses for where the `com` and `org` TLD servers are. These responses will include the IP addresses for those servers.
 
 
 ```bash
