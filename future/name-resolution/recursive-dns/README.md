@@ -655,6 +655,10 @@ A standard ARP request. If you look at your network map, you'll see that `resolv
 
 `1.2.0.100` (`resolver-c`) sends a request (`>`) to `101.0.1.100` (`rootdns-n`) for the `NS` records for `.`, the root of all DNS. Then, `101.0.1.100` (`rootdns-n`) sends a reply back to `1.2.0.100` (`resolver-c`) providing the `NS` records for the root DNS servers.
 
+`resolver-c` already knew the addresses for the root servers from a file called `root.hints`. This file is installed with every resolver software so it will know wheer to start when resolving DNS queries. It doesn't know about the TLD servers by default. It doesn't know about the authoritative servers. It starts with the root servers until it gathers the information it needs.
+
+But the addresses in that file might be out of date. Our resolver wants to verify that it has the correct information for the root servers, so it's going to do what it does best: make DNS queries until it resolves the name.
+
 ```bash
 21:11:07.565703 IP 1.2.0.100.23565 > 100.0.1.100.53: 29379% [1au] A? com. (32)
 21:11:07.566389 IP 1.2.0.100.24580 > 101.0.1.100.53: 15555% [1au] A? org. (32)
@@ -665,8 +669,6 @@ A standard ARP request. If you look at your network map, you'll see that `resolv
 ```
 
 Now that `resolver-c` has all of the TLD DNS servers, It starts firing off requests to learn about all of the TLDs it needs to know about. It has a request from `client-c1` for a name in the `com` TLD, and it just got a response back for root server names in the `org` TLD. So we see 3 requests fired off here, each of them for `A` records for TLDs. The resolver will try to get the fastest possible response for the client. So it's spitting out requests to both of the root DNS servers here to see which response comes back first. 
-
-Interestingly, it doesn't do the same for `com`. This is likely because we didn't clear the cache on our whole internet. If we were to restart each DNS server on our internet, we'd likely see requests for `com` to both root DNS servers.
 
 The next 3 lines are the responses back from the top-level domain DNS servers. The actual response bodies aren't parsed here, but given what we saw in the exercises above, we know that what should be seeing DNS responses for where the `com` and `org` TLD servers are. These responses will include the IP addresses for those servers.
 
@@ -681,7 +683,7 @@ The next 3 lines are the responses back from the top-level domain DNS servers. T
 21:11:07.568250 IP 1.2.0.100.64823 > 8.2.0.100.53: 5986% [1au] A? google.com. (39)
 ```
 
-When `resolver-c` learned about the `com` TLD, it received an `NS` record that pointed it to `tlddns-g.google.com`. Our resolver is a diligent machine, so it wants to go ahead and learn everything it can about the domains it's given. So, it's gonna go ahead and fire off a request to gather the `A` records for `google.com` while it's at it.
+When `resolver-c` learned about the `com` TLD, it received an `NS` record that pointed it to `tlddns-g.google.com`. The glue records for `tlddns-g.google.com` were included in the response, but our resolver is a diligent machine. It wants verify that the glue records were correct and it wants to learn everything it can about the domains it's given. So, it's gonna go ahead and fire off a request to gather the `A` records for `google.com` while it's at it.
 
 There are more requests that are not directly tied to resolving `www.awesomecat.com`. Instead of including those in the line by line analysis, they're gonna be in a block at the end. That way they can still be documented to see the work the resolver is doing without detracting from this analysis.
 
@@ -702,13 +704,13 @@ There are more requests that are not directly tied to resolving `www.awesomecat.
 21:11:07.571741 IP 4.1.0.100.53 > 1.2.0.100.17366: 30044*- 1/0/1 A 4.2.0.11 (63)
 ```
 
-`4.1.0.100` (`authoritative-a`) responds to `1.2.0.100` (`resolver-c`) with the `A` record (IPv4 address) for `www.awesomecat.com`.
+HERE IT IS! `4.1.0.100` (`authoritative-a`) responds to `1.2.0.100` (`resolver-c`) with the `A` record (IPv4 address) for `www.awesomecat.com`.
 
 ```bash
 21:11:07.572238 IP 1.2.0.100.53 > 1.1.0.200.48600: 48085 1/0/1 A 4.2.0.11 (63)
 ```
 
-HERE IT IS! `1.2.0.100` (`resolver-c`) responds to `1.2.0.100` (`client-c1`) with the `A` record for `www.awesomecat.com`!!!
+`1.2.0.100` (`resolver-c`) finishes up the process by responding to `1.2.0.100` (`client-c1`) initial request with the `A` record for `www.awesomecat.com`.
 
 ```bash
 21:11:07.568907 IP 1.2.0.100.38858 > 101.0.1.101.53: 27609% [1au] A? isc.org. (36)
