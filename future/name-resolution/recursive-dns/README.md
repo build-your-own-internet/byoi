@@ -31,17 +31,19 @@ There are some new categories of machines we have added to this network. All of 
 <!-- TODO: We don't like that an appendix is load bearing to understanding of this section. Come back to it! -->
 We go deeper into what roles these different machines play in the context of Recursive DNS in our [appendix on the subject](../../../appendix/recursive-dns.md).
 
-<!--TODO: Ensure that the appendix clearly spells out why recursive DNS is useful -->
-
 ## Let's explore how this all works
 
 As promised, we are going to teach you how to use the system before we build the system. Towards that end, we have created sections on useful or interesting things people do when it comes to managing their DNS. So let's dive right in!
 
 ### Add a new name
 
-<!-- TODO: write a high level overview of what we're about to do -->
-
 Our current internet has a few names already defined in the DNS. We want to add another one, `www.awesomecat.com`. For most people, they just go to the registrar to add a new name. However, we are in the business of digging deep. So we will explore what happens behind the scenes!
+
+This is going to require a few steps:
+
+- add a new apex domain (`awesomecat.com`) to our TLD server
+- add a new entry to the authoritative server for `awesomecat.com`
+- add a new zone file to our authoritative server for `awesomecat.com`
 
 To get started, go ahead and `byoi-rebuild` to bring up the internet we'll be using for this chapter.
 
@@ -644,15 +646,13 @@ A standard ARP request. If you look at your network map, you'll see that `resolv
 21:11:07.561754 IP 1.1.0.200.48600 > 1.2.0.100.53: 48085+ [1au] A? www.awesomecat.com. (59)
 ```
 
-<!-- TODO: maybe define A record beyond just the paranthetical? Or do an aside on record types?  -->
-`1.1.0.200` (`client-c1`) sends a request to `1.2.0.100` (`resolver-c`) port `53` requesting the `A` records (the IPv4 records) for `www.awesomecat.com`.
+`1.1.0.200` (`client-c1`) sends a request to `1.2.0.100` (`resolver-c`) port `53` requesting the `A` records for `www.awesomecat.com`. Please check the [recursive dns appendix](../../../appendix/recursive-dns.md#understanding-the-record-types) for an explanation of a few common record types.
 
 ```bash
 21:11:07.562914 IP 1.2.0.100.47301 > 101.0.1.100.53: 35603% [1au] NS? . (28)
 21:11:07.564677 IP 101.0.1.100.53 > 1.2.0.100.47301: 35603*- 2/0/3 NS rootdns-i.isc.org., NS rootdns-n.netnod.org. (123)
 ```
 
-<!-- TODO: define NS/SOA records -->
 `1.2.0.100` (`resolver-c`) sends a request (`>`) to `101.0.1.100` (`rootdns-n`) for the `NS` records for `.`, the root of all DNS. Then, `101.0.1.100` (`rootdns-n`) sends a reply back to `1.2.0.100` (`resolver-c`) providing the `NS` records for the root DNS servers.
 
 ```bash
@@ -754,6 +754,8 @@ HERE IT IS! `1.2.0.100` (`resolver-c`) responds to `1.2.0.100` (`client-c1`) wit
 ```
 
 Dear lord... `resolver-c` just wants to know everything abou the internet. Each of these packets is part of `resolver-c` attempting to either learn about domains that were tangentially related to its attempt to resolve `www.awesomecat.com`. Plus there's some ARP request to learn about `router-c3` there at the end.
+
+Now that we've gone through reading the basic `tcpdump` output, we encourage the reader to go back through this exercise again, this time running `tcpdump -nvv` to get the verbose output. See if you can read what's happening with each request when you get even more information!
 
 ## Final Exercises
 
