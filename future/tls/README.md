@@ -103,8 +103,19 @@ OpenSSH is a tool that network and computer administrators have been using for d
 
 #### Option 1. Make a secure connection from one computer to another using openssh
 
+- install `openssh-client` and `openssh-server`
+- on `client-c1` run `ssh-keygen`
+- copy the public key that was generated over to `server-s1` in `~/.ssh/authorized_keys`
+- start the ssh server on `server-s1` with `sshd`
+- run `ssh -v server-s1.supercorp.com` on `client-c1` and watch all the things take place!
+- Win.
+
+Can we compare what is happening in TLS handshake v. setting up an ssh connection? 
+- the server is asking the client to prove they are who they say they are in ssh 
+- the server has to prove who it is in TLS
+
+is our initial example actually relevant for this particular technology?
+
 ### Option 2. That's nice, but what if we'd like more computers to talk to each other: openssh port-forwarding
 
 ### Vtunnel. That's nice, but openssh doesn't scale well. implement a real VPN
-
-
