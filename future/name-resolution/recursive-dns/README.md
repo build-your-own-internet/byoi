@@ -1,41 +1,412 @@
 # Recursive DNS
 
-In our previous chapter, we made a promise that we were going to build out a solution that could scale to the entire internet. But then, all we did was build a single DNS server. That single server is not particularly scalable to our internet. In our real world internet, we have millions of machines trying to access apps, sites, APIs, and general content all around the world. In order to do so, they need to convert those easy-for-humans-to-understand domain names into IP addresses. A single DNS server would fall over and cry in pain if it tried to handle all that traffic.
+In our previous chapter, we made a promise that we were going to build out a solution that could scale to the entire internet. But then, all we did was build a single DNS server.
+
+In our real world Internet, we have millions of machines trying to access apps, sites, APIs, and general content all around the world. In order to do so, they need to convert those easy-for-humans-to-understand domain names into IP addresses. A single DNS server would fall over and cry in pain if it tried to handle all that traffic.
 
 Not only that... We have a system where we don't really trust other people/organizations to manage our domain names for us. We need to have a system where people can be autonomous in managing their domains.
 
 ## Goals
 
+Alright, what we're going to play around with a completely realistic full-size DNS infrastructure with you. This is going to be Full Strength™ DNS as you would see in the Real Internet. To do that, we need to spend a little time talking about how the DNS protocol changes when we shift from a single-dns-server deployment to a realistic multi-server system.
+
+In previous chapters, we have taken the approach of building our internet interactively where we mixed conversations about how things worked with sections focused on building out the infrastructure. Given the complexity of DNS and the various systems involved, it feels like that approach won't get you, our audience, to see the value until much later. So, we are taking a new approach in this chapter, where we play with a built-out infrastructure to learn about the details of recursive DNS and DNS configuration more broadly. In actually managing the DNS system, you'll have an opportunity to see how it all fits together. By the end, we'll ask you to add new elements to the system which will give you the experience of building the system out.
+
+The flow of this chapter, then, will be:
+
 0. Understand how recursive DNS works
 1. Explore and make changes to the DNS infrastructure of our internet
-2. Learn how to troubleshoot DNS errors
-3. Build a recursive DNS infrastructure from scratch
+2. Describe the basics of DNS troubleshooting
+3. Give you some exercises in which you can play around with DNS on your own
 
-## Disclaimer
+## 0. Understand how recursive DNS works
 
-In previous chapters, we have taken the approach of building our internet interactively where we mixed conversations about how things worked with sections focused on building out the infrastructure. Given the complexity of DNS and the various systems involved, it feels like that approach won't get you, our audience, to see the value until much later. So, we are taking a new approach in this chapter, where we play with a built out infrastructure to learn about the details of recursive DNS and DNS configuration more broadly. In actually managing the DNS system, you'll have an opportunity to see how it all fits together. By the end, we'll ask you to add new elements to the system which will give you the experience of building the system out.
+Name resolution is the process of converting a human readable name, e.g. `www.awesomecat.com`, into an IP address. There's a bunch of different ways to perform name resolution, but on The Internet, we'll mostly see this done in the Domain Name System, or DNS.
 
-## What is the system we are working with?
+But if I wanna make a request to look up what the IP address is for a particular name, what's actually performing the lookup for me? And how does it know what server to send its request to?
 
-This leads us to our map. If you need help understanding this map, check out our [appendix on how to read network maps](../../../appendix/how-to-read-a-network-map.md).
+### High Level: How is DNS Name Resolution Performed?
+
+At a very high level, DNS name resolution is performed by asking a bunch of different machines what the IP address is for a particular name. Each machine gets us closer to our answer.
+
+Think of it this way... Let's say someone mentions to you that they just had a great vacation hiking in the Grand Canyon. It sounds really rad, so you wanna look up if you could take a similar vacation. But, how can you find somewhere to stay? What else is there to do in the area? Where do you even start to figure this out? We need some kind of centralized place where everyone knows they can go to gather this kind of information. For this scenario, we'll go to the Google machine.
+
+OK, so you ask Google hotels near the Grand Canyon, and Google comes back with some information. Neat! But it's not booking you a room. It's just telling you where to go so you can book a room. You click on the link for the hotel chain, and it doesn't take you to a reservation page. It takes you to a home site where you can select a location for the hotel you want to stay in. You select the location and you're finally where you want to be; on a form to book a room for your stay.
+
+In that process, we started with a very wide search, asking generally for hotels near the Grand Canyon. Then we found a hotel chain, but the information was still too broad, we needed to narrow it down to a specific building for that chain. Finally, we get to the right place to do what we need. This is a recursive process, each step getting us closer to the end goal of booking a room for our vacation.
+
+A DNS lookup on The Internet follows a similar recursive process to find the DNS records for a name. The process starts at a Root DNS server that has a global knowledge of names on the internet, but it doesn't know anything specific. Instead, the Root DNS server will say to go ask a different machine, a Top Level Domain (TLD) server, that knows a bit more of the specifics. The TLD server still doesn't know about the specific DNS records for the name, but it does know which machine should have those records. So it will point to the Authoritative DNS machine for the name. Finally, a request can land on the Authoritative DNS server, which can answer the DNS queries it recieves.
+
+But why go through all this process? Why don't we just have those root servers answer all the DNS queries? The problem is load. There are millions of DNS queries being made on the internet every second. There isn't a machine on earth that could handle the load for all domain names on the internet. Instead, we ask machines to delegate responsibility by the label. So the root servers are responsible for pointing the resolver to the TLDs, which handle a much smaller portion of the traffic. In turn, the TLDs delegate to the authoritative servers, which handle a fraction of the TLD traffic. In this way, the internet doesn't take down any machine and we can handle the load for all the DNS queries!
+
+### The Hardware
+
+Before we can look at the process, we need to learn a little bit about the specific machines involved in DNS. We'll use a [new network map](./how-to-read-a-network-map.md) with a few new machines defined on it:
+
+![large internet with DNS infrastructure](img/simplified-dns-map.svg)
+
+Let's briefly break down what we're seeing in this network map. If you haven't already, it would behoove you to read over [How to Read a Network Map](./how-to-read-a-network-map.md) before continuing this section.
+
+One major thing we added to this map is that the internet is made up of networks of networks. But the networks aren't necessarily a single prefix. Within a network, the owner can break up it's IP addresses however they want. So this network map shows that the internet knows about Comcast, for example, as a network. But within Comcast, they've broken up their larger prefixes. This bit is largely irrelevant to this discussion, but we wanted to call that out to avoid confusion!
+
+We color coded this map a bit to make it easier to find the machines we're talking about. All of the machines that are various shades of brown and have labels on them are part of the DNS infrastructure on our internet. Look for the following machines in our internet diagram above:
+
+- Root DNS
+- TLD DNS
+- Authoritative DNS
+- Recursive Resolver
+
+Let's see how each of these machines is used in our recursive DNS lookup.
+
+### The Process: A Recursive DNS Lookup in Slow Motion
+
+_**NOTE** For the purposes of this explanation, we're going to ignore that caching exists._
+
+First. Let’s just define the actual goal of what we’re trying to accomplish. Using the network map above, we're going to pretend we're sitting on a client machine.
+
+![large internet with DNS infrastructure with a pointer to the client machine](img/recursive-dns-explanation/simplified-dns-map-1.svg)
+
+Now, the user on this machine really wants to go visit `www.awesomecat.com`. Before the user can revel in GIFs and shorts of cats being awesome in the world, they need to resolve `www.awesomecat.com` to an IP address. The first thing this machine is going to do is send a request to their ISP's (Comcast in this case) recursive resolver.
+
+![large internet with DNS infrastructure with the path between the client machine and the recursive resolver highlighted](img/recursive-dns-explanation/simplified-dns-map-2.svg)
+
+The recursive resolver's job is to keep asking questions about what the DNS records are for a name until it gets a final answer. It will continue to initiate new requests until it either receives a response with the DNS records it was looking for or it receives an error. Only then will it respond back to the client.
+
+So, what's the first thing it needs to do? It doesn't know what server on the internet might know about `www.awesomecat.com`. Fortunately, every resolver comes installed with a file called [root.hints](https://www.internic.net/domain/named.root). This file provides the resolver the IP addresses of ALL of the root servers around the world. Since, for this explanation, we're ignoring the cache, the only thing the resolver knows about on the internet are those root servers. It will start by firing off a request to the Root DNS servers, asking them what the IP address is for `www.awesomecat.com`.
+
+![large internet with DNS infrastructure with the path between the recursive resolver and the root DNS servers highlighted](img/recursive-dns-explanation/simplified-dns-map-3.svg)
+
+The role of the Root DNS server on The Internet is simple. All they do is tell the resolver which Top Level Domain (TLD) servers to go to. Root DNS servers don't know all the DNS records for every domain on the internet. That would be way too many requests and waaaaaaaay too many domain names! What they do know is where the next step to find those answers lives.
+
+Let's look at the domain we're attempting to lookup again: `www.awesomecat.com`. The Root DNS server looks at the last label on this name, `com`, and tells the recursive resolver to go ask one of the `COM` TLD servers. This gets us one step closer to learning what the address records are for the domain we want to lookup!
+
+Our resolver receives the response back from the Root server, and it recognizes that this is not the final answer it's looking for. But! It also sees that it now has IP addresses of another server that has more information about the domain it's attempting to look up! So, our stalwart resolver fires off requests to the `COM` TLD servers.
+
+![large internet with DNS infrastructure with the path between the recursive resolver and the COM TLD server highlighted](img/recursive-dns-explanation/simplified-dns-map-4.svg)
+
+Much like the Root DNS server, our TLD servers see way too much traffic to be able to provide answers to every DNS query that hits them. Instead, they too delegate.
+
+When `www.awesomecat.com` was created, a new record was added to the the `COM` TLD servers that instructed them to point any queries for any sub-domain under the `awesomecat.com` apex to a specific Authoritative DNS server. All over the internet, there are Authoritative DNS servers, servers that are responsible for providing answers to DNS queries for the names they know about.
+
+So in the story of our little resolver trying to find the IP address for `www.awesomecat.com`, it sent a request to the TLD server for `COM`, but it got another brush off. It was told that it needs to go ask the Authoritative DNS server for `awesomecat.com`.
+
+Our resolver receives that response, and undeterred, it initiates another new request, this time to the Authoritative server it just learned about.
+
+![large internet with DNS infrastructure with the path between the recursive resolver and the Authoritative DNS server highlighted](img/recursive-dns-explanation/simplified-dns-map-5.svg)
+
+The request lands on the Authoritative DNS server for this domain, and that server actually knows about the domain! It's able to send back an IP address for a server that knows how to handle queries for `www.awesomecat.com`!!!
+
+The resolver receives the response, sees that it AT LAST has an IP address for `www.awesomecat.com`, and sends that response back to the client. The process is complete!
+
+### Let's See The Recursive DNS Lookup Happen Programmatically
+
+OK. That's all fine and good to see on our little internet, but what happens when this process is let loose in the real world? We can pretend that we are a stalwart resolver out on the internet, bound and determined to find an IP address for `www.awesomecat.com`. While we don't have a network map for you to follow along with, we can simulate this process using a command line tool called `dig`.
+
+#### Understanding the output of a `dig` command
+
+Let's start with some basic `dig` output for the query `dig www.awesomecat.com`:
+
+```bash
+$ dig www.awesomecat.com
+
+; <<>> DiG 9.10.6 <<>> www.awesomecat.com
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 55033
+;; flags: qr rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 512
+;; QUESTION SECTION:
+;www.awesomecat.com.  IN A
+
+;; ANSWER SECTION:
+www.awesomecat.com. 3600 IN A 76.223.54.146
+www.awesomecat.com. 3600 IN A 13.248.169.48
+
+;; Query time: 106 msec
+;; SERVER: 2001:558:feed::1#53(2001:558:feed::1)
+;; WHEN: Tue Oct 29 14:16:55 MDT 2024
+;; MSG SIZE  rcvd: 79
+```
+
+Let's decipher what we're seeing here before we get too far into this explanation. The primary things we're going to be looking at are the `status`, `ANSWER`, `AUTHORITY`, `ADDITIONAL`, and `SERVER` sections of this response.
+
+The `status` header tells us whether or not a request was able to return a response, and in cases where it couldn’t, why it couldn’t return a response. The most common statuses you’ll encounter are:
+
+- `NOERROR`: The request for a domain was able to be successfully routed, and the server processing the request did not error out when looking up the name.
+- `SERVFAIL`: The domain requested exists, but the DNS server either doesn’t have data or has bad data for it.
+- `NXDOMAIN`: The domain requested doesn’t exist.
+- `REFUSED`: The authoritative DNS server refused the request. The domain doesn’t exist and the server refuses to process requests for domains that do not exist.
+
+The `AUTHORITY` and `ADDITIONAL` sections tell us where we can go to find DNS records for the name if the server we're querying doesn't have them.
+
+The `ANSWER` section is, as you might have guessed, the actual response for the DNS query. It tells us the name that being resolved (e.g. `www.awesomecat.com`), the time to live (TTL) of the DNS response (e.g. `3600`), and the answer to the DNS query (e.g. `76.223.54.146`). This particular domain has 2 different IP addresses your machine can use! Neat!
+
+#### Understanding the record types
+
+As we explore the process a recursive resolver goes through to resolve a name, we'll see a few different record types. Each record type performs a different service for the domain and/or the name resolution process. Let's take a look at a few common record types:
+
+- `A`: an IPv4 record.
+- `AAAA`: an IPv6 record.
+- `NS`: a Name Server record. This points the resolver to a nameserver that should be authoritative over the domain.
+- `TXT`:  a simple string record on the domain. This is frequently used for validating ownership over the domain.
+
+#### Querying a Each Server Directly
+
+As we mentioned earlier, we might not know where to go to resolve a name. But, because we're filling in the place of a resolver, we can always know where to start! We just need to find our Root DNS servers!
+
+Let's start by running a `dig` without including a name in the question. The output of this command will give us something similar to what would exist in a real resolver's [root.hints](https://www.internic.net/domain/named.root) file. Here we'll see a list of all the Root Servers in the world:
+
+```bash
+$ dig
+
+; <<>> DiG 9.10.6 <<>>
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 36819
+;; flags: qr rd ra ad; QUERY: 1, ANSWER: 13, AUTHORITY: 0, ADDITIONAL: 27
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 512
+;; QUESTION SECTION:
+;.    IN NS
+
+;; ANSWER SECTION:
+.   501023 IN NS i.root-servers.net.
+.   501023 IN NS j.root-servers.net.
+.   501023 IN NS k.root-servers.net.
+.   501023 IN NS l.root-servers.net.
+.   501023 IN NS m.root-servers.net.
+.   501023 IN NS a.root-servers.net.
+.   501023 IN NS b.root-servers.net.
+.   501023 IN NS c.root-servers.net.
+.   501023 IN NS d.root-servers.net.
+.   501023 IN NS e.root-servers.net.
+.   501023 IN NS f.root-servers.net.
+.   501023 IN NS g.root-servers.net.
+.   501023 IN NS h.root-servers.net.
+
+;; ADDITIONAL SECTION:
+a.root-servers.net. 393950 IN A 198.41.0.4
+a.root-servers.net. 393975 IN AAAA 2001:503:ba3e::2:30
+b.root-servers.net. 393960 IN A 170.247.170.2
+b.root-servers.net. 393960 IN AAAA 2801:1b8:10::b
+c.root-servers.net. 393950 IN A 192.33.4.12
+c.root-servers.net. 393950 IN AAAA 2001:500:2::c
+d.root-servers.net. 393955 IN A 199.7.91.13
+d.root-servers.net. 393956 IN AAAA 2001:500:2d::d
+e.root-servers.net. 400379 IN A 192.203.230.10
+e.root-servers.net. 395774 IN AAAA 2001:500:a8::e
+f.root-servers.net. 393953 IN A 192.5.5.241
+f.root-servers.net. 393953 IN AAAA 2001:500:2f::f
+g.root-servers.net. 395782 IN A 192.112.36.4
+g.root-servers.net. 399710 IN AAAA 2001:500:12::d0d
+h.root-servers.net. 393962 IN A 198.97.190.53
+h.root-servers.net. 393964 IN AAAA 2001:500:1::53
+i.root-servers.net. 393955 IN A 192.36.148.17
+i.root-servers.net. 393954 IN AAAA 2001:7fe::53
+j.root-servers.net. 393972 IN A 192.58.128.30
+j.root-servers.net. 393979 IN AAAA 2001:503:c27::2:30
+k.root-servers.net. 393958 IN A 193.0.14.129
+k.root-servers.net. 393960 IN AAAA 2001:7fd::1
+l.root-servers.net. 393955 IN A 199.7.83.42
+l.root-servers.net. 393955 IN AAAA 2001:500:9f::42
+m.root-servers.net. 393951 IN A 202.12.27.33
+m.root-servers.net. 393951 IN AAAA 2001:dc3::35
+
+;; Query time: 15 msec
+;; SERVER: 2001:558:feed::1#53(2001:558:feed::1)
+;; WHEN: Tue Oct 29 14:25:46 MDT 2024
+;; MSG SIZE  rcvd: 811
+```
+
+Let's take note of those fields we highlighted earlier.
+
+First, we see that `status: NOERROR`, which means that our request was successful! We got back a meaningful response!
+
+Next, take a look at that `ANSWER` section. We see a list of 13 servers, each identified by a letter followed by `root-servers.net.`. This is telling us what the names of each of the Root servers are around the world.
+
+Finally, that `ADDITIONAL` section. Here, we're getting both the IPv4 and the IPv6 addresses for each of the names for the Root servers! This speeds up the DNS resolution process because our resolver doesn't have to make a separate query to find the address of the next server it needs to talk to.
+
+OK, so now we know what our Root servers are, we want to ask them what they know about `www.awesomecat.com`. Let's run a dig that points that query to one of the name servers: `dig www.awesomecat.com @i.root-servers.net.`
+
+```bash
+$ dig www.awesomecat.com @i.root-servers.net.
+
+; <<>> DiG 9.10.6 <<>> www.awesomecat.com @i.root-servers.net.
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 33978
+;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 13, ADDITIONAL: 27
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;www.awesomecat.com.  IN A
+
+;; AUTHORITY SECTION:
+com.   172800 IN NS i.gtld-servers.net.
+com.   172800 IN NS a.gtld-servers.net.
+com.   172800 IN NS d.gtld-servers.net.
+com.   172800 IN NS m.gtld-servers.net.
+com.   172800 IN NS l.gtld-servers.net.
+com.   172800 IN NS c.gtld-servers.net.
+com.   172800 IN NS b.gtld-servers.net.
+com.   172800 IN NS g.gtld-servers.net.
+com.   172800 IN NS f.gtld-servers.net.
+com.   172800 IN NS h.gtld-servers.net.
+com.   172800 IN NS e.gtld-servers.net.
+com.   172800 IN NS j.gtld-servers.net.
+com.   172800 IN NS k.gtld-servers.net.
+
+;; ADDITIONAL SECTION:
+m.gtld-servers.net. 172800 IN AAAA 2001:501:b1f9::30
+l.gtld-servers.net. 172800 IN AAAA 2001:500:d937::30
+k.gtld-servers.net. 172800 IN AAAA 2001:503:d2d::30
+j.gtld-servers.net. 172800 IN AAAA 2001:502:7094::30
+i.gtld-servers.net. 172800 IN AAAA 2001:503:39c1::30
+h.gtld-servers.net. 172800 IN AAAA 2001:502:8cc::30
+g.gtld-servers.net. 172800 IN AAAA 2001:503:eea3::30
+f.gtld-servers.net. 172800 IN AAAA 2001:503:d414::30
+e.gtld-servers.net. 172800 IN AAAA 2001:502:1ca1::30
+d.gtld-servers.net. 172800 IN AAAA 2001:500:856e::30
+c.gtld-servers.net. 172800 IN AAAA 2001:503:83eb::30
+b.gtld-servers.net. 172800 IN AAAA 2001:503:231d::2:30
+a.gtld-servers.net. 172800 IN AAAA 2001:503:a83e::2:30
+m.gtld-servers.net. 172800 IN A 192.55.83.30
+l.gtld-servers.net. 172800 IN A 192.41.162.30
+k.gtld-servers.net. 172800 IN A 192.52.178.30
+j.gtld-servers.net. 172800 IN A 192.48.79.30
+i.gtld-servers.net. 172800 IN A 192.43.172.30
+h.gtld-servers.net. 172800 IN A 192.54.112.30
+g.gtld-servers.net. 172800 IN A 192.42.93.30
+f.gtld-servers.net. 172800 IN A 192.35.51.30
+e.gtld-servers.net. 172800 IN A 192.12.94.30
+d.gtld-servers.net. 172800 IN A 192.31.80.30
+c.gtld-servers.net. 172800 IN A 192.26.92.30
+b.gtld-servers.net. 172800 IN A 192.33.14.30
+a.gtld-servers.net. 172800 IN A 192.5.6.30
+
+;; Query time: 59 msec
+;; SERVER: 2001:7fe::53#53(2001:7fe::53)
+;; WHEN: Tue Oct 29 14:34:00 MDT 2024
+;; MSG SIZE  rcvd: 846
+```
+
+Again, we see `status: NOERROR`. Things are looking good!
+
+But notice... There's no `ANSWER` section in this response. This means we haven't gotten back the IP addresses for the name we're asking about.
+
+When we look at the `AUTHORITY` and `ADDITIONAL` sections, they look pretty similar to our query for just the root servers... But, if you look a little closer, you'll see that the response in the `AUTHORITY` section shows that it's providing answers for `com.`... A closer inspection of the suffix on those names shows us that it's pointing to `gtld-servers.net.`, which you might notice that `tld` is part of that name. So the Root server is saying "I don't know about this name, but if you go ask this `com.` TLD server, you'll probably get a better answer".
+
+PROGRESS!
+
+OK. Let's repeat that process, this time asking that TLD server `dig www.awesomecat.com @i.gtld-servers.net.`:
+
+```bash
+$ dig www.awesomecat.com @i.gtld-servers.net.
+
+; <<>> DiG 9.10.6 <<>> www.awesomecat.com @i.gtld-servers.net.
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 53629
+;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 2, ADDITIONAL: 3
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 4096
+;; QUESTION SECTION:
+;www.awesomecat.com.  IN A
+
+;; AUTHORITY SECTION:
+awesomecat.com.  172800 IN NS ns3.afternic.com.
+awesomecat.com.  172800 IN NS ns4.afternic.com.
+
+;; ADDITIONAL SECTION:
+ns3.afternic.com. 172800 IN A 97.74.98.65
+ns4.afternic.com. 172800 IN A 173.201.66.65
+
+;; Query time: 42 msec
+;; SERVER: 2001:503:39c1::30#53(2001:503:39c1::30)
+;; WHEN: Tue Oct 29 14:38:39 MDT 2024
+;; MSG SIZE  rcvd: 124
+```
+
+We're getting closer! Still no `ANSWER` section, but this time, the `AUTHORITY` section is pointing us to a couple of specific name servers, `ns3.afternic.com.` and `ns4.afternic.com.`. We see the IP addresses for those name servers in the `ADDITIONAL` section.
+
+OK, we're still pretending to be our own resolver. So we don't give up yet! We're gonna make yet another query! Let's take a look at the output from `dig www.awesomecat.com @ns3.afternic.com.`:
+
+```bash
+$ dig www.awesomecat.com @ns3.afternic.com.
+
+; <<>> DiG 9.10.6 <<>> www.awesomecat.com @ns3.afternic.com.
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 31304
+;; flags: qr aa rd; QUERY: 1, ANSWER: 2, AUTHORITY: 2, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1472
+;; QUESTION SECTION:
+;www.awesomecat.com.  IN A
+
+;; ANSWER SECTION:
+www.awesomecat.com. 3600 IN A 13.248.169.48
+www.awesomecat.com. 3600 IN A 76.223.54.146
+
+;; AUTHORITY SECTION:
+www.awesomecat.com. 3600 IN NS ns4.afternic.com.
+www.awesomecat.com. 3600 IN NS ns3.afternic.com.
+
+;; Query time: 47 msec
+;; SERVER: 97.74.98.65#53(97.74.98.65)
+;; WHEN: Tue Oct 29 14:46:26 MDT 2024
+;; MSG SIZE  rcvd: 124
+```
+
+HAHAH! We finally have an `ANSWER` section! Now we know the actual IP addresses for this name! We did it! We followed through the entire recursive process to resolve the name! Congratulations!
+
+We completed this process by manually running every `dig` for every step of the recursive lookup. If you want to see this process run quickly, you can run `dig www.awesomecat.com +trace +answer +additional +authority`. The output will be long, but it should look pretty familiar at this point!
+
+### Recap
+
+So let's review what just happened here.
+
+- The recursive DNS process is necessary because no single machine can be responsible for the entire internet.
+- A recursive DNS lookup is performed by a resolver, a special software designed to keep making DNS queries until it receives a definitive answer.
+- If a resolver doesn't know where else to go, it will query a root DNS server. The root DNS server will point to the TLD server that should have more information about the domain being requested.
+- A TLD server is responsible for knowing which authoritative server owns the records for the next label; e.g. `awesomecat` in `awesomecat.com`.
+- The authoritative server keeps track of the DNS records for any domain it is responsible for.
+- Once the resolver has an answer, it will send the final response back to the client who initiated the query.
+
+Next, we're going to to play around in this system!
+
+## 1. Explore and make changes to the DNS infrastructure of our internet
+
+This leads us to our map! If you need help understanding this map, check out our [appendix on how to read network maps](../../../appendix/how-to-read-a-network-map.md).
 
 ![Network map of a large internetwork](./nr-recursive-dns.png)
 
-There are some new categories of machines we have added to this network. All of the machines are part of the DNS infrastructure, including:
+You might recognize some of these new machines from our previous description on how recursive DNS works. See if you can find the machines that are part of the complete DNS infrastructure, including:
 
-* Root Nameservers
-* Top Level Domain (TLD) Nameservers
-* Authoritative Nameservers
-* Recursive Resolvers
+- Root Nameservers
+- Top Level Domain (TLD) Nameservers
+- Authoritative Nameservers
+- Recursive Resolvers
 
-<!-- TODO: We don't like that an appendix is load bearing to understanding of this section. Come back to it! -->
-We go deeper into what roles these different machines play in the context of Recursive DNS in our [appendix on the subject](../../../appendix/recursive-dns.md).
+### Let's explore how this all works
 
-## Let's explore how this all works
+First, let's do a `byoi-rebuild` to get the internet for this chapter up and running. Once that's complete, we're going to run through a few different configuration changes that will each take you one level deeper into how recursive DNS works!
 
-As promised, we are going to teach you how to use the system before we build the system. Towards that end, we have created sections on useful or interesting things people do when it comes to managing their DNS. So let's dive right in!
+The tasks we want to complete before we set you off on your own:
 
-### Add a new name
+- add a new name on this Internet
+- add a new top-level domain
+
+#### Add a new name
 
 Our current internet has a few names already defined in the DNS. We want to add another one, `www.awesomecat.com`. For most people, they just go to the registrar to add a new name. However, we are in the business of digging deep. So we will explore what happens behind the scenes!
 
@@ -45,9 +416,7 @@ This is going to require a few steps:
 - add a new entry to the authoritative server for `awesomecat.com`
 - add a new zone file to our authoritative server for `awesomecat.com`
 
-To get started, go ahead and `byoi-rebuild` to bring up the internet we'll be using for this chapter.
-
-Now, where do we start? If you recall the recursive DNS lookup process, a resolver will start by asking the root server where the domain is. The root server will point the resolver to the Top Level Domain (TLD) server for that domain. In this case, `com.`. We know that the root servers in our toy internet already know where the `com.` TLD server is, so we don't need to do that step. Let's go see what the response is to a `dig` for our domain.
+Now, where do we start? If you recall the recursive DNS lookup process, a resolver will start by asking the root server where the domain is. The root server will point the resolver to the Top Level Domain (TLD) server for that domain. In this case, `com.`. We have already set this network up for you such that the root servers in our toy internet already know where the `com.` TLD server is, so we don't need to do that step. Let's go see what the response is to a `dig` for our new domain.
 
 First, let's `hopon client-c1` so we can run our query:
 
@@ -80,7 +449,11 @@ Ok, there's several things we learn from this response. First, `status: NXDOMAIN
 com.   3600 IN SOA tlddns-g.google.com. tlddns-g.google.com. 2024041501 3600 900 604800 86400
 ```
 
-This also tells us the name of the TLD server for `com.`: `tlddns-g.google.com.`. Now we know we need to `hopon tlddns-g` in order to start adding our DNS records for `www.awesomecat.com`. The software that we use to run our DNS servers for this toy internet is called [knot](https://www.knot-dns.cz/). If you didn't know the software that was running, you could run a simple `netstat` command:
+This also tells us the name of the TLD server for `com.`: `tlddns-g.google.com.`. That means that this particular server is responsible for answering 100% of all DNS queries that end in `.com`. Note that the Real Internet has many more servers that accomplish this task because `.com` is a very popular top-level domain name and if there were only one server for this, we'd have a lot problems.
+
+If you reference the network map, you'll see that we have a TLD DNS server in our toy "google.com" network. In the Real Internet, we cannot just hop on to a TLD server and make configuration changes. But in our toy internet, we can do whatever we want (in fact, we'll need to if we want to make this work)!
+
+So let's `hopon tlddns-g` in order to start adding our DNS records for `www.awesomecat.com` and find what software is running to handle DNS requests. As we've done in other chapters, you could see a list of all the running software on a machine with the `ps -aux` command. However, we're going to use a slightly different approach this time. In this case, let's look at all the software that is listening for incoming network requests with the `netstat` command:
 
 ```bash
 root@tlddns-g:/# netstat -tulpn
@@ -93,9 +466,14 @@ udp        0      0 8.2.0.100:53            0.0.0.0:*                           
 udp        0      0 127.0.0.11:34177        0.0.0.0:*                           -
 ```
 
-You'll notice that `knotd` is running on port `53` on a number of these lines (both TCP and UDP). Port 53 is the standard port used for all DNS queries. This confirms that we're running `knot` as our DNS server.
+Take a look at the `Local Address` column in this output. Here we can see that there are five listening ports on this particular machine. Two of them are listening on local IP addresses (i.e. `127.0.0.11`), which means they will not be accessible from the network and are part of Docker doing its job. We can ignore these.
 
-Now, let's look at what the full command is that started this process:
+The other three entries in this list are all bound to `8.2.0.100`, which is the IP address of this machine, and you can see a `:53` at the end, which means that it's listening on port `53`. Port 53 is the standard port used for all DNS queries!
+
+Next, if we look at the `PID/Program name` column in this output, we can see that the software that's listening on this port is `knot`.
+That's right: we set this toy internet up to use [knot](https://www.knot-dns.cz/) as our DNS server.
+
+Now, let's go back to our old friend, `ps aux` to look at what the full command is that started knot:
 
 ```bash
 root@tlddns-g:/# ps aux
@@ -107,7 +485,7 @@ root          38  0.0  0.0   4188  3456 pts/0    Ss   19:39   0:00 /bin/bash
 root          50 25.0  0.0   8088  4096 pts/0    R+   19:45   0:00 ps aux
 ```
 
-So, here we see `/usr/sbin/knotd --config /config/knot.conf --daemonize`, which tells us that the knot server was started using the config file in `/config/knot.conf`. Let's take a look at that file.
+So, here we see `/usr/sbin/knotd --config /config/knot.conf --daemonize`, which tells us that the knot server was started using the config file in `/config/knot.conf`. Let's take a look at that file:
 
 ```bash
 root@tlddns-g:/# cat /config/knot.conf
@@ -122,7 +500,7 @@ zone:
     storage: "/var/lib/knot"
 ```
 
-The first thing to notice is that knot is only listening for requests that come in on IP address `8.2.0.100` on port `53`. The IP address there is the address for this machine on our toy internet.
+The first thing to notice is that knot is only listening for requests that come in on IP address `8.2.0.100` on port `53`. This confirms what we saw on our `netstat` command above.
 
 Then we have a list of [zones](../../../chapters/glossary.md#dns-zone). In this config, there is only one zone: `com`. When this server receives a DNS request for a domain, it will check the next label of the name (`awesomecat`) against the file for that zone, `"/etc/knot/com.zone"`. If it finds the name in that file, it can send back the IP address for the server that is the authority over that next label. So let's take a look what currently exists in the `com` zonefile:
 
@@ -156,19 +534,38 @@ authoritative-s.supercorp.com.     IN A   9.1.0.100
 
 The first thing we should look at is the block for the `SOA`, or Start of Authority. An SOA record indicates to any interested party which server is the authority over all records within a particular zone. In this case, the zone is `com`, and the server is our `tlddns-g.google.com` server.
 
-The next set of records that we see look like what we would expect in the `ANSWER` section of a `dig`. The type of record we see for `com.`, `comcast`, `supercorp`, etc are all `NS` records, which stands for NameServer records. This record type tells resolvers that we haven't reached the end of our yet. Instead, send another query to the server that is the authority over the next label.
+The next set of lines in this config file look like what we would expect in the `ANSWER` section of a `dig` command.
 
-If you look at `comcast`, for example, you'll see that it's pointing to `authoritative-s.supercorp.com.`, which you'll find in the Supercorp network of our network map. But, that name doesn't actually help the resolver make it's query. The resolver still needs an IP address to know where to send it's next DNS query. A few lines below, we see the glue records for the authoritative servers on our toy internet. Glue records are A or AAAA records that point to another server that a resolver will need to query in order to continue the process of resolving a name. By including the IP addresses for the authoritative servers in this zone file, the DNS server can respond to DNS queries for names it knows about with BOTH the NS record and the IP address for the server the resolver needs to query next.
+```unset
+com.            IN NS  tlddns-g.google.com.
+comcast         IN NS  authoritative-s.supercorp.com.
+supercorp       IN NS  authoritative-s.supercorp.com.
+aws             IN NS  authoritative-a.aws.com.
+google          IN NS  authoritative-a.aws.com.
+```
 
-So the next thing we need to do is add our `awesomecat` label to this zone file. We want to use the `authoritative-a` server in our AWS network as the authority for this name. Add a new line below the entry for `google` that looks like:
+The type of record we see for `com.`, `comcast`, `supercorp`, etc are all [`NS` records](#understanding-the-record-types). This type of record tells [resolvers](../../../chapters/glossary.md#resolver) that we haven't reached the end of our query yet. Instead, the resolvers should query the next server indicated by the record, which will be the authority over the next label.
+
+If you look at `comcast`, for example, you'll see that it's pointing to `authoritative-s.supercorp.com.`, which you'll find in the Supercorp network of our network map. But, that name doesn't actually help the resolver make its query. The resolver still needs an IP address to know where to send it's next DNS query. A few lines below, we see the glue records for the authoritative servers on our toy internet:
+
+```unset
+authoritative-a.aws.com.           IN A   4.1.0.100
+authoritative-s.supercorp.com.     IN A   9.1.0.100
+```
+
+Glue records are A or AAAA [records](#understanding-the-record-types) that point to the IP address of another server that a resolver will need to query in order to continue the process of resolving a name.
+
+#### Configure the TLD server
+
+Okay, let's stop talking about how this works, and let's start making some changes to get our new domain-name working. The first thing we need to do is add our `awesomecat` label to this zone file. Let's use the `authoritative-a` server in our AWS network as the authority for this name (that's an arbitrary choice-- we could have chosen _any_ authoritative server for this job). Add a new line below the entry for `google` that looks like:
 
 ```unset
 awesomecat      IN NS  authoritative-a.aws.com.
 ```
 
-Note: Why aren't we including the `com.` after each of our labels? If you look at the beginning of the file, you'll see a line, `$ORIGIN com.`. This tells our DNS server to add the `com.` label to any entry that does not already include it.
+> 📝 Note: Why aren't we including the `com.` after each of our labels? If you look at the beginning of the file, you'll see a line, `$ORIGIN com.`. This tells our DNS server to add the `com.` label to any entry that does not already include it.
 
-OK, let's make sure we added this record correctly. But... we added a new entry to a file that knot loaded on startup. That means if we run our `dig` again now, we'll still see that the resolver was only able to make it as far as `tlddns-g`. Because even though we added the entry to the file, knot still doesn't know about it. We need to make sure knot on `tlddns-g` knows about the new entry, but we need to do that without interrupting any potential traffic on our super busy toy internet. Let's use the `kill -HUP` command, which tells the machine to re-read any config files for the process.
+OK, let's make sure we added this record correctly. But... if we run our `dig` again now, the resolver will get the same answer from `knot`. This is because we haven't yet signalled to `knot` that we made a configuration change so let's give it a signal to reload its configuration files without interrupting any potential traffic on our super busy toy internet. The `kill -HUP` command tells the machine to re-read any config files for the process.
 
 First, let's get the process ID again:
 
@@ -182,7 +579,7 @@ root          38  0.0  0.0   4188  3456 pts/0    Ss   19:39   0:00 /bin/bash
 root          50 25.0  0.0   8088  4096 pts/0    R+   19:45   0:00 ps aux
 ```
 
-We can see that knot is process ID is `20`. Let's run our command:
+We can see that knot is process ID is `20` (note that this process-id might be different when you try this yourself). Let's run our command:
 
 ```bash
 kill -HUP 20
@@ -217,9 +614,11 @@ authoritative-a.aws.com. 3600 IN A 4.1.0.100
 ;; MSG SIZE  rcvd: 97
 ```
 
-Look at that! We don't have an answer, but we have a new response in our `AUTHORITY` section! This shows that `tlddns-g` know that a resolver should go ask `authoritative-a.aws.com` about any record pertaining to `awesomecat.com`. AND! We see the glue records included in the `ADDITIONAL` section. This tells the resolver where to send the query without having to first resolve `authoritative-a.aws.com`. Neat!
+Look at that! We don't have an answer, but we have a new response in our `AUTHORITY` section! This shows that `tlddns-g` knows that a resolver should go ask the `authoritative-a.aws.com` server about any record pertaining to `awesomecat.com`. AND! We see the glue records included in the `ADDITIONAL` section. This tells the resolver where to send the query without having to first resolve the `authoritative-a.aws.com` name. Neat!
 
-Now that the `com.` nameserver knows where to send a resolver asking for `awesomecat.com`, we need tell that authoritative server how to respond to those queries. Let's `hopon authoritative-a` and open the config file we found previously for knot configs, `/config/knot.conf`:
+#### Configure the authoritative server
+
+Now that the `com.` nameserver knows where to send a resolver asking for `awesomecat.com`, we need tell that authoritative server how to respond to _those_ queries. Let's `hopon authoritative-a` and open the config file `/config/knot.conf`:
 
 ```unset
 # Define the server options
@@ -248,7 +647,7 @@ zone:
     storage: "/var/lib/knot"
 ```
 
-On this server, we see significantly more zones than we saw on the `com.` server! We need to add a new zone for our `awesomecat` zone:
+On this server, we see significantly more zones than we saw on the `com.` TLD server! Let's edit that config file and add a new section for our `awesomecat` zone:
 
 ```unset
   - domain: awesomecat.com
@@ -256,7 +655,7 @@ On this server, we see significantly more zones than we saw on the `com.` server
     storage: "/var/lib/knot"
 ```
 
-Ok, so now we're referencing a file that doesn't exist. Let's create that file. You can paste the following command wholesale into your terminal:
+Ok, so now we're referencing a file that doesn't exist. To create that file, you can paste the following command wholesale into your terminal:
 
 ```bash
 cat << ZONEFILE > /etc/knot/awesomecat.com.zone
@@ -272,15 +671,18 @@ cat << ZONEFILE > /etc/knot/awesomecat.com.zone
                 )
 
 www      IN A      4.2.0.11
+
 ZONEFILE
 ```
 
-In this file, we're following the same structure we saw previously in defining the `ORIGIN` and the `SOA` record. Then we're adding a new record for the `www` label. Let's see this in action! We wanna run another `dig` to resolve the name for `www.awesomecat.com`. But, just like we saw before, we need to restart the knot process on this machine. The PID, or process ID, will likely be a different number than it was on `tlddns-g`. Run your `ps aux` to find the process ID and `kill -HUP` that process.
+In this file, we're following the same structure we saw previously in defining the `ORIGIN` and the `SOA` record. Then we're adding a new record for the `www` label.
 
-Now, let's run our `dig`!
+Let's see this in action! We wanna run another `dig` to resolve the name for `www.awesomecat.com`. But, just like we saw before, we need to signal the knot process to reload its config. Run your `ps aux` to find the process ID and `kill -HUP` that process.
+
+Now, let's run our `dig` querying our authoritative name server!
 
 ```bash
-root@authoritative-a:/# dig www.awesomecat.com
+root@authoritative-a:/# dig www.awesomecat.com @4.2.0.11
 
 ; <<>> DiG 9.18.28-1~deb12u2-Debian <<>> www.awesomecat.com
 ;; global options: +cmd
@@ -303,6 +705,8 @@ www.awesomecat.com. 3600 IN A 4.2.0.11
 ```
 
 There it is! We did it!
+
+#### Test it from the client
 
 Now, let's go back to our `client-c1` and see if we can successfully resolve the name there! `hopon client-c1` again and re-run your `dig`. What happens?
 
@@ -331,15 +735,15 @@ com.   2475 IN SOA tlddns-g.google.com. tlddns-g.google.com. 2024041501 3600 900
 
 Ok... What do you think might have happened there?
 
-Let's talk a little bit about caching. Caching is actually a really common problem with DNS changes. Because DNS changes are fairly infrequent, most people set the ttl for their DNS entries fairly high, sometimes even longer than a full day. This means that when make a change on The Real Internet, it might not propagate as quickly as you might expect.
+Let's talk a little bit about _caching_. Caching is actually a really common problem with DNS changes. Because DNS changes are fairly infrequent, most people set the ttl for their DNS entries fairly high, sometimes even longer than a full day. This means that when make a change on The Real Internet, it might not propagate as quickly as you might expect.
 
 So, if we know that the issue is caching, which machine do you think might be caching the DNS response from earlier? Which machine is responsible for persisting in making queries until we have a DNS response?
 
-When you figure out which machine you need to reset, you'll need to reset the resolving software. We picked a software called `unbound`. You'll use the same trick we just used with knot, namely, run `kill -HUP` on the process ID for unbound.
+When you figure out which machine you need to reset, you'll need to reset the resolving software. We picked a software called `unbound`. You'll use the same trick we just used with `knot`, namely, run `kill -HUP` on the process ID for unbound.
 
 If you're not sure which machine to go to, check the [super secret answer section](#reset-unbound) below.
 
-### Add a new TLD
+#### Add a new TLD
 
 Okay, so we did this process of adding a new name. We're going to take this a little deeper and add an entire new TLD. What's the best plan of attack for how to do this? Well, we started the last section by performing a name-lookup from a client and seeing what the recursive name-resolver did to try to resolve that name. We then found where that failed and fixed it. We're going to do the same thing now with a new top-level domain.
 
@@ -625,7 +1029,7 @@ Would you look at that! We got our whole lookup done now! Congratulations team!
 
 NOTE: We hacked this together a little... We used glue records in the zonefile we created for `meow.` to point our resolvers to the authoritative servers. But those actual records don't exist anywhere in our DNS. We still need to go back and add actual records for `authoritative-a.aws.meow.` and `authoritative-s.supercorp.meow.`. We'll leave that as an exercise for the reader.
 
-## Watch the recursive DNS lookup using `tcpdump`
+## 2. Describe the basics of DNS troubleshooting
 
 So far, we've been building out and testing this system while relying on a piece of achitecture that we haven't addressed at all yet... The recursive resolver. The role of the resolver is to take the responsibility for answering DNS questions for all computers in the network. This involves the whole process of chasing down names from beginning to end, starting with the "root" name servers, and ceaselessly asking DNS questions until finding the final "authoritative" server for a name being requested. Since this can often require many network calls, the recursive resolver also caches these values in order to cut down on network traffic.
 
@@ -671,7 +1075,6 @@ But the addresses in that file might be out of date. Our resolver wants to verif
 Now that `resolver-c` has all of the TLD DNS servers, It starts firing off requests to learn about all of the TLDs it needs to know about. It has a request from `client-c1` for a name in the `com` TLD, and it just got a response back for root server names in the `org` TLD. So we see 3 requests fired off here, each of them for `A` records for TLDs. The resolver will try to get the fastest possible response for the client. So it's spitting out requests to both of the root DNS servers here to see which response comes back first. 
 
 The next 3 lines are the responses back from the top-level domain DNS servers. The actual response bodies aren't parsed here, but given what we saw in the exercises above, we know that what should be seeing DNS responses for where the `com` and `org` TLD servers are. These responses will include the IP addresses for those servers.
-
 
 ```bash
 21:11:07.567766 IP 1.2.0.100.63263 > 8.2.0.100.53: 3546% [1au] A? awesomecat.com. (43)
@@ -759,7 +1162,7 @@ Dear lord... `resolver-c` just wants to know everything abou the internet. Each 
 
 Now that we've gone through reading the basic `tcpdump` output, we encourage the reader to go back through this exercise again, this time running `tcpdump -nvv` to get the verbose output. See if you can read what's happening with each request when you get even more information!
 
-## Final Exercises
+## 3. Give you some exercises in which you can play around with DNS on your own
 
 Now that we've built out some of the infrastructure together, take a stab at adding a few more elements to this toy internet. We've added a new network, RIPE, to our network map.
 
@@ -773,19 +1176,19 @@ We looked briefly at the software `unbound` and how it makes recursive requests 
 
 Your task for this configuration is the following:
 
-* `hopon` one of the other recursive resolvers (e.g. `resolver-g`) and examine the config files for unbound
-  * `/etc/unbound/unbound.conf`
-  * `/etc/unbound/root.hints`
-* duplicate the configuration on `resolver-r` including the `root.hints` file
-* tell `unbound` to load the config changes (`kill -HUP <process-id>`)
-* configure the nameserver for each machine on the Ripe network (the `resolv.conf` file) to point at the new `resolver-r` address `103.0.1.101`
+- `hopon` one of the other recursive resolvers (e.g. `resolver-g`) and examine the config files for unbound
+  - `/etc/unbound/unbound.conf`
+  - `/etc/unbound/root.hints`
+- duplicate the configuration on `resolver-r` including the `root.hints` file
+- tell `unbound` to load the config changes (`kill -HUP <process-id>`)
+- configure the nameserver for each machine on the Ripe network (the `resolv.conf` file) to point at the new `resolver-r` address `103.0.1.101`
 
 Once you've got your resolver correctly configured, test it out!
 
-* `dig resolver-g.google.com`
-* `dig client-c1.comcast.com`
-* `dig rootdns-n.netnod.org`
-* `dig tlddns-v.verisign.org`
+- `dig resolver-g.google.com`
+- `dig client-c1.comcast.com`
+- `dig rootdns-n.netnod.org`
+- `dig tlddns-v.verisign.org`
 
 ### Configure the Root DNS server
 
@@ -795,10 +1198,10 @@ Start by looking at the `knot` config and zonefiles for one of the other root se
 
 Once you know you've got `rootdns-r` setup correctly and working, make sure you go back to each of the other root DNS servers and add the entry for `rootdns-r` to it. You'll also need to update the `root.hints` files for each resolver on the toy internet. Remember to tell the software to reload the configs on each machine you touch!
 
-## Answer Section
+### Answer Section
 
 If you got stuck figuring out any of our challenges, this is the section where we provide more detail.
 
-### Reset Unbound
+#### Reset Unbound
 
 When a client makes a DNS request, the recursive resolver that it points to is the one responsible for actually finding the DNS records. If you look at the network map, the resolver that lives in each network will be the recursive resolver for that network. So, if we need to reset the cache for queries client-c1 is making, you would need to `hopon recursive-c`.
