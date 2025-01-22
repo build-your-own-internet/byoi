@@ -2,9 +2,16 @@
 
 Okay, so far our internet behaves the way it did in 1993* when the web was first invented. Back then, the internet was being used by academics sharing papers. Eventually, people started to buy things over the internet, and security has evolved to meet those needs.
 
-Clearly, in a modern internet, we need to have some assurance when we're communicating over the internet that the server we're trying to reach is *in fact* the server we think it is. We would also like our communications with that server to be private.
+There are several questions to ask when securing a connection from your client to a server:
 
-Let's do an experiment! Let's see what it might look like for an attacker to intercept the traffic to a legitimate server with their own server. Let's `hopon client-c1` and make a web connection using `links http://server-s1.supercorp.com`. When you run that command, you should see something like this:
+1. Am I talking to who I think I'm talking to?
+2. Is the communication between me and who I'm talking to private?
+
+Clearly, in a modern internet, we need to have some assurance when we're communicating over the internet that the server we're trying to reach is *in fact* the server we think it is. This will be the focus of this first chapter on TLS. We will get more and more sophisticated in solving the problems of connection-security in later TLS chapters.
+
+## Let's discover how easy it is to hijack a connection
+
+Okay, so first let's do an experiment! We're going to see how easy it is to be confused about who you're trying to talk to over the internet. Let's see what it might look like for an attacker to intercept the traffic to a legitimate server with their own server. Let's `hopon client-c1` and make a web connection using `links http://server-s1.supercorp.com`. When you run that command, you should see something like this:
 
 ```unset
 Welcome to server-s1!
@@ -24,7 +31,7 @@ Thank you for visiting server-s1.
 
 > To EXIT: press `esc` to open the menu. Press `enter` to open the `File` dropdown. Select `Exit`.
 
-Okay. Here's the experiment: is there a way we can replace that web server and direct your traffic to an attacker's web server instead without you knowing that anything is different? This is actually quite easy, and achievable in a number of different ways.The simplest way we can do this is by getting into `router-t8` and making a one-line configuration change:
+Okay. Now here's the experiment: is there a way we can replace that web server and direct your traffic to an attacker's web server instead without you knowing that anything is different? This is actually quite easy, and achievable in a number of different ways.The simplest way we can do this is by getting into `router-t8` and making a one-line configuration change:
 
 ```bash
 root@router-t8:/# iptables -t nat -A PREROUTING -d 9.2.0.10 -j DNAT --to-destination 6.6.6.6
@@ -42,7 +49,7 @@ tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
 listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 ```
 
-Then, on `client-c1`, let's perfom a `ping`:
+Then, on `client-c1`, let's perform a `ping`:
 
 ```bash
 root@client-c1:/# ping 9.2.0.10 -c2
@@ -85,9 +92,21 @@ We will def take good care of your credit card information...
 :maniacal laugh:
 ```
 
-So now we understand the problem. What do we do about this?
+So now we understand the problem.What do we do about this?
 
 Just like we've done in other chapters, let's start with the simplest possible thing that could work. How can we get two machines to talk securely to each other so that this attack fails?
+
+## Let's clean this up before we move on
+
+Now that we've successfully attacked this server, let's reset our network so that `client-c1` can communicate normally with `server-s1` again.
+
+`hopon router-t8` and issue this `iptables` command:
+
+```bash
+root@router-t8:/# iptables -t nat -F
+```
+
+This command *flushes* all the rules out of this router so that it goes back to working normally.
 
 ## Goals
 
@@ -103,11 +122,119 @@ OpenSSH is a tool that network and computer administrators have been using for d
 
 #### Option 1. Make a secure connection from one computer to another using openssh
 
-- install `openssh-client` and `openssh-server`
-- on `client-c1` run `ssh-keygen`
-- copy the public key that was generated over to `server-s1` in `~/.ssh/authorized_keys`
-- start the ssh server on `server-s1` with `sshd`
-- run `ssh -v server-s1.supercorp.com` on `client-c1` and watch all the things take place!
+Openssh requires authentication between computers that want to communicate over the internet. This means that the client needs to generate some kind of key that the server can identify it by. Then that key needs to be installed on the server for reference. So let's try this out!
+
+> Note 📝: you do not have to share keys and instead could use passwords with openssh, but we're not going to demonstrate that approach in this chapter. Feel free to experiment on your own if that's of interest.
+
+1. We're going to start by generating a key on `client-c1`
+
+```unset
+root@client-c1:/# ssh-keygen -f /root/.ssh/id_ed25519 -N ""
+Generating public/private ed25519 key pair.
+Your identification has been saved in /root/.ssh/id_ed25519
+Your public key has been saved in /root/.ssh/id_ed25519.pub
+The key fingerprint is:
+SHA256:2FenEHW7/oa5MSFyCrddJm6o5hofmPvwSuNj6/EnQjg root@client-c1
+The key's randomart image is:
++--[ED25519 256]--+
+|          ... .  |
+|           . . . |
+|          . . o  |
+|       o   o o . |
+|     .. S + = =  |
+|    E .o + O * . |
+|     oO . + + +o |
+|     o+Xoo..  o+.|
+|     oBXBo    .o.|
++----[SHA256]-----+
+```
+
+From the output of this command (`ssh-keygen`), you can gather that it will generate a public/private key pair and save those keys in the `/root/.ssh` directory on your `client-c1` machine. The private key is named `id_ed25519` and the public key will be named `id_ed25519.pub`. Also, incidentally, the private key on your machine could be protected by a password, but we're not going to use that feature. That's why we included the `-N ""` flag, which indicates an empty password.
+
+<!-- TODO: some level of explanation of what the hell public/private cryptography even is -->
+
+2. Copy the public key on `client-c1` over to `server-s1`
+
+Next, we're going to copy the public key to the server. To do that, simply run `cat /root/.ssh/id_ed25519.pub` (*NOTE* the `.pub` at the end of that filename!) and copy it.
+
+Next, we're going to install the client's public key on `server-s1`. To do that, exit the `client-c1` machine and `hopon server-s1`.
+
+Now, use `vim /root/.ssh/authorized_keys` to install the client's public key by simply pasting it in and saving the file and exiting `vim`.
+
+When you're finished, you should be able to run `cat /root/.ssh/authorized_keys` and see something like this:
+
+```unset
+root@server-s1:/# cat /root/.ssh/authorized_keys
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBgG+rtdb4VOFC+JF+NJodUD9APr/r+CEqeY0ypqLMF0 root@client-c1
+```
+
+> *NOTE*: the contents of that file will be different that the example shown above, but should look very similar.
+
+3. Start the openssh server on server-s1
+
+To start the ssh process, you're going to have to run three commands on `server-s1`:
+
+```bash
+root@server-s1:/# mkdir -p /var/run/sshd
+root@server-s1:/# chmod 0755 /var/run/sshd
+root@server-s1:/# sshd
+```
+
+Confirm that the server process is running by using the `ps aux` command:
+
+```bash
+root@server-s1:/# ps aux
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.0   4032  2816 ?        Ss   21:19   0:00 /bin/bash /host-start-up.sh
+root          16  0.0  0.0  10516  1576 ?        Ss   21:19   0:00 nginx: master process nginx
+www-data      17  0.0  0.0  12124  4136 ?        S    21:19   0:00 nginx: worker process
+www-data      18  0.0  0.0  12124  4136 ?        S    21:19   0:00 nginx: worker process
+root          19  0.0  0.0   2268  1024 ?        S    21:19   0:00 /bin/sleep infinity
+www-data      20  0.0  0.0  12124  4136 ?        S    21:19   0:00 nginx: worker process
+www-data      21  0.0  0.0  12124  4136 ?        S    21:19   0:00 nginx: worker process
+www-data      22  0.0  0.0  12124  4136 ?        S    21:19   0:00 nginx: worker process
+www-data      23  0.0  0.0  12124  4136 ?        S    21:19   0:00 nginx: worker process
+root          36  0.0  0.0   4296  3584 pts/0    Ss   21:52   0:00 /bin/bash
+root          54  0.0  0.0  12052  2764 ?        Ss   21:57   0:00 sshd: sshd [listener] 0 of 10-100 startups
+root          55  0.0  0.0   7628  3456 pts/0    R+   21:57   0:00 ps aux
+```
+
+See that line which has `sshd` in it? That means it's running!
+
+4. Copy keys from `server-s1` to `client-c1`
+
+Okay, so when we generated keys on `client-c1` and copied them to `server-s1`, that enabled `server-s1` to trust `client-c1`. But trust has to flow *both ways*. We need `client-c1` to be able to trust `server-s1` too. Therefore, before we leave `server-s1`, we need to copy its public keys so that we can install them on `client-c1`.
+
+The server's public key is stored in `/etc/ssh/ssh_host_ed25519_key.pub`. `cat` that file out and copy it. Then exit `server-s1` and return to `client-c1`.
+
+On `client-c1`, you're going to `vim` the file `/root/.ssh/known_hosts`
+
+The first thing to type into this file is `server-s1.supercorp.com`. Then add a space. Then paste in what you copied from `server-s1`. When you're finished, the contents of the `/root/.ssh/known_hosts` file should look something this:
+
+```unset
+server-s1.supercorp.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL5FLNU4DT6SwM1RivVJmd4UO242BdzaqMpn1A/5JRvS root@buildkitsandbox
+```
+
+5. Test the connection from `client-c1` to `server-s1`
+
+<!-- TODO: maybe go ahead and leave the hacked connection in place? -->
+
+```bash
+root@client-c1:/# ssh -v -o PasswordAuthentication=no server-s1.supercorp.com
+OpenSSH_9.6p1 Ubuntu-3ubuntu13.5, OpenSSL 3.0.13 30 Jan 2024
+debug1: Reading configuration data /etc/ssh/ssh_config
+debug1: /etc/ssh/ssh_config line 19: include /etc/ssh/ssh_config.d/*.conf matched no files
+debug1: /etc/ssh/ssh_config line 21: Applying options for *
+debug1: Connecting to server-s1.supercorp.com [9.2.0.10] port 22.
+debug1: connect to address 9.2.0.10 port 22: Connection refused
+ssh: connect to host server-s1.supercorp.com port 22: Connection refused
+```
+
+Alright, we're now ready to test this out. For this to work properly, we need to make sure that the attack that we executed at the beginning of this chapter has been undone. Make sure you ran the command in [the cleanup section](#lets-clean-this-up-before-we-move-on) before you go on.
+
+Let's go back to `client-c1` and make the connection:
+
+run `ssh -v server-s1.supercorp.com` on `client-c1` and watch all the things take place!
 - Win.
 
 Can we compare what is happening in TLS handshake v. setting up an ssh connection? 
