@@ -96,18 +96,6 @@ So now we understand the problem.What do we do about this?
 
 Just like we've done in other chapters, let's start with the simplest possible thing that could work. How can we get two machines to talk securely to each other so that this attack fails?
 
-## Let's clean this up before we move on
-
-Now that we've successfully attacked this server, let's reset our network so that `client-c1` can communicate normally with `server-s1` again.
-
-`hopon router-t8` and issue this `iptables` command:
-
-```bash
-root@router-t8:/# iptables -t nat -F
-```
-
-This command *flushes* all the rules out of this router so that it goes back to working normally.
-
 ## Goals
 
 1. Understand why /how internet requests can get intercepted
@@ -149,7 +137,7 @@ The key's randomart image is:
 +----[SHA256]-----+
 ```
 
-From the output of this command (`ssh-keygen`), you can gather that it will generate a public/private key pair and save those keys in the `/root/.ssh` directory on your `client-c1` machine. The private key is named `id_ed25519` and the public key will be named `id_ed25519.pub`. Also, incidentally, the private key on your machine could be protected by a password, but we're not going to use that feature. That's why we included the `-N ""` flag, which indicates an empty password.
+From the output of this command (`ssh-keygen`), you can gather that it will generate a public/private key pair and save those keys in the `/root/.ssh` directory on your `client-c1` machine. The private key is named `id_ed25519` and the public key will be named `id_ed25519.pub`. Also, incidentally, the private key on your machine could be protected by a password, for simplicity, we included the `-N ""` flag on this command, which indicates an empty password.
 
 <!-- TODO: some level of explanation of what the hell public/private cryptography even is -->
 
@@ -168,7 +156,7 @@ root@server-s1:/# cat /root/.ssh/authorized_keys
 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBgG+rtdb4VOFC+JF+NJodUD9APr/r+CEqeY0ypqLMF0 root@client-c1
 ```
 
-> *NOTE*: the contents of that file will be different that the example shown above, but should look very similar.
+> *NOTE*: the contents of that file will be different than the example shown above, but should look very similar.
 
 3. Start the openssh server on server-s1
 
@@ -180,7 +168,7 @@ root@server-s1:/# chmod 0755 /var/run/sshd
 root@server-s1:/# sshd
 ```
 
-Confirm that the server process is running by using the `ps aux` command:
+For some reason, `openssh` doesn't create this crucial directory for us when its installed. Confirm that the server process is running by using the `ps aux` command:
 
 ```bash
 root@server-s1:/# ps aux
@@ -209,7 +197,7 @@ The server's public key is stored in `/etc/ssh/ssh_host_ed25519_key.pub`. `cat` 
 
 On `client-c1`, you're going to `vim` the file `/root/.ssh/known_hosts`
 
-The first thing to type into this file is `server-s1.supercorp.com`. Then add a space. Then paste in what you copied from `server-s1`. When you're finished, the contents of the `/root/.ssh/known_hosts` file should look something this:
+The first thing we need to do is identify which host this is. So in the `known_hosts` file, type `server-s1.supercorp.com` on the first line. Then add a space. Then paste in what you copied from `server-s1`. When you're finished, the contents of the `/root/.ssh/known_hosts` file should look something this:
 
 ```unset
 server-s1.supercorp.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL5FLNU4DT6SwM1RivVJmd4UO242BdzaqMpn1A/5JRvS root@buildkitsandbox
@@ -217,7 +205,7 @@ server-s1.supercorp.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL5FLNU4DT6SwM1RivVJ
 
 5. Test the connection from `client-c1` to `server-s1`
 
-<!-- TODO: maybe go ahead and leave the hacked connection in place? -->
+Now that we have everything setup, let's test that everything works! We'll an `ssh` command to access `server-s1` from `client-c1`!
 
 ```bash
 root@client-c1:/# ssh -v -o PasswordAuthentication=no server-s1.supercorp.com
@@ -230,18 +218,128 @@ debug1: connect to address 9.2.0.10 port 22: Connection refused
 ssh: connect to host server-s1.supercorp.com port 22: Connection refused
 ```
 
-Alright, we're now ready to test this out. For this to work properly, we need to make sure that the attack that we executed at the beginning of this chapter has been undone. Make sure you ran the command in [the cleanup section](#lets-clean-this-up-before-we-move-on) before you go on.
+Oh no... `Connection refused` That's not what we wanted! What could be going on here? 
 
-Let's go back to `client-c1` and make the connection:
+Remember our EVIL attacking computer from the first exercise? It still has it's rules installed on `router-t8`! If we `hopon server-e1` and run a `tcpdump`, we'll see our request landing there:
 
-run `ssh -v server-s1.supercorp.com` on `client-c1` and watch all the things take place!
-- Win.
+```bash
+root@server-e1:/# tcpdump -n
 
-Can we compare what is happening in TLS handshake v. setting up an ssh connection? 
-- the server is asking the client to prove they are who they say they are in ssh 
-- the server has to prove who it is in TLS
+23:25:54.714745 IP 1.1.0.200.37518 > 6.6.6.6.22: Flags [S], seq 3097370418, win 64240, options [mss 1460,sackOK,TS val 2668185149 ecr 0,nop,wscale 7], length 0
+23:25:54.714856 IP 6.6.6.6.22 > 1.1.0.200.37518: Flags [R.], seq 0, ack 3097370419, win 0, length 0
+```
 
-is our initial example actually relevant for this particular technology?
+What we see happening here is the very thing we would want to see if there was an attack on one of our servers. We try to make a connection, but the connection is never created because the destination machine doesn't have the correct credentials. The connection is terminated before the attacking machine can cause any harm!
+
+But... we still want to see what it looks like when the connection works. Fortunately, we control every aspect of this internet. We can remove the rule on `router-t8` and make our request between `client-c1` and `server-s1` work again! To do this, `hopon router-t8` and issue this `iptables` command:
+
+```bash
+root@router-t8:/# iptables -t nat -F
+```
+
+Now try running your `ssh` command again. You're going to get A LOT of output. Don't worry. Per usual, we'll take it line by line and examine what's going on there!
+
+```bash
+root@client-c1:/# ssh -v -o PasswordAuthentication=no server-s1.supercorp.com
+OpenSSH_9.6p1 Ubuntu-3ubuntu13.5, OpenSSL 3.0.13 30 Jan 2024
+debug1: Reading configuration data /etc/ssh/ssh_config
+debug1: /etc/ssh/ssh_config line 19: include /etc/ssh/ssh_config.d/*.conf matched no files
+debug1: /etc/ssh/ssh_config line 21: Applying options for *
+debug1: Connecting to server-s1.supercorp.com [9.2.0.10] port 22.
+debug1: Connection established.
+debug1: identity file /root/.ssh/id_rsa type -1
+debug1: identity file /root/.ssh/id_rsa-cert type -1
+debug1: identity file /root/.ssh/id_ecdsa type -1
+debug1: identity file /root/.ssh/id_ecdsa-cert type -1
+debug1: identity file /root/.ssh/id_ecdsa_sk type -1
+debug1: identity file /root/.ssh/id_ecdsa_sk-cert type -1
+debug1: identity file /root/.ssh/id_ed25519 type 3
+debug1: identity file /root/.ssh/id_ed25519-cert type -1
+debug1: identity file /root/.ssh/id_ed25519_sk type -1
+debug1: identity file /root/.ssh/id_ed25519_sk-cert type -1
+debug1: identity file /root/.ssh/id_xmss type -1
+debug1: identity file /root/.ssh/id_xmss-cert type -1
+debug1: identity file /root/.ssh/id_dsa type -1
+debug1: identity file /root/.ssh/id_dsa-cert type -1
+debug1: Local version string SSH-2.0-OpenSSH_9.6p1 Ubuntu-3ubuntu13.5
+debug1: Remote protocol version 2.0, remote software version OpenSSH_9.6p1 Ubuntu-3ubuntu13.5
+debug1: compat_banner: match: OpenSSH_9.6p1 Ubuntu-3ubuntu13.5 pat OpenSSH* compat 0x04000000
+debug1: Authenticating to server-s1.supercorp.com:22 as 'root'
+debug1: load_hostkeys: fopen /root/.ssh/known_hosts2: No such file or directory
+debug1: load_hostkeys: fopen /etc/ssh/ssh_known_hosts: No such file or directory
+debug1: load_hostkeys: fopen /etc/ssh/ssh_known_hosts2: No such file or directory
+debug1: SSH2_MSG_KEXINIT sent
+debug1: SSH2_MSG_KEXINIT received
+debug1: kex: algorithm: sntrup761x25519-sha512@openssh.com
+debug1: kex: host key algorithm: ssh-ed25519
+debug1: kex: server->client cipher: chacha20-poly1305@openssh.com MAC: <implicit> compression: none
+debug1: kex: client->server cipher: chacha20-poly1305@openssh.com MAC: <implicit> compression: none
+debug1: expecting SSH2_MSG_KEX_ECDH_REPLY
+debug1: SSH2_MSG_KEX_ECDH_REPLY received
+debug1: Server host key: ssh-ed25519 SHA256:cnsZMibc+rac/Opl6KtkckFzJ6EeNc6licOSWr4669Q
+debug1: load_hostkeys: fopen /root/.ssh/known_hosts2: No such file or directory
+debug1: load_hostkeys: fopen /etc/ssh/ssh_known_hosts: No such file or directory
+debug1: load_hostkeys: fopen /etc/ssh/ssh_known_hosts2: No such file or directory
+debug1: Host 'server-s1.supercorp.com' is known and matches the ED25519 host key.
+debug1: Found key in /root/.ssh/known_hosts:1
+debug1: ssh_packet_send2_wrapped: resetting send seqnr 3
+debug1: rekey out after 134217728 blocks
+debug1: SSH2_MSG_NEWKEYS sent
+debug1: Sending SSH2_MSG_EXT_INFO
+debug1: expecting SSH2_MSG_NEWKEYS
+debug1: ssh_packet_read_poll2: resetting read seqnr 3
+debug1: SSH2_MSG_NEWKEYS received
+debug1: rekey in after 134217728 blocks
+debug1: SSH2_MSG_EXT_INFO received
+debug1: kex_ext_info_client_parse: server-sig-algs=<ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,sk-ssh-ed25519@openssh.com,sk-ecdsa-sha2-nistp256@openssh.com,rsa-sha2-512,rsa-sha2-256>
+debug1: kex_ext_info_check_ver: publickey-hostbound@openssh.com=<0>
+debug1: kex_ext_info_check_ver: ping@openssh.com=<0>
+debug1: SSH2_MSG_SERVICE_ACCEPT received
+debug1: SSH2_MSG_EXT_INFO received
+debug1: kex_ext_info_client_parse: server-sig-algs=<ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,sk-ssh-ed25519@openssh.com,sk-ecdsa-sha2-nistp256@openssh.com,rsa-sha2-512,rsa-sha2-256>
+debug1: Authentications that can continue: publickey,password
+debug1: Next authentication method: publickey
+debug1: Will attempt key: /root/.ssh/id_rsa
+debug1: Will attempt key: /root/.ssh/id_ecdsa
+debug1: Will attempt key: /root/.ssh/id_ecdsa_sk
+debug1: Will attempt key: /root/.ssh/id_ed25519 ED25519 SHA256:RE/TNMufC0Q1YX7SmjgRdzzzPtJtFfooQN1H7xG4Ygo
+debug1: Will attempt key: /root/.ssh/id_ed25519_sk
+debug1: Will attempt key: /root/.ssh/id_xmss
+debug1: Will attempt key: /root/.ssh/id_dsa
+debug1: Trying private key: /root/.ssh/id_rsa
+debug1: Trying private key: /root/.ssh/id_ecdsa
+debug1: Trying private key: /root/.ssh/id_ecdsa_sk
+debug1: Offering public key: /root/.ssh/id_ed25519 ED25519 SHA256:RE/TNMufC0Q1YX7SmjgRdzzzPtJtFfooQN1H7xG4Ygo
+debug1: Server accepts key: /root/.ssh/id_ed25519 ED25519 SHA256:RE/TNMufC0Q1YX7SmjgRdzzzPtJtFfooQN1H7xG4Ygo
+Authenticated to server-s1.supercorp.com ([9.2.0.10]:22) using "publickey".
+debug1: channel 0: new session [client-session] (inactive timeout: 0)
+debug1: Requesting no-more-sessions@openssh.com
+debug1: Entering interactive session.
+debug1: pledge: filesystem
+debug1: client_input_global_request: rtype hostkeys-00@openssh.com want_reply 0
+debug1: client_input_hostkeys: searching /root/.ssh/known_hosts for server-s1.supercorp.com / (none)
+debug1: client_input_hostkeys: searching /root/.ssh/known_hosts2 for server-s1.supercorp.com / (none)
+debug1: client_input_hostkeys: hostkeys file /root/.ssh/known_hosts2 does not exist
+debug1: client_input_hostkeys: no new or deprecated keys from server
+debug1: Remote: /root/.ssh/authorized_keys:1: key options: agent-forwarding port-forwarding pty user-rc x11-forwarding
+debug1: Remote: /root/.ssh/authorized_keys:1: key options: agent-forwarding port-forwarding pty user-rc x11-forwarding
+debug1: Sending environment.
+debug1: pledge: fork
+Welcome to Ubuntu 24.04.1 LTS (GNU/Linux 6.8.0-47-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+This system has been minimized by removing packages and content that are
+not required on a system that users do not log into.
+
+To restore this content, you can run the 'unminimize' command.
+Last login: Fri Jan 24 23:21:43 2025 from 1.1.0.200
+root@server-s1:~#
+```
+
+Before we do anything else... Look at the command line! Notice that we're on `server-s1`! 
 
 ### Option 2. That's nice, but what if we'd like more computers to talk to each other: openssh port-forwarding
 
