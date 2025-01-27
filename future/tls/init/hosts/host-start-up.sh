@@ -34,6 +34,10 @@ case $HOSTNAME in
   ip route add default via 6.6.6.8
   cp /init/$(hostname)/index.nginx-debian.html /var/www/html/
   nginx
+
+  mkdir -p /var/run/sshd
+  chmod 0755 /var/run/sshd
+  sshd
   ;;
 esac
 

@@ -214,13 +214,105 @@ debug1: Reading configuration data /etc/ssh/ssh_config
 debug1: /etc/ssh/ssh_config line 19: include /etc/ssh/ssh_config.d/*.conf matched no files
 debug1: /etc/ssh/ssh_config line 21: Applying options for *
 debug1: Connecting to server-s1.supercorp.com [9.2.0.10] port 22.
-debug1: connect to address 9.2.0.10 port 22: Connection refused
-ssh: connect to host server-s1.supercorp.com port 22: Connection refused
+debug1: Connection established.
+debug1: identity file /root/.ssh/id_rsa type -1
+debug1: identity file /root/.ssh/id_rsa-cert type -1
+debug1: identity file /root/.ssh/id_ecdsa type -1
+debug1: identity file /root/.ssh/id_ecdsa-cert type -1
+debug1: identity file /root/.ssh/id_ecdsa_sk type -1
+debug1: identity file /root/.ssh/id_ecdsa_sk-cert type -1
+debug1: identity file /root/.ssh/id_ed25519 type 3
+debug1: identity file /root/.ssh/id_ed25519-cert type -1
+debug1: identity file /root/.ssh/id_ed25519_sk type -1
+debug1: identity file /root/.ssh/id_ed25519_sk-cert type -1
+debug1: identity file /root/.ssh/id_xmss type -1
+debug1: identity file /root/.ssh/id_xmss-cert type -1
+debug1: identity file /root/.ssh/id_dsa type -1
+debug1: identity file /root/.ssh/id_dsa-cert type -1
+debug1: Local version string SSH-2.0-OpenSSH_9.6p1 Ubuntu-3ubuntu13.5
+debug1: Remote protocol version 2.0, remote software version OpenSSH_9.6p1 Ubuntu-3ubuntu13.5
+debug1: compat_banner: match: OpenSSH_9.6p1 Ubuntu-3ubuntu13.5 pat OpenSSH* compat 0x04000000
+debug1: Authenticating to server-s1.supercorp.com:22 as 'root'
+debug1: load_hostkeys: fopen /root/.ssh/known_hosts2: No such file or directory
+debug1: load_hostkeys: fopen /etc/ssh/ssh_known_hosts: No such file or directory
+debug1: load_hostkeys: fopen /etc/ssh/ssh_known_hosts2: No such file or directory
+debug1: SSH2_MSG_KEXINIT sent
+debug1: SSH2_MSG_KEXINIT received
+debug1: kex: algorithm: sntrup761x25519-sha512@openssh.com
+debug1: kex: host key algorithm: ssh-ed25519
+debug1: kex: server->client cipher: chacha20-poly1305@openssh.com MAC: <implicit> compression: none
+debug1: kex: client->server cipher: chacha20-poly1305@openssh.com MAC: <implicit> compression: none
+debug1: expecting SSH2_MSG_KEX_ECDH_REPLY
+debug1: SSH2_MSG_KEX_ECDH_REPLY received
+debug1: Server host key: ssh-ed25519 SHA256:hzydfBasIMJNIg3Hba4N5F5SBzn0dHblKnEG0R/PiuQ
+debug1: load_hostkeys: fopen /root/.ssh/known_hosts2: No such file or directory
+debug1: load_hostkeys: fopen /etc/ssh/ssh_known_hosts: No such file or directory
+debug1: load_hostkeys: fopen /etc/ssh/ssh_known_hosts2: No such file or directory
+debug1: Host 'server-s1.supercorp.com' is known and matches the ED25519 host key.
+debug1: Found key in /root/.ssh/known_hosts:1
+debug1: ssh_packet_send2_wrapped: resetting send seqnr 3
+debug1: rekey out after 134217728 blocks
+debug1: SSH2_MSG_NEWKEYS sent
+debug1: Sending SSH2_MSG_EXT_INFO
+debug1: expecting SSH2_MSG_NEWKEYS
+debug1: ssh_packet_read_poll2: resetting read seqnr 3
+debug1: SSH2_MSG_NEWKEYS received
+debug1: rekey in after 134217728 blocks
+debug1: SSH2_MSG_EXT_INFO received
+debug1: kex_ext_info_client_parse: server-sig-algs=<ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,sk-ssh-ed25519@openssh.com,sk-ecdsa-sha2-nistp256@openssh.com,rsa-sha2-512,rsa-sha2-256>
+debug1: kex_ext_info_check_ver: publickey-hostbound@openssh.com=<0>
+debug1: kex_ext_info_check_ver: ping@openssh.com=<0>
+debug1: SSH2_MSG_SERVICE_ACCEPT received
+debug1: SSH2_MSG_EXT_INFO received
+debug1: kex_ext_info_client_parse: server-sig-algs=<ssh-ed25519,ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,sk-ssh-ed25519@openssh.com,sk-ecdsa-sha2-nistp256@openssh.com,rsa-sha2-512,rsa-sha2-256>
+debug1: Authentications that can continue: publickey,password
+debug1: Next authentication method: publickey
+debug1: Will attempt key: /root/.ssh/id_rsa
+debug1: Will attempt key: /root/.ssh/id_ecdsa
+debug1: Will attempt key: /root/.ssh/id_ecdsa_sk
+debug1: Will attempt key: /root/.ssh/id_ed25519 ED25519 SHA256:md3fwq1E0rxdpEmmZqXwd8iA5fn5Zmtw/mWODXRyyeY
+debug1: Will attempt key: /root/.ssh/id_ed25519_sk
+debug1: Will attempt key: /root/.ssh/id_xmss
+debug1: Will attempt key: /root/.ssh/id_dsa
+debug1: Trying private key: /root/.ssh/id_rsa
+debug1: Trying private key: /root/.ssh/id_ecdsa
+debug1: Trying private key: /root/.ssh/id_ecdsa_sk
+debug1: Offering public key: /root/.ssh/id_ed25519 ED25519 SHA256:md3fwq1E0rxdpEmmZqXwd8iA5fn5Zmtw/mWODXRyyeY
+debug1: Authentications that can continue: publickey,password
+debug1: Trying private key: /root/.ssh/id_ed25519_sk
+debug1: Trying private key: /root/.ssh/id_xmss
+debug1: Trying private key: /root/.ssh/id_dsa
+debug1: No more authentication methods to try.
+root@server-s1.supercorp.com: Permission denied (publickey,password).
 ```
 
-Oh no... `Connection refused` That's not what we wanted! What could be going on here? 
+OK. There's a lot going on there. The beginning of this output is dealing with loading various ssh configurations. We can look at that more a bit later. Instead, let's focus on the end of this output:
 
-Remember our EVIL attacking computer from the first exercise? It still has it's rules installed on `router-t8`! If we `hopon server-e1` and run a `tcpdump`, we'll see our request landing there:
+```bash
+debug1: Authentications that can continue: publickey,password
+debug1: Next authentication method: publickey
+debug1: Will attempt key: /root/.ssh/id_rsa
+debug1: Will attempt key: /root/.ssh/id_ecdsa
+debug1: Will attempt key: /root/.ssh/id_ecdsa_sk
+debug1: Will attempt key: /root/.ssh/id_ed25519 ED25519 SHA256:md3fwq1E0rxdpEmmZqXwd8iA5fn5Zmtw/mWODXRyyeY
+debug1: Will attempt key: /root/.ssh/id_ed25519_sk
+debug1: Will attempt key: /root/.ssh/id_xmss
+debug1: Will attempt key: /root/.ssh/id_dsa
+debug1: Trying private key: /root/.ssh/id_rsa
+debug1: Trying private key: /root/.ssh/id_ecdsa
+debug1: Trying private key: /root/.ssh/id_ecdsa_sk
+debug1: Offering public key: /root/.ssh/id_ed25519 ED25519 SHA256:md3fwq1E0rxdpEmmZqXwd8iA5fn5Zmtw/mWODXRyyeY
+debug1: Authentications that can continue: publickey,password
+debug1: Trying private key: /root/.ssh/id_ed25519_sk
+debug1: Trying private key: /root/.ssh/id_xmss
+debug1: Trying private key: /root/.ssh/id_dsa
+debug1: No more authentication methods to try.
+root@server-s1.supercorp.com: Permission denied (publickey,password).
+```
+
+This is telling us that `openssh` is going to try several methods of authentication to access `server-s1`. It lists the keys and encryption methods it's going to try, trys them, then, when it runs out of keys to try, it throws a `Permission denied` error. What this means is that the server we're attempting to connect to doesn't have a matching public key for the private key we're using to initiate connection. But why? We just went through all that setup!
+
+Remember our EVIL attacking computer from the first exercise? It still has it's rules installed on `router-t8`! If we `hopon server-e1` and run a `tcpdump` while making the request again, we'll see our request landing there:
 
 ```bash
 root@server-e1:/# tcpdump -n
