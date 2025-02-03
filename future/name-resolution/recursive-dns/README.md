@@ -555,6 +555,8 @@ authoritative-s.supercorp.com.     IN A   9.1.0.100
 
 Glue records are A or AAAA [records](#understanding-the-record-types) that point to the IP address of another server that a resolver will need to query in order to continue the process of resolving a name.
 
+<!-- TODO: POTENTIAL ASIDE HERE FOR TALKING ABOUT DNS BAILIWICK -->
+
 #### Configure the TLD server
 
 Okay, let's stop talking about how this works, and let's start making some changes to get our new domain-name working. The first thing we need to do is add our `awesomecat` label to this zone file. Let's use the `authoritative-a` server in our AWS network as the authority for this name (that's an arbitrary choice-- we could have chosen _any_ authoritative server for this job). Add a new line below the entry for `google` that looks like:
@@ -934,6 +936,8 @@ You're done with the `rootdns-i` server. This DNS server is now ready to respond
 
 ##### Set up the `.meow` TLD server on the unused TLD DNS server
 
+1. Set up the `knot.conf` file.
+
 Now that the root DNS servers are configured, we're going to set up our **new** top-level domain server. `hopon tlddns-a` to configure the `knot` server there.
 
 If we check the `/config/knot.conf` file, you'll see that we currently only have the `server` itself defined. We'll need the following text at the end of the file to add the new `.meow` zone:
@@ -946,41 +950,54 @@ zone:
     storage: "/var/lib/knot"
 ```
 
+2. Create the `meow.zone` zone
+
 Now that we've told `knot` where to find the file for the zone, we should actually go and make that file! Let's `vim /etc/knot/meow.zone` and add the zone content we want for this TLD.
 
-<!-- NOTE THAT WE ENDED HERE!!! -->
+We've looked at several zone files already in this chapter. If you look at them, you might be able to find a pattern to them. We're going to be setting up the new `tlddsn-a` server. The configuration for this server will be very similar in pattern to the other TLD servers (i.e. `tlddns-g`, `tlddns-n`, and `tlddns-v`).
 
-```unset
-TODO 
-1. Explain that we're adding some domains to meow.
-2. Do we want to give them the entire zonefile or go look at others and make them figure it out
-```
+Let's go take a look at one of these other TLD DNS servers to use that server as a template for setting up this new server. In a separate terminal session, `hopon tlddns-g` and `cat /etc/knot/com.zone`. We've discussed the structure a bit previously in this chapter.
+
+Use the `com.zone` file from the `tlddns-g` server as a template for your new `meow.zone` file that you'll set up on the `tlddns-a` server.
+
+Once you've gotten something that might work, remember to restart the knot server. Then, to see if your configurations are correct, try these commands to see if you've done things properly:
 
 ```bash
-$ORIGIN meow.
-@       IN SOA (
-                tlddns-a.aws.meow.       ; MNAME
-                tlddns-a.aws.meow.       ; RNAME
-                2024041501               ; serial
-                3600                     ; refresh (1 hour)
-                900                      ; retry (15 minutes)
-                604800                   ; expire (1 week)
-                86400                    ; minimum (1 day)
-                )
+$ dig @4.3.0.14 meow.
 
-; Top-level domain delegations
-meow.    IN NS   tlddns-a.aws.meow.
+; <<>> DiG 9.18.28-1~deb12u2-Debian <<>> @4.3.0.14 meow.
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 1717
+;; flags: qr aa rd; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 1
+;; WARNING: recursion requested but not available
 
-; All the labels that the TLD knows about
-pippin         IN NS  authoritative-s.supercorp.meow.
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;meow.                          IN      A
 
-; glue records for the authoritative DNS servers that the TLD knows about
-; i.e. if google is using the same authoritative server as aws, it's one glue record
-authoritative-a.aws.meow.           IN A   4.1.0.100
-authoritative-s.supercorp.meow.     IN A   9.1.0.100
+;; AUTHORITY SECTION:
+meow.                   3600    IN      SOA     tlddns-a.aws.meow. tlddns-a.aws.meow. 2024041501 3600 900 604800 86400
+
+;; Query time: 0 msec
+;; SERVER: 4.3.0.14#53(4.3.0.14) (UDP)
+;; WHEN: Mon Feb 03 19:47:57 UTC 2025
+;; MSG SIZE  rcvd: 82
 ```
 
+**IF YOU GET STUCK**
+
+1. Describe baliwick
+2. Point them to the answer section if they get stuck
+3. Ask them to go back and add some domains to meow.
+
 <!-- TODO: we still need to figure out how to 'fix' needing an authoritative server with the same TLD as our domain. If we can't let's add a section on why we can't... -->
+
+
+
+## JUNK DRAWER:
 
 We've already discussed a lot of what's going on here in previous sections. The thing to notice here is that we've added a new subdomain, `pippin.meow`, which will be served out of the `authoritative-s` DNS server. Tell your `knot` server that it needs to reload its config files, then let's run a `dig` on `pippin.meow`:
 
@@ -1245,6 +1262,8 @@ Once you know you've got `rootdns-r` setup correctly and working, make sure you 
 ### Answer Section
 
 If you got stuck figuring out any of our challenges, this is the section where we provide more detail.
+
+Final .meow configuration for various names
 
 #### Reset Unbound
 
