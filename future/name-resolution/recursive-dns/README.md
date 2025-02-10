@@ -987,6 +987,11 @@ meow.                   3600    IN      SOA     tlddns-a.aws.meow. tlddns-a.aws.
 ;; MSG SIZE  rcvd: 82
 ```
 
+```bash
+$ dig @100.0.1.100 meow.
+
+```
+
 **IF YOU GET STUCK**
 
 1. Describe baliwick
