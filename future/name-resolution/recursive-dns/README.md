@@ -557,7 +557,7 @@ Glue records are A or AAAA [records](#understanding-the-record-types) that point
 
 <!-- TODO: POTENTIAL ASIDE HERE FOR TALKING ABOUT DNS BAILIWICK -->
 
-#### Configure the TLD server
+##### Configure the TLD server
 
 Okay, let's stop talking about how this works, and let's start making some changes to get our new domain-name working. The first thing we need to do is add our `awesomecat` label to this zone file. Let's use the `authoritative-a` server in our AWS network as the authority for this name (that's an arbitrary choice-- we could have chosen _any_ authoritative server for this job). Add a new line below the entry for `google` that looks like:
 
@@ -567,7 +567,7 @@ awesomecat      IN NS  authoritative-a.aws.com.
 
 > 📝 Note: Why aren't we including the `com.` after each of our labels? If you look at the beginning of the file, you'll see a line, `$ORIGIN com.`. This tells our DNS server to add the `com.` label to any entry that does not already include it.
 
-#### Restart the knot process
+##### Restart the knot process
 
 OK, let's make sure we added this record correctly. But... if we run our `dig` again now, the resolver will get the same answer from `knot`. This is because we haven't yet signalled to `knot` that we made a configuration change so let's give it a signal to reload its configuration files without interrupting any potential traffic on our super busy toy internet. The `kill -HUP` command tells the machine to re-read any config files for the process.
 
@@ -620,7 +620,7 @@ authoritative-a.aws.com. 3600 IN A 4.1.0.100
 
 Look at that! We don't have an answer, but we have a new response in our `AUTHORITY` section! This shows that `tlddns-g` knows that a resolver should go ask the `authoritative-a.aws.com` server about any record pertaining to `awesomecat.com`. AND! We see the glue records included in the `ADDITIONAL` section. This tells the resolver where to send the query without having to first resolve the `authoritative-a.aws.com` name. Neat!
 
-#### Configure the authoritative server
+##### Configure the authoritative server
 
 Now that the `com.` nameserver knows where to send a resolver asking for `awesomecat.com`, we need tell that authoritative server how to respond to _those_ queries. Let's `hopon authoritative-a` and open the config file `/config/knot.conf`:
 
@@ -710,7 +710,7 @@ www.awesomecat.com. 3600 IN A 4.2.0.11
 
 There it is! We did it!
 
-#### Test it from the client
+##### Test it from the client
 
 Now, let's go back to our `client-c1` and see if we can successfully resolve the name there! `hopon client-c1` again and re-run your `dig`. What happens?
 
@@ -751,22 +751,22 @@ If you're not sure which machine to go to, check the [super secret answer sectio
 
 Okay, so we did this process of adding a new name. We're going to take this a little deeper and add an entire new TLD (like ".com"). What's the best plan of attack for how to do this? Well, we started the last section by performing a name-lookup from a client and seeing what the recursive name-resolver did to try to resolve that name. We then found where that failed and fixed it. We're going to do the same thing now with a new top-level domain.
 
-First, let's pick a new top-level domain that hasn't been implemented yet. So far, we've got `.com`, `.net` and `.org`. So let's pick something else. How about `.meow`? That sounds fun, and this is our little internet, and we can do whichever top-level domains we want. Even though `.meow` is not a real Internet top-level domain, we feel that it **should be** and is a growth-opportunity for the "real" internet.
+First, let's pick a new top-level domain that hasn't been implemented yet. So far, we've got `.com`, `.net` and `.org` on our toy internet. So let's pick something else. How about `.meow`? That sounds fun, and this is our little internet, and we can do whichever top-level domains we want! Even though `.meow` is not a real Internet top-level domain, we feel that it **should be** and is a growth-opportunity for the "real" internet.
 
 We're going to add this new TLD server to the AWS network if you look at the [network map at the top of this section](#1-explore-and-make-changes-to-the-dns-infrastructure-of-our-internet), you'll see a unused TLD DNS server at `4.3.0.14`. Let's appropriate that server for our `.meow` TLD server!
 
-Now that you've spent some time playing with DNS and making some small changes, you're probably ready to start by just imagining how name-resolution actions take place on the internet in order to figure out where to begin. Let's therefore just start by thinking about this process. If you need to review, check out the [section where talk about how name resolution works](#0-understand-how-recursive-dns-works) for a refresher.
+Now that you've spent some time playing with DNS and making some small changes, you're probably ready to start by just imagining how name-resolution actions take place on the internet (without caching) in order to figure out where to begin. Let's therefore just start by thinking about this process. If you need to review, check out the [section where talk about how name resolution works](#0-understand-how-recursive-dns-works) for a refresher.
 
 ##### Reviewing how name-resolution works for top-level domains
 
 First, we started with a client (e.g. `client-c1`). Let's say it attempts to resolve the name `pippin.meow`. What happens?
 
-1. `client-c1` sends a request to its local recursive resolver, `resolver-c`.
-2. `resolver-c` has never seen `pippin.meow` before, nor has it ever seen any `.meow` address to be resolved, so it starts at a root server (i.e. `rootdns-n` or `rootdns-i`)
+1. `client-c1` sends a request to resolve `pippin.meow.` to its local recursive resolver (`resolver-c`).
+2. `resolver-c` needs to figure out where the `.meow` top-level domain server lives. If it doesn't know where to go, it starts with its own `root.hints` file, which points it to a DNS Root server (i.e. `rootdns-n` or `rootdns-i`).
 
 > 🤔 When the name-resolution request goes to either of these servers, what do you think is going to happen?
 
-Well, neither of those name-servers have ever heard of the `.meow` TLD, so they're probably going to error. Let's hopon one of those root-level name servers and double-check that this is the case!
+Well, neither of those name-servers have ever heard of the `.meow` TLD because we haven't added an entry — so they're probably going to error. Let's hopon one of those root-level name servers and double-check that this is the case!
 
 ```bash
 root@rootdns-i:/# dig @100.0.1.100 meow.
@@ -793,19 +793,19 @@ root@rootdns-i:/# dig @100.0.1.100 meow.
 ;; MSG SIZE  rcvd: 85
 ```
 
-Okay, this is what we expected: the root DNS server replied with an `NXDOMAIN`, telling us that the `.meow` TLD does not exist. Since root DNS servers are the "authoritative" servers over all top-level domains, this server can say definitively that this name will not resolve!
+Okay, this is what we expected: the root DNS server replied with an `NXDOMAIN`, telling us that the `.meow` TLD does not exist. Since root DNS servers are the "authoritative" servers over all top-level domains, this server can definitively say that this name will not resolve!
 
 ##### How do we fix this?
 
 This should feel very similar to adding the `awesomecat.com` name to the `.com` TLD server. In that case, we told the `.com` DNS server where it could go find records for the `awesomecat` label.
 
-In our current case, since we have _two_ root-dns servers, we're going to need to make the changes on two different machines. You may recognize that, had our internet been more like the "real" internet, we would have had a number of `.com` servers to update to make that case work.
+> 📝 **NOTE**: In our current case, since we have _two_ root-dns servers, we're going to need to make the changes on two different machines. Similarly, had our toy internet been more like the "real" internet, then when we added the `.awesomecat.com` label, we would have had to go update multiple `.com` servers to make that change.
 
 Okay, here's the plan of attack:
 
-- start by teaching `rootdns-i` about the `.meow` TLD
+- teach `rootdns-i` about the `.meow` TLD
 - teach `rootdns-n` about the `.meow` TLD
-- Finally, set up the `.meow` TLD server on the unused TLD DNS server, `4.3.0.14` (a.k.a. `tlddns-a`)
+- set up the `.meow` TLD server on the unused TLD DNS server (`4.3.0.14`, a.k.a. `tlddns-a`)
 
 ##### Teach `rootdns-i` about the `.meow` TLD
 
@@ -824,7 +824,7 @@ zone:
     storage: "/var/lib/knot"
 ```
 
-Okay, so we see that this server is ready to answer requests for the name `.` (looking at the `- domain: .` line). The dot there simply references "all zones on the Internet". Only root DNS servers should have configuration for this label.
+Okay, so we see that this server is ready to answer requests for the name `.` (looking at the `- domain: .` line). The dot there simply references "all zones on the Internet". Only root DNS servers should have a configuration for this label.
 
 Let's take a look at what's inside that config file that's being referenced under the `.` domain:
 
@@ -871,7 +871,7 @@ So, there's a few things going on in this file. A lot of this looks similar to t
 
 This says that any request for a root server can go to either `rootdns-i.isc.org.` OR `rootdns-n.netnod.org.`. In practice, your resolver will most likely send requests to both. This means that if a path is broken or congested to one server, the resolver still has an opportunity to get a timely response from the other. In The Real Internet, there are 13 root server names. Each of those 13 root server names is used to identify multiple machines that function as root servers. This adds layers upon layers of redundancy to make sure the system as a whole has as close to 100% uptime as possible.
 
-The next lines are the glue records for the root servers. As a reminder, glue records speed up query time by providing an IP address for the name of the next machine the resolver needs to query.
+The next lines are the glue records for the root servers. As a reminder, glue records speed up the query time by providing an IP address for the name of the next machine the resolver needs to query.
 
 ```unset
 ; Glue records for root name servers
@@ -900,7 +900,7 @@ tlddns-a.aws.meow.      IN A 4.3.0.14
 
 As we discussed previously, `knot` loads these config files at startup. Which means it doesn't know about our changes until we tell it that there are updated files to load. You'll need to restart the `knot` process on this DNS server. Refer to [the section above](#restart-the-knot-process) if you need a reminder on how to do this.
 
-Once you've done that, you should be able to make a query to the root DNS server for the new TLD entry and be pointed to `tlddns-a.aws.meow.` for your next step:
+Once you've restarted knot, you should be able to make a query to the root DNS server for the new TLD entry and be pointed to `tlddns-a.aws.meow.` for your next step:
 
 ```bash
 root@rootdns-i:/# dig @100.0.1.100 meow.
@@ -954,13 +954,11 @@ zone:
 
 Now that we've told `knot` where to find the file for the zone, we should actually go and make that file! Let's `vim /etc/knot/meow.zone` and add the zone content we want for this TLD.
 
-We've looked at several zone files already in this chapter. If you look at them, you might be able to find a pattern to them. We're going to be setting up the new `tlddsn-a` server. The configuration for this server will be very similar in pattern to the other TLD servers (i.e. `tlddns-g`, `tlddns-n`, and `tlddns-v`).
-
-Let's go take a look at one of these other TLD DNS servers to use that server as a template for setting up this new server. In a separate terminal session, `hopon tlddns-g` and `cat /etc/knot/com.zone`. We've discussed the structure a bit previously in this chapter.
-
-Use the `com.zone` file from the `tlddns-g` server as a template for your new `meow.zone` file that you'll set up on the `tlddns-a` server.
+We've looked at several zone files already in this chapter. If you look at them, you might be able to find a pattern. We're going to be setting the zone file on this server, which will be very similar in pattern to the other TLD zone files on servers `tlddns-g`, `tlddns-n`, and `tlddns-v`. Go take a look at one of these other TLD DNS servers and use take a look at their zone files to use as a starting place for setting up this new server. If you get stuck, take a look at the [final directory](./final/dns-servers/tlddns-a/meow.zone) for some assistance.
 
 Once you've gotten something that might work, remember to restart the knot server. Then, to see if your configurations are correct, try these commands to see if you've done things properly:
+
+**TEST 1** Query `tlddns-a` directly to see if it responds to its own TLD entry:
 
 ```bash
 $ dig @4.3.0.14 meow.
@@ -987,121 +985,27 @@ meow.                   3600    IN      SOA     tlddns-a.aws.meow. tlddns-a.aws.
 ;; MSG SIZE  rcvd: 82
 ```
 
+**TEST 2** Query a root DNS server to see if it provides the same answer:
+
 ```bash
 $ dig @100.0.1.100 meow.
-
 ```
 
-**IF YOU GET STUCK**
+##### Next steps for future learning
 
-1. Describe baliwick
-2. Point them to the answer section if they get stuck
-3. Ask them to go back and add some domains to meow.
-
-<!-- TODO: we still need to figure out how to 'fix' needing an authoritative server with the same TLD as our domain. If we can't let's add a section on why we can't... -->
-
-
-
-## JUNK DRAWER:
-
-We've already discussed a lot of what's going on here in previous sections. The thing to notice here is that we've added a new subdomain, `pippin.meow`, which will be served out of the `authoritative-s` DNS server. Tell your `knot` server that it needs to reload its config files, then let's run a `dig` on `pippin.meow`:
-
-```bash
-root@tlddns-a:/# dig @4.3.0.14 pippin.meow.
-
-; <<>> DiG 9.18.28-1~deb12u2-Debian <<>> @4.3.0.14 pippin.meow.
-; (1 server found)
-;; global options: +cmd
-;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 12690
-;; flags: qr rd; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 2
-;; WARNING: recursion requested but not available
-
-;; OPT PSEUDOSECTION:
-; EDNS: version: 0, flags:; udp: 1232
-;; QUESTION SECTION:
-;pippin.meow.   IN A
-
-;; AUTHORITY SECTION:
-pippin.meow.  3600 IN NS authoritative-s.supercorp.meow.
-
-;; ADDITIONAL SECTION:
-authoritative-s.supercorp.meow. 3600 IN A 9.1.0.100
-
-;; Query time: 0 msec
-;; SERVER: 4.3.0.14#53(4.3.0.14) (UDP)
-;; WHEN: Wed Nov 27 22:34:46 UTC 2024
-;; MSG SIZE  rcvd: 96
-```
-
-Ok, so far we've:
-
-* [x] configured the root server to know about the TLD server
-* [x] configured the TLD server to know about it's zone
-* [x] added a subdomain, `pippin` to the `meow` zone
-
-Now we need to go tell the authoritative server we selected, `authoritative-s`, how to answer DNS queries for `pippin.meow`. When you `hopon authoritative-s`, we'll need to start by telling the knot server that it has a new zone it needs to answer for. We'll do that by adding the following to `/config/knot.conf`:
-
-```bash
-  - domain: pippin.meow
-    file: "/etc/knot/pippin.meow.zone"
-    storage: "/var/lib/knot"
-```
-
-Again, once we've added the zone, we'll need to create the zonefile and add the DNS records to it. So create and edit the file we pointed to for our zone, `/etc/knot/pippin.meow.zone`, and add the following:
-
-```bash
-$ORIGIN pippin.meow.
-@       IN SOA (
-                host-dns.pippin.meow.   ; MNAME
-                admin.pippin.meow.      ; RNAME
-                2024041501              ; serial
-                3600                    ; refresh (1 hour)
-                900                     ; retry (15 minutes)
-                604800                  ; expire (1 week)
-                86400                   ; minimum (1 day)
-                )
-
-@          IN A    4.2.0.11
-www        IN A    4.2.0.11
-```
-
-In this zonefile, we're adding A records for both `pippin.meow` and `www.pippin.meow` that point to the server at `4.2.0.11`. Now, let's tell our knot on this server that it has new config files and let's check our work!
-
-```bash
-root@authoritative-s:/# dig www.pippin.meow
-
-; <<>> DiG 9.18.28-1~deb12u2-Debian <<>> www.pippin.meow
-;; global options: +cmd
-;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 34614
-;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
-
-;; OPT PSEUDOSECTION:
-; EDNS: version: 0, flags:; udp: 1232
-;; QUESTION SECTION:
-;www.pippin.meow.  IN A
-
-;; ANSWER SECTION:
-www.pippin.meow. 3600 IN A 4.2.0.11
-
-;; Query time: 3 msec
-;; SERVER: 9.2.0.100#53(9.2.0.100) (UDP)
-;; WHEN: Wed Nov 27 23:19:25 UTC 2024
-;; MSG SIZE  rcvd: 60
-```
-
-Would you look at that! We got our whole lookup done now! Congratulations team!
-
-NOTE: We hacked this together a little... We used glue records in the zonefile we created for `meow.` to point our resolvers to the authoritative servers. But those actual records don't exist anywhere in our DNS. We still need to go back and add actual records for `authoritative-a.aws.meow.` and `authoritative-s.supercorp.meow.`. We'll leave that as an exercise for the reader.
+Now that you've defined the `.meow` TLD, add some additional DNS records for a few domains. We suggest `pippin.meow.`, `royce.meow`, and `kitty.meow`.
 
 ## 2. Describe the basics of DNS troubleshooting
 
-So far, we've been building out and testing this system while relying on a piece of achitecture that we haven't addressed at all yet... The recursive resolver. The role of the resolver is to take the responsibility for answering DNS questions for all computers in the network. This involves the whole process of chasing down names from beginning to end, starting with the "root" name servers, and ceaselessly asking DNS questions until finding the final "authoritative" server for a name being requested. Since this can often require many network calls, the recursive resolver also caches these values in order to cut down on network traffic.
+### Recursive resolvers
 
-Now that we've got everything setup and working, we can `hopon` a resolver machine and watch all of the requests that are necessary to make this recursive lookup work. Let's `hopon resolver-c`. 
+One useful piece of equipment to look at is the DNS Resolver. Once we're on that machine, we can see all the DNS queries its making to resolve a name for its clients. Therefore, to start our troubleshooting journey, let's focus on this role first.
 
-First though, the requests we made to prove that `www.awesomecat.com` was working have cached the responses to the various DNS queries. We need to clear that cache. The easiest way to do this is to restart the resolver process. The software we used for our resolver on this toy internet is called `unbound`. We'll use the same procedure we did to restart `knot`, namely, find the process ID with `ps aux` (this time looking for "unbound" instead of "knot") and then run `kill -HUP <process_id>`.
+The role of the resolver is to take the responsibility for answering DNS questions for all computers in the network. This involves the whole process of chasing down names from beginning to end, starting with the "root" name servers, and ceaselessly asking DNS questions until finding the final "authoritative" server for a name being requested. Since this can often require many network calls, the recursive resolver also caches these values in order to cut down on network traffic.
+
+Now that we've got everything setup and working, we can `hopon` a resolver machine and watch all of the requests that are necessary to make this recursive lookup work. Let's `hopon resolver-c`.
+
+First though, we need to clear the cache for all `www.awesomecat.com` queries. The easiest way to do this is to restart the resolver process. The software we used for our resolver on this toy internet is called `unbound`. We'll use the same procedure we did to restart `knot`, namely, find the process ID with `ps aux` (this time looking for `unbound` instead of `knot`) and then run `kill -HUP <process_id>`.
 
 Once that's done, we can run our `tcpdump`. `resolver-c` only has one network interface, so we can run a simple `tcpdump -n` to see all the packets running through that interface. Open a second window, `hopon client-c1` in that window, and run `dig www.awesomecat.com`. You should see A LOT of output in your `tcpdump`. Let's take it line by line:
 
@@ -1110,22 +1014,24 @@ Once that's done, we can run our `tcpdump`. `resolver-c` only has one network in
 21:11:07.561667 ARP, Reply 1.2.0.100 is-at 02:42:01:02:00:64, length 28
 ```
 
-A standard ARP request. If you look at your network map, you'll see that `resolver-c` has IP Address `1.2.0.100`. So `1.2.0.3` (`router-c3`) is asking which machine on this network is `1.2.0.100`. The next line is `resolver-c` replying to `router-c3`'s ARP request with it's own MAC address. For more on this, checkout the [IP and MAC addresses appendix](../../../appendix/ip-and-mac-addresses.md)
+**A standard ARP request.** We'ver covered these kinds of messages in previous chapters. For more on this, checkout the [IP and MAC addresses appendix](../../../appendix/ip-and-mac-addresses.md)
 
 ```bash
 21:11:07.561754 IP 1.1.0.200.48600 > 1.2.0.100.53: 48085+ [1au] A? www.awesomecat.com. (59)
 ```
 
-`1.1.0.200` (`client-c1`) sends a request to `1.2.0.100` (`resolver-c`) port `53` requesting the `A` records for `www.awesomecat.com`. Please check the [recursive dns appendix](../../../appendix/recursive-dns.md#understanding-the-record-types) for an explanation of a few common record types.
+**Client's DNS Request to the resolver.** `1.1.0.200` (`client-c1`) sends a request to `1.2.0.100` (`resolver-c`) on port `53` requesting the `A` records for `www.awesomecat.com`. Please check the [above section in this chapter](#understanding-the-record-types) for an explanation of a few common record types.
 
 ```bash
 21:11:07.562914 IP 1.2.0.100.47301 > 101.0.1.100.53: 35603% [1au] NS? . (28)
 21:11:07.564677 IP 101.0.1.100.53 > 1.2.0.100.47301: 35603*- 2/0/3 NS rootdns-i.isc.org., NS rootdns-n.netnod.org. (123)
 ```
 
-`1.2.0.100` (`resolver-c`) sends a request (`>`) to `101.0.1.100` (`rootdns-n`) for the `NS` records for `.`, the root of all DNS. Then, `101.0.1.100` (`rootdns-n`) sends a reply back to `1.2.0.100` (`resolver-c`) providing the `NS` records for the root DNS servers.
+**Resolver contacts Root DNS servers** `1.2.0.100` (`resolver-c`) sends a request (`>`) to `101.0.1.100` (`rootdns-n`) for the `NS` records for `.`, the root of all DNS. Then, `101.0.1.100` (`rootdns-n`) sends a reply back to `1.2.0.100` (`resolver-c`) providing the `NS` records for the root DNS servers.
 
-`resolver-c` already knew the addresses for the root servers from a file called `root.hints`. This file is installed with every resolver software so it will know wheer to start when resolving DNS queries. It doesn't know about the TLD servers by default. It doesn't know about the authoritative servers. It starts with the root servers until it gathers the information it needs.
+<!-- TODO: WE ENDED HERE -->
+
+`resolver-c` already knew the addresses for the root servers from a file called `root.hints`. This file is installed with every resolver software so it will know where to start when resolving DNS queries. It doesn't know about the TLD servers by default. It doesn't know about the authoritative servers. It starts with the root servers until it gathers the information it needs.
 
 But the addresses in that file might be out of date. Our resolver wants to verify that it has the correct information for the root servers, so it's going to do what it does best: make DNS queries until it resolves the name.
 
