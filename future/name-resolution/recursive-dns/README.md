@@ -999,22 +999,34 @@ Now that you've defined the `.meow` TLD, add some additional DNS records for a f
 
 ### Recursive resolvers
 
-One useful piece of equipment to look at is the DNS Resolver. Once we're on that machine, we can see all the DNS queries its making to resolve a name for its clients. Therefore, to start our troubleshooting journey, let's focus on this role first.
+One useful piece of equipment to look at is the DNS Recursive Resolver (or just "resolver"). Once we're on that machine, we can see all the DNS queries its making to resolve a name for its clients. Being able to read and understand the output of these queires can help you find and resolve issues in your dns configurations.
 
-The role of the resolver is to take the responsibility for answering DNS questions for all computers in the network. This involves the whole process of chasing down names from beginning to end, starting with the "root" name servers, and ceaselessly asking DNS questions until finding the final "authoritative" server for a name being requested. Since this can often require many network calls, the recursive resolver also caches these values in order to cut down on network traffic.
+The role of the resolver is to to find the answer for DNS questions for any computers that can route their DNS queries to it. This involves the whole process of chasing down names from beginning to end, starting with the "root" name servers, and ceaselessly asking DNS questions until finding the final "authoritative" server for the name requested. Since this can often require many network calls, the recursive resolver also caches these values in order to cut down on network traffic.
 
-Now that we've got everything setup and working, we can `hopon` a resolver machine and watch all of the requests that are necessary to make this recursive lookup work. Let's `hopon resolver-c`.
+Now that we've got everything set up and working, we can `hopon` a resolver machine and watch all of the requests that are necessary to make this recursive lookup work. Let's `hopon resolver-c` and watch the DNS queries made to resolve `www.awesomecat.com`.
 
-First though, we need to clear the cache for all `www.awesomecat.com` queries. The easiest way to do this is to restart the resolver process. The software we used for our resolver on this toy internet is called `unbound`. We'll use the same procedure we did to restart `knot`, namely, find the process ID with `ps aux` (this time looking for `unbound` instead of `knot`) and then run `kill -HUP <process_id>`.
+First though, before we look at this traffic, we need to clear the cache for all `www.awesomecat.com` queries. The easiest way to do this is to restart the resolver process. The software we used for our resolver on this toy internet is called `unbound`. We'll use the same procedure we did to restart `knot`, namely, find the process ID with `ps aux` (this time looking for "unbound" instead of "knot") and then run `kill -HUP <process_id>`.
 
-Once that's done, we can run our `tcpdump`. `resolver-c` only has one network interface, so we can run a simple `tcpdump -n` to see all the packets running through that interface. Open a second window, `hopon client-c1` in that window, and run `dig www.awesomecat.com`. You should see A LOT of output in your `tcpdump`. Let's take it line by line:
+Once that's done, run:
+
+```bash
+root@resolver-c:/# tcpdump -n
+```
+
+In a new window, `hopon client-c1` and run:
+
+```bash
+root@client-c1:/# dig www.awesomecat.com
+```
+
+In your first window, you should see A LOT of output in your `tcpdump`. Let's take a look at it line by line:
 
 ```bash
 21:11:07.561149 ARP, Request who-has 1.2.0.100 tell 1.2.0.3, length 28
 21:11:07.561667 ARP, Reply 1.2.0.100 is-at 02:42:01:02:00:64, length 28
 ```
 
-**A standard ARP request.** We'ver covered these kinds of messages in previous chapters. For more on this, checkout the [IP and MAC addresses appendix](../../../appendix/ip-and-mac-addresses.md)
+**A standard ARP request.** You may or may not see these two lines. But either way, we can ignore them. We'ver covered these kinds of messages in previous chapters. For more on this, checkout the [IP and MAC addresses appendix](../../../appendix/ip-and-mac-addresses.md)
 
 ```bash
 21:11:07.561754 IP 1.1.0.200.48600 > 1.2.0.100.53: 48085+ [1au] A? www.awesomecat.com. (59)
@@ -1029,11 +1041,40 @@ Once that's done, we can run our `tcpdump`. `resolver-c` only has one network in
 
 **Resolver contacts Root DNS servers** `1.2.0.100` (`resolver-c`) sends a request (`>`) to `101.0.1.100` (`rootdns-n`) for the `NS` records for `.`, the root of all DNS. Then, `101.0.1.100` (`rootdns-n`) sends a reply back to `1.2.0.100` (`resolver-c`) providing the `NS` records for the root DNS servers.
 
-<!-- TODO: WE ENDED HERE -->
+So, how did our recursive resolver know where to send these initial requests? Well, `resolver-c` knew the addresses for the root servers from a file called `/etc/unbound/root.hints`.
 
-`resolver-c` already knew the addresses for the root servers from a file called `root.hints`. This file is installed with every resolver software so it will know where to start when resolving DNS queries. It doesn't know about the TLD servers by default. It doesn't know about the authoritative servers. It starts with the root servers until it gathers the information it needs.
+Let's take a look at that file with the `cat` command:
 
-But the addresses in that file might be out of date. Our resolver wants to verify that it has the correct information for the root servers, so it's going to do what it does best: make DNS queries until it resolves the name.
+```bash
+root@resolver-c:/# cat /etc/unbound/root.hints
+;       This file holds the information on root name servers needed to
+;       initialize cache of Internet domain name servers
+;       (e.g. reference this file in the "cache  .  <file>"
+;       configuration file of BIND domain name servers).
+;
+;       The version that would be used on the Real Internet is made available by InterNIC
+;       under anonymous FTP as
+;           file                /domain/named.cache
+;           on server           FTP.INTERNIC.NET
+;       -OR-                    RS.INTERNIC.NET
+;
+
+.                        3600000      NS    rootdns-i.isc.org.
+rootdns-i.isc.org.       3600000      A     100.0.1.100
+
+.                        3600000      NS    rootdns-n.netnod.org.
+rootdns-n.netnod.org.    3600000      A     101.0.1.100
+
+; End of file%
+```
+
+This file is installed with every resolver software so it will know where to start when resolving DNS queries. When we wrote this chapter, we set these `root.hints` files up in advance for you. These are _very different_ from the `root.hints` file that you would install on the Real Internet, since our files point to our two little Root DNS servers. If you'd like to take a look at what "real" one looks like, [check out this link](https://www.internic.net/domain/named.root).
+
+So therefore, our recursive resolver doesn't know about the TLD servers by default nor does it know about the authoritative servers. It starts with the root servers it learned about in its `root.hints` file. It begins the recursive process by contacting those servers to begin gathering the information it needs to answer any request.
+
+But the addresses in that file might be out of date! Our resolver wants to verify that it has the correct information for the root servers, so it's going to do what it does best: make DNS queries until it resolves the name.
+
+Next, we'll see queries for the TLD DNS Servers:
 
 ```bash
 21:11:07.565703 IP 1.2.0.100.23565 > 100.0.1.100.53: 29379% [1au] A? com. (32)
@@ -1044,13 +1085,30 @@ But the addresses in that file might be out of date. Our resolver wants to verif
 21:11:07.567274 IP 100.0.1.100.53 > 1.2.0.100.42017: 52879- 0/1/2 (78)
 ```
 
-Now that `resolver-c` has all of the TLD DNS servers, It starts firing off requests to learn about all of the TLDs it needs to know about. It has a request from `client-c1` for a name in the `com` TLD, and it just got a response back for root server names in the `org` TLD. So we see 3 requests fired off here, each of them for `A` records for TLDs. The resolver will try to get the fastest possible response for the client. So it's spitting out requests to both of the root DNS servers here to see which response comes back first. 
+**Find the IP addresses for the `.com` and `.org` TLD DNS servers**. The resolver starts firing off requests to learn about all of the TLDs it needs to know about. It has a request from `client-c1` for a name in the `com` TLD, and it just got a response back for root server names in the `org` TLD. So we see 3 requests fired off here, each of them for `A` records for TLDs. The resolver will try to get the fastest possible response for the client. So it's spitting out requests to both of the root DNS servers here to see which response comes back first.
 
-The next 3 lines are the responses back from the top-level domain DNS servers. The actual response bodies aren't parsed here, but given what we saw in the exercises above, we know that what should be seeing DNS responses for where the `com` and `org` TLD servers are. These responses will include the IP addresses for those servers.
+The next 3 lines are the responses back for the top-level domain DNS servers from the root DNS servers. The actual response bodies aren't parsed here, but given what we saw in the exercises above, we know that what should be seeing DNS responses for where the `com` and `org` TLD servers are. These responses will include the IP addresses for those servers.
+
+> 📝 NOTE: This `tcpdump` output is pretty minimal and the response output don't look like they contain any real information about the DNS protocol. If you want, you can re-run the `tcpdump` command in "verbose" mode (`tcpdump -nvvv`)  to show much more information about what is happening with DNS. **Be prepared to be overwhelmed** with output though. But, just as an example, the "verbose" version of the above query looks like this:
+
+```unset
+     1.2.0.100.55412 > 100.0.1.100.53: [bad udp cksum 0x6703 -> 0xfd51!] 51452% [1au] A? com. ar: . OPT UDPsize=1232 DO (32)
+19:57:57.158747 IP (tos 0x0, ttl 64, id 53689, offset 0, flags [none], proto UDP (17), length 60)
+    1.2.0.100.41868 > 100.0.1.100.53: [bad udp cksum 0x6703 -> 0xdda6!] 6794% [1au] A? org. ar: . OPT UDPsize=1232 DO (32)
+19:57:57.158881 IP (tos 0x0, ttl 60, id 34090, offset 0, flags [none], proto UDP (17), length 106)
+    100.0.1.100.53 > 1.2.0.100.55412: [bad udp cksum 0x6731 -> 0x0721!] 51452- q: A? com. 0/1/2 ns: com. [1d] NS tlddns-g.google.com. ar: tlddns-g.google.com. [1d] A 8.2.0.100, . OPT UDPsize=1232 DO (78)
+19:57:57.158881 IP (tos 0x0, ttl 60, id 34089, offset 0, flags [none], proto UDP (17), length 106)
+    100.0.1.100.53 > 1.2.0.100.41868: [bad udp cksum 0x6731 -> 0xec01!] 6794- q: A? org. 0/1/2 ns: org. [1d] NS tlddns-n.netnod.org. ar: tlddns-n.netnod.org. [1d] A 101.0.1.101, . OPT UDPsize=1232 DO (78)
+```
+
+Okay, so what happens next?
+<!-- TODO ENDED HERE KINDA -->
 
 ```bash
 21:11:07.567766 IP 1.2.0.100.63263 > 8.2.0.100.53: 3546% [1au] A? awesomecat.com. (43)
 ```
+
+**A thing happens here**
 
 `1.2.0.100` (`resolver-c`) sends a request to `8.2.0.100` (`tlddns-g`) for the `A` records for `awesomecat.com`.
 
