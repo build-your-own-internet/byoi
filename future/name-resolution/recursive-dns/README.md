@@ -1039,7 +1039,7 @@ In your first window, you should see A LOT of output in your `tcpdump`. Let's ta
 21:11:07.564677 IP 101.0.1.100.53 > 1.2.0.100.47301: 35603*- 2/0/3 NS rootdns-i.isc.org., NS rootdns-n.netnod.org. (123)
 ```
 
-**Resolver contacts Root DNS servers** `1.2.0.100` (`resolver-c`) sends a request (`>`) to `101.0.1.100` (`rootdns-n`) for the `NS` records for `.`, the root of all DNS. Then, `101.0.1.100` (`rootdns-n`) sends a reply back to `1.2.0.100` (`resolver-c`) providing the `NS` records for the root DNS servers.
+**Resolver contacts Root DNS servers** `1.2.0.100` (`resolver-c`) sends a request (`>`) to `101.0.1.100` (`rootdns-n`) for the `NS` records for `.`, the root of all DNS. Then, `101.0.1.100` (`rootdns-n`) sends a reply back to `1.2.0.100` (`resolver-c`) providing the `NS` records for the root DNS servers. Note the `35603` number in both the request and reponse lines. This is the "request-id", and it makes it easier for you to keep track of question-answer pairs. Sometimes you'll see DNS queries in large batches and it can be difficult to know what answer is for what question unless you pay attention to these ids!
 
 So, how did our recursive resolver know where to send these initial requests? Well, `resolver-c` knew the addresses for the root servers from a file called `/etc/unbound/root.hints`.
 
@@ -1091,7 +1091,8 @@ The next 3 lines are the responses back for the top-level domain DNS servers fro
 
 > 📝 NOTE: This `tcpdump` output is pretty minimal and the response output don't look like they contain any real information about the DNS protocol. If you want, you can re-run the `tcpdump` command in "verbose" mode (`tcpdump -nvvv`)  to show much more information about what is happening with DNS. **Be prepared to be overwhelmed** with output though. But, just as an example, the "verbose" version of the above query looks like this:
 
-```unset
+<!-- TODO: missing first line of output here -->
+```bash
      1.2.0.100.55412 > 100.0.1.100.53: [bad udp cksum 0x6703 -> 0xfd51!] 51452% [1au] A? com. ar: . OPT UDPsize=1232 DO (32)
 19:57:57.158747 IP (tos 0x0, ttl 64, id 53689, offset 0, flags [none], proto UDP (17), length 60)
     1.2.0.100.41868 > 100.0.1.100.53: [bad udp cksum 0x6703 -> 0xdda6!] 6794% [1au] A? org. ar: . OPT UDPsize=1232 DO (32)
@@ -1101,49 +1102,98 @@ The next 3 lines are the responses back for the top-level domain DNS servers fro
     100.0.1.100.53 > 1.2.0.100.41868: [bad udp cksum 0x6731 -> 0xec01!] 6794- q: A? org. 0/1/2 ns: org. [1d] NS tlddns-n.netnod.org. ar: tlddns-n.netnod.org. [1d] A 101.0.1.101, . OPT UDPsize=1232 DO (78)
 ```
 
-Okay, so what happens next?
-<!-- TODO ENDED HERE KINDA -->
-
 ```bash
 21:11:07.567766 IP 1.2.0.100.63263 > 8.2.0.100.53: 3546% [1au] A? awesomecat.com. (43)
 ```
 
-**A thing happens here**
-
-`1.2.0.100` (`resolver-c`) sends a request to `8.2.0.100` (`tlddns-g`) for the `A` records for `awesomecat.com`.
+**Ask the .com TLD server for awesomecat's authoritative server**. `resolver-c` sends a request to `8.2.0.100` (`tlddns-g`) for the `A` records for `awesomecat.com`.
 
 ```bash
 21:11:07.568250 IP 1.2.0.100.64823 > 8.2.0.100.53: 5986% [1au] A? google.com. (39)
 ```
 
-When `resolver-c` learned about the `com` TLD, it received an `NS` record that pointed it to `tlddns-g.google.com`. The glue records for `tlddns-g.google.com` were included in the response, but our resolver is a diligent machine. It wants verify that the glue records were correct and it wants to learn everything it can about the domains it's given. So, it's gonna go ahead and fire off a request to gather the `A` records for `google.com` while it's at it.
+**Double-check the information about the google top-level domain** When `resolver-c` learned about the `com` TLD, it received an `NS` record that pointed it to `tlddns-g.google.com`. The glue records for `tlddns-g.google.com` were included in the response, but our resolver is a diligent machine. It wants verify that the glue records were correct and it wants to learn everything it can about the domains it's given. So, it's gonna go ahead and fire off a request to gather the `A` records for `google.com` while it's at it. This request is **not** directly related to resolving `www.awesomecat.com`.
 
-There are more requests that are not directly tied to resolving `www.awesomecat.com`. Instead of including those in the line by line analysis, they're gonna be in a block at the end. That way they can still be documented to see the work the resolver is doing without detracting from this analysis.
+There are more requests that are not directly tied to resolving `www.awesomecat.com`. Instead of including those in the line-by-line analysis, if you're curious about them, take a peek at [the appendix at the end of this chapter](#appendix). That way they can still be documented to see the work the resolver is doing without detracting from this analysis. Let's move on to the next important bit in resolving `www.awesomecat.com`!
 
 ```bash
 21:11:07.568496 IP 8.2.0.100.53 > 1.2.0.100.63263: 3546- 0/1/2 (93)
 21:11:07.568758 IP 8.2.0.100.53 > 1.2.0.100.64823: 5986- 0/1/2 (89)
 ```
 
-`8.2.0.100` (`tlddns-g`) responds back to the queries `1.2.0.100` (`resolver-c`) just made. In each of these lines, you'll see a request ID: `3546` and `5986`. If you check the previous requests coming from `resolver-c`, you can find the corresponding request ID. Again, from our exercises above, we can surmise that response `3546` tells our intrepid resolver that the authoritative DNS server for `awesomecat.com` is `authoritative-a.aws.com` AND it provides the IP address for that server.
+**Response from the google TLD server for the last several queries** `8.2.0.100` (`tlddns-g`) responds back to the queries `resolver-c` just made. In each of these lines, you'll see a request ID: (e.g. `3546` and `5986`, these will probably be different for you). If you check the previous requests coming from `resolver-c`, you can find the corresponding request ID. The actual information contained in these responses is not visible from these tcpdump lines. We have to surmise that response `3546` tells our intrepid resolver that the authoritative DNS server for `awesomecat.com` is `authoritative-a.aws.com` AND it provides the IP address for that server. If you want to be _sure_ about this, you can re-run the `tcpdump` command in verbose mode as described above.
 
 ```bash
 21:11:07.571062 IP 1.2.0.100.17366 > 4.1.0.100.53: 30044% [1au] A? www.awesomecat.com. (47)
 ```
 
-`1.2.0.100` (`resolver-c`) sends a request to `4.1.0.100` (`authoritative-a`) for the `A` records for `www.awesomecat.com`. Remember, `resolver-c` learned about the IP address for the authoritative server for `awesomecat.com` in request `3546` above.
+**Final request to the authoritative server** `resolver-c` **finally** sends a request to `4.1.0.100` (`authoritative-a`) for the `A` records for `www.awesomecat.com`. Remember, `resolver-c` learned about the IP address for the authoritative server for `awesomecat.com` in the response to `3546` above.
 
 ```bash
 21:11:07.571741 IP 4.1.0.100.53 > 1.2.0.100.17366: 30044*- 1/0/1 A 4.2.0.11 (63)
 ```
 
-HERE IT IS! `4.1.0.100` (`authoritative-a`) responds to `1.2.0.100` (`resolver-c`) with the `A` record (IPv4 address) for `www.awesomecat.com`.
+**THE ANSWER WE HAVE BEEN WAITING FOR** HERE IT IS! `4.1.0.100` (`authoritative-a`) responds to `resolver-c` with the `A` record for `www.awesomecat.com`.
 
 ```bash
 21:11:07.572238 IP 1.2.0.100.53 > 1.1.0.200.48600: 48085 1/0/1 A 4.2.0.11 (63)
 ```
 
-`1.2.0.100` (`resolver-c`) finishes up the process by responding to `1.2.0.100` (`client-c1`) initial request with the `A` record for `www.awesomecat.com`.
+**Pass the DNS response back to the client** Remember, `resolver-c` is doing all this work on behalf of `client-c1`, which started the ball rolling. `resolver-c` needs to finish up the process by responding to the initial request that `client-c1` (`1.2.0.100`) made with the `A` record for `www.awesomecat.com`.
+
+That's it! What we just looked at should have felt pretty familiar in comparison to the `dig` exercise [we did at the beginning of the chapter](#the-process-a-recursive-dns-lookup-in-slow-motion). We saw the resolver make increasingly specific requests until it received a final response to its DNS query and responded back to the client.
+
+## 3. Give you some exercises in which you can play around with DNS on your own
+
+Now that we've built out some of the infrastructure together, let's take a stab at adding a few more elements to this toy internet. First, we'd like to bring your attention to a new network, "RIPE":
+
+![Network map including the RIPE network](./final-exercises.svg)
+
+So now we're going to have you do a couple more exercises to make sure you have enough practice configuring DNS-related software. To that end, we have a **new** rootdns and a **new** resolver. Your task is to configure them so they function correctly in our toy internet! In each case, it would be helpful to go check (and potentially copy) the config files for similar machines on our internet.
+
+<!-- TODO WE DONE STOPPED HERE -->
+
+### Configure the resolver
+
+We looked briefly at the software `unbound` and how it makes recursive requests to resolve DNS queries. But... how does it even know where to start? Every recursive resolver software, including `unbound`, uses a file called `root.hints` that tells it what the names and IP addresses of the root servers are. When it has no idea where to go to request information about a name, it will start by talking to one of the root servers.
+
+Your task for this configuration is the following:
+
+- `hopon` one of the other recursive resolvers (e.g. `resolver-g`) and examine the config files for unbound
+  - `/etc/unbound/unbound.conf`
+  - `/etc/unbound/root.hints`
+- duplicate the configuration on `resolver-r` including the `root.hints` file
+- tell `unbound` to load the config changes (`kill -HUP <process-id>`)
+- configure the nameserver for each machine on the Ripe network (the `resolv.conf` file) to point at the new `resolver-r` address `103.0.1.101`
+
+Once you've got your resolver correctly configured, test it out!
+
+- `dig resolver-g.google.com`
+- `dig client-c1.comcast.com`
+- `dig rootdns-n.netnod.org`
+- `dig tlddns-v.verisign.org`
+
+### Configure the Root DNS server
+
+We've added a TLD server, but we can go even deeper on our toy internet. For your next exercise, build out a root DNS server!
+
+Start by looking at the `knot` config and zonefiles for one of the other root servers (e.g. `rootdns-i`). Mimic that setup on `rootdns-r`. You'll need to tell `knot` to reload the config files once you've got them on the server. Test that `rootdns-r` can point requests to the correct TLD with `dig @103.0.1.100 com.`. 
+
+Once you know you've got `rootdns-r` setup correctly and working, make sure you go back to each of the other root DNS servers and add the entry for `rootdns-r` to it. You'll also need to update the `root.hints` files for each resolver on the toy internet. Remember to tell the software to reload the configs on each machine you touch!
+
+### Answer Section
+
+If you got stuck figuring out any of our challenges, this is the section where we provide more detail.
+
+Final .meow configuration for various names
+
+#### Reset Unbound
+
+When a client makes a DNS request, the recursive resolver that it points to is the one responsible for actually finding the DNS records. If you look at the network map, the resolver that lives in each network will be the recursive resolver for that network. So, if we need to reset the cache for queries client-c1 is making, you would need to `hopon recursive-c`.
+
+## Appendix
+
+What about all those extra queries that `resolver-c` makes?
 
 ```bash
 21:11:07.568907 IP 1.2.0.100.38858 > 101.0.1.101.53: 27609% [1au] A? isc.org. (36)
@@ -1191,49 +1241,3 @@ HERE IT IS! `4.1.0.100` (`authoritative-a`) responds to `1.2.0.100` (`resolver-c
 Dear lord... `resolver-c` just wants to know everything abou the internet. Each of these packets is part of `resolver-c` attempting to either learn about domains that were tangentially related to its attempt to resolve `www.awesomecat.com`. Plus there's some ARP request to learn about `router-c3` there at the end.
 
 Now that we've gone through reading the basic `tcpdump` output, we encourage the reader to go back through this exercise again, this time running `tcpdump -nvv` to get the verbose output. See if you can read what's happening with each request when you get even more information!
-
-## 3. Give you some exercises in which you can play around with DNS on your own
-
-Now that we've built out some of the infrastructure together, take a stab at adding a few more elements to this toy internet. We've added a new network, RIPE, to our network map.
-
-![Network map including the RIPE network](./final-exercises.svg)
-
-Configure the rootdns and resolver in the RIPE network to do the jobs we've assigned to them! In each case, it would be helpful to go check (and potentially copy) the config files for similar machines on our internet.
-
-### Configure the resolver
-
-We looked briefly at the software `unbound` and how it makes recursive requests to resolve DNS queries. But... how does it even know where to start? Every recursive resolver software, including `unbound`, uses a file called `root.hints` that tells it what the names and IP addresses of the root servers are. When it has no idea where to go to request information about a name, it will start by talking to one of the root servers.
-
-Your task for this configuration is the following:
-
-- `hopon` one of the other recursive resolvers (e.g. `resolver-g`) and examine the config files for unbound
-  - `/etc/unbound/unbound.conf`
-  - `/etc/unbound/root.hints`
-- duplicate the configuration on `resolver-r` including the `root.hints` file
-- tell `unbound` to load the config changes (`kill -HUP <process-id>`)
-- configure the nameserver for each machine on the Ripe network (the `resolv.conf` file) to point at the new `resolver-r` address `103.0.1.101`
-
-Once you've got your resolver correctly configured, test it out!
-
-- `dig resolver-g.google.com`
-- `dig client-c1.comcast.com`
-- `dig rootdns-n.netnod.org`
-- `dig tlddns-v.verisign.org`
-
-### Configure the Root DNS server
-
-We've added a TLD server, but we can go even deeper on our toy internet. For your next exercise, build out a root DNS server!
-
-Start by looking at the `knot` config and zonefiles for one of the other root servers (e.g. `rootdns-i`). Mimic that setup on `rootdns-r`. You'll need to tell `knot` to reload the config files once you've got them on the server. Test that `rootdns-r` can point requests to the correct TLD with `dig @103.0.1.100 com.`. 
-
-Once you know you've got `rootdns-r` setup correctly and working, make sure you go back to each of the other root DNS servers and add the entry for `rootdns-r` to it. You'll also need to update the `root.hints` files for each resolver on the toy internet. Remember to tell the software to reload the configs on each machine you touch!
-
-### Answer Section
-
-If you got stuck figuring out any of our challenges, this is the section where we provide more detail.
-
-Final .meow configuration for various names
-
-#### Reset Unbound
-
-When a client makes a DNS request, the recursive resolver that it points to is the one responsible for actually finding the DNS records. If you look at the network map, the resolver that lives in each network will be the recursive resolver for that network. So, if we need to reset the cache for queries client-c1 is making, you would need to `hopon recursive-c`.
