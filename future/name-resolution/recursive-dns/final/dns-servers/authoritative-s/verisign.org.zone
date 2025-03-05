@@ -1,0 +1,15 @@
+$ORIGIN verisign.org.
+@       IN SOA (
+                host-dns.verisign.org.   ; MNAME
+                admin.verisign.org.      ; RNAME
+                2024041501               ; serial
+                3600                     ; refresh (1 hour)
+                900                      ; retry (15 minutes)
+                604800                   ; expire (1 week)
+                86400                    ; minimum (1 day)
+                )
+
+v4-2-8        IN A    2.8.0.4
+v4-102        IN A    102.0.1.4
+
+tlddns-v      IN A    102.0.1.100
