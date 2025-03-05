@@ -553,9 +553,11 @@ authoritative-a.aws.com.           IN A   4.1.0.100
 authoritative-s.supercorp.com.     IN A   9.1.0.100
 ```
 
-Glue records are A or AAAA [records](#understanding-the-record-types) that point to the IP address of another server that a resolver will need to query in order to continue the process of resolving a name.
+Glue records are A or AAAA [records](#understanding-the-record-types) that point to the IP address of another server that a resolver will need to query in order to continue the process of resolving a name. That means, in this example, that while everything under the comcast label is pointed to `authoritative-s.supercorp.com`, the resolver does not need to do an additional lookup on `authoritative-s.supercorp.com` to continue resolving `www.comcast.com`. It can use the "glue record" provided to know it can send its next query to `9.1.0.100` immediately. Glue records are populated in our dig output in the ADDITIONAL section that we looked at previously.
 
-<!-- TODO: POTENTIAL ASIDE HERE FOR TALKING ABOUT DNS BAILIWICK -->
+In other words, if the resolver asks the TLD server "where is `www.awesomecat.com`?", and the TLD server says, "Oh, that name can be resolved by the DNS server called `dns.amazon.com`.", that's not super helpful to the resolver. In this case, the resolver would then need to then ask the TLD DNS server, "Okay, dude, but now I need to go talk to `dns.amazon.com`, and I now need **its** IP address. So what's that"?
+
+A more efficient response from be TLD DNS server would be, "Yeah, that can be resolved by `dns.amazon.com`, and by the way, the IP address of `dns.amazon.com` (since I know you're gonna need it), is `X.X.X.X`."
 
 ##### Configure the TLD server
 
@@ -743,9 +745,7 @@ Let's talk a little bit about _caching_. Caching is actually a really common pro
 
 So, if we know that the issue is caching, which machine do you think might be caching the DNS response from earlier? Which machine is responsible for persisting in making queries until we have a DNS response?
 
-When you figure out which machine you need to reset, you'll need to reset the resolving software. We picked a software called `unbound`. You'll use the same trick we just used with `knot`, namely, run `kill -HUP` on the process ID for unbound.
-
-If you're not sure which machine to go to, check the [super secret answer section](#reset-unbound) below.
+When a client makes a DNS request, the recursive resolver that it points to is the one responsible for actually finding the DNS records. If you look at the network map, the resolver that lives in each network will be the recursive resolver for that network. So, if we need to reset the cache for queries client-c1 is making, you would need to `hopon recursive-c`.
 
 #### Add a new Top-level Domain (TLD)
 
@@ -1091,15 +1091,15 @@ The next 3 lines are the responses back for the top-level domain DNS servers fro
 
 > 📝 NOTE: This `tcpdump` output is pretty minimal and the response output don't look like they contain any real information about the DNS protocol. If you want, you can re-run the `tcpdump` command in "verbose" mode (`tcpdump -nvvv`)  to show much more information about what is happening with DNS. **Be prepared to be overwhelmed** with output though. But, just as an example, the "verbose" version of the above query looks like this:
 
-<!-- TODO: missing first line of output here -->
 ```bash
-     1.2.0.100.55412 > 100.0.1.100.53: [bad udp cksum 0x6703 -> 0xfd51!] 51452% [1au] A? com. ar: . OPT UDPsize=1232 DO (32)
-19:57:57.158747 IP (tos 0x0, ttl 64, id 53689, offset 0, flags [none], proto UDP (17), length 60)
-    1.2.0.100.41868 > 100.0.1.100.53: [bad udp cksum 0x6703 -> 0xdda6!] 6794% [1au] A? org. ar: . OPT UDPsize=1232 DO (32)
-19:57:57.158881 IP (tos 0x0, ttl 60, id 34090, offset 0, flags [none], proto UDP (17), length 106)
-    100.0.1.100.53 > 1.2.0.100.55412: [bad udp cksum 0x6731 -> 0x0721!] 51452- q: A? com. 0/1/2 ns: com. [1d] NS tlddns-g.google.com. ar: tlddns-g.google.com. [1d] A 8.2.0.100, . OPT UDPsize=1232 DO (78)
-19:57:57.158881 IP (tos 0x0, ttl 60, id 34089, offset 0, flags [none], proto UDP (17), length 106)
-    100.0.1.100.53 > 1.2.0.100.41868: [bad udp cksum 0x6731 -> 0xec01!] 6794- q: A? org. 0/1/2 ns: org. [1d] NS tlddns-n.netnod.org. ar: tlddns-n.netnod.org. [1d] A 101.0.1.101, . OPT UDPsize=1232 DO (78)
+19:31:48.229725 IP (tos 0x0, ttl 64, id 35477, offset 0, flags [none], proto UDP (17), length 60)
+    1.2.0.100.33259 > 100.0.1.100.53: [bad udp cksum 0x6703 -> 0xb897!] 25664% [1au] A? com. ar: . OPT UDPsize=1232 DO (32)
+19:31:48.229929 IP (tos 0x0, ttl 64, id 4300, offset 0, flags [none], proto UDP (17), length 60)
+    1.2.0.100.11023 > 101.0.1.100.53: [bad udp cksum 0x6803 -> 0x87ca!] 59363% [1au] A? org. ar: . OPT UDPsize=1232 DO (32)
+19:31:48.230116 IP (tos 0x0, ttl 60, id 6184, offset 0, flags [none], proto UDP (17), length 106)
+    100.0.1.100.53 > 1.2.0.100.33259: [bad udp cksum 0x6731 -> 0xc266!] 25664- q: A? com. 0/1/2 ns: com. [1d] NS tlddns-g.google.com. ar: tlddns-g.google.com. [1d] A 8.2.0.100, . OPT UDPsize=1232 DO (78)
+19:31:48.230224 IP (tos 0x0, ttl 60, id 7415, offset 0, flags [none], proto UDP (17), length 106)
+    101.0.1.100.53 > 1.2.0.100.11023: [bad udp cksum 0x6831 -> 0x9625!] 59363- q: A? org. 0/1/2 ns: org. [1d] NS tlddns-n.netnod.org. ar: tlddns-n.netnod.org. [1d] A 101.0.1.101, . OPT UDPsize=1232 DO (78)
 ```
 
 ```bash
@@ -1151,22 +1151,22 @@ Now that we've built out some of the infrastructure together, let's take a stab 
 
 So now we're going to have you do a couple more exercises to make sure you have enough practice configuring DNS-related software. To that end, we have a **new** rootdns and a **new** resolver. Your task is to configure them so they function correctly in our toy internet! In each case, it would be helpful to go check (and potentially copy) the config files for similar machines on our internet.
 
-<!-- TODO WE DONE STOPPED HERE -->
-
 ### Configure the resolver
 
-We looked briefly at the software `unbound` and how it makes recursive requests to resolve DNS queries. But... how does it even know where to start? Every recursive resolver software, including `unbound`, uses a file called `root.hints` that tells it what the names and IP addresses of the root servers are. When it has no idea where to go to request information about a name, it will start by talking to one of the root servers.
+We looked briefly at the software `unbound` and how it makes recursive requests to resolve DNS queries. But... how does it even know where to start?
+
+Every recursive resolver software, including `unbound`, uses a file called `root.hints` that tells it where the root servers are. When it has no idea where to go to request information about a name, it will start by talking to one of the root servers it finds in this file.
 
 Your task for this configuration is the following:
 
-- `hopon` one of the other recursive resolvers (e.g. `resolver-g`) and examine the config files for unbound
+- `hopon` one of the already-configured recursive resolvers (e.g. `resolver-g`) and examine the config files for unbound
   - `/etc/unbound/unbound.conf`
   - `/etc/unbound/root.hints`
 - duplicate the configuration on `resolver-r` including the `root.hints` file
 - tell `unbound` to load the config changes (`kill -HUP <process-id>`)
-- configure the nameserver for each machine on the Ripe network (the `resolv.conf` file) to point at the new `resolver-r` address `103.0.1.101`
+- configure the nameserver for all three machines on the RIPE network (i.e. update the `resolv.conf` file) to point at the new `resolver-r` address `103.0.1.101`
 
-Once you've got your resolver correctly configured, test it out!
+Once you've got your resolver correctly configured, test it out from one of the machines on the RIPE network!
 
 - `dig resolver-g.google.com`
 - `dig client-c1.comcast.com`
@@ -1175,25 +1175,92 @@ Once you've got your resolver correctly configured, test it out!
 
 ### Configure the Root DNS server
 
-We've added a TLD server, but we can go even deeper on our toy internet. For your next exercise, build out a root DNS server!
+We've [added a TLD server](#configure-the-tld-server), but we can go even deeper on our toy internet. For your next exercise, build out a root DNS server!
 
-Start by looking at the `knot` config and zonefiles for one of the other root servers (e.g. `rootdns-i`). Mimic that setup on `rootdns-r`. You'll need to tell `knot` to reload the config files once you've got them on the server. Test that `rootdns-r` can point requests to the correct TLD with `dig @103.0.1.100 com.`. 
+Start by looking at the `knot` config and zonefiles for one of the other root servers (e.g. `rootdns-i`). Mimic that setup on `rootdns-r`. You'll need to tell `knot` to reload the config files once you've got them on the server. Test that `rootdns-r` can point requests to the correct TLD with (for example):
 
-Once you know you've got `rootdns-r` setup correctly and working, make sure you go back to each of the other root DNS servers and add the entry for `rootdns-r` to it. You'll also need to update the `root.hints` files for each resolver on the toy internet. Remember to tell the software to reload the configs on each machine you touch!
+```bash
+root@router-r4:/# dig @103.0.1.100 com.
+```
 
-### Answer Section
+Once you know you've got `rootdns-r` set up correctly and working:
 
-If you got stuck figuring out any of our challenges, this is the section where we provide more detail.
-
-Final .meow configuration for various names
-
-#### Reset Unbound
-
-When a client makes a DNS request, the recursive resolver that it points to is the one responsible for actually finding the DNS records. If you look at the network map, the resolver that lives in each network will be the recursive resolver for that network. So, if we need to reset the cache for queries client-c1 is making, you would need to `hopon recursive-c`.
+- add the entry for `rootdns-r` to each already-configured root-dns server.
+- update the `root.hints` files for each resolver on the toy internet.
+- use the `kill -HUP <process-id>` to tell the software to reload the configs on each machine you touch!
 
 ## Appendix
 
-What about all those extra queries that `resolver-c` makes?
+### Why are there so many zones in an authoritative DNS server's config?
+
+If we hopon `authoritative-a` and take a look at the `/config/knot.conf` file, we see there are three `aws` zone files: `.net`, `.com`, and `.org`.
+
+```bash
+root@authoritative-a:/# cat /config/knot.conf
+# Define the server options
+server:
+  listen: 4.1.0.100@53
+
+# Define the zone
+zone:
+  - domain: aws.com
+    file: "/etc/knot/aws.com.zone"
+    storage: "/var/lib/knot"
+  - domain: aws.net
+    file: "/etc/knot/aws.net.zone"
+    storage: "/var/lib/knot"
+  - domain: aws.org
+    file: "/etc/knot/aws.org.zone"
+    storage: "/var/lib/knot"
+  - domain: google.com
+    file: "/etc/knot/google.com.zone"
+    storage: "/var/lib/knot"
+  - domain: isc.org
+    file: "/etc/knot/isc.org.zone"
+    storage: "/var/lib/knot"
+  - domain: ripe.org
+    file: "/etc/knot/ripe.org.zone"
+    storage: "/var/lib/knot"
+  - domain: zayo.net
+    file: "/etc/knot/zayo.net.zone"
+    storage: "/var/lib/knot"
+```
+
+If we then take a look at the `/etc/knot/aws.net.zone` file, we see the following:
+
+```bash
+root@authoritative-a:/# cat /etc/knot/aws.net.zone
+$ORIGIN aws.net.
+@       IN SOA (
+                host-dns.aws.net.       ; MNAME
+                admin.aws.net.          ; RNAME
+                2024041501              ; serial
+                3600                    ; refresh (1 hour)
+                900                     ; retry (15 minutes)
+                604800                  ; expire (1 week)
+                86400                   ; minimum (1 day)
+                )
+
+authoritative-a     IN A    4.1.0.100
+```
+
+This is a very bare-bones config, which also happens to be nearly identical with `/etc/knot/aws.org.zone`. Specifically, all it has is an entry for `authoritative-a` itself.
+
+What is the purpose of each of these zone files? Why not just put everything under `.com`? Let's take a look at the problem. If we look at the `.org` TLD zone file on `tlddns-n`, we'll see an entry for `isc` that looks like this:
+
+```bash
+isc         IN NS  authoritative-a.aws.org.
+```
+
+As a reminder, this line is telling our recursive resolver to point queries for any name within `isc.org` to the `authoritative-a` server. There are a number of ways that we can refer to `authoritative-a`. For example, we could call it `authoritative-a.aws.com`. We have also registered other names for this server: `authoritative-a.aws.org` and `authoritative-a.aws.net`. For the purposes of adding entries into zone files, the TLD of the server you're pointing to has to match the TLD of the domain that you're registering, e.g. `isc.org` is in the `org` TLD, so in order to use glue records to speed up the lookup process, it's necessary to point this to `authoritative-a.aws.org` and not a different name for that server.
+
+Let's revisit what glue records do. These records point to the next server that resolvers need to use for the next step in name resolution without the need to do an **additional** DNS lookup just to find the IP address of that authoritative server. In other words, glue records populate the "additional records" fields in our dig queries which the resolver can use for the next step in name resolution.
+
+The problem is that in DNS, there is the concept of "zone of responsibility" or "bailiwick." This refers to a policy that says "you cannot use glue records for a name with a different TLD (or higher-level label)." So, in our example here, a request for "isc.org" would not get the glue records when we pointed isc to `authoritative-a.aws.com` as the authoritative server. Obviously, the resolver can still do the DNS lookup for `authoritative-a.aws.com`, but that takes more requests and is less efficient.
+
+So what's the purpose of all these extra zone files, like `aws.net.zone`? We need to create DNS entries for our authoritative servers for each of the TLDs that this server is authoritative for on our Internet. Since `authoritative-a` is able to be authoritative for all these top-level domains, it needs a name for itself on each of those domains. If you hop on each of the TLD servers on our internet, you'll see there's an `aws` glue record that matches the name of the TLD server you're on.
+
+### What about all those extra queries that `resolver-c` makes?
 
 ```bash
 21:11:07.568907 IP 1.2.0.100.38858 > 101.0.1.101.53: 27609% [1au] A? isc.org. (36)
