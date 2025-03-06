@@ -41,11 +41,11 @@ But why go through all this process? Why don't we just have those root servers a
 
 ### The Hardware
 
-Before we can look at the process, we need to learn a little bit about the specific machines involved in DNS. We'll use a [new network map](./how-to-read-a-network-map.md) with a few new machines defined on it:
+Before we can look at the process, we need to learn a little bit about the specific machines involved in DNS. We'll use a new network map with a few new machines defined on it:
 
-![large internet with DNS infrastructure](../../../img/network-maps/recursive-dns-explanation/simplified-dns-map-1.svg)
+![large internet with DNS infrastructure](../../img/network-maps/recursive-dns.svg)
 
-Let's briefly break down what we're seeing in this network map. If you haven't already, it would behoove you to read over [How to Read a Network Map](./how-to-read-a-network-map.md) before continuing this section.
+Let's briefly break down what we're seeing in this network map. If you haven't already, it would behoove you to read over [How to Read a Network Map](../../appendix/how-to-read-a-network-map.md) before continuing this section.
 
 One major thing we added to this map is that the internet is made up of networks of networks. But the networks aren't necessarily a single prefix. Within a network, the owner can break up it's IP addresses however they want. So this network map shows that the internet knows about Comcast, for example, as a network. But within Comcast, they've broken up their larger prefixes. This bit is largely irrelevant to this discussion, but we wanted to call that out to avoid confusion!
 
@@ -64,17 +64,17 @@ _**NOTE** For the purposes of this explanation, we're going to ignore that cachi
 
 First. Let’s just define the actual goal of what we’re trying to accomplish. Using the network map above, we're going to pretend we're sitting on a client machine.
 
-![large internet with DNS infrastructure with a pointer to the client machine](../../../img/network-maps/recursive-dns-explanation/simplified-dns-map-1.svg)
+<img src="../../img/network-maps/recursive-dns-explanation/simplified-dns-map-1.svg" alt="large internet with DNS infrastructure with a pointer to the client machine" width="750"/>
 
 Now, the user on this machine really wants to go visit `www.awesomecat.com`. Before the user can revel in GIFs and shorts of cats being awesome in the world, they need to resolve `www.awesomecat.com` to an IP address. The first thing this machine is going to do is send a request to their ISP's (Comcast in this case) recursive resolver.
 
-![large internet with DNS infrastructure with the path between the client machine and the recursive resolver highlighted](../../../img/network-maps/recursive-dns-explanation/simplified-dns-map-2.svg)
+<img src="../../img/network-maps/recursive-dns-explanation/simplified-dns-map-2.svg" alt="large internet with DNS infrastructure with the path between the client machine and the recursive resolver highlighted" width="750"/>
 
 The recursive resolver's job is to keep asking questions about what the DNS records are for a name until it gets a final answer. It will continue to initiate new requests until it either receives a response with the DNS records it was looking for or it receives an error. Only then will it respond back to the client.
 
 So, what's the first thing it needs to do? It doesn't know what server on the internet might know about `www.awesomecat.com`. Fortunately, every resolver comes installed with a file called [root.hints](https://www.internic.net/domain/named.root). This file provides the resolver the IP addresses of ALL of the root servers around the world. Since, for this explanation, we're ignoring the cache, the only thing the resolver knows about on the internet are those root servers. It will start by firing off a request to the Root DNS servers, asking them what the IP address is for `www.awesomecat.com`.
 
-![large internet with DNS infrastructure with the path between the recursive resolver and the root DNS servers highlighted](../../../img/network-maps/recursive-dns-explanation/simplified-dns-map-3.svg)
+<img src="../../img/network-maps/recursive-dns-explanation/simplified-dns-map-3.svg" alt="large internet with DNS infrastructure with the path between the recursive resolver and the root DNS servers highlighted" width="750"/>
 
 The role of the Root DNS server on The Internet is simple. All they do is tell the resolver which Top Level Domain (TLD) servers to go to. Root DNS servers don't know all the DNS records for every domain on the internet. That would be way too many requests and waaaaaaaay too many domain names! What they do know is where the next step to find those answers lives.
 
@@ -82,17 +82,17 @@ Let's look at the domain we're attempting to lookup again: `www.awesomecat.com`.
 
 Our resolver receives the response back from the Root server, and it recognizes that this is not the final answer it's looking for. But! It also sees that it now has IP addresses of another server that has more information about the domain it's attempting to look up! So, our stalwart resolver fires off requests to the `COM` TLD servers.
 
-![large internet with DNS infrastructure with the path between the recursive resolver and the COM TLD server highlighted](../../../img/network-maps/recursive-dns-explanation/simplified-dns-map-4.svg)
+<img src="../../img/network-maps/recursive-dns-explanation/simplified-dns-map-4.svg" alt="large internet with DNS infrastructure with the path between the recursive resolver and the COM TLD server highlighted" width="750"/>
 
 Much like the Root DNS server, our TLD servers see way too much traffic to be able to provide answers to every DNS query that hits them. Instead, they too delegate.
 
-When `www.awesomecat.com` was created, a new record was added to the the `COM` TLD servers that instructed them to point any queries for any sub-domain under the `awesomecat.com` apex to a specific Authoritative DNS server. All over the internet, there are Authoritative DNS servers, servers that are responsible for providing answers to DNS queries for the names they know about.
+When `www.awesomecat.com` was created, a new record was added to the the `com.` TLD servers that instructed them to point any queries for any sub-domain under the `awesomecat.com` apex to a specific Authoritative DNS server. All over the internet, there are Authoritative DNS servers, servers that are responsible for providing answers to DNS queries for the names they know about.
 
-So in the story of our little resolver trying to find the IP address for `www.awesomecat.com`, it sent a request to the TLD server for `COM`, but it got another brush off. It was told that it needs to go ask the Authoritative DNS server for `awesomecat.com`.
+So in the story of our little resolver trying to find the IP address for `www.awesomecat.com`, it sent a request to the TLD server for `com.`, but it got another brush off. It was told that it needs to go ask the Authoritative DNS server for `awesomecat.com`.
 
 Our resolver receives that response, and undeterred, it initiates another new request, this time to the Authoritative server it just learned about.
 
-![large internet with DNS infrastructure with the path between the recursive resolver and the Authoritative DNS server highlighted](../../../img/network-maps/recursive-dns-explanation/simplified-dns-map-5.svg)
+<img src="../../img/network-maps/recursive-dns-explanation/simplified-dns-map-5.svg" alt="large internet with DNS infrastructure with the path between the recursive resolver and the Authoritative DNS server highlighted" width="750"/>
 
 The request lands on the Authoritative DNS server for this domain, and that server actually knows about the domain! It's able to send back an IP address for a server that knows how to handle queries for `www.awesomecat.com`!!!
 
@@ -100,7 +100,7 @@ The resolver receives the response, sees that it AT LAST has an IP address for `
 
 ### Let's See The Recursive DNS Lookup Happen Programmatically
 
-OK. That's all fine and good to see on our little internet, but what happens when this process is let loose in the real world? We can pretend that we are a stalwart resolver out on the internet, bound and determined to find an IP address for `www.awesomecat.com`. While we don't have a network map for you to follow along with, we can simulate this process using a command line tool called `dig`.
+OK. That's all fine and good to see on our little internet, but what happens when this process is let loose in the real world? We're going to step out of our toy internet for a moment and interact with the real internet. We can pretend that we are a stalwart resolver out on the internet, bound and determined to find an IP address for `www.awesomecat.com`. While we don't have a network map for you to follow along with, we can simulate this process using a command line tool called `dig`.
 
 #### Understanding the output of a `dig` command
 
@@ -229,7 +229,7 @@ Next, take a look at that `ANSWER` section. We see a list of 13 servers, each id
 
 Finally, that `ADDITIONAL` section. Here, we're getting both the IPv4 and the IPv6 addresses for each of the names for the Root servers! This speeds up the DNS resolution process because our resolver doesn't have to make a separate query to find the address of the next server it needs to talk to.
 
-OK, so now we know what our Root servers are, we want to ask them what they know about `www.awesomecat.com`. Let's run a dig that points that query to one of the name servers: `dig www.awesomecat.com @i.root-servers.net.`
+OK, so now we know what our Root servers are, we want to ask them what they know about `www.awesomecat.com`. Let's run a `dig` that points that query to one of the root name servers: `dig www.awesomecat.com @i.root-servers.net.`
 
 ```bash
 $ dig www.awesomecat.com @i.root-servers.net.
@@ -303,7 +303,7 @@ When we look at the `AUTHORITY` and `ADDITIONAL` sections, they look pretty simi
 
 PROGRESS!
 
-OK. Let's repeat that process, this time asking that TLD server `dig www.awesomecat.com @i.gtld-servers.net.`:
+OK. Let's repeat that process, this time asking one of the `com.` TLD servers `dig www.awesomecat.com @i.gtld-servers.net.`:
 
 ```bash
 $ dig www.awesomecat.com @i.gtld-servers.net.
@@ -388,7 +388,7 @@ Next, we're going to to play around in this system!
 
 This leads us to our map! If you need help understanding this map, check out our [appendix on how to read network maps](../../../appendix/how-to-read-a-network-map.md).
 
-![Network map of a large internetwork](./nr-recursive-dns.png)
+![Network map of a large internetwork](../../img/network-maps/recursive-dns.svg)
 
 You might recognize some of these new machines from our previous description on how recursive DNS works. See if you can find the machines that are part of the complete DNS infrastructure, including:
 
@@ -502,7 +502,7 @@ zone:
 
 The first thing to notice is that knot is only listening for requests that come in on IP address `8.2.0.100` on port `53`. This confirms what we saw on our `netstat` command above.
 
-Then we have a list of [zones](../../../chapters/glossary.md#dns-zone). In this config, there is only one zone: `com`. When this server receives a DNS request for a domain, it will check the next label of the name (`awesomecat`) against the file for that zone, `"/etc/knot/com.zone"`. If it finds the name in that file, it can send back the IP address for the server that is the authority over that next label. So let's take a look what currently exists in the `com` zonefile:
+Then we have a list of [zones](../../chapters/glossary.md#dns-zone). In this config, there is only one zone: `com`. When this server receives a DNS request for a domain, it will check the next label of the name (`awesomecat`) against the file for that zone, `"/etc/knot/com.zone"`. If it finds the name in that file, it can send back the IP address for the server that is the authority over that next label. So let's take a look what currently exists in the `com` zonefile:
 
 ```bash
 root@tlddns-g:/# cat /etc/knot/com.zone
@@ -544,7 +544,7 @@ aws             IN NS  authoritative-a.aws.com.
 google          IN NS  authoritative-a.aws.com.
 ```
 
-The type of record we see for `com.`, `comcast`, `supercorp`, etc are all [`NS` records](#understanding-the-record-types). This type of record tells [resolvers](../../../chapters/glossary.md#resolver) that we haven't reached the end of our query yet. Instead, the resolvers should query the next server indicated by the record, which will be the authority over the next label.
+The type of record we see for `com.`, `comcast`, `supercorp`, etc are all [`NS` records](#understanding-the-record-types). This type of record tells [resolvers](../../chapters/glossary.md#resolver) that we haven't reached the end of our query yet. Instead, the resolvers should query the next server indicated by the record, which will be the authority over the next label.
 
 If you look at `comcast`, for example, you'll see that it's pointing to `authoritative-s.supercorp.com.`, which you'll find in the Supercorp network of our network map. But, that name doesn't actually help the resolver make its query. The resolver still needs an IP address to know where to send it's next DNS query. A few lines below, we see the glue records for the authoritative servers on our toy internet:
 
@@ -1147,7 +1147,7 @@ That's it! What we just looked at should have felt pretty familiar in comparison
 
 Now that we've built out some of the infrastructure together, let's take a stab at adding a few more elements to this toy internet. First, we'd like to bring your attention to a new network, "RIPE":
 
-![Network map including the RIPE network](./final-exercises.svg)
+![Network map including the RIPE network](../../img/network-maps/recursive-dns-final-exercises.svg)
 
 So now we're going to have you do a couple more exercises to make sure you have enough practice configuring DNS-related software. To that end, we have a **new** rootdns and a **new** resolver. Your task is to configure them so they function correctly in our toy internet! In each case, it would be helpful to go check (and potentially copy) the config files for similar machines on our internet.
 

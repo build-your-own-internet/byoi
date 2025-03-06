@@ -5,4 +5,4 @@ set -o errexit
 bash $(dirname "$0")/meets-colima-requirements
 bash $(dirname "$0")/byoi-cleanup
 
-docker compose up --detach
+docker-compose up --detach
