@@ -388,7 +388,7 @@ Next, we're going to to play around in this system!
 
 This leads us to our map! If you need help understanding this map, check out our [appendix on how to read network maps](../../../appendix/how-to-read-a-network-map.md).
 
-![Network map of a large internetwork](./nr-recursive-dns.png)
+![Network map of a large internetwork](../../img/network-maps/recursive-dns.svg)
 
 You might recognize some of these new machines from our previous description on how recursive DNS works. See if you can find the machines that are part of the complete DNS infrastructure, including:
 
@@ -1147,7 +1147,7 @@ That's it! What we just looked at should have felt pretty familiar in comparison
 
 Now that we've built out some of the infrastructure together, let's take a stab at adding a few more elements to this toy internet. First, we'd like to bring your attention to a new network, "RIPE":
 
-![Network map including the RIPE network](./final-exercises.svg)
+![Network map including the RIPE network](../../img/network-maps/recursive-dns-final-exercises.svg)
 
 So now we're going to have you do a couple more exercises to make sure you have enough practice configuring DNS-related software. To that end, we have a **new** rootdns and a **new** resolver. Your task is to configure them so they function correctly in our toy internet! In each case, it would be helpful to go check (and potentially copy) the config files for similar machines on our internet.
 
