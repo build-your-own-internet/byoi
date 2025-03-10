@@ -1,5 +1,12 @@
 # BGP (Border Gateway Protocol)
 
+## Lots of stuff to learn
+
+- DHCP
+- RIP
+- OSPF
+- BGP
+
 ## Goal
 
 Let's simulate large scale internet entities and how they communicate routes between each other!
