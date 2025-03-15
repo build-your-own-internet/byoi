@@ -13,7 +13,7 @@ For this chapter, we want to build a single server that is responsible for knowi
 
 Let's look at the internet we'll be working with for this chapter:
 
-![our-inter-network](../../img/network-maps/basic-dns-internet.svg)
+![our-inter-network](../../img/network-maps/name-resolution/basic-dns-internet.svg)
 
 Notice that our internet now has a server called `DNS` at `2.0.0.107`. This server provides Authoritative DNS services for our internet. If you check the directory for this chapter, you'll see that there's a new Dockerfile entry: `Dockerfile_dns`. This Dockerfile builds its image from a base image that includes DNS server software called `knot`. To achieve our goal for this chapter, we will need to:
 

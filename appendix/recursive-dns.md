@@ -20,11 +20,11 @@ But why go through all this process? Why don't we just have those root servers a
 
 ## The Hardware
 
-Before we can look at the process, we need to learn a little bit about the specific machines involved in DNS. We'll use a [new network map](./how-to-read-a-network-map.md) with a few new machines defined on it:
+Before we can look at the process, we need to learn a little bit about the specific machines involved in DNS. We'll use a new network map with a few new machines defined on it:
 
-![large internet with DNS infrastructure](img/simplified-dns-map.svg)
+![large internet with DNS infrastructure](../img/network-maps/name-resolution/recursive-dns.svg)
 
-Let's briefly break down what we're seeing in this network map. If you haven't already, it would behoove you to read over [How to Read a Network Map](./how-to-read-a-network-map.md) before continuing this section.
+Let's briefly break down what we're seeing in this network map. If you haven't already, it would behoove you to read over [How to Read a Network Map](../../appendix/how-to-read-a-network-map.md) before continuing this section.
 
 One major thing we added to this map is that the internet is made up of networks of networks. But the networks aren't necessarily a single prefix. Within a network, the owner can break up it's IP addresses however they want. So this network map shows that the internet knows about Comcast, for example, as a network. But within Comcast, they've broken up their larger prefixes. This bit is largely irrelevant to this discussion, but we wanted to call that out to avoid confusion!
 
@@ -43,17 +43,17 @@ _**NOTE** For the purposes of this explanation, we're going to ignore that cachi
 
 First. Let’s just define the actual goal of what we’re trying to accomplish. Using the network map above, we're going to pretend we're sitting on a client machine.
 
-![large internet with DNS infrastructure with a pointer to the client machine](img/recursive-dns-explanation/simplified-dns-map-1.svg)
+<img src="../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-1.svg" alt="large internet with DNS infrastructure with a pointer to the client machine" width="750"/>
 
 Now, the user on this machine really wants to go visit `www.awesomecat.com`. Before the user can revel in GIFs and shorts of cats being awesome in the world, they need to resolve `www.awesomecat.com` to an IP address. The first thing this machine is going to do is send a request to their ISP's (Comcast in this case) recursive resolver.
 
-![large internet with DNS infrastructure with the path between the client machine and the recursive resolver highlighted](img/recursive-dns-explanation/simplified-dns-map-2.svg)
+<img src="../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-2.svg" alt="large internet with DNS infrastructure with the path between the client machine and the recursive resolver highlighted" width="750"/>
 
 The recursive resolver's job is to keep asking questions about what the DNS records are for a name until it gets a final answer. It will continue to initiate new requests until it either receives a response with the DNS records it was looking for or it receives an error. Only then will it respond back to the client.
 
 So, what's the first thing it needs to do? It doesn't know what server on the internet might know about `www.awesomecat.com`. Fortunately, every resolver comes installed with a file called [root.hints](https://www.internic.net/domain/named.root). This file provides the resolver the IP addresses of ALL of the root servers around the world. Since, for this explanation, we're ignoring the cache, the only thing the resolver knows about on the internet are those root servers. It will start by firing off a request to the Root DNS servers, asking them what the IP address is for `www.awesomecat.com`.
 
-![large internet with DNS infrastructure with the path between the recursive resolver and the root DNS servers highlighted](img/recursive-dns-explanation/simplified-dns-map-3.svg)
+<img src="../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-3.svg" alt="large internet with DNS infrastructure with the path between the recursive resolver and the root DNS servers highlighted" width="750"/>
 
 The role of the Root DNS server on The Internet is simple. All they do is tell the resolver which Top Level Domain (TLD) servers to go to. Root DNS servers don't know all the DNS records for every domain on the internet. That would be way too many requests and waaaaaaaay too many domain names! What they do know is where the next step to find those answers lives.
 
@@ -61,17 +61,17 @@ Let's look at the domain we're attempting to lookup again: `www.awesomecat.com`.
 
 Our resolver receives the response back from the Root server, and it recognizes that this is not the final answer it's looking for. But! It also sees that it now has IP addresses of another server that has more information about the domain it's attempting to look up! So, our stalwart resolver fires off requests to the `COM` TLD servers.
 
-![large internet with DNS infrastructure with the path between the recursive resolver and the COM TLD server highlighted](img/recursive-dns-explanation/simplified-dns-map-4.svg)
+<img src="../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-4.svg" alt="large internet with DNS infrastructure with the path between the recursive resolver and the COM TLD server highlighted" width="750"/>
 
 Much like the Root DNS server, our TLD servers see way too much traffic to be able to provide answers to every DNS query that hits them. Instead, they too delegate.
 
-When `www.awesomecat.com` was created, a new record was added to the the `COM` TLD servers that instructed them to point any queries for any sub-domain under the `awesomecat.com` apex to a specific Authoritative DNS server. All over the internet, there are Authoritative DNS servers, servers that are responsible for providing answers to DNS queries for the names they know about.
+When `www.awesomecat.com` was created, a new record was added to the the `com.` TLD servers that instructed them to point any queries for any sub-domain under the `awesomecat.com` apex to a specific Authoritative DNS server. All over the internet, there are Authoritative DNS servers, servers that are responsible for providing answers to DNS queries for the names they know about.
 
-So in the story of our little resolver trying to find the IP address for `www.awesomecat.com`, it sent a request to the TLD server for `COM`, but it got another brush off. It was told that it needs to go ask the Authoritative DNS server for `awesomecat.com`.
+So in the story of our little resolver trying to find the IP address for `www.awesomecat.com`, it sent a request to the TLD server for `com.`, but it got another brush off. It was told that it needs to go ask the Authoritative DNS server for `awesomecat.com`.
 
 Our resolver receives that response, and undeterred, it initiates another new request, this time to the Authoritative server it just learned about.
 
-![large internet with DNS infrastructure with the path between the recursive resolver and the Authoritative DNS server highlighted](img/recursive-dns-explanation/simplified-dns-map-5.svg)
+<img src="../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-5.svg" alt="large internet with DNS infrastructure with the path between the recursive resolver and the Authoritative DNS server highlighted" width="750"/>
 
 The request lands on the Authoritative DNS server for this domain, and that server actually knows about the domain! It's able to send back an IP address for a server that knows how to handle queries for `www.awesomecat.com`!!!
 
@@ -79,7 +79,7 @@ The resolver receives the response, sees that it AT LAST has an IP address for `
 
 ## Let's See The Recursive DNS Lookup Happen Programmatically
 
-OK. That's all fine and good to see on our little internet, but what happens when this process is let loose in the real world? We can pretend that we are a stalwart resolver out on the internet, bound and determined to find an IP address for `www.awesomecat.com`. While we don't have a network map for you to follow along with, we can simulate this process using a command line tool called `dig`.
+OK. That's all fine and good to see on our little internet, but what happens when this process is let loose in the real world? We're going to step out of our toy internet for a moment and interact with the real internet. We can pretend that we are a stalwart resolver out on the internet, bound and determined to find an IP address for `www.awesomecat.com`. While we don't have a network map for you to follow along with, we can simulate this process using a command line tool called `dig`.
 
 ### Understanding the output of a `dig` command
 
@@ -208,7 +208,7 @@ Next, take a look at that `ANSWER` section. We see a list of 13 servers, each id
 
 Finally, that `ADDITIONAL` section. Here, we're getting both the IPv4 and the IPv6 addresses for each of the names for the Root servers! This speeds up the DNS resolution process because our resolver doesn't have to make a separate query to find the address of the next server it needs to talk to.
 
-OK, so now we know what our Root servers are, we want to ask them what they know about `www.awesomecat.com`. Let's run a dig that points that query to one of the name servers: `dig www.awesomecat.com @i.root-servers.net.`
+OK, so now we know what our Root servers are, we want to ask them what they know about `www.awesomecat.com`. Let's run a `dig` that points that query to one of the root name servers: `dig www.awesomecat.com @i.root-servers.net.`
 
 ```bash
 $ dig www.awesomecat.com @i.root-servers.net.
@@ -282,7 +282,7 @@ When we look at the `AUTHORITY` and `ADDITIONAL` sections, they look pretty simi
 
 PROGRESS!
 
-OK. Let's repeat that process, this time asking that TLD server `dig www.awesomecat.com @i.gtld-servers.net.`:
+OK. Let's repeat that process, this time asking one of the `com.` TLD servers `dig www.awesomecat.com @i.gtld-servers.net.`:
 
 ```bash
 $ dig www.awesomecat.com @i.gtld-servers.net.
@@ -352,13 +352,13 @@ We completed this process by manually running every `dig` for every step of the 
 
 ## Recap
 
-So let's review what just happened here. 
+So let's review what just happened here.
 
-* The recursive DNS process is necessary because no single machine can be responsible for the entire internet. 
-* A recursive DNS lookup is performed by a resolver, a special software designed to keep making DNS queries until it receives a definitive answer.
-* If a resolver doesn't know where else to go, it will query a root DNS server. The root DNS server will point to the TLD server that should have more information about the domain being requested.
-* A TLD server is responsible for knowing which authoritative server owns the records for the next label; e.g. `awesomecat` in `awesomecat.com`.
-* The authoritative server keeps track of the DNS records for any domain it is responsible for.
-* Once the resolver has an answer, it will send the final response back to the client who initiated the query.
+- The recursive DNS process is necessary because no single machine can be responsible for the entire internet.
+- A recursive DNS lookup is performed by a resolver, a special software designed to keep making DNS queries until it receives a definitive answer.
+- If a resolver doesn't know where else to go, it will query a root DNS server. The root DNS server will point to the TLD server that should have more information about the domain being requested.
+- A TLD server is responsible for knowing which authoritative server owns the records for the next label; e.g. `awesomecat` in `awesomecat.com`.
+- The authoritative server keeps track of the DNS records for any domain it is responsible for.
+- Once the resolver has an answer, it will send the final response back to the client who initiated the query.
 
 If you'd like to play around in this system, checkout our chapter on [name resolution with recursive DNS](../future/name-resolution/recursive-dns/)!
