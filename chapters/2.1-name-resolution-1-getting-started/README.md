@@ -41,7 +41,7 @@ Okay, we have a brand-new [docker-compose.yml](./docker-compose.yml) file and [D
 Use the [byoi-rebuild](../../bin/byoi-rebuild) command to start everything up, and use the [hopon](../../bin/hopon) command to get into `host-a` and `ping` host-c (which is at `6.0.0.103`):
 
 ```bash
-➜  001-nr-getting-started $ hopon host-a
+$ hopon host-a
 root@host-a:/# ping 6.0.0.103 -c 2
 PING 6.0.0.103 (6.0.0.103) 56(84) bytes of data.
 64 bytes from 6.0.0.103: icmp_seq=1 ttl=61 time=0.416 ms
