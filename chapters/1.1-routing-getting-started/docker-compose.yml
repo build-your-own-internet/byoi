@@ -1,27 +1,29 @@
 version: "3.0"
 services:
-  boudi:
+  client:
     build: .
-    container_name: build-your-own-internet-001-boudi
-    image: build-your-own-internet-001-boudi
+    container_name: build-your-own-internet-001-client
+    image: build-your-own-internet-001-client
+    hostname: client
     networks:
-      caternet:
+      ten-one-net:
         ipv4_address: 10.1.1.3
     cap_add:
       - NET_ADMIN
-  pippin:
+  server:
     build: .
-    container_name: build-your-own-internet-001-pippin
-    image: build-your-own-internet-001-pippin
+    container_name: build-your-own-internet-001-server
+    image: build-your-own-internet-001-server
+    hostname: server
     networks:
-      caternet:
+      ten-one-net:
         ipv4_address: 10.1.1.2
     cap_add:
       - NET_ADMIN
 
 networks:
-  caternet:
-    name: build-your-own-internet-001-caternet
+  ten-one-net:
+    name: build-your-own-internet-001-ten-one-net
     driver: bridge
     ipam:
       driver: default

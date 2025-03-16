@@ -4,14 +4,6 @@ So... you've decided to join us in building a tiny internet! Welcome to the jour
 
 Before you get started, let's make sure you understand what you're gonna be looking at.
 
-## The structure of chapters
-
-If you look at the directory structure for the `chapters` folder, you'll notice that some folders are numbered and some are not. This is intentional. We wanted this repo to be more of a "choose your own adventure" than some prescribed learning structure.
-
-For the numbered chapters, e.g. `001-routing`, we do recommend doing those in order. Those chapters set the groundwork for how we're structuring the internet we're building and introduce bespoke commands created to make navigating this internet easier. If you already have abundant confidence in your routing skillz, DOPE! Maybe just scan the chapters to understand the structure learn how we're setting things up.
-
-As for the chapters that don't have numbers... Rather than telling you that you should learn about name resolution before you dig into firewalls, we wanted you to choose what's interesting to you at the moment. The repo will be here when you're ready to come back and learn more! We hope you'll join us again when you find it useful and interesting!
-
 ## Software
 
 ### Homebrew
@@ -74,15 +66,4 @@ If that doesn't work, try clearing the system with `docker system prune`.
 
 ## Network Maps
 
-The beginning of each chapter will display a network map showing what we expect our internet to look like by the end of the chapter, e.g.:
-
-```markdown
-   boudi             pippin
-     │10.1.1.3          │10.1.1.2
-     │                  │
-     │                  │
-─────┴──────────────────┴──────
-              (caternet 10.1.1.0/24)
-```
-
-Individual machines that exist on a network will show their specific IP address, e.g. `10.1.1.3`. Those machines will have vertical lines that point to the networks they have interfaces on. The horizontal lines in the network maps are the networks themselves. They will be identified with an IP address range, e.g. `10.1.1.0/24`.
+The beginning of each chapter will display a network map showing what we expect our internet to look like by the end of the chapter. Please review the [appendix on How to Read a Network Map](../../appendix/how-to-read-a-network-map.md) to understand this visual helper tool!

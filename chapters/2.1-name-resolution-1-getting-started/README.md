@@ -6,7 +6,7 @@ What is name resolution? What problem(s) does it solve? In previous chapters, we
 
 Let's take a look at the internet we'll be working with for this chapter. You'll notice we've made some changes from the network diagrams we've used in other chapters. In _this_ internet, we have a bunch of [hosts](../glossary.md#host) that would like to communicate with each other:
 
-![our-inter-network](../../img/network-maps//nr-getting-started.svg)
+![our-inter-network](../../img/network-maps/name-resolution/nr-getting-started.svg)
 
 Let's say we set this internet up for sharing fun pictures. Perhaps your passion is dancing photos, and host A (1.0.0.101) contains a massive library of `.jpg` files of this genre. Perhaps your friend Squee's passion is adorable kitty pictures, and their host B (5.0.0.102) has photos of that kind. When all of our friends set up their image-sharing hosts, we're going to end up with a bunch of machines that contain specific files we want access to.
 
@@ -41,7 +41,7 @@ Okay, we have a brand-new [docker-compose.yml](./docker-compose.yml) file and [D
 Use the [byoi-rebuild](../../bin/byoi-rebuild) command to start everything up, and use the [hopon](../../bin/hopon) command to get into `host-a` and `ping` host-c (which is at `6.0.0.103`):
 
 ```bash
-➜  001-nr-getting-started $ hopon host-a
+$ hopon host-a
 root@host-a:/# ping 6.0.0.103 -c 2
 PING 6.0.0.103 (6.0.0.103) 56(84) bytes of data.
 64 bytes from 6.0.0.103: icmp_seq=1 ttl=61 time=0.416 ms
