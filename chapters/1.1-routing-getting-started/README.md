@@ -265,21 +265,21 @@ With that done, we're back to our regularly scheduled content.
 
 At this point, there are a whole bunch of manual steps to get all this going.  Now that we have proven to ourselves that we know how to do this all manually, let's automate it! We have more containers to bring up and networks to build, and doing that all by hand will be a lot of toil.
 
-We are going to use the `docker compose` command which uses the [docker-compose.yml](docker-compose.yml) file in this directory to build, configure, and start our two containers on our network.
+Make sure you're currently in the directory for this chapter. We are going to use the `docker-compose` command which uses the [docker-compose.yml](docker-compose.yml) file in this directory to build, configure, and start our two containers on our network. If you check that file, you'll see that we're creating:
 
-You will use the following command:
+- 1 network
+    - ten-one-net (`10.1.1.0/24`)
+- 2 services, each with an interface on ten-one-net
+    - client (`10.1.1.3`)
+    - server (`10.1.1.2`)
+
+To use this magical file to automate building out machines on our network, use the following command:
 
 ```bash
-docker compose up -d
+docker-compose up -d
 ```
 
-The `-d` flag tells docker compose that you want to continue using your terminal. When you're done with this session, you'll want to run `docker compose stop` in the same directory as the [docker-compose.yml](docker-compose.yml) file.
-
-There are a few differences with the system that docker creates using `docker compose` as compared to when we did this manually:
-
-- the network it creates has the same name as the directory you ran this from with the network name as defined in the `docker-compose.yml` file appended to it. So, in this chapter, `build-your-own-internet-001-ten-one-net`.
-- Similarly, each container has that same label prepended to it; e.g. `build-your-own-internet-001-server`.
-- Docker has added a router in this network which connects both of these containers to the Internet. That router has the IP address of `10.1.1.1`. Each container also has a default-gateway pointed to that IP address which enables you to run a command like `ping 4.2.2.2`, which will successfully ping a DNS machine on the internet.
+The `-d` flag tells docker compose that you want to continue using your terminal. When you're done with this session, you'll want to run `docker compose down` in the same directory as the [docker-compose.yml](docker-compose.yml) file.
 
 Now you can repeat the tests we did above by connecting to each container (this time with commands `docker exec -it build-your-own-internet-001-client /bin/bash` and `docker exec -it build-your-own-internet-001-server /bin/bash`) and run the same `tcpdump` and `ping` commands as earlier with the same results.
 

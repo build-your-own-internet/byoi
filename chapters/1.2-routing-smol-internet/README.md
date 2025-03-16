@@ -30,13 +30,7 @@ Now that we've got a bit of an internet drawn out in our network diagram above, 
 
 ### Aside: Efficiencies
 
-#### Naming of the Containers
 
-You may have noticed in chapter 1 that, while we named our containers `boudi` and `pippin`, what appeared in the terminal when we jumped on those containers was a sha that doesn't have much meaning for us, e.g. `root@0c3ce9be81e7:/#`. Because that sha doesn't have meaning for us, it was hard to track which window was a terminal for which container.
-
-Also, as we started working on this chapter and were working with 3 machines on 2 networks, we also started getting our IP addresses jumbled. We wanted a solution that gave us a prettier prompt in our terminal, e.g. `root@boudi:/#`, and we wanted to be able to ping a container with the container name, e.g. `ping pippin`.
-
-The first solution we employed was to modify the `/etc/hosts` on each machine, e.g. `10.1.1.2 pippin` on `pippin`. This was great, except it's a continued manual effort every time we have to rebuild the containers. Turns out... adding a `hostname` to the container definition in `docker-compose.yml` did the trick!
 
 #### Scripts
 
