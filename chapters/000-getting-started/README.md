@@ -4,14 +4,6 @@ So... you've decided to join us in building a tiny internet! Welcome to the jour
 
 Before you get started, let's make sure you understand what you're gonna be looking at.
 
-## The structure of chapters
-
-If you look at the directory structure for the `chapters` folder, you'll notice that some folders are numbered and some are not. This is intentional. We wanted this repo to be more of a "choose your own adventure" than some prescribed learning structure.
-
-For the numbered chapters, e.g. `001-routing`, we do recommend doing those in order. Those chapters set the groundwork for how we're structuring the internet we're building and introduce bespoke commands created to make navigating this internet easier. If you already have abundant confidence in your routing skillz, DOPE! Maybe just scan the chapters to understand the structure learn how we're setting things up.
-
-As for the chapters that don't have numbers... Rather than telling you that you should learn about name resolution before you dig into firewalls, we wanted you to choose what's interesting to you at the moment. The repo will be here when you're ready to come back and learn more! We hope you'll join us again when you find it useful and interesting!
-
 ## Software
 
 ### Homebrew
