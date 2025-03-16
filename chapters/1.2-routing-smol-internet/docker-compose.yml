@@ -1,31 +1,52 @@
 version: "3.0"
 services:
-  boudi:
+  router:
     build: .
-    container_name: build-your-own-internet-002-boudi
-    image: build-your-own-internet-002-boudi
-    hostname: boudi
+    container_name: build-your-own-internet-001-router
+    hostname: router
     networks:
-      caternet:
+      ten-one-net:
         ipv4_address: 10.1.1.3
+      ten-two-net:
+        ipv4_address: 10.1.2.3
     cap_add:
       - NET_ADMIN
-  pippin:
+    sysctls:
+      - net.ipv4.ip_forward=1
+  client:
     build: .
-    container_name: build-your-own-internet-002-pippin
-    image: build-your-own-internet-002-pippin
-    hostname: pippin
+    container_name: build-your-own-internet-001-client
+    hostname: client
     networks:
-      caternet:
+      ten-one-net:
         ipv4_address: 10.1.1.2
     cap_add:
       - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
+
+  server:
+    build: .
+    container_name: build-your-own-internet-001-server
+    hostname: server
+    networks:
+      ten-two-net:
+        ipv4_address: 10.1.2.2
+    cap_add:
+      - NET_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
 
 networks:
-  caternet:
-    name: build-your-own-internet-002-caternet
+  ten-one-net:
     driver: bridge
     ipam:
       driver: default
       config:
         - subnet: 10.1.1.0/24
+  ten-two-net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.1.2.0/24
