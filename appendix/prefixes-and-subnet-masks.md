@@ -13,98 +13,22 @@ A “prefix” and a “subnet mask” are the 2 parts that comprise a network a
 
 The structure of the addresses we’re looking at is numbers split into 4 chunks separated by a dot (.). Each of these chunks is referred to as an “octet”. Why an octet? Because each number is a decimal (base10) representation of an 8-bit binary number. That’s why they only go up to 255 in any one of the octets. We can convert each 8 bit binary number to a decimal value. Check this out:
 
-<table>
-  <tr>
-   <td>Value in Binary
-   </td>
-   <td>Value in Decimal
-   </td>
-  </tr>
-  <tr>
-   <td>0000 0000
-   </td>
-   <td>0
-   </td>
-  </tr>
-  <tr>
-   <td>0000 0001
-   </td>
-   <td>1
-   </td>
-  </tr>
-  <tr>
-   <td>0000 0010
-   </td>
-   <td>2
-   </td>
-  </tr>
-  <tr>
-   <td>0000 0011
-   </td>
-   <td>3
-   </td>
-  </tr>
-  <tr>
-   <td>0000 0100
-   </td>
-   <td>4
-   </td>
-  </tr>
-  <tr>
-   <td>0000 0101
-   </td>
-   <td>5
-   </td>
-  </tr>
-  <tr>
-   <td>0000 0110
-   </td>
-   <td>6
-   </td>
-  </tr>
-  <tr>
-   <td>0000 0111
-   </td>
-   <td>7
-   </td>
-  </tr>
-  <tr>
-   <td>0000 1000
-   </td>
-   <td>8
-   </td>
-  </tr>
-  <tr>
-   <td>0001 0000
-   </td>
-   <td>16
-   </td>
-  </tr>
-  <tr>
-   <td>0010 0000
-   </td>
-   <td>32
-   </td>
-  </tr>
-  <tr>
-   <td>0100 0000
-   </td>
-   <td>64
-   </td>
-  </tr>
-  <tr>
-   <td>1000 0000
-   </td>
-   <td>128
-   </td>
-  </tr>
-  <tr>
-   <td>1111 1111
-   </td>
-   <td>255
-   </td>
-  </tr>
-</table>
+| Value in Binary | Value in Decimal |
+| --------------: | ---------------: |
+| 0000 0000       | 0                |
+| 0000 0001       | 1                |
+| 0000 0010       | 2                |
+| 0000 0011       | 3                |
+| 0000 0100       | 4                |
+| 0000 0101       | 5                |
+| 0000 0110       | 6                |
+| 0000 0111       | 7                |
+| 0000 1000       | 8                |
+| 0001 0000       | 16               |
+| 0010 0000       | 32               |
+| 0100 0000       | 64               |
+| 1000 0000       | 128              |
+| 1111 1111       | 255              |
 
 What we see happening here is that each value in our 8-bit number corresponds with a decimal value. Oddly, [this children’s program](https://www.youtube.com/watch?v=VpDDPWVn5-Q) is the best explanation of binary I’ve ever found.
 
@@ -114,11 +38,17 @@ It’s easy to look at an IP address and try to make it more complicated than it
 
 So, back to binary. If we translate each octet of Fastly’s IP address range into binary, we’ll see:
 
+```none
 151.101.0.0 => 10010111.01100101.00000000.00000000
+                  151      101      0        0
+```
 
+```none
 151.101.255.255 => 10010111.01100101.11111111.11111111
+                      151      101       0       0
+```
 
-Those octets are much harder on the human brain to comprehend and communicate. Instead, we perform a conversion on the binary values to translate each octet into decimal numbers that we are more accustomed to.
+Those binary octets are much harder on the human brain to comprehend and communicate. Instead, we perform a conversion on the binary values to translate each octet into decimal numbers (still called octets) that we are more accustomed to.
 
 ## Routing
 
@@ -232,48 +162,12 @@ What we just described in the previous section is how to determine if a destinat
 
 Let’s look at some prefixes and the range of IP addresses they provide.
 
-<table>
-  <tr>
-   <td>Subnet Mask
-   </td>
-   <td>Applied Prefix
-   </td>
-   <td>Sample IP Range
-   </td>
-  </tr>
-  <tr>
-   <td>/24
-   </td>
-   <td>151.101.0.0/24
-   </td>
-   <td>151.101.0.0 - 151.101.0.255
-   </td>
-  </tr>
-  <tr>
-   <td>/23
-   </td>
-   <td>151.101.0.0/23
-   </td>
-   <td>151.101.0.0 - 151.101.1.255
-   </td>
-  </tr>
-  <tr>
-   <td>/22
-   </td>
-   <td>151.101.0.0/22
-   </td>
-   <td>151.101.0.0 - 151.101.3.255
-   </td>
-  </tr>
-  <tr>
-   <td>/16
-   </td>
-   <td>151.101.0.0/16
-   </td>
-   <td>151.101.0.0 - 151.101.255.255
-   </td>
-  </tr>
-</table>
+| Subnet Mask    | Applied Prefix | Sample IP Range                |
+| :------------- | :------------- | :----------------------------- |
+| /24            | 151.101.0.0/24 | 151.101.0.0 - 151.101.0.255    |
+| /23            | 151.101.0.0/23 | 151.101.0.0 - 151.101.1.255    |
+| /22            | 151.101.0.0/22 | 151.101.0.0 - 151.101.3.255    |
+| /16            | 151.101.0.0/16 | 151.101.0.0 - 151.101.255.255  |
 
 Did you notice the pattern there? Eh? Eh?! The values at the upper end of the IP range increase at the same rate as our next binary value! So we double the number of possible IP addresses between /24 & /23. Then we double it again between /23 & /22. Etc. Etc. Etc.
 
