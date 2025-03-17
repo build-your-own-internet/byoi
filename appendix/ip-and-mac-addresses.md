@@ -1,6 +1,6 @@
 # IP and Ethernet Addresses
 
-Once upon a time, when computers were new and nobody knew what was possible with them, some people decided that it would be fun to be able to connect a few of them together and have them communicate with each other. There were many ideas about the most efficient way to accomplish this. Some companies developed proprietary solutions while other solutions were developed by governments or academic institutions. 
+Once upon a time, when computers were new and nobody knew what was possible with them, some people decided that it would be fun to be able to connect a few of them together and have them communicate with each other. There were many ideas about the most efficient way to accomplish this. Some companies developed proprietary solutions while other solutions were developed by governments or academic institutions.
 
 After decades of evolution, two technologies became dominant: Ethernet and IP. Ethernet dominated the “local-network” landscape because it was simple, fast, and ubiquitous. Unlike most of its competitors, it was not proprietary, so you could buy cheap off-the-shelf equipment. You could buy cables, cut them to length, and crimp on ends yourself. Ethernet had a lot of technical limitations, but because of the simplicity of its design, people developed solutions that allowed it to grow from 10 megabits-per-second (MBPS) to 100 gigabits-per-second while still being largely backwards-compatible. Your WiFi router has Ethernet ports on it. If you want to get a network interface for your computer, the only thing you’re likely to be able to find for it is Ethernet. If you go to any datacenter in the world, the vast majority of the network cabling will be Ethernet. If you buy a network-based video-camera or speaker, they all use Ethernet. It’s that slightly-wide “telephone jack” (are there people reading this that don’t know what a telephone jack is? 😂) that you see everywhere.
 
@@ -13,7 +13,6 @@ Because of this, there are two different **kinds** of addresses that we need to 
 The other address your computer has is an IP address, and they typically look like `192.23.33.12`. Unlike MAC addresses which are generally burned into the silicon, IP addresses are more malleable and can be reassigned as necessary.
 
 So, how does all this work together? Let’s take a look at what a typical home network might look like:
-
 
 ```markdown
 ┌────────┐   ┌─────────────┐   ┌───────────┐

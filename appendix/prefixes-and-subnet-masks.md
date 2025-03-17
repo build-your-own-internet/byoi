@@ -143,7 +143,7 @@ This might sound like gibberish to begin with. Don't worry! We'll spell it out i
     1. **If they match**: use that route 🙂
     2. **If they do not match**: go on to the next route 😞
 
-#### Example
+#### Example packet 10.2.1.4 - does it match 10.1.0.0/24?
 
 Let's go through an example of this. We're looking at one router on the Internet, and let's say it has the following routing table:
 
@@ -158,7 +158,7 @@ Let's say this router sees a packet coming in destined for `10.2.1.4`. The route
 
 To accomplish this, it's going to go through the routing table and apply the algorithm to each route until it finds a match. Let's say it starts with the first route in the table: `10.1.0.0/24`.
 
-##### Step 1
+##### Step 1 - attempting 10.1.0.0/24
 
 > Take the subnet-mask of the current route and perform a bitwise AND operation with the destination IP address of the packet we're routing.
 
@@ -191,7 +191,7 @@ So, we started a destination address of `10.2.1.4`. We’re checking to see if i
 
 > By the way, did you notice that the result of applying the "subnet mask" to an IP address is that it just "masks out" (kinda like masking tape) part of the address? That's why it's called a "mask"! It just acts like a filter: anywhere there's a `1` in the mask, we take the value of the address. Anywhere there's a `0` in the mask, we ignore the value of the address!
 
-##### Step 2
+##### Step 2 - attempting 10.1.0.0/24
 
 > Take the network address of the current route and compare that with the previous result
 > If they match: use that route
@@ -203,7 +203,7 @@ The network address, everything _before_ the "/24", of the current route is `10.
 
 Okay, the first route didn’t work out. But we’re not frightened. We have more routes to check, and we are pretending to be a tireless computer! So, okay, chin up soldier: the next route is `10.2.0.0/23`. Let's go through the same two-step process that we did for the first route.
 
-##### Step 1
+##### Step 1 - attempting 10.2.0.0/24
 
 We apply the subnet mask (`/23`) to the destination IP address (`10.2.1.4`):
 
@@ -216,7 +216,7 @@ result:              00001010.00000010.00000000.00000000
 
 ...and if we convert the octets of the result back to decimal, we get `10.2.0.0`.
 
-##### Step 2
+##### Step 2 - attempting 10.2.0.0/24
 
 Next, we take the network address of the **current route** (10.2.0.0) and compare that with the result of step 1 (10.2.0.0).
 
