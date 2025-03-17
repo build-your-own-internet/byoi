@@ -6,7 +6,8 @@ We want to build a simple network where two machines can ping each other. To kee
 
 Here's what we expect our network to look like by the end of this chapter:
 
-![basic-network-map](../../img/network-maps/basic-network-map.svg)
+[![basic-network-map](../../img/network-maps/basic-network-map.svg
+ "Basic Network Map")](../../img/network-maps/basic-network-map.svg)
 
 In this diagram, there are 2 machines, `client` and `server`, who are a single network, `10.1.1.0/24`. That network can be understood as: all IP addresses in the range from `10.1.1.0` through `10.1.1.255`. Any machine on that network will have an IP address that is within that range, so `client` has the IP address `10.1.1.3` and `server` has the IP address `10.1.1.2`.
 

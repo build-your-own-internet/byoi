@@ -12,7 +12,8 @@ Let's start with the simplest thing we can do: we're gonna head down the route o
 
 First, let's check out what our little internet looks like for this chapter:
 
-![our-inter-network](../../img/network-maps/name-resolution/nr-multicast.svg)
+[![our-inter-network](../../img/network-maps/name-resolution/nr-multicast.svg
+ "Our Inter-network")](../../img/network-maps/name-resolution/nr-multicast.svg)
 
 The significant things to note about this internet are that we have 2 machines on one network, `host-c` and `host-f` are on `6.0.0.0/8`, and we added a new host, `host-h`, to the `4.0.0.0/8` network. `host-h` is only one hop away from `host-c` and `host-f`. This means that requests from `host-h` <=> `host-c` only need to be routed through one router. This simplifies what we're looking at when we are checking what's happening on our internet. We wanted to have a request path that involved one and only one router; adding `host-h` handled that for us.
 
@@ -437,7 +438,8 @@ Previously, we saw `router-3` proxying the request for name resolution for `host
 
 The name resolution request flow looks something like this:
 
-![flowchart of proxy broadcast through our internet](../../img/network-maps/name-resolution/proxy-broadcast.svg)
+[![flowchart of proxy broadcast through our internet](../../img/network-maps/name-resolution/proxy-broadcast.svg
+ "flowchart of proxy broadcast through our internet")](../../img/network-maps/name-resolution/proxy-broadcast.svg)
 
 Each arrow in this diagram indicates a new proxied request for name resolution for `host-h.local`. The color of the arrows indicates how far down the proxy chain that request is.
 
@@ -451,7 +453,8 @@ The result of these behaviors is that messages don't go around the internet fore
 
 Next, let's look at how the response makes its way to every machine as well.
 
-![flowchart of a proxy response through our internet](../../img/network-maps/name-resolution/proxy-response.svg)
+[![flowchart of a proxy response through our internet](../../img/network-maps/name-resolution/proxy-response.svg
+ "flowchart of a proxy response through our internet")](../../img/network-maps/name-resolution/proxy-response.svg)
 
 Here, we see that `host-h` generates the response message that gets broadcast to every router on the `4.0.0.0/8` network. Each router then proxies that message to each machine on each other network it has an interface on. As each router, in turn, does the same thing, this allows the response to flood back to every machine on the internet.
 
