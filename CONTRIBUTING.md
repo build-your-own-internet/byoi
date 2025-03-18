@@ -6,9 +6,9 @@ When writing a new chapter, we have frequently encountered situations where we'r
 
 This project started because the authors all wanted to get practical, hands on experiences with the various technologies and protocols that make the internet work. That means we didn't always know where to start with a chapter. This is good. This means that we had really obvious growth opportunities and we got to tangibly experience our learning processes!!! When we approached large topics that we understood in theory, we didn't think about the chapter yet. Instead, we just played around until we got something working. Once we had a better understanding of how the system/technology/protocol worked, we could start thinking about what the chapter itself might look like. Usually, we needed to write several smaller chapters before we could implement the fully fledged system we dreamed of.
 
-The first thing we keep in mind when we're developing content for a topic is making sure the reader understands the problem first. Once the reader can get hands on experience with a problem, then we attempt to implement the simplest solution we can think of for the problem. The solutions we reach for are imperfect. They might not be implemented broadly. They may have only been implemented in a more nacent version of The Internet. However, the basic solution gives the reader a foundation to build on. 
+The first thing we keep in mind when we're developing content for a topic is making sure the reader understands the problem first. Once the reader can get hands on experience with a problem, then we attempt to implement the simplest solution we can think of for the problem. The solutions we reach for are imperfect. They might not be implemented broadly. They may have only been implemented in a more nacent version of The Internet. However, the basic solution gives the reader a foundation to build on.
 
-Once we have an initial solution, we can start poking holes in that solution. Does it scale? Is it secure? Is it maintainable? And finally... what does the actual modern internet do? We want to end with a solution that looks as close to the current internet as possible. 
+Once we have an initial solution, we can start poking holes in that solution. Does it scale? Is it secure? Is it maintainable? And finally... what does the actual modern internet do? We want to end with a solution that looks as close to the current internet as possible.
 
 So writing a chapter might look like this:
 
@@ -22,7 +22,7 @@ Ok, let's take it back even further. How do we create a secure connection just b
 
 So this comes down to "what's the most fundamental part of what we made that we can break apart and explain to the reader". If all else fails, look at how the real internet was actually developed over time. The internet didn't start with TLS. That was a solution that came as the internet grew more and more massive. So let's go back to the first problem we're trying to solve and let's see how we can solve that in the simplest way.
 
-We always want to start with the problem. For TLS, this means we write a chapter/section that demonstrates an EVIL server intercepting packets meant for a legitimate server. The reader then has the hands on experience of the problem. 
+We always want to start with the problem. For TLS, this means we write a chapter/section that demonstrates an EVIL server intercepting packets meant for a legitimate server. The reader then has the hands on experience of the problem.
 
 Now we can move into finding a solution. In most cases, the first solution we want to implement is going to focus on connecting just 2 machines. Don't worry about an internet. Worry about the _most basic_ implementation!
 
