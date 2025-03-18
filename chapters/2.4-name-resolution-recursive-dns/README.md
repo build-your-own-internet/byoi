@@ -392,7 +392,7 @@ Next, we're going to to play around in this system!
 
 ## 1. Explore and make changes to the DNS infrastructure of our internet
 
-This leads us to our map! If you need help understanding this map, check out our [appendix on how to read network maps](../../../appendix/how-to-read-a-network-map.md).
+This leads us to our map! If you need help understanding this map, check out our [appendix on how to read network maps](../../appendix/how-to-read-a-network-map.md).
 
 [![Network map of a large internetwork](../../img/network-maps/name-resolution/recursive-dns.svg
  "Network map of a large internetwork")](../../img/network-maps/name-resolution/recursive-dns.svg)
@@ -1033,7 +1033,7 @@ In your first window, you should see A LOT of output in your `tcpdump`. Let's ta
 21:11:07.561667 ARP, Reply 1.2.0.100 is-at 02:42:01:02:00:64, length 28
 ```
 
-**A standard ARP request.** You may or may not see these two lines. But either way, we can ignore them. We'ver covered these kinds of messages in previous chapters. For more on this, checkout the [IP and MAC addresses appendix](../../../appendix/ip-and-mac-addresses.md)
+**A standard ARP request.** You may or may not see these two lines. But either way, we can ignore them. We'ver covered these kinds of messages in previous chapters. For more on this, checkout the [IP and MAC addresses appendix](../../appendix/ip-and-mac-addresses.md)
 
 ```bash
 21:11:07.561754 IP 1.1.0.200.48600 > 1.2.0.100.53: 48085+ [1au] A? www.awesomecat.com. (59)

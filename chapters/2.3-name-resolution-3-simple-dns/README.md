@@ -207,7 +207,7 @@ The configuration we have done so far is to get knot running. Now, we need to co
 
 So now, in order to use the Knot server's information about the names on our internet, we need to tell the `host-dns` machine to use **itself** to resolve hostnames. This pattern should be familiar since we had to configure either `/etc/hosts` or `/etc/nsswitch.conf` for similar ends in our earlier exploration of name resolution.
 
-We talked in [chapter 1 of this section](../name-resolution-1-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name) about how a machine knows who to ask to resolve a name. Take a moment and have a look at the `/etc/resolv.conf` file on the `host-dns` machine:
+We talked in [chapter 1 of this section](../2.1-name-resolution-1-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name) about how a machine knows who to ask to resolve a name. Take a moment and have a look at the `/etc/resolv.conf` file on the `host-dns` machine:
 
 ```bash
 nano /etc/resolv.conf
