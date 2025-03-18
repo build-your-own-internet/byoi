@@ -29,7 +29,7 @@ We decided to take notes that create a reproducible experience. We document our 
 
 ### Software
 
-You will need to install [colima](https://smallsharpsoftwaretools.com/tutorials/use-colima-to-run-docker-containers-on-macos/) or [docker desktop](https://www.docker.com/products/docker-desktop/) to manage your docker instances. We go into more detail what these software are and how to get started with them in [our prequel chapter 000](./chapters/000-prequel-how-does-this-work/README.md).
+You will need to install [colima](https://smallsharpsoftwaretools.com/tutorials/use-colima-to-run-docker-containers-on-macos/) or [docker desktop](https://www.docker.com/products/docker-desktop/) to manage your docker instances. We go into more detail what these software are and how to get started with them in [our prequel chapter 000](./chapters/000-getting-started/README.md).
 
 ## DISCLAIMERS
 

@@ -125,7 +125,7 @@ Now, we can `ping` from router3 => server! Huzzah! Progress!!!
 
 When we initially created our broken set up for troubleshooting network problems in Chapter 4, we found that packets were getting mysteriously dropped where we weren't expecting them to be... Here's the deal. We had set up an asymmetric routing situation where one router was pointing to another over a peer-to-peer route, but the router receiving the request had a different route back for the response. This is a necessary thing in the wild; it allows flexibility in the internet. However, linux, the operating system we're starting our machines with, has opinions on this. If our linux machines see that they should send response packets out a different interface than the request packets came in on, by default, they will drop them on the floor.
 
-To fix this problem, we need to override this configuration. If you look in your [docker-compose.yml file](../004-lrg-internet/docker-compose.yml) for Chapter 4, you'll see that each router has some more `sysctl` configuration setup that look something like:
+To fix this problem, we need to override this configuration. If you look in your [docker-compose.yml file](../chapters/1.3-routing-internet-chonk/docker-compose.yml) for Chapter 4, you'll see that each router has some more `sysctl` configuration setup that look something like:
 
 ```yml
 - net.ipv4.conf.all.rp_filter=0

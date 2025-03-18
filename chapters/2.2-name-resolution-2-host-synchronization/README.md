@@ -21,7 +21,7 @@ The significant things to note about this internet are that we have 2 machines o
 
 Avahi is a program which uses [multicast](../glossary.md#multicast) to perform name resolution on local networks with minimal configuration. If you check the [Dockerfile](./Dockerfile) for this chapter, you'll see that we added a new software, `avahi-utils`.
 
-As you might recall, in [chapter 1](../name-resolution-1-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name), we took a look at the contents of `/etc/nsswitch.conf`. We saw that the `hosts` line provided instructions for how to resolve a name. The order runs sequentially through each entry in that line; it starts with looking at the `files` on the system (i.e. `/etc/hosts`), and, if it doesn't find the name there, then it should use `dns` (if it is configured).
+As you might recall, in [chapter 1](../2.1-name-resolution-1-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name), we took a look at the contents of `/etc/nsswitch.conf`. We saw that the `hosts` line provided instructions for how to resolve a name. The order runs sequentially through each entry in that line; it starts with looking at the `files` on the system (i.e. `/etc/hosts`), and, if it doesn't find the name there, then it should use `dns` (if it is configured).
 
 Let's start off by taking a quick look at the `/etc/nsswitch.conf` file on our machines now.
 
@@ -474,7 +474,7 @@ root@host-c:/# links http://host-f.local
 
 As [we went over previously](#avahi-and-avahi-daemon), Avahi name resolution works by editing the `hosts` entry in `/etc/nsswitch.conf`. Even if we have the `avahi-daemon` running on a machine, if we remove the `mdns4_minimal` entry from the `hosts` in `/etc/nsswitch.conf`, we'll break the name resolution process. Try it for yourself.
 
-Can you explain why? If you're not comfortable with your explanation yet, review how a computer knows how to resolve a name in [chapter 1](../name-resolution-1-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name).
+Can you explain why? If you're not comfortable with your explanation yet, review how a computer knows how to resolve a name in [chapter 1](../2.1-name-resolution-1-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name).
 
 ## Appendix
 
