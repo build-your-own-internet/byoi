@@ -6,7 +6,8 @@ In the previous chapter, we build a small network of 2 machines that could ping 
 
 Here's what we expect our internet to look like by the end of this chapter:
 
-![smol-internet-network-map](../../img/network-maps/smol-internet-network-map.svg)
+[![smol-internet-network-map](../../img/network-maps/smol-internet-network-map.svg
+ "A Smol Internet Network Map")](../../img/network-maps/smol-internet-network-map.svg)
 
 You'll notice in this network diagram that we've built on the smol network from Chapter 1.1. Here, we've added a new network, `10.1.2.0/24`, and we've added a new machine, `router`. A [router](../glossary.md#router-aka-gateway) is a machine that has an [interface](../glossary.md#interface) on multiple networks and can forward packets across those networks. In this case, our router has an interface on both `10.1.1.0/24` and `10.1.2.0/24`.
 
