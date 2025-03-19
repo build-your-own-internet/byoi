@@ -727,58 +727,6 @@ services:
     sysctls:
       - net.ipv4.ip_forward=0
 
-  # RIPE
-  router-r4:
-    container_name: "build-your-own-internet-router-r4"
-    build:
-      context: .
-      dockerfile: Dockerfile_router
-    image: "build-your-own-internet-router"
-    hostname: router-r4
-    networks:
-      one-oh-three-hundo-net:
-        ipv4_address: 103.0.1.4
-      three-four-net:
-        ipv4_address: 3.4.0.4
-    cap_add:
-      - NET_ADMIN
-      - SYS_ADMIN
-    sysctls:
-      - net.ipv4.ip_forward=1
-      - net.ipv4.conf.all.rp_filter=0
-
-  server-r2:
-    container_name: "build-your-own-internet-server-r2"
-    build:
-      context: .
-      dockerfile: Dockerfile_host
-    image: "build-your-own-internet-host"
-    hostname: server-r2
-    networks:
-      one-oh-three-hundo-net:
-        ipv4_address: 103.0.1.12
-    cap_add:
-      - NET_ADMIN
-      - SYS_ADMIN
-    sysctls:
-      - net.ipv4.ip_forward=0
-
-  server-r1:
-    container_name: "build-your-own-internet-server-r1"
-    build:
-      context: .
-      dockerfile: Dockerfile_host
-    image: "build-your-own-internet-host"
-    hostname: server-r1
-    networks:
-      one-oh-three-hundo-net:
-        ipv4_address: 103.0.1.11
-    cap_add:
-      - NET_ADMIN
-      - SYS_ADMIN
-    sysctls:
-      - net.ipv4.ip_forward=0
-
 networks:
   one-one-net:
     name: "build-your-own-internet-one-one-net"
@@ -1116,13 +1064,3 @@ networks:
       driver: default
       config:
         - subnet: 102.0.1.0/24
-  one-oh-three-hundo-net:
-    name: "build-your-own-internet-one-oh-three-hundo-net"
-    driver: bridge
-    driver_opts:
-      com.docker.network.bridge.enable_ip_masquerade: 'false'
-      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
-    ipam:
-      driver: default
-      config:
-        - subnet: 103.0.1.0/24
