@@ -5,6 +5,14 @@
 3. router-a2 gets routes from its neighbors
 4. eventually, pull all all static routes out and have all routers learn all routes via RIP
 
+Handy commands!
+
+```
+birdc show route export rip1
+birdc configure
+birdc show route all
+```
+
 Where we're at:
 
 1. We have two routers with static routes. We include an `export all` with protocol static, which will need to be removed for the final iteration of this.
