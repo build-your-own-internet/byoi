@@ -24,6 +24,7 @@ Where we're at:
 Questions or exercises we want to make sure we cover:
 
 - convert Zayo and Telia converted
+  - router-a4 learned of `101.0.1.0/24 via 2.4.0.2 dev eth1 proto bird` somehow even through router-n2 isn't running rip yet.
 - It would be cool to have static routes maybe influence things and compare that to using knobs in the IGP itself.
 - (for later?) if A3 is shut off, can A2 get to the networks via A4 that A4 also has?
 - Be careful about `import all` and `export all` in all the protocols
