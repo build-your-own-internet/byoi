@@ -1,3 +1,28 @@
+#Our initial goals
+
+1. Have routes populated across three routers (RIP)
+2. Some routers will have static routes, one router (router a2) has nothing but its interfaces
+3. router-a2 gets routes from its neighbors
+4. eventually, pull all all static routes out and have all routers learn all routes via RIP
+
+Where we're at:
+
+1. We have two routers with static routes. We include an `export all` with protocol static, which will need to be removed for the final iteration of this.
+2. We have the three-router situation working between A2, A3, and A4.
+   - A2's connected network shows up on A4 and A3.
+   - A3 and A4's static routes are advertised to A2.
+   - is A3's connected network showing up on A2?
+
+Questions or exercises we want to make sure we cover:
+
+- convert Zayo and Telia converted
+- It would be cool to have static routes maybe influence things and compare that to using knobs in the IGP itself.
+- (for later?) if A3 is shut off, can A2 get to the networks via A4 that A4 also has?
+- Be careful about `import all` and `export all` in all the protocols
+
+
+
+
 PROBLEM 1: removing routes from a router that was killed:
 - one thing we're noticing, is that we killed router-a3 and the routes from it stayed on router-a2. We're seeing reports from the debugger that it's getting those routes from the kernel.
 - actually, it just took a long time for this to work, don't know why yet.
