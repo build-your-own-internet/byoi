@@ -1,12 +1,6 @@
 #!/bin/bash
 
 /usr/sbin/ip route delete default
-cp /init/$HOSTNAME/resolv.conf /etc/resolv.conf
-
-mkdir -p /etc/vim
-cp /vimrc /etc/vim/vimrc.local
-
-rm -rf /init
 
 case $HOSTNAME in
 # Comcast network machines
@@ -89,13 +83,4 @@ case $HOSTNAME in
   ;;
 esac
 
-  # if [[ $(hostname) =~ server.* ]]; then
-#   # copy in all the image files for each specific host
-  #   cp -a /home/www/$(hostname) /var/www
-#   rm -rf /home/www
-# 
-#   # start an http server on each host
-#   /usr/bin/busybox httpd -h /var/www -f
-# fi
-  
 /bin/sleep infinity

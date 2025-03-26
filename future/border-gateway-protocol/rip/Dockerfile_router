@@ -17,8 +17,8 @@ RUN apt-get update && apt-get install -y iproute2 \
     procps \
     bird-bgp
 
-COPY ./init/routers /init
 COPY ./init/routers/router-start-up.sh /router-start-up.sh
-COPY ./init/vimrc /vimrc
+RUN mkdir -p /etc/vim
+COPY ./init/vimrc /etc/vim/vimrc.local
 
 CMD ["/router-start-up.sh"]
