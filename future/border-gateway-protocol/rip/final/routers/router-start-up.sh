@@ -4,7 +4,7 @@ BIRD_CONF_FILE="/etc/bird/bird.conf"
 
 /usr/sbin/ip route delete default
 
-cp /init/$HOSTNAME/bird.conf $BIRD_CONF_FILE || echo "bird.conf not found"
+cp /init/bird.conf $BIRD_CONF_FILE || echo "bird.conf not found"
 mkdir -p /run/bird
 
 mkdir -p /etc/vim
