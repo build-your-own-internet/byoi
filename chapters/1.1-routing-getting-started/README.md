@@ -6,14 +6,13 @@ We want to build a simple network where two machines can ping each other. To kee
 
 Here's what we expect our network to look like by the end of this chapter:
 
-[![basic-network-map](../../img/network-maps/basic-network-map.svg
- "Basic Network Map")](../../img/network-maps/basic-network-map.svg)
+[![Basic Network Map][basic network map]][basic network map]
 
 In this diagram, there are 2 machines, `client` and `server`, who are a single network, `10.1.1.0/24`. That network can be understood as: all IP addresses in the range from `10.1.1.0` through `10.1.1.255`. Any machine on that network will have an IP address that is within that range, so `client` has the IP address `10.1.1.3` and `server` has the IP address `10.1.1.2`.
 
-To understand more about reading network maps, please review the [appendix on How to Read a Network Map](../../appendix/how-to-read-a-network-map.md)!
+To understand more about reading network maps, please review the [appendix on How to Read a Network Map][appendix netmap]!
 
-To understand more about network addresses, check out the [appendix entry on Prefixes and Subnet Masks](../../appendix/prefixes-and-subnet-masks.md)!
+To understand more about network addresses, check out the [appendix entry on Prefixes and Subnet Masks][appendix prefixes]!
 
 ## Running your docker container
 
@@ -35,11 +34,11 @@ To do so:
 1. `docker run -d --cap-add=NET_ADMIN --name=client $DOCKER_IMAGE`
 
 >**📝 NOTE:**
-> What is this `--cap-add=NET_ADMIN` all about, you ask? Check the "Problem Solving" section at the bottom for more information! Also see [this Stack Overflow post](https://stackoverflow.com/questions/27708376/why-am-i-getting-an-rtnetlink-operation-not-permitted-when-using-pipework-with-d) for more details.
+> What is this `--cap-add=NET_ADMIN` all about, you ask? Check the "Problem Solving" section at the bottom for more information! Also see [this Stack Overflow post on RTNETLINK and Docker][stackoverflow rtnetlink] for more details.
 
 ## Build a Network
 
-Now that we've got some machines up and running, let's network them together! To start with, let's just verify that `client` and `server` can't already talk to each other. We can check this by running a very simple program called [`ping`](../command-reference-guide.md#ping). We can provide `ping` with an IP address and it will see if it can send a simple request to the machine at the address provided. If a machine receives the type of request `ping` sends, it will send a response back. We're expecting there to be no response when `client` tries to `ping` `server`.
+Now that we've got some machines up and running, let's network them together! To start with, let's just verify that `client` and `server` can't already talk to each other. We can check this by running a very simple program called [`ping`][ref ping]. We can provide `ping` with an IP address and it will see if it can send a simple request to the machine at the address provided. If a machine receives the type of request `ping` sends, it will send a response back. We're expecting there to be no response when `client` tries to `ping` `server`.
 
 ### Check the current state
 
@@ -49,7 +48,7 @@ Let's start by hopping onto `server`:
 docker exec -it server /bin/bash
 ```
 
-In order for `client` to `ping` `server`, we'll need to get `server`'s IP address. Let's start by seeing what IP address configuration Docker automatically created for `server` when it created the machine. There's a very simple command with a lot of confusing output that we can run to get this: [`ip addr`](../command-reference-guide.md#ip-addr).
+In order for `client` to `ping` `server`, we'll need to get `server`'s IP address. Let's start by seeing what IP address configuration Docker automatically created for `server` when it created the machine. There's a very simple command with a lot of confusing output that we can run to get this: [`ip addr`][ref ip addr].
 
 ``` bash
 root@3daaaf641c2d:/# ip addr
@@ -63,7 +62,7 @@ root@3daaaf641c2d:/# ip addr
        valid_lft forever preferred_lft forever
 ```
 
-There's a lot going on here, and we'll get more familiar with this output in future chapters. But, for now, what we're seeing is 2 network [interfaces](../glossary.md#interface) on `server`, one for loopback, `lo`, which is used in networking for routing queries back to the machine that made the initial query. The other interface, `eth0` shows us that `server` already has an IP address, `172.17.0.2`, on an existing network, `172.17.0.2/16`. The exact address may be different on your machine, but the principles are the same.
+There's a lot going on here, and we'll get more familiar with this output in future chapters. But, for now, what we're seeing is 2 network [interfaces][glossary interface] on `server`, one for loopback, `lo`, which is used in networking for routing queries back to the machine that made the initial query. The other interface, `eth0` shows us that `server` already has an IP address, `172.17.0.2`, on an existing network, `172.17.0.2/16`. The exact address may be different on your machine, but the principles are the same.
 
 Uh oh... Let's hopon `client` and see if that machine is on the same network:
 
@@ -135,7 +134,7 @@ As the message indicates, that network is no longer available. `client` doesn't 
 
 ### Add our own IP address configuration
 
-Now that we've removed the default network docker created, let's get started creating a network of our own! Let's add IP addresses to each of these containers using the `ip addr add` command. In this example, we want to use the `10.1.1.0/24` network for these containers. `10.0.0.0/8` is one of the networks identified in [RFC 1918](https://www.rfc-editor.org/rfc/rfc1918) that is exclusively used for _private_ networking. This means that any IP packet that reaches the internet with an IP address in this range will be dropped. This is helpful in our tutorial because if our system is misconfigured to route to the Internet, we don't want a false-positive for ping tests. Therefore on `server`, we use the command
+Now that we've removed the default network docker created, let's get started creating a network of our own! Let's add IP addresses to each of these containers using the `ip addr add` command. In this example, we want to use the `10.1.1.0/24` network for these containers. `10.0.0.0/8` is one of the networks identified in [RFC 1918][RFC 1918] that is exclusively used for _private_ networking. This means that any IP packet that reaches the internet with an IP address in this range will be dropped. This is helpful in our tutorial because if our system is misconfigured to route to the Internet, we don't want a false-positive for ping tests. Therefore on `server`, we use the command
 
 `ip addr add 10.1.1.2/24 dev eth0`
 
@@ -145,7 +144,7 @@ But wait... why are we ending our addresses with `.2` and `.3`? Why aren't we st
 
 ### Test the network connection
 
-Here, we're going to start exploring with a networking tool called [`tcpdump`](../command-reference-guide.md#tcpdump). `tcpdump` "sniffs" ethernet frames on the network interface identified in the command. What we'll end up running on `server` is:
+Here, we're going to start exploring with a networking tool called [`tcpdump`][ref tcpdump]. `tcpdump` "sniffs" ethernet frames on the network interface identified in the command. What we'll end up running on `server` is:
 
 ```bash
 tcpdump -ni eth0
@@ -221,7 +220,7 @@ Basically, all you need to know about this is that `ping` is a program that send
 19:52:30.297112 ARP, Reply 10.1.1.2 is-at 02:42:ac:16:00:03, length 28
 ```
 
-ARP, which stands for Address Resolution Protocol,  is a protocol that allows a machine that is connected locally on one network to talk to another machine that is also connected to that same network (as opposed to a machine that wants to communicate over multiple networks). To learn more about ARP, checkout the [prefixes and subnet masks appendix](../../appendix/prefixes-and-subnet-masks.md).
+ARP, which stands for Address Resolution Protocol,  is a protocol that allows a machine that is connected locally on one network to talk to another machine that is also connected to that same network (as opposed to a machine that wants to communicate over multiple networks). To learn more about ARP, checkout the [prefixes and subnet masks appendix][appendix prefixes].
 
 After seeing the ARP packets go back and forth (which establish the ability for those two containers to talk to each other on the local network), we see the ICMP echo-request and echo-reply packets go back and forth in our `tcpdump` output.
 
@@ -269,10 +268,10 @@ At this point, there are a whole bunch of manual steps to get all this going.  N
 Make sure you're currently in the directory for this chapter. We are going to use the `docker-compose` command which uses the [docker-compose.yml](docker-compose.yml) file in this directory to build, configure, and start our two containers on our network. If you check that file, you'll see that we're creating:
 
 - 1 network
-    - ten-one-net (`10.1.1.0/24`)
+  - ten-one-net (`10.1.1.0/24`)
 - 2 services, each with an interface on ten-one-net
-    - client (`10.1.1.3`)
-    - server (`10.1.1.2`)
+  - client (`10.1.1.3`)
+  - server (`10.1.1.2`)
 
 To use this magical file to automate building out machines on our network, use the following command:
 
@@ -296,3 +295,21 @@ ip: RTNETLINK answers: Operation not permitted
 ```
 
 The solution for the problem was adding the permission `--cap-add=NET_ADMIN` when running `docker run` to get docker to allow us to be able to edit them.
+
+<!-- Links, reference style, inside docset -->
+
+[basic network map]:        ../../img/network-maps/basic-network-map.svg
+[appendix netmap]:          ../../appendix/how-to-read-a-network-map.md
+[appendix prefixes]:        ../../appendix/prefixes-and-subnet-masks.md
+[ref ip addr]:              ../command-reference-guide.md#ip-addr
+[ref ping]:                 ../command-reference-guide.md#ping
+[ref tcpdump]:              ../command-reference-guide.md#tcpdump
+[glossary interface]:       ../glossary.md#interface
+
+<!-- Links, reference style, to external resources -->
+[ext icmp responses]:        https://docs.netapp.com/us-en/e-series-santricity/sm-hardware/what-are-icmp-ping-responses.html
+[RFC 1918]:                  https://www.rfc-editor.org/rfc/rfc1918
+                             "RFC 1918"
+[stackoverflow rtnetlink]:   https://stackoverflow.com/questions/27708376/why-am-i-getting-an-rtnetlink-operation-not-permitted-when-using-pipework-with-d
+                             "Stackoverflow post on RTNETLINK and Docker"
+<!-- end of file -->

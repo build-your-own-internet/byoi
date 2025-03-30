@@ -12,8 +12,7 @@ Let's start with the simplest thing we can do: we're gonna head down the route o
 
 First, let's check out what our little internet looks like for this chapter:
 
-[![our-inter-network](../../img/network-maps/name-resolution/nr-multicast.svg
- "Our Inter-network")](../../img/network-maps/name-resolution/nr-multicast.svg)
+[!["Our Inter-network"][our inter network]][our inter network]
 
 The significant things to note about this internet are that we have 2 machines on one network, `host-c` and `host-f` are on `6.0.0.0/8`, and we added a new host, `host-h`, to the `4.0.0.0/8` network. `host-h` is only one hop away from `host-c` and `host-f`. This means that requests from `host-h` <=> `host-c` only need to be routed through one router. This simplifies what we're looking at when we are checking what's happening on our internet. We wanted to have a request path that involved one and only one router; adding `host-h` handled that for us.
 
@@ -438,8 +437,7 @@ Previously, we saw `router-3` proxying the request for name resolution for `host
 
 The name resolution request flow looks something like this:
 
-[![flowchart of proxy broadcast through our internet](../../img/network-maps/name-resolution/proxy-broadcast.svg
- "flowchart of proxy broadcast through our internet")](../../img/network-maps/name-resolution/proxy-broadcast.svg)
+[!["flowchart of proxy broadcast through our internet"][flowchart proxy broadcast]][flowchart proxy broadcast]
 
 Each arrow in this diagram indicates a new proxied request for name resolution for `host-h.local`. The color of the arrows indicates how far down the proxy chain that request is.
 
@@ -453,8 +451,7 @@ The result of these behaviors is that messages don't go around the internet fore
 
 Next, let's look at how the response makes its way to every machine as well.
 
-[![flowchart of a proxy response through our internet](../../img/network-maps/name-resolution/proxy-response.svg
- "flowchart of a proxy response through our internet")](../../img/network-maps/name-resolution/proxy-response.svg)
+[!["flowchart of proxy response through our internet"][flowchart proxy response]][flowchart proxy response]
 
 Here, we see that `host-h` generates the response message that gets broadcast to every router on the `4.0.0.0/8` network. Each router then proxies that message to each machine on each other network it has an interface on. As each router, in turn, does the same thing, this allows the response to flood back to every machine on the internet.
 
@@ -491,3 +488,15 @@ We've talked a lot in this chapter about multicast. But what makes multicast dif
 **Multicast** is another routing scheme which sends packets to many machines at once. Unlike "broadcast" packets, there are special registered multicast addresses that carry semantic meaning. We saw that the IP address `224.0.0.51`, for example, is used for multicast name-resolution. Machines that care about multicast name-resolution will listen for broadcast messages to this IP address and will respond accordingly. Furthermore, multicast is just broadcast that **could** be routed across multiple networks, but, in practice, this is rarely ever done.
 
 ![an image of routing schemes](https://bunnyacademy.b-cdn.net/what-is-routing-scheme.svg)
+
+<!-- Links, reference style, inside docset -->
+[our inter network]:         ../../img/network-maps/name-resolution/nr-multicast.svg
+                             "Our Inter-network"
+
+[flowchart proxy broadcast]: ../../img/network-maps/name-resolution/proxy-broadcast.svg
+                             "flowchart of proxy broadcast through our internet"
+
+[flowchart proxy response]:  ../../img/network-maps/name-resolution/proxy-response.svg
+                             "flowchart of a proxy response through our internet"
+
+<!-- end of file -->

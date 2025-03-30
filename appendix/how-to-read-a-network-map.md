@@ -6,8 +6,7 @@ Everything that we build in this project depends on us understanding the shape o
 
 Let's start with a very simple network map:
 
-[![basic-network-map](../img/network-maps/basic-network-map.svg
- "Basic Network Map")](../img/network-maps/basic-network-map.svg)
+[![basic network map][basic network map]][basic network map]
 
 So, what's going on here? First, what's probably most obvious about this map is that we have 2 machines on our network: a `Client` and a `Server`. Now, look at how each machine has a thin line coming out of it that connects it to a thicker line. That thick line symbolizes the network, and the thin lines from each machine symbolize their connections to that network.
 
@@ -19,8 +18,7 @@ So we've identified that the network is `10.1.1.0/24`, but we also need to know 
 
 So, we now know how to read a network map for a single network. But we're looking to build a full internet! That means multiple networks! Let's look at a slightly more complicated network map:
 
-[![smol-internet-network-map](../img/network-maps/smol-internet-network-map.svg
- "A Smol Internet Network Map")](../img/network-maps/smol-internet-network-map.svg)
+[![smol internet map][smol internet map]][smol internet map]
 
 OK, some of this should already look familiar. See if you can identify each of the following:
 
@@ -40,10 +38,21 @@ When we look at this network map, we can see that the `Router` has a connection 
 
 Alright, let's make this more interesting. Take a look at this slightly chonkier internet map:
 
-[![chonky-internet-network-map](../img/network-maps/internet-chonk-network-map.svg
- "A Chonky Internet Network Map")](../img/network-maps/internet-chonk-network-map.svg)
+[![chonky internet map][chonky internet map]][chonky internet map]
 
 See if you can complete the following exercises:
 
 1. What is `Server`'s IP address? What is `Router4`'s IP address on `2.1.1.0/29`?
 2. Use the lines that connect the machines to their networks to find a path for requests from `Client` to reach `Server`. 3. What do you think is the best path? Write down the IP addresses of each machine that will be used in that path.
+
+<!-- Links, reference style, inside docset -->
+[basic network map]:         ../img/network-maps/basic-network-map.svg
+                             "Basic Network Map"
+
+[smol internet map]:         ../img/network-maps/smol-internet-network-map.svg
+                             "A Smol Internet Network Map"
+
+[chonky internet map]:       ../img/network-maps/internet-chonk-network-map.svg
+                             "A Chonky Internet Network Map"
+
+<!-- end of file -->
