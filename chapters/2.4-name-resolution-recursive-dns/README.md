@@ -43,8 +43,7 @@ But why go through all this process? Why don't we just have those root servers a
 
 Before we can look at the process, we need to learn a little bit about the specific machines involved in DNS. We'll use a new network map with a few new machines defined on it:
 
-[![large internet with DNS infrastructure](../../img/network-maps/name-resolution/recursive-dns.svg
- "large internet with DNS infrastructure")](../../img/network-maps/name-resolution/recursive-dns.svg)
+[![large internet with DNS infrastructure][largenet DNS infra]][largenet DNS infra]
 
 Let's briefly break down what we're seeing in this network map. If you haven't already, it would behoove you to read over [How to Read a Network Map](../../appendix/how-to-read-a-network-map.md) before continuing this section.
 
@@ -65,20 +64,17 @@ _**NOTE** For the purposes of this explanation, we're going to ignore that cachi
 
 First. Let’s just define the actual goal of what we’re trying to accomplish. Using the network map above, we're going to pretend we're sitting on a client machine.
 
-[![large internet with DNS infrastructure with a pointer to the client machine](../../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-1.svg
- "large internet with DNS infrastructure with a pointer to the client machine")](../../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-1.svg)
+[![large internet with DNS infrastructure with a pointer to the client machine][largenet DNS infra client]][largenet DNS infra client]
 
 Now, the user on this machine really wants to go visit `www.awesomecat.com`. Before the user can revel in GIFs and shorts of cats being awesome in the world, they need to resolve `www.awesomecat.com` to an IP address. The first thing this machine is going to do is send a request to their ISP's (Comcast in this case) recursive resolver.
 
-[![large internet with DNS infrastructure with the path between the client machine and the recursive resolver highlighted](../../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-2.svg
- "large internet with DNS infrastructure with the path between the client machine and the recursive resolver highlighted")](../../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-2.svg)
+[![large internet with DNS infrastructure with the path between the client machine and the recursive resolver highlighted][largenet DNS infra client-recursive]][largenet DNS infra client-recursive]
 
 The recursive resolver's job is to keep asking questions about what the DNS records are for a name until it gets a final answer. It will continue to initiate new requests until it either receives a response with the DNS records it was looking for or it receives an error. Only then will it respond back to the client.
 
 So, what's the first thing it needs to do? It doesn't know what server on the internet might know about `www.awesomecat.com`. Fortunately, every resolver comes installed with a file called [root.hints](https://www.internic.net/domain/named.root). This file provides the resolver the IP addresses of ALL of the root servers around the world. Since, for this explanation, we're ignoring the cache, the only thing the resolver knows about on the internet are those root servers. It will start by firing off a request to the Root DNS servers, asking them what the IP address is for `www.awesomecat.com`.
 
-[![large internet with DNS infrastructure with the path between the recursive resolver and the root DNS servers highlighted](../../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-3.svg
- "large internet with DNS infrastructure with the path between the recursive resolver and the root DNS servers highlighted")](../../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-3.svg)
+[![large internet with DNS infrastructure with the path between the recursive resolver and the root DNS servers highlighted][largenet DNS infra recursive-root]][largenet DNS infra recursive-root]
 
 The role of the Root DNS server on The Internet is simple. All they do is tell the resolver which Top Level Domain (TLD) servers to go to. Root DNS servers don't know all the DNS records for every domain on the internet. That would be way too many requests and waaaaaaaay too many domain names! What they do know is where the next step to find those answers lives.
 
@@ -86,8 +82,7 @@ Let's look at the domain we're attempting to lookup again: `www.awesomecat.com`.
 
 Our resolver receives the response back from the Root server, and it recognizes that this is not the final answer it's looking for. But! It also sees that it now has IP addresses of another server that has more information about the domain it's attempting to look up! So, our stalwart resolver fires off requests to the `COM` TLD servers.
 
-[![large internet with DNS infrastructure with the path between the recursive resolver and the COM TLD server highlighted](../../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-4.svg
- "large internet with DNS infrastructure with the path between the recursive resolver and the COM TLD server highlighted")](../../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-4.svg)
+[![large internet with DNS infrastructure with the path between the recursive resolver and the COM TLD server highlighted][largenet DNS infra recursive-comtld]][largenet DNS infra recursive-comtld]
 
 Much like the Root DNS server, our TLD servers see way too much traffic to be able to provide answers to every DNS query that hits them. Instead, they too delegate.
 
@@ -97,8 +92,7 @@ So in the story of our little resolver trying to find the IP address for `www.aw
 
 Our resolver receives that response, and undeterred, it initiates another new request, this time to the Authoritative server it just learned about.
 
-[![large internet with DNS infrastructure with the path between the recursive resolver and the Authoritative DNS server highlighted](../../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-5.svg
- "large internet with DNS infrastructure with the path between the recursive resolver and the Authoritative DNS server highlighted")](../../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-5.svg)
+[![large internet with DNS infrastructure with the path between the recursive resolver and the Authoritative DNS server highlighted][largenet DNS infra recursive-auth]][largenet DNS infra recursive-auth]
 
 The request lands on the Authoritative DNS server for this domain, and that server actually knows about the domain! It's able to send back an IP address for a server that knows how to handle queries for `www.awesomecat.com`!!!
 
@@ -394,8 +388,7 @@ Next, we're going to to play around in this system!
 
 This leads us to our map! If you need help understanding this map, check out our [appendix on how to read network maps](../../appendix/how-to-read-a-network-map.md).
 
-[![Network map of a large internetwork](../../img/network-maps/name-resolution/recursive-dns.svg
- "Network map of a large internetwork")](../../img/network-maps/name-resolution/recursive-dns.svg)
+[![Network map of a large internetwork][netmap large internetwork]][netmap large internetwork]
 
 You might recognize some of these new machines from our previous description on how recursive DNS works. See if you can find the machines that are part of the complete DNS infrastructure, including:
 
@@ -945,21 +938,21 @@ You're done with the `rootdns-i` server. This DNS server is now ready to respond
 
 1. Set up the `knot.conf` file.
 
-Now that the root DNS servers are configured, we're going to set up our **new** top-level domain server. `hopon tlddns-a` to configure the `knot` server there.
+   Now that the root DNS servers are configured, we're going to set up our **new** top-level domain server. `hopon tlddns-a` to configure the `knot` server there.
 
-If we check the `/config/knot.conf` file, you'll see that we currently only have the `server` itself defined. We'll need the following text at the end of the file to add the new `.meow` zone:
+   If we check the `/config/knot.conf` file, you'll see that we currently only have the `server` itself defined. We'll need the following text at the end of the file to add the new `.meow` zone:
 
-```bash
-# Define the zone
-zone:
-  - domain: meow
-    file: "/etc/knot/meow.zone"
-    storage: "/var/lib/knot"
-```
+    ```bash
+    # Define the zone
+    zone:
+      - domain: meow
+        file: "/etc/knot/meow.zone"
+        storage: "/var/lib/knot"
+    ```
 
 2. Create the `meow.zone` zone
 
-Now that we've told `knot` where to find the file for the zone, we should actually go and make that file! Let's `vim /etc/knot/meow.zone` and add the zone content we want for this TLD.
+   Now that we've told `knot` where to find the file for the zone, we should actually go and make that file! Let's `vim /etc/knot/meow.zone` and add the zone content we want for this TLD.
 
 We've looked at several zone files already in this chapter. If you look at them, you might be able to find a pattern. We're going to be setting the zone file on this server, which will be very similar in pattern to the other TLD zone files on servers `tlddns-g`, `tlddns-n`, and `tlddns-v`. Go take a look at one of these other TLD DNS servers and use take a look at their zone files to use as a starting place for setting up this new server. If you get stuck, take a look at the [final directory](./final/dns-servers/tlddns-a/meow.zone) for some assistance.
 
@@ -995,7 +988,7 @@ meow.                   3600    IN      SOA     tlddns-a.aws.meow. tlddns-a.aws.
 **TEST 2** Query a root DNS server to see if it provides the same answer:
 
 ```bash
-$ dig @100.0.1.100 meow.
+dig @100.0.1.100 meow.
 ```
 
 ##### Next steps for future learning
@@ -1154,8 +1147,7 @@ That's it! What we just looked at should have felt pretty familiar in comparison
 
 Now that we've built out some of the infrastructure together, let's take a stab at adding a few more elements to this toy internet. First, we'd like to bring your attention to a new network, "RIPE":
 
-[![Network map including the RIPE network](../../img/network-maps/name-resolution/recursive-dns-final-exercises.svg
- "Network map including the RIPE network")](../../img/network-maps/name-resolution/recursive-dns-final-exercises.svg)
+[![Network map including the RIPE network][netmap with RIPE network]][netmap with RIPE network]
 
 So now we're going to have you do a couple more exercises to make sure you have enough practice configuring DNS-related software. To that end, we have a **new** rootdns and a **new** resolver. Your task is to configure them so they function correctly in our toy internet! In each case, it would be helpful to go check (and potentially copy) the config files for similar machines on our internet.
 
@@ -1316,3 +1308,30 @@ So what's the purpose of all these extra zone files, like `aws.net.zone`? We nee
 Dear lord... `resolver-c` just wants to know everything abou the internet. Each of these packets is part of `resolver-c` attempting to either learn about domains that were tangentially related to its attempt to resolve `www.awesomecat.com`. Plus there's some ARP request to learn about `router-c3` there at the end.
 
 Now that we've gone through reading the basic `tcpdump` output, we encourage the reader to go back through this exercise again, this time running `tcpdump -nvv` to get the verbose output. See if you can read what's happening with each request when you get even more information!
+
+<!-- Links, reference style, inside docset -->
+[largenet DNS infra]:        ../img/network-maps/name-resolution/recursive-dns.svg
+                             "large internet with DNS infrastructure"
+
+[largenet DNS infra client]: ../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-1.svg
+                             "large internet with DNS infrastructure with a pointer to the client machine"
+
+[largenet DNS infra client-recursive]: ../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-2.svg
+                                       "large internet with DNS infrastructure with the path between the client machine and the recursive resolver highlighted"
+
+[largenet DNS infra recursive-root]:   ../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-3.svg
+                                       "large internet with DNS infrastructure with the path between the recursive resolver and the root DNS servers highlighted"
+
+[largenet DNS infra recursive-comtld]: ../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-4.svg
+                                       "large internet with DNS infrastructure with the path between the recursive resolver and the COM TLD server highlighted"
+
+[largenet DNS infra recursive-auth]:   ../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-5.svg
+                                       "large internet with DNS infrastructure with the path between the recursive resolver and the Authoritative DNS server highlighted"
+
+[netmap large internetwork]:           ../../img/network-maps/name-resolution/recursive-dns.svg
+                                       "Network map of a large internetwork"
+
+[netmap with RIPE network]:            ../../img/network-maps/name-resolution/recursive-dns-final-exercises.svg
+                                       "Network map including the RIPE network"
+
+<!-- end of file -->

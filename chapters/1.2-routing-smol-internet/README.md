@@ -6,8 +6,7 @@ In the previous chapter, we build a small network of 2 machines that could ping 
 
 Here's what we expect our internet to look like by the end of this chapter:
 
-[![smol-internet-network-map](../../img/network-maps/smol-internet-network-map.svg
- "A Smol Internet Network Map")](../../img/network-maps/smol-internet-network-map.svg)
+[![A Smol Internet Map][smol internet map]][smol internet map]
 
 You'll notice in this network diagram that we've built on the smol network from Chapter 1.1. Here, we've added a new network, `10.1.2.0/24`, and we've added a new machine, `router`. A [router](../glossary.md#router-aka-gateway) is a machine that has an [interface](../glossary.md#interface) on multiple networks and can forward packets across those networks. In this case, our router has an interface on both `10.1.1.0/24` and `10.1.2.0/24`.
 
@@ -372,3 +371,10 @@ For the sake of ensuring the rest of this chapter works as expected, we will not
 ```
 
 Each of the machines say `0 packets dropped by kernel`. Ummm… if the packets didn’t make it back to `server` and the packets weren’t dropped… where did they go? Well, `client` still dropped the packets. The `0 packets dropped by kernel` count isn't the number of packets dropped in total; it's the number of packets dropped *by tcpdump*. Specifically, `tcpdump` would drop those packets [because of buffer overflow](https://unix.stackexchange.com/questions/144794/why-would-the-kernel-drop-packets).
+
+<!-- Links, reference style, inside docset -->
+
+[smol internet map]:         ../../img/network-maps/smol-internet-network-map.svg
+                             "A Smol Internet Network Map"
+
+<!-- end of file -->

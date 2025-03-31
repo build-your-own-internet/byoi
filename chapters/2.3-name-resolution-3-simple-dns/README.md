@@ -13,8 +13,7 @@ For this chapter, we want to build a single server that is responsible for knowi
 
 Let's look at the internet we'll be working with for this chapter:
 
-[![our-inter-network](../../img/network-maps/name-resolution/basic-dns-internet.svg
- "Our Inter-network")](../../img/network-maps/name-resolution/basic-dns-internet.svg)
+[!["Our Inter-network")][our inter network]][our inter network]
 
 Notice that our internet now has a server called `DNS` at `2.0.0.107`. This server provides Authoritative DNS services for our internet. If you check the directory for this chapter, you'll see that there's a new Dockerfile entry: `Dockerfile_dns`. This Dockerfile builds its image from a base image that includes DNS server software called `knot`. To achieve our goal for this chapter, we will need to:
 
@@ -318,3 +317,9 @@ By the time you're done, you should be able to do the following:
 
 * on `host-a`, you should be able to run the command `ping host-d.byoi.net -w 2` and you should be able to get responses.
 * you should be able to `hopon host-d` (for example) and run `links http://host-c.byoi.net` and bring up the web page on that host.
+
+<!-- Links, reference style, inside docset -->
+[our inter network]:         ../../img/network-maps/name-resolution/nr-getting-started.svg
+                             "Our Inter-network"
+
+<!-- end of file -->
