@@ -71,7 +71,19 @@ There's not much going on here yet. This basic configuration includes:
 
 - `router id`: (optional) the unique IP address of this router. While this is recommended, it's not necessary for BIRD to work.
 - `protocol kernel`: This section controls how you get routing information into and out of the routing table for this machine.
-- `protocol device`: This section empowers BIRD to learn what interfaces exist on this machine and their up/down status.
+- `protocol device`: This section empowers BIRD to learn what network interfaces (or "devices") exist on this machine and their up/down status.
+
+<!-- TODO: be sure to make sure we explain the difference between a route that shows up from `ip route` that gets there because there is a network interface attached to that network and a route that shows up when we do an `ip route add` command -->
+
+Some common things you'll see in each `protocol` section is:
+
+- `scan time`: How often a process should be kicked off to update values in this protocol
+- `import`: pull information from the protocol we manage.
+  - `none`: In the case of `kernel`, if it has `import none`, then it will not read the routing table from the kernel to be included in BIRD's route information.
+  - `all`: In the case of `kernel`, if it has `import all`, then BIRD will pull all information from the machine's route table and include that in its route information.  <!-- TODO: VERIFY THIS -->
+- `export`: send information from `BIRD core` to the protocol we manage.
+  - `none`: In the case of `kernel`, if we `export none`, then the kernel's routing table will not reflect any of the information that BIRD knows about.
+  - `all`: In the case of `kernel`, if we do `export all`, then the kernel's routing table will be updated with BIRD's routes and the router will be able to use that information to physically route packets as it sees them go by.
 
 As we mentioned earlier, we're going to use a protocol called `RIP` for exchanging route information between routers on our network. Let's see what this process will look like conceptually, then we'll explore how to build the configuration we want in BIRD to make that happen.
 
@@ -81,16 +93,16 @@ First, introduce a new diagram. This is a conceptual picture of `router-a2` comm
 
 On the left, we have stuff that exists "outside" of BIRD:
 
-- `eth0, eth1`: The network interfaces of the machine which connect it to the networks that it sends packets on
-- `ip route`: the kernel's routing table which provides instructions for where to send packets to networks that it is not directly connected to.
+- **eth0, eth1**: The network interfaces of the machine which connect it to the networks that it sends packets on
+- **route table**: the kernel's routing table which provides instructions for where to send packets to networks that it is not directly connected to.
 
-Moving to the right, we next encounter a giant box labelled `BIRD`. This is the BIRD software and all of its constituent pieces. As we move into bird, the first big yellow box represents the "protocols" that BIRD knows about. We have already encountered the `device` and `kernel` protocols from the initial `bird.conf` file above. This diagram introduces the `RIP` protocol, which is used in communicating with other routers on our little internet.
+Moving to the right, we next encounter a giant box labelled **BIRD**. This is the BIRD software and all of its constituent pieces. As we move into bird, the first big yellow box represents the "protocols" that BIRD knows about. We have already encountered the `device` and `kernel` protocols from the initial `bird.conf` file above. This diagram introduces the `RIP` protocol, which is used in communicating with other routers on our little internet.
 
-Finally, we have the box labelled `BIRD core` which manages organizing information between protocols to create a coherent routing table for the router.
+Finally, we have the box labelled **BIRD core** which manages organizing information between protocols to create a coherent routing table for the router.
 
 But what does this process look like on a larger internet? How exactly does route information get collected and distributed among the routers using RIP?
 
-To answer that question, we're going to give you a Giant Step-by-Step Diagram™. It's going to start with how the router collects information about its own network connections and will go through the process of how it uses the RIP protocol to communicate that information to other routers in order to build a complete picture of the entire network so that the router can build a full routing table for the entire internet.
+To answer that question, we're going to give you a Giant Step-by-Step Diagram™! It's going to start with how the router collects information about its own network connections and will go through the process of how it uses the RIP protocol to communicate that information to other routers in order to build a complete picture of the entire network so each router can build a full routing table for the entire internet.
 
 See you in a couple pages!
 
@@ -158,6 +170,12 @@ PROBLEM 2:
 Here's what we're going to try:
 - rebuild this pocket-by-pocket and see static routes go away and routes get populated.
 - by the end of next session (hopefully), we have all static routes removed in the `final` directory.
+
+## Fun exercises:
+
+1. Add `learn yes` to the kernel protocol and add a static route and see that sucker propagate around the network
+2. 
+
 
 ## Outstanding questions:
 
