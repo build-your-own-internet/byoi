@@ -28,7 +28,7 @@ root@router-a2:/# ip route
 
 > 📝 **NOTE:** your interface names (eth0 and eth1) may be different
 
-### Implementing BIRD
+### How BIRD works
 
 At the moment, our routers don't have any way of communicating routing information to each other. we need to configure BIRD so it knows what routes to advertise and how to advertise them. To do that, we're going to start by using `vim` to modify the `bird.conf` file on this machine:
 
@@ -108,7 +108,141 @@ See you in a couple pages!
 
 [![how BIRD works][how BIRD works]][how BIRD works]
 
-<!-- THIS IS WHERE WE LEFT OFF --------------------------------------------- -->
+### Implementing RIP in BIRD
+
+We looked at the default configuration for BIRD and now we're going to give you a complete configuration for implementing RIP in BIRD. We'll move router-by-router and see how routing-tables are populated and look at some key controls that BIRD provides for us to check on the status of our RIP environment.
+
+1. Hopon `router-a2`
+2. Before we get started with making configuration changes with BIRD, let's see what this router knows about our toy internet by using the `ip route` command. You should see something like this:
+
+```bash
+root@router-a2:/# ip route
+4.1.0.0/16 dev eth0 proto kernel scope link src 4.1.0.2
+4.2.0.0/16 dev eth1 proto kernel scope link src 4.2.0.2
+```
+
+3. Next, let's start configuring BIRD. The first step is to update the `/etc/bird/bird.conf` file to match the following:
+
+```bash
+# If we run BIRD interactively, we can see logs go by for everything
+# it's doing
+debug protocols all;
+
+# Learn what interfaces exist on this machine and also their up/down status
+protocol device {
+  scan time 10;
+}
+
+# Adds interface route information to BIRD's routing table
+protocol direct {
+  interface "*";
+}
+
+protocol kernel {
+  # A real bird instance would do this, but we want
+  # to make it very obvious what BIRD is doing.
+  # persist;
+
+  scan time 10;
+  
+  # So we're not going to propagate routes from the 
+  # kernel into BIRD at this time.
+  import none;
+
+  # This is to make sure that the OS can get to places on 
+  # our toy network.
+  export all;
+}
+
+protocol rip {
+  # Populate all known routes
+  # these come from:
+  #   - the kernel
+  #   - the static routes
+  #   - directly-connected interfaces
+  import all;
+
+  # this is what we send to other RIP routers
+  export all;
+
+  # I think this is what interfaces we are sending RIP updates to
+  # and receive RIP updates from
+  interface "*" {
+    version 2;
+  };
+}
+```
+
+4. Restart the BIRD daemon in interactive debugging mode.
+
+Remember to use the `ps aux` command to list all the running processes on the machine. Find the line that has `bird` in it and look at the `PID` column for that line to find the process-id. Next, issue the `kill` command with process-id that you found. This will stop `bird` from running in the background. It should look something like this:
+
+```bash
+root@router-a2:/# ps aux
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.0   4032  2816 ?        Ss   18:32   0:00 /bin/bash /router-start-up.sh
+root          12  0.0  0.0   2796  1408 ?        Ss   18:32   0:00 /usr/sbin/bird -c /etc/bird/bird.conf
+root          13  0.0  0.0   2268  1024 ?        S    18:32   0:00 /bin/sleep infinity
+root          14  0.0  0.0   4296  3456 pts/0    Ss   18:32   0:00 /bin/bash
+root          25  0.0  0.0   7628  3456 pts/0    R+   18:32   0:00 ps aux
+root@router-a2:/# kill 12
+```
+
+Next, let's run `bird` with this new configuration in interactive debugging mode by adding the `-d` flag when we start it:
+
+```bash
+root@router-a2:/# bird -c /etc/bird/bird.conf -d
+bird: device1: Initializing
+bird: direct1: Initializing
+bird: kernel1: Initializing
+bird: rip1: Initializing
+bird: device1: Starting
+bird: device1: Scanning interfaces
+bird: device1: Connected to table master
+bird: device1: State changed to feed
+bird: Chosen router ID 4.1.0.2 according to interface eth0
+...
+```
+
+Don't panic! You're going to see a lot of debugging information here. Scan through this output and see what you can understand. It's okay if it doesn't all (or even mostly!) make sense to you. Find the bits that do make sense and see if you can understand them in context. Once the `bird` has completed its initialization, you should see the following lines continuing to output:
+
+```bash
+bird: device1: Scanning interfaces
+bird: kernel1: Scanning routing table
+bird: kernel1: Pruning table master
+bird: rip1: Interface timer fired for eth1
+bird: rip1: Sending regular updates for eth1
+bird: rip1: Sending response via eth1
+bird: device1: Scanning interfaces
+bird: kernel1: Scanning routing table
+bird: kernel1: Pruning table master
+```
+
+This is telling us that `bird` is scanning to see what routes it could be learning. SO, let's go take a look at those routes!
+
+5. Check your routes on `router-a2`
+
+Leave this output scrolling in this window, and open a new window and hopon `router-a2` once again so we can ask it some questions while `bird` keeps doing its thing.
+
+Let's take a look at how `router-a2`'s routing table has changed!
+
+```bash
+root@router-a2:/# ip route
+4.1.0.0/16 dev eth0 proto kernel scope link src 4.1.0.2
+4.2.0.0/16 dev eth1 proto kernel scope link src 4.2.0.2
+```
+
+Psyche! With only one router running RIP, there is nothing for it to communicate with and so no new route information is coming into this router. This is like one hand clapping: no sound yet!
+
+6. Add a neighbor
+
+In order to see some interesting results, we need to have at least two routers that [neighbor](../../../chapters/glossary.md#neighbor-in-a-routing-context) each other running RIP. So let's configure `router-a3` the same way and watch the changes roll in!
+
+Open a third window to `router-a3`, and update the `/etc/bird/bird.conf` file on _that_ router to match the configuration that we gave you for `router-a2`. All of these routers will take _exactly the same_ configuration file. Easy, huh?
+
+
+
+We recommend starting `bird` in "interactive debugging mode" so that we can see exactly how these routers are going to communicate.
 
 We're going to go against recommended best practice and remove this from our configs for the sake of simplicity.
 A common confiuguration value that we'll see throughout this file is `import`s and `export`s. `import`s are how we get

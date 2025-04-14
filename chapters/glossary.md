@@ -17,6 +17,7 @@ You might run into terms that you don't know the definition to. Sometimes they a
   - [machine](#machine)
   - [multicast](#multicast)
   - [name resolution](#name-resolution)
+  - [neighbor (in a routing context)](#neighbor-in-a-routing-context)
   - [network](#network)
   - [packets (a.k.a `IP packets`)](#packets-aka-ip-packets)
   - [proxy](#proxy)
@@ -104,6 +105,10 @@ This tends to be a private network solution because hosts can't really trust the
 ## name resolution
 
 Name-resolution is the process of converting a human-friendly name into the IP address machines need to be able to route traffic across the Internet.
+
+## neighbor (in a routing context)
+
+When two routers each have interfaces on the same network, they can communicate directly with each other over Ethernet. This makes them "neighbors."
 
 ## network
 

@@ -1,19 +1,13 @@
 #!/bin/bash
-
-BIRD_CONF_FILE="/etc/bird/bird.conf"
-
-/usr/sbin/ip route delete default
-
-cp /init/bird.conf $BIRD_CONF_FILE || echo "bird.conf not found"
-mkdir -p /run/bird
-
 mkdir -p /etc/vim
 cp /vimrc /etc/vim/vimrc.local
+/usr/sbin/ip route delete default
 
+
+BIRD_CONF_FILE="/etc/bird/bird.conf"
+cp /init/bird.conf $BIRD_CONF_FILE || echo "bird.conf not found"
+mkdir -p /run/bird
 rm -rf /init
-
-if [ -f "$BIRD_CONF_FILE" ]; then
-  /usr/sbin/bird -c $BIRD_CONF_FILE
-fi
+/usr/sbin/bird -c $BIRD_CONF_FILE
 
 /bin/sleep infinity
