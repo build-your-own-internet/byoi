@@ -191,7 +191,7 @@ root@router-a2:/# kill 12
 Next, let's run `bird` with this new configuration in interactive debugging mode by adding the `-d` flag when we start it:
 
 ```bash
-root@router-a2:/# bird -c /etc/bird/bird.conf -d
+root@router-a2:/# bird -d
 bird: device1: Initializing
 bird: direct1: Initializing
 bird: kernel1: Initializing
@@ -222,48 +222,196 @@ This is telling us that `bird` is scanning to see what routes it could be learni
 
 5. Check your routes on `router-a2`
 
-Leave this output scrolling in this window, and open a new window and hopon `router-a2` once again so we can ask it some questions while `bird` keeps doing its thing.
+Leave the `bird -d` output scrolling in this window, and open a **new** window and hopon `router-a2` once again so we can watch the route table update as we add new [neighbors](../../../chapters/glossary.md#neighbor-in-a-routing-context).
 
-Let's take a look at how `router-a2`'s routing table has changed!
+Let's take a look at how `router-a2`'s routing table has changed! We're going to use the `watch` command with the `ip route` command so that we can see the routes refresh in real time as we make changes:
 
 ```bash
-root@router-a2:/# ip route
+root@router-a2:/# watch ip route
+```
+
+```bash
+Every 2.0s: ip route       router-a2: Wed Apr 16 20:23:21 2025
+
 4.1.0.0/16 dev eth0 proto kernel scope link src 4.1.0.2
 4.2.0.0/16 dev eth1 proto kernel scope link src 4.2.0.2
 ```
 
-Psyche! With only one router running RIP, there is nothing for it to communicate with and so no new route information is coming into this router. This is like one hand clapping: no sound yet!
+So what this is going to do, if you're not familiar with `watch`, is to run the command you give it and show you the output every two seconds. This means we get a refresh of what routes this machine knows every two seconds. 
+
+You might feel a slight sense of disappointment that you don't see any new routes yet. Why did we do all that work with bird just to have the router do nothing?! Well, with only one router running RIP, there is nothing for it to communicate with and so no new route information is coming into this router. This is like one hand clapping: no sound yet!
 
 6. Add a neighbor
 
 In order to see some interesting results, we need to have at least two routers that [neighbor](../../../chapters/glossary.md#neighbor-in-a-routing-context) each other running RIP. So let's configure `router-a3` the same way and watch the changes roll in!
 
-Open a third window to `router-a3`, and update the `/etc/bird/bird.conf` file on _that_ router to match the configuration that we gave you for `router-a2`. All of these routers will take _exactly the same_ configuration file. Easy, huh?
+Open a **third** window, this time to `router-a3`, and update the `/etc/bird/bird.conf` file on _that_ router to match the configuration that we gave you for `router-a2`. All of these routers will take _exactly the same_ configuration file. Easy, huh?
 
+We recommend starting `bird` in "interactive debugging mode" so that we can see exactly how these routers are going to communicate. That's what we're currently running on `router-a2`.
 
+Run the `ps` command as above with router-a3 and run the `kill` command again to terminate the `bird` process on this router. Then run `bird` on router-a3 with the debugging switch. You should see something like this:
 
-We recommend starting `bird` in "interactive debugging mode" so that we can see exactly how these routers are going to communicate.
+```bash
+root@router-a3:/# bird -d
+bird: device1: Initializing
+bird: direct1: Initializing
+bird: kernel1: Initializing
+bird: rip1: Initializing
+bird: device1: Starting
+bird: device1: Scanning interfaces
+bird: device1: Connected to table master
+bird: device1: State changed to feed
+bird: Chosen router ID 3.4.0.3 according to interface eth2
+```
 
-We're going to go against recommended best practice and remove this from our configs for the sake of simplicity.
-A common confiuguration value that we'll see throughout this file is `import`s and `export`s. `import`s are how we get
+In your window running `watch ip route`, you should suddenly see some new routes show up `router-a2`'s routing table!
 
- You'll notice that there is a commented-out `export all` configuration.
-Game plan:
-- fart around with `router-a2`, `a3`, and `a4` so that the three of them are talking RIP together and exchanging routes that they know about.
-- have them go router-by-router and have them paste in configs and maybe have a terminal open on router-a2 and see the birdc output grow and see ip route get bigger
+```bash
+Every 2.0s: ip route       router-a2: Wed Apr 16 20:34:35 2025
+
+3.4.0.0/16 via 4.1.0.3 dev eth0 proto bird
+4.1.0.0/16 dev eth0 proto kernel scope link src 4.1.0.2
+4.2.0.0/16 dev eth1 proto kernel scope link src 4.2.0.2
+4.3.0.0/16 via 4.1.0.3 dev eth0 proto bird
+```
+
+Notice the `proto bird` on the new routes that just showed up. This tells you where they came from! Thanks, `bird` (*・‿・)ノ⌒*
+
+In the first window, where you have the debugging output from `router-a2`'s `bird` process, you may need to scroll back a little bit, you should also see a **whole bunch** of fun new RIP debugging messages show up, such as the following:
+
+```bash
+bird: rip1: Interface timer fired for eth1
+bird: rip1: Sending regular updates for eth1
+bird: rip1: Sending response via eth1
+bird: rip1: New neighbor 4.1.0.3 on eth0
+bird: rip1: Request received from 4.1.0.3 on eth0
+bird: rip1: Sending response via eth0
+bird: rip1: Response received from 4.1.0.3 on eth0
+bird: rip1 > added 4.1.0.0/16 via 4.1.0.3 on eth0
+bird: rip1 > added [best] 4.3.0.0/16 via 4.1.0.3 on eth0
+bird: kernel1 < added 4.3.0.0/16 via 4.1.0.3 on eth0
+bird: rip1 < added 4.3.0.0/16 via 4.1.0.3 on eth0
+bird: rip1: Scheduling triggered updates for eth0
+bird: rip1: Scheduling triggered updates for eth1
+bird: rip1 > added [best] 3.4.0.0/16 via 4.1.0.3 on eth0
+bird: kernel1 < added 3.4.0.0/16 via 4.1.0.3 on eth0
+bird: rip1 < added 3.4.0.0/16 via 4.1.0.3 on eth0
+bird: rip1: Interface timer fired for eth1
+bird: rip1: Sending triggered updates for eth1
+bird: rip1: Sending response via eth1
+bird: rip1: Interface timer fired for eth0
+bird: rip1: Sending triggered updates for eth0
+bird: rip1: Sending response via eth0
+bird: device1: Scanning interfaces
+bird: kernel1: Scanning routing table
+bird: kernel1: 3.4.0.0/16: seen
+bird: kernel1: 4.3.0.0/16: seen
+```
+
+This debugging output is a little simpler than the debugging output that we've seen from `tcpdump`. Take a minute and see if you can make a little sense of what's happening here. Take a minute to go through the output line-by-line and write down what you think each line might mean.
+
+The gist of this is that we're watching `bird` use the communication happening over the RIP protocol to learn new routes and save them into its local ("kernel") routing table.
+
+7. Rinse and repeat!
+
+Okay, we've got two routers running RIP and communicating routes successfully to each other. Guess what... we have nineteen more to go!
+
+Here are the rest of the routers that need to be configured:
+
+- router-a4
+- router-n2
+- router-z7
+- router-z6
+- router-z8
+- router-z5
+- router-c3
+- router-c2
+- router-t7
+- router-t6
+- router-t8
+- router-t5
+- router-s2
+- router-s3
+- router-i2
+- router-v4
+- router-g3
+- router-g4
+- router-g2
+
+It's time to roll out the configuration to each and every one of these little guys! Note that these routers have been given in a specific order. The reason for this has to do with the concept of "neighbors" that we've talked about earlier. Remember that the RIP protocol has to communicate over Ethernet (meaning, on-the-same-network) to other routers. Those routers are "neighbors" because they are adjacent to each other on a larger internet. If we start running RIP on a router that doesn't have direct communication with another router running RIP, then there's no way for the routes to populate. Once we've filled the gap and have a contiguous line of routers running RIP, the routes will populate eventually. But since we'd like to see updates on `router-a2` for each and every router that we configure, we want to make sure that we're always configuring a new router that neighbors a router that's already configured.
+
+Here's what you'll need to do for each router in the list:
+
+- `hopon <router-name>`
+- update the `/etc/bird/bird.conf` file to match what we gave you for `router-a2` and `router-a3`.
+- find the bird process with `ps -aux`
+- run the kill command to restart the `bird` process (i.e. `kill -HUP <process-id>`)
+- pay attention to the open windows for `router-a2` to see the new routes populate.
+
+## Validate that shit!
+
+By the time you're done with all that serious labor, the output of the `watch ip route` command on `router-a2` should have gotten pretty huge! It should look a lil' somethin' like this:
+
+```bash
+Every 2.0s: ip route                                                               router-a2: Wed Apr 16 21:02:19 2025
+
+1.1.0.0/16 via 4.1.0.4 dev eth0 proto bird
+1.2.0.0/16 via 4.1.0.4 dev eth0 proto bird
+1.3.0.0/16 via 4.1.0.4 dev eth0 proto bird
+2.1.0.0/16 via 4.1.0.4 dev eth0 proto bird
+2.3.0.0/16 via 4.1.0.4 dev eth0 proto bird
+2.4.0.0/16 via 4.1.0.4 dev eth0 proto bird
+2.5.6.0/24 via 4.1.0.4 dev eth0 proto bird
+2.5.7.0/24 via 4.1.0.4 dev eth0 proto bird
+2.5.8.0/24 via 4.1.0.4 dev eth0 proto bird
+2.6.7.0/24 via 4.1.0.4 dev eth0 proto bird
+2.6.8.0/24 via 4.1.0.4 dev eth0 proto bird
+2.7.8.0/24 via 4.1.0.4 dev eth0 proto bird
+2.8.0.0/16 via 4.1.0.4 dev eth0 proto bird
+3.4.0.0/16 via 4.1.0.3 dev eth0 proto bird
+3.5.6.0/24 via 4.1.0.3 dev eth0 proto bird
+3.5.7.0/24 via 4.1.0.3 dev eth0 proto bird
+3.5.8.0/24 via 4.1.0.3 dev eth0 proto bird
+3.6.7.0/24 via 4.1.0.3 dev eth0 proto bird
+3.6.8.0/24 via 4.1.0.3 dev eth0 proto bird
+3.7.8.0/24 via 4.1.0.3 dev eth0 proto bird
+3.8.0.0/16 via 4.1.0.3 dev eth0 proto bird
+3.9.0.0/16 via 4.1.0.3 dev eth0 proto bird
+4.1.0.0/16 dev eth0 proto kernel scope link src 4.1.0.2
+4.2.0.0/16 dev eth1 proto kernel scope link src 4.2.0.2
+4.3.0.0/16 via 4.1.0.3 dev eth0 proto bird
+8.1.0.0/16 via 4.1.0.3 dev eth0 proto bird
+8.2.0.0/16 via 4.1.0.4 dev eth0 proto bird
+9.1.0.0/16 via 4.1.0.3 dev eth0 proto bird
+9.2.0.0/16 via 4.1.0.3 dev eth0 proto bird
+9.3.0.0/16 via 4.1.0.3 dev eth0 proto bird
+100.0.1.0/24 via 4.1.0.4 dev eth0 proto bird
+101.0.1.0/24 via 4.1.0.3 dev eth0 proto bird
+102.0.1.0/24 via 4.1.0.4 dev eth0 proto bird
+```
+
+Look at all those great `bird` routes! `bird` rules! 🐦💪
+
+Next, now that we've got everything configured, let's make sure that our internet functions exactly the way it has in our previous routing chapters (the bad old days when we had to configure all the routes statically by hand).
+
+We'll use our old friend `ping` to send a packet from `client-c1` to `server-s2`:
+
+```bash
+root@client-c1:/# ping 9.2.0.12 -c1
+PING 9.2.0.12 (9.2.0.12) 56(84) bytes of data.
+64 bytes from 9.2.0.12: icmp_seq=1 ttl=58 time=0.326 ms
+
+--- 9.2.0.12 ping statistics ---
+1 packets transmitted, 1 received, 0% packet loss, time 0ms
+rtt min/avg/max/mdev = 0.326/0.326/0.326/0.000 ms
+```
+
+💥 Dope! We have network connectivity across this great toy internet of ours!
+
+Finish by running `byoi-validate` to ensure that you have complete connectivity.
+
 - once the whole thing is done, break shit and see it heal
 - also maybe point to `/final` to show them how it would be automatically configured from scratch.
-
-As we mentioned before, `BIRD` is the software we're going to use to popu our rout tab. before it will work, we need to conf it. just like everything else on unix-based systems, it all comes down to files. we need to make aa new file for the bird configuration. let's `vim /etc/bird/bird.conf`
-
-TODO:
-- change BYOI-rebuild so they can bring in a config file
-
-
-1. Have routes populated across three routers (RIP)
-2. Some routers will have static routes, one router (router a2) has nothing but its interfaces
-3. router-a2 gets routes from its neighbors
-4. eventually, pull all all static routes out and have all routers learn all routes via RIP
 
 Handy commands!
 
@@ -273,24 +421,11 @@ birdc configure
 birdc show route all
 ```
 
-Where we're at:
-
-1. We have two routers with static routes. We include an `export all` with protocol static, which will need to be removed for the final iteration of this.
-2. We have the three-router situation working between A2, A3, and A4.
-   - A2's connected network shows up on A4 and A3.
-   - A3 and A4's static routes are advertised to A2.
-   - is A3's connected network showing up on A2?
-
 Questions or exercises we want to make sure we cover:
 
-- convert Zayo and Telia converted
-  - router-a4 learned of `101.0.1.0/24 via 2.4.0.2 dev eth1 proto bird` somehow even through router-n2 isn't running rip yet.
 - It would be cool to have static routes maybe influence things and compare that to using knobs in the IGP itself.
 - (for later?) if A3 is shut off, can A2 get to the networks via A4 that A4 also has?
 - Be careful about `import all` and `export all` in all the protocols
-
-
-
 
 PROBLEM 1: removing routes from a router that was killed:
 - one thing we're noticing, is that we killed router-a3 and the routes from it stayed on router-a2. We're seeing reports from the debugger that it's getting those routes from the kernel.
