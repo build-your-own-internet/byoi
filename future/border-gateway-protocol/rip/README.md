@@ -173,6 +173,8 @@ protocol rip {
 }
 ```
 
+<!-- TODO: Explain this at some point ? What is `interface "*" ` for example -->
+
 4. Restart the BIRD daemon in interactive debugging mode.
 
 Remember to use the `ps aux` command to list all the running processes on the machine. Find the line that has `bird` in it and look at the `PID` column for that line to find the process-id. Next, issue the `kill` command with process-id that you found. This will stop `bird` from running in the background. It should look something like this:
@@ -350,6 +352,8 @@ Here's what you'll need to do for each router in the list:
 
 ## Validate that shit!
 
+1. Spot-check your routes!
+
 By the time you're done with all that serious labor, the output of the `watch ip route` command on `router-a2` should have gotten pretty huge! It should look a lil' somethin' like this:
 
 ```bash
@@ -392,9 +396,11 @@ Every 2.0s: ip route                                                            
 
 Look at all those great `bird` routes! `bird` rules! 🐦💪
 
-Next, now that we've got everything configured, let's make sure that our internet functions exactly the way it has in our previous routing chapters (the bad old days when we had to configure all the routes statically by hand).
+2. Ping around and find out!
 
-We'll use our old friend `ping` to send a packet from `client-c1` to `server-s2`:
+Next, now that we think we've got everything configured, let's make sure that our internet functions exactly the way it has in our previous routing chapters (remember the bad old days when we had to configure all the routes statically by hand?).
+
+Try using your old friend `ping` to send a packet from `client-c1` to `server-s2`. `hopon client-c1` and run the `ping` command as follows:
 
 ```bash
 root@client-c1:/# ping 9.2.0.12 -c1
@@ -406,9 +412,67 @@ PING 9.2.0.12 (9.2.0.12) 56(84) bytes of data.
 rtt min/avg/max/mdev = 0.326/0.326/0.326/0.000 ms
 ```
 
-💥 Dope! We have network connectivity across this great toy internet of ours!
+💥 Dope! We have network connectivity across this great toy internet of ours! If this doesn't work, you'll need to troubleshoot your routes. Refer to the [discover the breakage](../../../chapters/1.3-routing-internet-chonk/README.md#discover-the-breakage) troubleshooting section from chapter 1.3 if you need some assistance.
 
-Finish by running `byoi-validate` to ensure that you have complete connectivity.
+3. Do a complete check of the whole network using the `byoi-validate` script
+
+We're going to finish by running a script called `byoi-validate` to ensure that all of the routes across the network are working as expected. This is a `bash` script which automatically performs `ping` tests for you. It's going to run tests from one machine in each "eyeball-network" to every other machine on our internet. This ensures that there is correct routing out of each network. You'll need to be in the same directory that you've been running the `hopon` commands from (i.e. `build-your-own-internet/future/border-gateway-protocol/rip`), and you'll run the command `byoi-validate`. The output from that command, if everything is working correctly, should look like this:
+
+```bash
+$ byoi-validate
+
+Testing IP connectivity from client-c1
+...................................................................................
+
+Testing IP connectivity from server-g3
+...................................................................................
+
+Testing IP connectivity from server-s1
+...................................................................................
+
+Testing IP connectivity from server-a1
+...................................................................................
+✅ No errors! Everything is working!
+```
+
+If that script reports any errors, your job is to go and fix them! Refer to the [discover the breakage](../../../chapters/1.3-routing-internet-chonk/README.md#discover-the-breakage) troubleshooting section from chapter 1.3 if you need some assistance.
+
+## Break that shit!
+
+That's great, we did a whole bunch of work to wind up exa as we started bef. why did we do? Let's take a look at one of the pow of using a routing protocol to determine your routes: namely, healing broken routes. 
+
+Take a look at your network map. Trace with your finger the path that you think packets should take from `client-c1` to `server-a3`. There are lots of possible options! Ideally, the routers are going to pick the shortest path from source to destination and back again. This means that, for this example, the path should be:
+
+- `router-c3`
+- `router-z6`
+- `router-z7`
+- `router-a4`
+- `server-a3`
+
+What happens when one of those routers goes down? Since we've built our toy internet with redundant paths from one side of it to another, it would be best if we could have our packets automatically re-routed to a less-optimal route. Well, our routing protocol (RIP) should be able to do this for us. Let's see if it can.
+
+Let's first validate our assumptions about the path that we thing packets will take from `client-c1` to `server-a3`. `hopon router-z6` and take a look at its routing table:
+
+```bash
+$ hopon router-z6
+root@router-z6:/# ip route
+...
+4.1.0.0/16 via 2.6.7.7 dev eth3 proto bird
+4.2.0.0/16 via 2.6.7.7 dev eth3 proto bird
+4.3.0.0/16 via 2.6.7.7 dev eth3 proto bird
+...
+```
+
+There are a lot of routes here, we've skipped the unimportant ones for this conversation with `...`, but the routes that start with `4.` are the ones that get us to the amazon web services toy network. As you can see from this printout, `router-z6` wants to send packets to `router-z7` for all these networks, which is perfect.
+
+To watch RIP help our internet re-route our packets around a failure, we're going to take down `router-z7` and see what happens. Before we do that, let's set up some monitoring so we can see exactly what happens! You'll need a window connected to each of these systems:
+
+- `router-z7`: to cause the outage
+- `router-z6`: to watch its routing table change (hopefully 🤞)
+- `client-c3`: to have a continuous ping going on so we can see when packets start getting lost and hopefully when the network is healed and packets start going through again.
+
+<!-- WE ENDED OFF HERE -->
+
 
 - once the whole thing is done, break shit and see it heal
 - also maybe point to `/final` to show them how it would be automatically configured from scratch.

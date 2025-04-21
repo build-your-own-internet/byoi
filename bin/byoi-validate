@@ -55,10 +55,13 @@ for system in $systems; do
     ding "$system" "$ip"
   done
   echo
-  echo "Testing name resolution from $system"
-  for dns_name in $dns_names; do
-    dost "$system" "$dns_name"
-  done
+
+  if [ $(echo $dns_names | wc -w) -ne 0 ]; then
+    echo "Testing name resolution from $system"
+    for dns_name in $dns_names; do
+      dost "$system" "$dns_name"
+    done
+  fi
 done
 
 # Summary of errors
