@@ -467,7 +467,7 @@ There are a lot of routes here, since we only care about the routes to the aws n
 
 To watch RIP help our internet re-route our packets around a failure, we're going to take down `router-z7` and see what happens. Before we do that, let's set up some monitoring so we can see exactly what happens!
 
-1. Open a separate windows to `router-z6`, `router-z5` and `router-z8`. Run the command `watch ip route` on each of them. All of these routers should have the same route for `4.1.0.0/16`, `4.2.0.0/16`, and `4.3.0.0/16`. Hopefully this will eventually change when RIP reconfigures itself after `router-z7` goes down. Leave these commands running in these windows. We'll be going back and watching these windows soon.
+1. Open separate windows to `router-z6`, `router-z5` and `router-z8`. Run the command `watch ip route` on each of them. All of these routers should have the same route for `4.1.0.0/16`, `4.2.0.0/16`, and `4.3.0.0/16`. Hopefully this will eventually change when RIP reconfigures itself after `router-z7` goes down. Leave these commands running in these windows. We'll be going back and watching these windows soon.
 
 2. Open an **additional** window to `router-z8` so that we can see debugging information from `bird` here. Follow [the directions for restarting bird in debugging mode](#4-restart-the-bird-daemon-in-interactive-debugging-mode) for this router.
 
@@ -654,13 +654,37 @@ The routing protocol people tend to reach for when they're doing stuff like what
 
 We're going to give you a configuration for OSPF so that you can try it in your toy internet and see how it works. We've already shown you a path for rolling out configuration and shown you some techniques for testing it. So we think you're ready to give it a try on your own. If you get stuck there's a configuration in `final` that you can use.
 
-The config:
+On each of your routers, replace the `rip` section in `/etc/bird/bird.conf` with a new `ospf` section, as follows:
 
 ```bash
+protocol ospf {
+  export all;  # Send all BIRD routes into OSPF (e.g., direct routes)
+  import all;  # Accept all OSPF-learned routes
 
+  area 0 {
+    interface "*" {
+      type broadcast;     # good for Ethernet, or switch-style topologies
+      hello 10;           # seconds between hellos (default: 10)
+      wait 40;            # wait time before DR election (default: 40)
+      dead 40;            # time to consider neighbor down (default: 40)
+    };
+  };
+}
 ```
 
-Handy commands!
+Remember that you'll have to restart the `bird` daemon to see your configuration changes. Before you restart, what do you think you'll see when you have `ospf` running on a single machine?
+
+Things to observe:
+
+1. Keep a window open on your first ospf router, running `watch ip route` on it. What changes do you see as you enable ospf router-by-router?
+2. Do RIP and OSPF communicate directly with each other?
+3. Do the same exercise we did above, killing `router-z7`. What differences did you notice in how quickly the routers healed their connections? What differences did you see when you started `router-z7` back up?
+
+## Appendix
+
+### Handy commands!
+
+Here are some things that we have found helpful in debugging `bird` !
 
 ```
 birdc show route export rip1
@@ -668,34 +692,6 @@ birdc configure
 birdc show route all
 ```
 
-Questions or exercises we want to make sure we cover:
-
-- It would be cool to have static routes maybe influence things and compare that to using knobs in the IGP itself.
-- (for later?) if A3 is shut off, can A2 get to the networks via A4 that A4 also has?
-- Be careful about `import all` and `export all` in all the protocols
-
-PROBLEM 1: removing routes from a router that was killed:
-- one thing we're noticing, is that we killed router-a3 and the routes from it stayed on router-a2. We're seeing reports from the debugger that it's getting those routes from the kernel.
-- actually, it just took a long time for this to work, don't know why yet.
-
-PROBLEM 2:
-- How do we get routes that are intrinsic to a router (e.g. on interfaces) to be advertised on RIP?
-- apparently, we need to have a `protocol direct` stanza with `interface "*"`. This will provide routing information for other protocols to use.
-- Additionally, we apparently needed to add `export all` to the `protocol rip` configuration in order for it to notify its neighbors of routes that it gets from other places. FOLLOWUP QUESTION: how come it advertised static routes without this?
-
-Here's what we're going to try:
-- rebuild this pocket-by-pocket and see static routes go away and routes get populated.
-- by the end of next session (hopefully), we have all static routes removed in the `final` directory.
-
-## Fun exercises:
-
-1. Add `learn yes` to the kernel protocol and add a static route and see that sucker propagate around the network
-2. 
-
-
-## Outstanding questions:
-
-1. What if router-a2 learns about a directly-connected route from another router? would it overwrite its own route table in favor of RIP? under what conditions might this be true?
 <!-- Links, reference style, inside docset -->
 [our map]:         ../../../img/network-maps/rip-routing.svg
                              "Our Map"
