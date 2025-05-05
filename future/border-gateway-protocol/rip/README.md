@@ -4,39 +4,25 @@ Up to this point, we have been manually configuring how our routers are able to 
 
 So, what do we do about this problem? We need some tool that will allow us to discover networks and update routes to those networks automatically without human intervention. Fortunately for us, this problem has already been solved and we can stand on the shoulders of giants.
 
-Routers have the ability to automatically collaborate with each other to convey information about the network to one another. They do this through what are called "Routing protocols." As you can imagine, ✨There is More Than One Way To Do It✨. So let's start by examining the simplest of all the routing protocols: "RIP". RIP is not widely used by network professionals in the world today because it has lots of problems that were discovered over time when people started building massively huge networks with security concerns. But for our purposes, it's very instructive and a great place to start.
+Routers have the ability to automatically collaborate with each other to convey information about the network to one another. They do this through what are called "Routing protocols." As you can imagine, ✨There is More Than One Way To Do It✨. So let's start by examining the simplest of all the routing protocols: "RIP" (which stands for "Routing Information Protocol").
 
-<!-- TODO: what are the security problems? Also, why is it actually useful and not a waste of time? -->
+> ⚠️ **DISCLAIMER**:RIP is not widely used by network professionals in the world today because it has lots of problems that were discovered over time when people started building massively huge networks with security concerns. But for our purposes, its simplicity will help us understand `bird` without getting mired in the complexity of more advanced routing protocols.
 
 ## Introducing the BIRD (BIRD Internet Routing Daemon) project
 
-We need to make our routers smarter. So far, they have been very simple switchboards, and we've been manually configuring each and every one of them with "static" routes. In order to imbue them with intelligence, it's going to take -- guess what -- _software_! The software we're going to use is called `BIRD`. This software knows about all kinds of routing protocols and will be the basis of the next few chapters.
+We need to make our routers smarter. So far, they have been very simple switchboards, and we've been manually configuring each and every one of them with [static routes](../../../chapters/glossary.md#static-routes). In order to imbue them with intelligence, it's going to take -- guess what -- _software_! The software we're going to use is called `BIRD`. This software knows about all kinds of routing protocols and will be the basis of the next few chapters.
 
-> 📝 **NOTE**: A "static" route is a hard-coded entry into a routing table. There is no software that updates or changes this route based on network conditions. If it needs to be changed, a human being needs to log into that router and change it. This is in contrast to "dynamic routes" that we'll be playing with in this chapter and going forward.
-
-Okay, so the first thing we're going to do is add `bird` to each of our routers. Lucky for you, we've already installed this software on the routers of this toy internet for this chapter. Next, we're going to start these routers up and begin playing with them, but first let's take a look at the network that we're going to be using in this chapter:
-
-[![our map][our map]][our map]
-
-Go ahead and run `byoi-rebuild`, and let's run our old friend `ip route` on one of our routers, `router-a2`, to show the routing table on that router. If you look at the network map, you'll see that `router-a2` only has interfaces on `4.1.0.0/24` and `4.2.0.0/24`. Now, when we check the routes, you should see that it only has routes for those interfaces (because we've removed all the static routes):
-
-```bash
-root@router-a2:/# ip route
-4.1.0.0/16 dev eth0 proto kernel scope link src 4.1.0.2
-4.2.0.0/16 dev eth1 proto kernel scope link src 4.2.0.2
-```
-
-> 📝 **NOTE:** your interface names (eth0 and eth1) may be different
+Before we start building, let's take a quick look at how the `bird` software does what it does.
 
 ### How BIRD works
 
-At the moment, our routers don't have any way of communicating routing information to each other. we need to configure BIRD so it knows what routes to advertise and how to advertise them. To do that, we're going to start by using `vim` to modify the `bird.conf` file on this machine:
+At the moment, our routers don't have any way of communicating routing information to each other. We need to configure BIRD so it knows what [routes](../../../chapters/glossary.md#route) to share with other routers as well as _how_ to share those routes. To do that, we're going to start by using `vim` to modify the `bird.conf` file on this machine:
 
 ```bash
 root@router-a2:/# vim /etc/bird/bird.conf
 ```
 
-This is the default configuration file that is installed with your BIRD configuration. It's not supposed to work yet. We'll explain each section of this file below:
+This is the default configuration file that is installed with your BIRD software. It's not supposed to work yet. We'll explain each section of this file below:
 
 ```bash
 # This is a minimal configuration file, which allows the bird daemon to start
@@ -67,27 +53,25 @@ protocol device {
 }
 ```
 
+<!-- WHERE WE LEFT OFF -->
+
 There's not much going on here yet. This basic configuration includes:
 
 - `router id`: (optional) the unique IP address of this router. While this is recommended, it's not necessary for BIRD to work.
 - `protocol kernel`: This section controls how you get routing information into and out of the routing table for this machine.
 - `protocol device`: This section empowers BIRD to learn what network interfaces (or "devices") exist on this machine and their up/down status.
 
-<!-- TODO: be sure to make sure we explain the difference between a route that shows up from `ip route` that gets there because there is a network interface attached to that network and a route that shows up when we do an `ip route add` command -->
+What does this "protocol" word mean in this context? It feels pretty "jargonny!" BIRD uses the word "protocol" to indicate sources and destinations for routing information. We'll look at this in more depth in a minute, but at a high level, it specifies where BIRD is able to learn about routes and where to communicate that routing information to.
 
-Some common things you'll see in each `protocol` section is:
+You probably noticed that these "protocols" have some options for "import" and "export". What does that mean here?
 
-- `scan time`: How often a process should be kicked off to update values in this protocol
-- `import`: pull information from the protocol we manage.
-  - `none`: In the case of `kernel`, if it has `import none`, then it will not read the routing table from the kernel to be included in BIRD's route information.
-  - `all`: In the case of `kernel`, if it has `import all`, then BIRD will pull all information from the machine's route table and include that in its route information.  <!-- TODO: VERIFY THIS -->
-- `export`: send information from `BIRD core` to the protocol we manage.
-  - `none`: In the case of `kernel`, if we `export none`, then the kernel's routing table will not reflect any of the information that BIRD knows about.
-  - `all`: In the case of `kernel`, if we do `export all`, then the kernel's routing table will be updated with BIRD's routes and the router will be able to use that information to physically route packets as it sees them go by.
+Well, "import" dictates whether or not to pull information from the protocol into the BIRD system. Once BIRD has imported routing information, "export" indicates which protocols should receive that information. This all sounds a little complex. We'll walk you through this step-by-step momentarily.
 
-As we mentioned earlier, we're going to use a protocol called `RIP` for exchanging route information between routers on our network. Let's see what this process will look like conceptually, then we'll explore how to build the configuration we want in BIRD to make that happen.
+One thing this standard BIRD configuration doesn't include is the protocol to use to communicate between routers. As we mentioned at the beginning of the chapter, we'll focus on the RIP protocol.
 
-First, introduce a new diagram. This is a conceptual picture of `router-a2` communicating with routers `a3` and `a4`. This focuses first on `router-a2` and the BIRD software that runs on it. It shows further details of the constituent pieces of BIRD's inner workings and how those inner-workings interface with the machine itself and with the other routers.
+First, let's introduce a new diagram. This diagram includes the protocols shown in the default configuration file in addition to the new RIP protocol that we'll add later.
+
+The diagram is a conceptual picture of `router-a2` communicating with routers `a3` and `a4`. This focuses first on `router-a2` and the BIRD software that runs on it. It shows further details of the constituent pieces of BIRD's inner workings and how those inner-workings interface with the machine itself and with the other routers.
 
 [![BIRD diagram explainer][BIRD diagram explainer]][BIRD diagram explainer]
 
@@ -96,19 +80,35 @@ On the left, we have stuff that exists "outside" of BIRD:
 - **eth0, eth1**: The network interfaces of the machine which connect it to the networks that it sends packets on
 - **route table**: the kernel's routing table which provides instructions for where to send packets to networks that it is not directly connected to.
 
-Moving to the right, we next encounter a giant box labelled **BIRD**. This is the BIRD software and all of its constituent pieces. As we move into bird, the first big yellow box represents the "protocols" that BIRD knows about. We have already encountered the `device` and `kernel` protocols from the initial `bird.conf` file above. This diagram introduces the `RIP` protocol, which is used in communicating with other routers on our little internet.
+Moving to the right, we next encounter a giant box labelled **BIRD**. This is the BIRD software and all of its constituent pieces (i.e. "protocols"). As we move into bird, the first big yellow box represents the protocols that BIRD knows about. We have already encountered the `device` and `kernel` protocols from the initial `bird.conf` file above. This diagram introduces the `RIP` protocol, which is used in communicating with other routers using RIP on our little internet.
 
-Finally, we have the box labelled **BIRD core** which manages organizing information between protocols to create a coherent routing table for the router.
+Finally, we have the box labelled **BIRD core** which manages organizing information ***between** protocols to create a coherent routing table for the router.
 
 But what does this process look like on a larger internet? How exactly does route information get collected and distributed among the routers using RIP?
 
-To answer that question, we're going to give you a Giant Step-by-Step Diagram™! It's going to start with how the router collects information about its own network connections and will go through the process of how it uses the RIP protocol to communicate that information to other routers in order to build a complete picture of the entire network so each router can build a full routing table for the entire internet.
+To answer that question, we're going to give you a Giant Step-by-Step Diagram™! It's going to start with how the router collects information about its own network connections. Next, it will go through the process of how it uses the RIP protocol to communicate that information to other routers. This will enable each router to build a full routing table for the entire internet.
+
+<!-- TODO: should we have a long-running analogy for signposts, etc? Should we talk about what happens if a routing table is incomplete? -->
 
 See you in a couple pages!
 
 [![how BIRD works][how BIRD works]][how BIRD works]
 
 ### Implementing RIP in BIRD
+
+Okay, so the first thing we're going to do is add `bird` to each of our routers. Lucky for you, we've already installed this software on the routers of this toy internet for this chapter. Next, we're going to start these routers up and begin playing with them, but first let's take a look at the network that we're going to be using in this chapter:
+
+[![our map][our map]][our map]
+
+Go ahead and run `byoi-rebuild`, and let's run our old friend `ip route` on one of our routers, `router-a2`, to show the routing table on that router. If you look at the network map, you'll see that `router-a2` only has interfaces on `4.1.0.0/24` and `4.2.0.0/24`. Now, when we check the routes, you should see that it only has routes for those interfaces (because we've removed all the static routes):
+
+```bash
+root@router-a2:/# ip route
+4.1.0.0/16 dev eth0 proto kernel scope link src 4.1.0.2
+4.2.0.0/16 dev eth1 proto kernel scope link src 4.2.0.2
+```
+
+> 📝 **NOTE:** your interface names (eth0 and eth1) may be different
 
 We looked at the default configuration for BIRD and now we're going to give you a complete configuration for implementing RIP in BIRD. We'll move router-by-router and see how routing-tables are populated and look at some key controls that BIRD provides for us to check on the status of our RIP environment.
 
