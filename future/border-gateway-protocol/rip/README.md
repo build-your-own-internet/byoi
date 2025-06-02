@@ -1,21 +1,97 @@
 # Automatic route configuration
 
-Up to this point, we have been manually configuring how our routers are able to find machines on our toy internet. As you can imagine, as the internet grows, this becomes quite the cumbersome process. If you look at something at the scale of The Real Internet™, it quickly becomes obvious that it's not possible to manually configure routes for all the machines on the entire internet.
+Up to this point, we have been manually configuring how our routers are able to find machines on our toy internet. As you can imagine, as the internet grows, this becomes quite the cumbersome process! If you look at something at the scale of The Real Internet™, it quickly becomes obvious that it's not possible to manually configure routes for all the machines on the entire internet.
 
-So, what do we do about this problem? We need some tool that will allow us to discover networks and update routes to those networks automatically without human intervention. Fortunately for us, this problem has already been solved and we can stand on the shoulders of giants.
+## Describing the problem
 
-Routers have the ability to automatically collaborate with each other to convey information about the network to one another. They do this through what are called "Routing protocols." As you can imagine, ✨There is More Than One Way To Do It✨. So let's start by examining the simplest of all the routing protocols: "RIP" (which stands for "Routing Information Protocol").
+We are trying to solve a complex problem in this chapter.
 
-> ⚠️ **DISCLAIMER**:RIP is not widely used by network professionals in the world today because it has lots of problems that were discovered over time when people started building massively huge networks with security concerns. But for our purposes, its simplicity will help us understand `bird` without getting mired in the complexity of more advanced routing protocols.
+We have a bunch of computers that are on an internet. Every computer needs to be able to send messages to (potentially) every other computer on our internet. In previous chapters, we explored how these special computers called "routers" have interfaces on multiple networks which allow them to pass packets from computers on one network to computers on another network. We manually told each and every one of these routers what the best path is to be able to reach computers on every network.
+
+Okay, so if we're not going to go around manually configuring the entire set of routers on the internet, where do we start? Well, we know that each router already knows what networks it has interfaces on. Those will be the first entries on its [routing table](../../../chapters/glossary.md#routing-table). The router also knows whether or not each interface is "up" or "down" (i.e. if it can send and receive packets on that interface).
+
+So, if each router already has intrinsic information about its networks, the next thing we need is a method to communicate this information to each **other** router. This communication is called a "routing [protocol](../../../chapters/glossary.md#protocol)." There is more than one routing protocol, so let's start by examining the simplest of all the routing protocols: "RIP" (which stands for "Routing Information Protocol").
+
+> ⚠️ **DISCLAIMER**:RIP is not widely used by network professionals in the world today because it has lots of problems that were discovered over time when people started building massively huge networks with security concerns. But for our purposes, its simplicity will help us understand what a routing protocol does without getting mired in the complexity of more complex routing protocols.
+
+Let's take a look at how RIP works, step-by-step. Let's start with a simple four-router network where each one is configured in a ring. Let's see how each router will learn about networks that it is not connected to.
+
+[![RIP protocol steps 1 and 2][RIP protocol steps 1 and 2]][RIP protocol steps 1 and 2]
+
+**Step 1** Remember, each router starts with only the information it knows about through its physical interfaces. Therefore the routing table for each router is initially populated only with the networks it has physical interfaces on (step 1). 
+
+Because routing information needs to be disseminated throughout the network between routers that are directly connected to each other, we're going to put special emphasis on pairs of routers that have this direct-connection. Routers that can talk directly to each other over a single network are called **neighbors**.
+
+The RIP protocol will have each router communicate all information in its own routing table to each of its neighbors as follows.
+
+**Step 2** router `R1` sends messages to its neighbors (routers `R2` and `R3`) that it knows about networks `A` and `B`.
+
+[![RIP protocol steps 3 and 4][RIP protocol steps 3 and 4]][RIP protocol steps 3 and 4]
+
+**Step 3** Router `R2` has received the communication from router `R1` and updates its routing table with _new information_. Because router `R2` already knew about network `B`, it doesn't have to add that. But we have new information that router `R2` can now reach network `A` through router `R1`. This means that when router `R2` has packets destined for network `A`, it knows that it should send those packets to router `R1`. Similarly, router `R3` already knew about network `A` but adds the new information that network `B` can be reached through router `R1`.
+
+**Step 4** Router `R2` will continue with this same pattern. But it now has some _second-hand_ information about network `A`. And it's going to send out its messages that it knows _how to reach_ networks `A`, `B`, and `C`.
+
+[![RIP protocol steps 5 and 6][RIP protocol steps 5 and 6]][RIP protocol steps 5 and 6]
+
+**Step 5** Router `R4` learns about two new networks (`A` and `B`) and updates its routing table to send all packets destined for networks `A` and `B` to router `R2`. Similarly, Router `R1` learned about network `C` and updated its routing table accordingly.
+
+**Step 6** Router `R4` now communicates out **ITS** routing table (which includes information about networks `A`, `B`, `C`, and `D`) out to all of **ITS** neighbors (`R2` and `R3`). 
+
+[![RIP protocol step 7][RIP protocol step 7]][RIP protocol step 7]
+
+**Step 7!** Now we have a bit of a connundrum! `R3` previously learned about network `B` through `R1`. How should it update its routing table? should it send its packets destined for Network `B` through `R1` or `R4`? The routing table can only have one entry, so it has to make a choice!
+
+To solve this problem, we're going to introduce a new wrinkle in how routers advertise their routes to each other.
+
+In our previous diagrams, our routers were **only** advertising the fact that they could reach particular networks. Now we're going to add additional metadata to this advertisement. When the routers are communicating their routing tables out, they'll also include a count of how many routers a packet would have to pass through to reach the destination network. This is called the **"hop count."** A higher hop count indicates: (a) increased network latency, (b) decreased reliability. So therefore, if a router has two choices for how to get to a given destination network, it will pick the one with the smallest hop-count.
+
+Therefore, when router `R3` receives the new advertisement for network `B`, it compares the advertisement it got from router `R1` with a hop-count of 1 to the advertisement it got from router `R4` with a hop-count of 2. Since the hop-count from router `R1` is smaller, it keeps that route in its routing table and ignores the one from router `R4`.
+
+Now that we understand how RIP works, let's talk about the software that we can use to implement RIP on each of our routers: **BIRD**!
 
 ## Introducing the BIRD (BIRD Internet Routing Daemon) project
 
-We need to make our routers smarter. So far, they have been very simple switchboards, and we've been manually configuring each and every one of them with [static routes](../../../chapters/glossary.md#static-routes). In order to imbue them with intelligence, it's going to take -- guess what -- _software_! The software we're going to use is called `BIRD`. This software knows about all kinds of routing protocols and will be the basis of the next few chapters.
-
+We need to make our routers smarter. So far, they have been very simple switchboards, and we've been manually configuring each and every one of them with [static routes](../../../chapters/glossary.md#static-routes). In order to imbue them with intelligence, it's going to take -- guess what -- _software_! The software we're going to use is called `BIRD`.
 Before we start building, let's take a quick look at how the `bird` software does what it does.
+
+Bird is fac comm bet routers to learn what networks each router knows. it uses a standard communication format to learn what routers have access to. this means each router can gain information about routes from other router.
+
+
+At its most fundamental, bird is software that runs on each router that inspects a router's environment in order to know how it's connected to its own physical networks and tries to convey that information to other routers which are also doing the same thing. When they all work together, using some standardized techniques for communication, the bird software running across all these routers allows the routers to build a complete picture of the entre network and build routing tables on each router to allow packets to traverse the internetwork without manual configuration by humans.
 
 ### How BIRD works
 
+THis is complicated and it's okay if this taske a few read-th before you understand ho wthis works. to make more ac lets use a diagram to show the flow of information through bird and between routers.
+
+First, let's introduce a new diagram. This diagram includes the protocols shown in the default configuration file in addition to the new RIP protocol that we'll add later.
+
+The diagram is a conceptual picture of `router-a2` communicating with routers `a3` and `a4`. This focuses first on `router-a2` and the BIRD software that runs on it. It shows further details of the constituent pieces of BIRD's inner workings and how those inner-workings interface with the machine itself and with the other routers.
+
+[![BIRD diagram explainer][BIRD diagram explainer]][BIRD diagram explainer]
+
+On the left, we have stuff that exists "outside" of BIRD:
+
+- **eth0, eth1**: The network interfaces of the machine which connect it to the networks that it sends packets on
+- **route table**: the kernel's routing table which provides instructions for where to send packets to networks that it is not directly connected to.
+
+Moving to the right, we next encounter a giant box labelled **BIRD**. This is the BIRD software and all of its constituent pieces (i.e. "protocols"). As we move into bird, the first big yellow box represents the protocols that BIRD knows about. We have already encountered the `device` and `kernel` protocols from the initial `bird.conf` file above. This diagram introduces the `RIP` protocol, which is used in communicating with other routers using RIP on our little internet.
+
+Finally, we have the box labelled **BIRD core** which manages organizing information ***between** protocols to create a coherent routing table for the router.
+
+But what does this process look like on a larger internet? How exactly does route information get collected and distributed among the routers using RIP?
+
+To answer that question, we're going to give you a Giant Step-by-Step Diagram™! It's going to start with how the router collects information about its own network connections. Next, it will go through the process of how it uses the RIP protocol to communicate that information to other routers. This will enable each router to build a full routing table for the entire internet.
+
+<!-- TODO: should we have a long-running analogy for signposts, etc? Should we talk about what happens if a routing table is incomplete? -->
+
+See you in a couple pages!
+
+[![how BIRD works][how BIRD works]][how BIRD works]
+
+### Implementing RIP in BIRD
+
+<!-- PASTED CRAP -->
 At the moment, our routers don't have any way of communicating routing information to each other. We need to configure BIRD so it knows what [routes](../../../chapters/glossary.md#route) to share with other routers as well as _how_ to share those routes. To do that, we're going to start by using `vim` to modify the `bird.conf` file on this machine:
 
 ```bash
@@ -68,34 +144,6 @@ You probably noticed that these "protocols" have some options for "import" and "
 Well, "import" dictates whether or not to pull information from the protocol into the BIRD system. Once BIRD has imported routing information, "export" indicates which protocols should receive that information. This all sounds a little complex. We'll walk you through this step-by-step momentarily.
 
 One thing this standard BIRD configuration doesn't include is the protocol to use to communicate between routers. As we mentioned at the beginning of the chapter, we'll focus on the RIP protocol.
-
-First, let's introduce a new diagram. This diagram includes the protocols shown in the default configuration file in addition to the new RIP protocol that we'll add later.
-
-The diagram is a conceptual picture of `router-a2` communicating with routers `a3` and `a4`. This focuses first on `router-a2` and the BIRD software that runs on it. It shows further details of the constituent pieces of BIRD's inner workings and how those inner-workings interface with the machine itself and with the other routers.
-
-[![BIRD diagram explainer][BIRD diagram explainer]][BIRD diagram explainer]
-
-On the left, we have stuff that exists "outside" of BIRD:
-
-- **eth0, eth1**: The network interfaces of the machine which connect it to the networks that it sends packets on
-- **route table**: the kernel's routing table which provides instructions for where to send packets to networks that it is not directly connected to.
-
-Moving to the right, we next encounter a giant box labelled **BIRD**. This is the BIRD software and all of its constituent pieces (i.e. "protocols"). As we move into bird, the first big yellow box represents the protocols that BIRD knows about. We have already encountered the `device` and `kernel` protocols from the initial `bird.conf` file above. This diagram introduces the `RIP` protocol, which is used in communicating with other routers using RIP on our little internet.
-
-Finally, we have the box labelled **BIRD core** which manages organizing information ***between** protocols to create a coherent routing table for the router.
-
-But what does this process look like on a larger internet? How exactly does route information get collected and distributed among the routers using RIP?
-
-To answer that question, we're going to give you a Giant Step-by-Step Diagram™! It's going to start with how the router collects information about its own network connections. Next, it will go through the process of how it uses the RIP protocol to communicate that information to other routers. This will enable each router to build a full routing table for the entire internet.
-
-<!-- TODO: should we have a long-running analogy for signposts, etc? Should we talk about what happens if a routing table is incomplete? -->
-
-See you in a couple pages!
-
-[![how BIRD works][how BIRD works]][how BIRD works]
-
-### Implementing RIP in BIRD
-
 Okay, so the first thing we're going to do is add `bird` to each of our routers. Lucky for you, we've already installed this software on the routers of this toy internet for this chapter. Next, we're going to start these routers up and begin playing with them, but first let's take a look at the network that we're going to be using in this chapter:
 
 [![our map][our map]][our map]
@@ -701,4 +749,16 @@ birdc show route all
 
 [BIRD diagram explainer]:         ../../../img/bird-diagram-explainer.svg
                              "BIRD diagram explainer"
+
+[RIP protocol steps 1 and 2]:         ../../../img/bird-rip/steps-1-and-2.svg
+                             "RIP protocol steps 1 and 2"
+
+[RIP protocol steps 3 and 4]:         ../../../img/bird-rip/steps-3-and-4.svg
+                             "RIP protocol steps 3 and 4"
+
+[RIP protocol steps 5 and 6]:         ../../../img/bird-rip/steps-5-and-6.svg
+                             "RIP protocol steps 5 and 6"
+
+[RIP protocol step 7]:         ../../../img/bird-rip/steps-7.svg
+                             "RIP protocol step 7"
 <!-- end of file -->

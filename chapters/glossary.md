@@ -20,12 +20,15 @@ You might run into terms that you don't know the definition to. Sometimes they a
   - [neighbor (in a routing context)](#neighbor-in-a-routing-context)
   - [network](#network)
   - [packets (a.k.a `IP packets`)](#packets-aka-ip-packets)
+  - [protocol](#protocol)
   - [proxy](#proxy)
   - [resolver](#resolver)
+  - [route](#route)
   - [router (a.k.a `gateway`)](#router-aka-gateway)
   - [routing table](#routing-table)
   - [service](#service)
   - [server](#server)
+  - [static routes](#static-routes)
   - [TCP (Transmission Control Protocol)](#tcp-transmission-control-protocol)
   - [UDP (User Datagram Protocol)](#udp-user-datagram-protocol)
 
@@ -122,6 +125,10 @@ Sometimes when people use the term "network," they mean "internet." Since "inter
 
 All traffic on an internet is wrapped up in IP packets. IP packets provide a header that contains a bit of metadata that is necessary to be able to correctly route and manage the data container within the packet.
 
+## protocol
+
+A **protocol** is like a set of rules that computers agree to follow so they can talk to each other. It’s kind of like how everyone agrees to speak the same language when playing a game together. Even if the computers are different or made by different people, they can still understand each other if they follow the same rules. These rules help them share things like names, messages, or pictures. Without protocols, computers would just be confused and not know what to do!
+
 ## proxy
 
 A proxy is a stand-in for something else. In computing, a proxy is a system that understands a network protocol and acts as an endpoint. A proxy will pretend to be the real system that is being communicated with while secretly relying on the real entity to serve the request.
@@ -129,6 +136,20 @@ A proxy is a stand-in for something else. In computing, a proxy is a system that
 ## resolver
 
 A resolver is a piece of software that performs DNS lookups.
+
+## route
+
+A "route" is an entry in a table that points to the next machine a packet should be sent to in order for that packet to get closer to its final destination. For example, if you run `ip route`, you might see the following route entry:
+
+```bash
+root@router-a2:/# ip route
+4.3.0.0/16 via 4.1.0.3 dev eth0 proto bird
+1.1.0.0/16 via 4.1.0.4 dev eth0 proto bird
+4.1.0.0/16 dev eth0 proto kernel scope link src 4.1.0.2
+4.2.0.0/16 dev eth1 proto kernel scope link src 4.2.0.2
+```
+
+Think of these like signposts you might find when you're hiking through a forest. You might encounter a junction along your path with a sign that says, "Mount Baker this way" or "Virginia City that way" kind of thing. These routes are like that. They tell the router what path to take next without knowing anything else about how far or if that path will *actually* get you to your destination.
 
 ## router (a.k.a `gateway`)
 
@@ -145,6 +166,10 @@ A process on a server which responds to requests. E.g. a website, API, DNS, TLS 
 ## server
 
 A server is any machine whose purpose is to serve a network request to a client. If the server fails to serve the request, it can return an appropriate error back to the client.
+
+## static routes
+
+A "static" route is a hard-coded entry into a routing table. There is no software that updates or changes this route based on network conditions. If it needs to be changed, a human being needs to log into that router and change it. This is in contrast to "dynamic routes" that we'll be playing with in this chapter and going forward.
 
 ## TCP (Transmission Control Protocol)
 
