@@ -34,7 +34,7 @@ You might run into terms that you don't know the definition to. Sometimes they a
 
 ## client
 
-A client is any host that initiates a connection/request to a server on the network or the larger internet. A common example is a browser or curl request to a web resource. In future chapters, we might explore how clients are protected by the network either via firewall or through other means but this definition is sufficient for our current use case.
+A client is any host that initiates a connection/request to another machine on the network or the larger internet. A common example is a browser or curl request to a web resource. In future chapters, we might explore how clients are protected by the network either via firewall or through other means but this definition is sufficient for our current use case.
 
 ## container
 
@@ -165,7 +165,7 @@ A process on a server which responds to requests. E.g. a website, API, DNS, TLS 
 
 ## server
 
-A server is any machine whose purpose is to serve a network request to a client. If the server fails to serve the request, it can return an appropriate error back to the client.
+A server is any machine whose purpose is to answer a network request from a client. If the server fails to serve the request, it can return an appropriate error back to the client.
 
 ## static routes
 
