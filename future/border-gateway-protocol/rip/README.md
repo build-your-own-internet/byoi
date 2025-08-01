@@ -45,17 +45,19 @@ Hey, y'all, this is router `R2`, and guess what, I can reach networks `A`, `B`, 
 
 **Step 7** So router `r3` receives this communication from router `R4` and says to itself, "Sweet! Let me check my routing table for what needs to be updated! Oh, snap! I already have an entry for network `B`! Should I continue to send packets to router `r1`, or should I update my routing table to send packets to router `R4` instead? I'm so confused! (⊙.☉)7"
 
-🤔 Let's take a moment an think about this. Knowing what you know about the network (since you have a bird's eye view of what's going on), what do you think the right answer is to this question? If router `r3` sent packets destined for network `B` to router `r4`, would it get there faster or slower than sending them to router `r1`? Trace the diagram the path it would take through each choice. All things being equal, having fewer routers involved in getting the packet to its destination is preferable.
+🤔 Let's take a moment an think about this. Knowing what you know about the network (since you have a bird's eye view of what's going on), what do you think the right answer is to this question? If router `r3` sent packets destined for network `B` to router `r4`, would it get there faster or slower than sending them to router `r1`? Trace the diagram path it would take through each choice. All things being equal, having fewer routers involved in getting the packet to its destination is preferable.
 
-Therefore router `R3` **should** prefer using router `r1` for network `B`, but how does it know how to make that choice? To solve this problem, we're going to introduce a new wrinkle in how routers advertise their routes to each other.
+Therefore router `R3` **should** prefer using router `r1` for network `B`, but *how does it know* how to make that choice? To solve this problem, we're going to introduce a new wrinkle in how routers advertise their routes to each other.
 
 In our previous diagrams, our routers were **only** advertising the fact that they could **reach** particular networks. Now we're going to add additional metadata to this advertisement. When the routers are communicating their routing tables out, they'll also include a **count** of how many routers a packet would have to pass through to reach the destination network. This is called the **"hop count."** Therefore, since we have decided that a smaller hop-count is preferable, if a router has two choices for how to get to a given destination network, it will pick the one with the smallest hop-count.
 
-> 📝 **NOTE** question for further thought: is hop-count necessarily _always_ the best metric for deciding if a path is preferable? What other properties of the network might be taken into account ot make these kinds of choices? Since RIP **only** takes hop-count into account for preferability, this might be one of the reasons it's no longer used.
+So let's now **go back to step 6**. Here is a new diagram which adds hop-count information to the routes that `r4` is advertising.
 
-<!-- TODO: new picture with updated communication involving hop-count (Step 7 revised) -->
-<!-- make sure that we talk about how hop-count is incremented, hopefully through diagram -->
+[![RIP protocol steps 6 and 7 revised][RIP protocol steps 6 and 7 revised]][RIP protocol steps 6 and 7 revised]
+
 Therefore, when router `R3` receives the new advertisement for network `B`, it compares the advertisement it got from router `R1` with a hop-count of 1 to the advertisement it got from router `R4` with a hop-count of 2. Since the hop-count from router `R1` is smaller, it keeps that route in its routing table and ignores the one from router `R4`.
+
+> 🤔 **PUZZLER:** question for further thought: is hop-count necessarily _always_ the best metric for deciding if a path is preferable? What other properties of the network might be taken into account to make these kinds of choices? Since RIP **only** takes hop-count into account for preferability, this might be one of the reasons it's no longer used.
 
 Now that we understand how RIP works, let's talk about the software that we can use to implement RIP on each of our routers: **BIRD**!
 
@@ -72,40 +74,36 @@ What this means in practice will become more clear as we explore how the `bird` 
 
 This is complicated and it's okay if this takes a few read-throughs before you understand how this works. To make this more accessible, let's use a diagram to show the flow of information through BIRD and between routers.
 
-First, let's introduce a new diagram.
+First, let's introduce a new diagram!
 
-<!-- TODO: change these to router `r1`, `r2`, etc -->
+<!-- TODO: CONSISTENT CAPITALIZATION: all "rx" should be "Rx" -->
 
-This diagram is a conceptual picture of `router-a2` communicating with routers `a3` and `a4`. This focuses first on `router-a2` and the BIRD software that runs on it. It shows further details of the constituent pieces of BIRD's inner workings and how those inner-workings interface with the machine itself and with the other routers.
+This diagram is a conceptual picture of `router-r1` communicating with routers `r2` and `r3`. This focuses first on `router-r1` and the BIRD software that runs on it. It shows further details of the constituent pieces of BIRD's inner workings and how those inner-workings interface with the machine itself and with the other routers.
 
 [![BIRD diagram explainer][BIRD diagram explainer]][BIRD diagram explainer]
 
-On the left, we have stuff that exists "outside" of BIRD:
-
-<!-- TODO: change diagram to say "routing table" -->
+On the far left, we have stuff that exists "outside" of BIRD:
 
 - **eth0, eth1**: The network interfaces of the machine which connect it to the networks that it sends packets on
-- **routing table**: the kernel's routing table which provides instructions for where to send packets to networks that it is not directly connected to.
+- **route table**: the kernel's routing table which provides instructions for where to send packets to networks that it is **not** directly connected to.
 
-Moving to the right, we next encounter a giant box labelled **BIRD**. This is the BIRD software and all of its constituent pieces (i.e. "protocols"). As we move into BIRD, the first big yellow box represents the protocols that BIRD knows about. Let's briefly look at each of these protocols.
+Moving to the right, we next encounter a giant box labelled **BIRD**. This is the BIRD software and all of its constituent pieces (i.e. "protocols"). As we move into BIRD, the first big yellow box represents the BIRD protocols we're going to be working with in this chapter. Let's briefly look at each of these:
 
-- `kernel`: controls how routing information gets into and out of the routing table for this machine.
 - `device`: empowers BIRD to learn what network interfaces (or "devices") exist on this machine and their up/down status.
-- `RIP`: used in communicating with other routers using RIP on our little internet.
+- `kernel`: controls how routing information gets into and out of the route table for this machine.
+- `RIP`: used in communicating with other routers using RIP on our little internet in the way we described in the last section.
 
-Finally, we have the box labelled **BIRD core** which manages organizing information ***between** protocols to create a coherent routing table for the router.
+> 📝 **NOTE**: What does this ["protocol"](../../../chapters/glossary.md#protocol) word mean _in this context_? It feels pretty "jargonny!" BIRD uses the word "protocol" to indicate sources and destinations for _routing information_. We'll look at this in more depth as we continue through this explanation, but at a high level, it specifies where BIRD is able to learn about routes and where it's able to communicate that routing information.
+
+Finally, we have the box labelled **BIRD core** which manages organizing information **between protocols** to create a coherent routing table for the router.
 
 But what does this process look like on a larger internet? How exactly does route information get collected and distributed by BIRD amongst routers using RIP?
 
 To answer that question, we're going to give you a Giant Step-by-Step Diagram™! It's going to start with how the router collects information about its own network connections. Next, it will go through the process of how it uses the RIP protocol to communicate that information to other routers. This will enable each router to build a full routing table for the entire internet.
 
-<!-- TODO: One way or another: get our router nomenclature consistent -->
-
 [![BIRD Details steps 1 and 2][BIRD Details steps 1 and 2]][BIRD Details steps 1 and 2]
 
 **Step 1**. The `device` protocol in BIRD will learn about the local routes (i.e. the networks that the router has interfaces on). 
-
-What does this ["protocol"](../../../chapters/glossary.md#protocol) word mean _in this context_? It feels pretty "jargonny!" BIRD uses the word "protocol" to indicate sources and destinations for _routing information_. We'll look at this in more depth as we continue through this explanation, but at a high level, it specifies where BIRD is able to learn about routes and where it's able to communicate that routing information.
 
 **Step 2**. The BIRD software receives the routes it learned about from the router's local devices. BIRD core maintains its own routing table that is separate from the table the router uses to make routing decisions. Both routing tables could be identical copies of each other but they don't have to be.
 
@@ -121,15 +119,15 @@ To pass data around, BIRD has two keywords that each protocol can use to dictate
 
 **Step 5** Now it's time to transmit packets about routing information to other routers! RIP will send broadcast messages on every network it's connected to about every route that BIRD core passed to it.
 
-**Step 6** Now we're looking at a neighbor router: `router-a3`! This router receives the routes from `router-a2`.
+**Step 6** Now we're looking at a neighbor router: `router-r2`! This router receives the routes from `router-r1`.
 
 [![BIRD Details steps 7 and 8][BIRD Details steps 7 and 8]][BIRD Details steps 7 and 8]
 
-**Step 7** BIRD-core on `router-a3` now `import`s the routes from the RIP protocol in order to add them to BIRD core's routing table.
+**Step 7** BIRD-core on `router-r2` now `import`s the routes from the RIP protocol in order to add them to BIRD core's routing table.
 
-**Step 8** So now, BIRD-core communicates its routes to the kernel protocol which will write a copy of those routes to `router-a3`'s routing table. `router-a3` is now able to forward packets destined for networks connected to `router-a2` towards `router-a2`.
+**Step 8** So now, BIRD-core communicates its routes to the kernel protocol which will write a copy of those routes to `router-r2`'s routing table. `router-r2` is now able to forward packets destined for networks connected to `router-r1` towards `router-r1`.
 
-**Step 9 (not pictured)** `router-a3` communicates out all of its routes (including locally-connected routes as well as those it heard about from `router-a2` to all of its locally-connected networks.
+**Step 9 (not pictured)** `router-r2` communicates out all of its routes (including locally-connected routes as well as those it heard about from `router-r1` to all of its locally-connected networks.
 
 Okay, that's it for theory. Now that we know how BIRD works, let's get some practical experience setting it up and getting it running!
 
@@ -783,7 +781,7 @@ birdc show route all
 [our map]:         ../../../img/network-maps/rip-routing.svg
                              "Our Map"
 
-[BIRD diagram explainer]:         ../../../img/bird-diagram-explainer.svg
+[BIRD diagram explainer]:         ../../../img/bird-rip/bird-diagram-explainer.svg
                              "BIRD diagram explainer"
 
 [RIP protocol steps 1 and 2]:         ../../../img/bird-rip/steps-1-and-2.svg
@@ -798,6 +796,9 @@ birdc show route all
 [RIP protocol step 7]:         ../../../img/bird-rip/steps-7.svg
                              "RIP protocol step 7"
 
+[RIP protocol steps 6 and 7 revised]:         ../../../img/bird-rip/step-6-and-7-revised.svg
+                             "RIP protocol steps 6 and 7 revised"
+
 [BIRD Details steps 1 and 2]:         ../../../img/bird-rip/BIRD-details-1+2.svg
                              "BIRD Details steps 1 and 2"
 
@@ -809,4 +810,5 @@ birdc show route all
                              
 [BIRD Details steps 7 and 8]:         ../../../img/bird-rip/BIRD-details-7+8.svg
                              "BIRD Details steps 7 and 8"
+
 <!-- end of file -->
