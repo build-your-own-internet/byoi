@@ -7,26 +7,6 @@ Let's use the tools and processes we've already discovered to make a much larger
 Here's what we expect the internet to look like at the end of this chapter:
 
 
-In the design of this network, we decided to make a few policies to make it easy to understand the IP addresses of each machine on each network without having to write them in the network diagram. While you can reference the [docker-compose](./docker-compose.yml) to find the various IP addresses of each machine, using the diagram makes it easier and if we have consistent decisions about how IP addresses are assigned, then the docker-compose file isn't needed as an additional reference.
-
-IP addresses for `Router`s:
-
-* The IP address for each `Router` will end in `.1` for each interface on each network that router has
-* Each `Router` will use the number in it's name on the third octet of the IP address for each interface on each network
-* On the peer2peer networks (the ones assigned a `/29` address range), we will include the specific last octet of the `Router` in the diagram
-
-So, for example, all of the IP addresses for `Router5` are:
-
-* `1.0.5.1` on the the `1.0.0.0/8` network
-* `100.1.5.1` on the `100.1.0.0/16` network
-* `200.1.1.19` on the `200.1.1.16/29` network
-
-IP addresses for `Client` and `Server`:
-
-* Both machines will use `.100` as the last octet for the network they have an interface on
-
-So, `Client`'s IP address is `1.0.0.100` and it only has an interface on the `1.0.0.0/8` network.
-
 ## Asides
 
 ### docker-compose settings
@@ -49,6 +29,8 @@ If you'd like to see the rough notes of our discovery, checkout [Miscellaneous: 
 
 This requires a long and detailed description to really understand. For the sake of keeping this document brief, we've moved the explanation for this to [Appendix: prefixes-and-subnet-masks.md](../../appendix/prefixes-and-subnet-masks.md) in the appendix. Please read that document and come back here when you feel confident you have a basic understanding of what it contains!
 [![chonky internet map][chonky internet map]][chonky internet map]
+
+If this network map is a bit challenging to read, take a moment to review the [How to Read a Network Map](../../appendix/how-to-read-a-network-map.md) document.
 
 ### How docker handles MAC addresses
 
