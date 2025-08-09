@@ -36,11 +36,9 @@ We want to create routing tables for each of the routers on the network we have 
 
 Based on that diagram, out of the 7 networks we've built, router1 already has interfaces on 3 of them:
 
-<!--**open question to ourselves** should we continue to refer to the docker-compose names for these networks if we're not using those names in the rest of the readme?-->
-
-* `5.0.0.0/8` or `five-net`
-* `200.1.1.8/29` or `p2p-eight`
-* `3.0.0.0/8` or `three-net`
+* `5.0.0.0/8`
+* `200.1.1.8/29`
+* `3.0.0.0/8`
 
 So, for router1 to participate in this internet, it needs to know how to route packets to each of the 4 networks it's not currently connected to. We can add routes to each of the 4 networks in our `start-up.sh` file to use a similar structure to what we used in chapter 2. So, we'll start by defining how router1 can reach each network through its connections with other routers. You'll see the following already defined in the `start-up.sh` file for this chapter:
 
@@ -102,7 +100,7 @@ listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 
 The first 2 packets in our `tcpdump` are `ARP` packets, i.e. `Request who-has 5.0.0.100 tell 5.0.1.1` and `Reply 5.0.0.100 is-at 02:42:05:00:00:64`. This is a machine on our network attempting to associate a MAC address with an IP address that it has learned about from an incoming request. For more details on what's happening here, check out the [appendix doc on IP and MAC addresses](../../appendix/ip-and-mac-addresses.md).
 
-Next we see 2 couplets of `ICMP echo request` and `ICMP echo reply`s. In these packets, we can see that the IP address of the machine requesting the ping is `3.0.3.1`, or router3's interface on `three-net`. The destination machine is `5.0.0.100`, or `server`'s interface on `five-net`. But! This also tells us the MAC addresses that are involved in the direct communication with `server`. So, when we see `02:42:05:00:01:01 > 02:42:05:00:00:64`, we can use what we know about how docker creates MAC addresses and see that router1's interface on `five-net`, `02:42:05:00:01:01`, is the interface sending the packets to `server`, `02:42:05:00:00:64`.
+Next we see 2 couplets of `ICMP echo request` and `ICMP echo reply`s. In these packets, we can see that the IP address of the machine requesting the ping is `3.0.3.1`, or router3's interface on `3.0.0.0/8`. The destination machine is `5.0.0.100`, or `server`'s interface on `5.0.0.0/8`. But! This also tells us the MAC addresses that are involved in the direct communication with `server`. So, when we see `02:42:05:00:01:01 > 02:42:05:00:00:64`, we can use what we know about how docker creates MAC addresses and see that router1's interface on `5.0.0.0/8`, `02:42:05:00:01:01`, is the interface sending the packets to `server`, `02:42:05:00:00:64`.
 
 Now that you have router3 able to ping `server`, build out the rest of the internet! Check that things work using ping at every step of the way! We recommend building out one "hop" at a time, so from router3, build out router2's connections. Check that router2 can ping `server` and router5. Move to router4. Can it ping `server`, router3, router5, and router2? Can it ping each router on every interface that router has on any network? Check the `ping -h` help to see how you can originate your ping from a specific interface. Can you ping from a specific interface on a router to a specific interface on another router?
 
@@ -217,7 +215,7 @@ This means that the routing problem is on the response path back from Server => 
 But what's this `ICMP time exceeded in-transit`?
 > 21:31:52.871718 IP 3.0.3.1 > 5.0.0.100: ICMP time exceeded in-transit, length 92
 
-It appears that router3 on three-net is letting the server know that it is unable to route packets.
+It appears that router3 on 3.0.0.0/8 is letting the server know that it is unable to route packets.
 
 Before we can dive into that, we need to know how `ping` works. Let's start by looking at the output of a successful `ping` from Client to Router5:
 
