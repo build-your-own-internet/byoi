@@ -29,12 +29,6 @@ So, `Client`'s IP address is `1.0.0.100` and it only has an interface on the `1.
 
 ## Asides
 
-### Pets v. Cattle
-
-You might be wondering what the hell happened to our fun pets and their personalities from the previous chapter. Well, we are in serious business territory now and there is no room for emotions and personality when it comes to serious business™. In other words, when you are dealing with large infrastructure, it's much easier to manage things when you assign roles to them that dictate how things are configured. Hence, we have Server(s), Client(s), and Router(s) instead of our lovable pets.
-
-There is an industry-specific phrase that matches the theme here too. Within infrastructure industry, the popular way to see components of the infrastructure is as "cattle, not pets". This is a mean way of saying we only care about the larger system and we care less about details of individual components. Those components are there to serve a purpose and once they are unable to, we can easily replace them with other components that can serve the same role.
-
 ### docker-compose settings
 
 We had to make some changes to the docker-compose file that generates the machines and networks for our internet. These changes were made to thwart default behavior that makes docker or linux work in better, more predicatable ways, but weren't advantageous to our particular scenario. Here's a summary of those changes:
