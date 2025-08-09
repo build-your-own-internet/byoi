@@ -6,28 +6,6 @@ Let's use the tools and processes we've already discovered to make a much larger
 
 Here's what we expect the internet to look like at the end of this chapter:
 
-
-## Asides
-
-### docker-compose settings
-
-We had to make some changes to the docker-compose file that generates the machines and networks for our internet. These changes were made to thwart default behavior that makes docker or linux work in better, more predicatable ways, but weren't advantageous to our particular scenario. Here's a summary of those changes:
-
-#### IP Masquerade
-
-First, each network definition now includes a `com.docker.network.bridge.enable_ip_masquerade: 'false'`. We discovered in trying to build out our initial internet that docker uses a default router to communicate between networks. This default router was intercepting packets that we were attempting to send between networks. This is intended behavior for docker! In most cases when you're using docker, you don't want to have to setup all the network configurations! But... in our case... we WANT to be able to configure our network at a minute level. Sooo... adding that `enable_ip_masquerade: false` line removes the default router on the network.
-
-If you'd like to see the notes from our investigation, check out [Miscellaneous: routing-pitfalls.md](../../miscellaneous/routing-pitfalls.md). Disclaimer: these notes are not the refined and beauteous things you are witnessing in the chapters. These are notes. But they do demonstrate our discovery process for identifying the problem.
-
-#### RP Filter
-
-`rp_filter`, or reverse path filter, is a setting on Linux machines that tells them to filter (or drop) packets that come in on one interface but are expected to go out a different interface on the return path. Let's look at an example. Look at the network map at the beginning of chapter 4. Packets coming from Client were sent to router4 via router5 on `200.1.1.16/29`, but, when router4 checked its routing table, it saw that its route back to Client was over `100.1.0.0/16`. Because the interfaces for incoming and outgoing packets to the same IP were different, router4 would drop the packets.
-
-If you'd like to see the rough notes of our discovery, checkout [Miscellaneous: discovery-rp_filter](../../miscellaneous/discovery-rp_filter.md). Again, these notes are not refined, but they do show our discovery process.
-
-### How to read an IP address; i.e. octets and subnets
-
-This requires a long and detailed description to really understand. For the sake of keeping this document brief, we've moved the explanation for this to [Appendix: prefixes-and-subnet-masks.md](../../appendix/prefixes-and-subnet-masks.md) in the appendix. Please read that document and come back here when you feel confident you have a basic understanding of what it contains!
 [![chonky internet map][chonky internet map]][chonky internet map]
 
 If this network map is a bit challenging to read, take a moment to review the [How to Read a Network Map](../../appendix/how-to-read-a-network-map.md) document.
@@ -36,7 +14,7 @@ If this network map is a bit challenging to read, take a moment to review the [H
 
 A MAC (media access control) address is the layer 2 address of a machine on a network. If you'd like to review what a MAC address is in detail, checkout [Appendix: ip-and-mac-addresses](../../appendix/ip-and-mac-addresses.md).
 
-Let's look at the output for one of our interfaces shown in `ip route`:
+Let's look at the output for one of our interfaces shown in `ip addr`:
 
 ```bash
 38: eth0@if39: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
@@ -350,14 +328,30 @@ Finally, we get to our last line... We see the same thing we saw in `seq 1`; rou
 
 We've found out loop! Next step: go check the `start-up-exercise.sh` and look at the routes going to `1.0.0.0/8` on both router2 and router3. Where should those point instead? Use the network map at the beginning of this chapter to determine where these packets *should* be getting forwarded to and update the routes. `byoi-rebuild` your containers and try your `ping` again!
 
-TODO:
+## Appendix
+
+### docker-compose settings
+
+We had to make some changes to the docker-compose file that generates the machines and networks for our internet. These changes were made to thwart default behavior that makes docker or linux work in better, more predicatable ways, but weren't advantageous to our particular scenario. Here's a summary of those changes:
+
+#### IP Masquerade
+
+First, each network definition now includes a `com.docker.network.bridge.enable_ip_masquerade: 'false'`. We discovered in trying to build out our initial internet that docker uses a default router to communicate between networks. This default router was intercepting packets that we were attempting to send between networks. This is intended behavior for docker! In most cases when you're using docker, you don't want to have to setup all the network configurations! But... in our case... we WANT to be able to configure our network at a minute level. Sooo... adding that `enable_ip_masquerade: false` line removes the default router on the network.
+
+If you'd like to see the notes from our investigation, check out [Miscellaneous: routing-pitfalls.md](../../miscellaneous/routing-pitfalls.md). Disclaimer: these notes are not the refined and beauteous things you are witnessing in the chapters. These are notes. But they do demonstrate our discovery process for identifying the problem.
+
+#### RP Filter
+
+`rp_filter`, or reverse path filter, is a setting on Linux machines that tells them to filter (or drop) packets that come in on one interface but are expected to go out a different interface on the return path. Let's look at an example. Look at the network map at the beginning of chapter 4. Packets coming from Client were sent to router4 via router5 on `200.1.1.16/29`, but, when router4 checked its routing table, it saw that its route back to Client was over `100.1.0.0/16`. Because the interfaces for incoming and outgoing packets to the same IP were different, router4 would drop the packets.
+
+If you'd like to see the rough notes of our discovery, checkout [Miscellaneous: discovery-rp_filter](../../miscellaneous/discovery-rp_filter.md). Again, these notes are not refined, but they do show our discovery process.
+
+### How to read an IP address; i.e. octets and subnets
+
+This requires a long and detailed description to really understand. For the sake of keeping this document brief, we've moved the explanation for this to [Appendix: prefixes-and-subnet-masks.md](../../appendix/prefixes-and-subnet-masks.md) in the appendix. Please read that document and come back here when you feel confident you have a basic understanding of what it contains!
 
 <!-- Links, reference style, inside docset -->
 [chonky internet map]:       ../../img/network-maps/internet-chonk-network-map.svg
                              "A Chonky Internet Network Map"
 
-* review and clean up both 004 readme and docker-routing-pitfalls
-* address comment in <https://github.com/psbanka/build-your-own-internet/pull/11>
-* find and address various TODOs
-* Ashish: remove new lines in appendix files
 <!-- end of file -->
