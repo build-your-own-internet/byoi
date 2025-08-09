@@ -6,31 +6,6 @@ Let's use the tools and processes we've already discovered to make a much larger
 
 Here's what we expect the internet to look like at the end of this chapter:
 
-```markdown
-                                          200.1.1.0/29
-                                ┌─────────────────────────┐
-               200.1.1.8/29     │ (.2)               (.3) │
-             ┌────────────────Router2                  Router4─────┐
-             │ (.11)            │                        │    (.18)│
-             │             ─────┴─┬──────────────────────┴─┬─      │200.1.1.16/29
-             │                    │       100.1.0.0/16     │       │
-             │                    │                        │       │
-             │                    │                        │       │
-             │                    │                        │       │
-             │                    │                        │       │
-             │                    │                        │  (.19)│
-             │                Router3                   Router5────┘
-             │                  │                           │
-             │      ──┬─────────┴────────            ───────┴──────────────┬──
-             │        │       3.0.0.0/8                    1.0.0.0/8       │
-             │        │                                                    │
-             │        │                                                    │
-             │ (.10)  │                                                    │
-  Server     └─────Router1                                               Client
-  (.100)              │                                                  (.100)
-────┴─────────────────┴─────
-              5.0.0.0/8
-```
 
 In the design of this network, we decided to make a few policies to make it easy to understand the IP addresses of each machine on each network without having to write them in the network diagram. While you can reference the [docker-compose](./docker-compose.yml) to find the various IP addresses of each machine, using the diagram makes it easier and if we have consistent decisions about how IP addresses are assigned, then the docker-compose file isn't needed as an additional reference.
 
@@ -79,6 +54,7 @@ If you'd like to see the rough notes of our discovery, checkout [Miscellaneous: 
 ### How to read an IP address; i.e. octets and subnets
 
 This requires a long and detailed description to really understand. For the sake of keeping this document brief, we've moved the explanation for this to [Appendix: prefixes-and-subnet-masks.md](../../appendix/prefixes-and-subnet-masks.md) in the appendix. Please read that document and come back here when you feel confident you have a basic understanding of what it contains!
+[![chonky internet map][chonky internet map]][chonky internet map]
 
 ### How docker handles MAC addresses
 
@@ -400,7 +376,12 @@ We've found out loop! Next step: go check the `start-up-exercise.sh` and look at
 
 TODO:
 
+<!-- Links, reference style, inside docset -->
+[chonky internet map]:       ../../img/network-maps/internet-chonk-network-map.svg
+                             "A Chonky Internet Network Map"
+
 * review and clean up both 004 readme and docker-routing-pitfalls
 * address comment in <https://github.com/psbanka/build-your-own-internet/pull/11>
 * find and address various TODOs
 * Ashish: remove new lines in appendix files
+<!-- end of file -->
