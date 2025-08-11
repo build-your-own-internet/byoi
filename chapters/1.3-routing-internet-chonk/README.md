@@ -6,85 +6,15 @@ Let's use the tools and processes we've already discovered to make a much larger
 
 Here's what we expect the internet to look like at the end of this chapter:
 
-```markdown
-                                          200.1.1.0/29
-                                ┌─────────────────────────┐
-               200.1.1.8/29     │ (.2)               (.3) │
-             ┌────────────────Router2                  Router4─────┐
-             │ (.11)            │                        │    (.18)│
-             │             ─────┴─┬──────────────────────┴─┬─      │200.1.1.16/29
-             │                    │       100.1.0.0/16     │       │
-             │                    │                        │       │
-             │                    │                        │       │
-             │                    │                        │       │
-             │                    │                        │       │
-             │                    │                        │  (.19)│
-             │                Router3                   Router5────┘
-             │                  │                           │
-             │      ──┬─────────┴────────            ───────┴──────────────┬──
-             │        │       3.0.0.0/8                    1.0.0.0/8       │
-             │        │                                                    │
-             │        │                                                    │
-             │ (.10)  │                                                    │
-  Server     └─────Router1                                               Client
-  (.100)              │                                                  (.100)
-────┴─────────────────┴─────
-              5.0.0.0/8
-```
+[![chonky internet map][chonky internet map]][chonky internet map]
 
-In the design of this network, we decided to make a few policies to make it easy to understand the IP addresses of each machine on each network without having to write them in the network diagram. While you can reference the [docker-compose](./docker-compose.yml) to find the various IP addresses of each machine, using the diagram makes it easier and if we have consistent decisions about how IP addresses are assigned, then the docker-compose file isn't needed as an additional reference.
-
-IP addresses for `Router`s:
-
-* The IP address for each `Router` will end in `.1` for each interface on each network that router has
-* Each `Router` will use the number in it's name on the third octet of the IP address for each interface on each network
-* On the peer2peer networks (the ones assigned a `/29` address range), we will include the specific last octet of the `Router` in the diagram
-
-So, for example, all of the IP addresses for `Router5` are:
-
-* `1.0.5.1` on the the `1.0.0.0/8` network
-* `100.1.5.1` on the `100.1.0.0/16` network
-* `200.1.1.19` on the `200.1.1.16/29` network
-
-IP addresses for `Client` and `Server`:
-
-* Both machines will use `.100` as the last octet for the network they have an interface on
-
-So, `Client`'s IP address is `1.0.0.100` and it only has an interface on the `1.0.0.0/8` network.
-
-## Asides
-
-### Pets v. Cattle
-
-You might be wondering what the hell happened to our fun pets and their personalities from the previous chapter. Well, we are in serious business territory now and there is no room for emotions and personality when it comes to serious business™. In other words, when you are dealing with large infrastructure, it's much easier to manage things when you assign roles to them that dictate how things are configured. Hence, we have Server(s), Client(s), and Router(s) instead of our lovable pets.
-
-There is an industry-specific phrase that matches the theme here too. Within infrastructure industry, the popular way to see components of the infrastructure is as "cattle, not pets". This is a mean way of saying we only care about the larger system and we care less about details of individual components. Those components are there to serve a purpose and once they are unable to, we can easily replace them with other components that can serve the same role.
-
-### docker-compose settings
-
-We had to make some changes to the docker-compose file that generates the machines and networks for our internet. These changes were made to thwart default behavior that makes docker or linux work in better, more predicatable ways, but weren't advantageous to our particular scenario. Here's a summary of those changes:
-
-#### IP Masquerade
-
-First, each network definition now includes a `com.docker.network.bridge.enable_ip_masquerade: 'false'`. We discovered in trying to build out our initial internet that docker uses a default router to communicate between networks. This default router was intercepting packets that we were attempting to send between networks. This is intended behavior for docker! In most cases when you're using docker, you don't want to have to setup all the network configurations! But... in our case... we WANT to be able to configure our network at a minute level. Sooo... adding that `enable_ip_masquerade: false` line removes the default router on the network.
-
-If you'd like to see the notes from our investigation, check out [Miscellaneous: routing-pitfalls.md](../../miscellaneous/routing-pitfalls.md). Disclaimer: these notes are not the refined and beauteous things you are witnessing in the chapters. These are notes. But they do demonstrate our discovery process for identifying the problem.
-
-#### RP Filter
-
-`rp_filter`, or reverse path filter, is a setting on Linux machines that tells them to filter (or drop) packets that come in on one interface but are expected to go out a different interface on the return path. Let's look at an example. Look at the network map at the beginning of chapter 4. Packets coming from Client were sent to router4 via router5 on `200.1.1.16/29`, but, when router4 checked its routing table, it saw that its route back to Client was over `100.1.0.0/16`. Because the interfaces for incoming and outgoing packets to the same IP were different, router4 would drop the packets.
-
-If you'd like to see the rough notes of our discovery, checkout [Miscellaneous: discovery-rp_filter](../../miscellaneous/discovery-rp_filter.md). Again, these notes are not refined, but they do show our discovery process.
-
-### How to read an IP address; i.e. octets and subnets
-
-This requires a long and detailed description to really understand. For the sake of keeping this document brief, we've moved the explanation for this to [Appendix: prefixes-and-subnet-masks.md](../../appendix/prefixes-and-subnet-masks.md) in the appendix. Please read that document and come back here when you feel confident you have a basic understanding of what it contains!
+If this network map is a bit challenging to read, take a moment to review the [How to Read a Network Map](../../appendix/how-to-read-a-network-map.md) document.
 
 ### How docker handles MAC addresses
 
 A MAC (media access control) address is the layer 2 address of a machine on a network. If you'd like to review what a MAC address is in detail, checkout [Appendix: ip-and-mac-addresses](../../appendix/ip-and-mac-addresses.md).
 
-Let's look at the output for one of our interfaces shown in `ip route`:
+Let's look at the output for one of our interfaces shown in `ip addr`:
 
 ```bash
 38: eth0@if39: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
@@ -106,11 +36,9 @@ We want to create routing tables for each of the routers on the network we have 
 
 Based on that diagram, out of the 7 networks we've built, router1 already has interfaces on 3 of them:
 
-<!--**open question to ourselves** should we continue to refer to the docker-compose names for these networks if we're not using those names in the rest of the readme?-->
-
-* `5.0.0.0/8` or `five-net`
-* `200.1.1.8/29` or `p2p-eight`
-* `3.0.0.0/8` or `three-net`
+* `5.0.0.0/8`
+* `200.1.1.8/29`
+* `3.0.0.0/8`
 
 So, for router1 to participate in this internet, it needs to know how to route packets to each of the 4 networks it's not currently connected to. We can add routes to each of the 4 networks in our `start-up.sh` file to use a similar structure to what we used in chapter 2. So, we'll start by defining how router1 can reach each network through its connections with other routers. You'll see the following already defined in the `start-up.sh` file for this chapter:
 
@@ -172,7 +100,7 @@ listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 
 The first 2 packets in our `tcpdump` are `ARP` packets, i.e. `Request who-has 5.0.0.100 tell 5.0.1.1` and `Reply 5.0.0.100 is-at 02:42:05:00:00:64`. This is a machine on our network attempting to associate a MAC address with an IP address that it has learned about from an incoming request. For more details on what's happening here, check out the [appendix doc on IP and MAC addresses](../../appendix/ip-and-mac-addresses.md).
 
-Next we see 2 couplets of `ICMP echo request` and `ICMP echo reply`s. In these packets, we can see that the IP address of the machine requesting the ping is `3.0.3.1`, or router3's interface on `three-net`. The destination machine is `5.0.0.100`, or `server`'s interface on `five-net`. But! This also tells us the MAC addresses that are involved in the direct communication with `server`. So, when we see `02:42:05:00:01:01 > 02:42:05:00:00:64`, we can use what we know about how docker creates MAC addresses and see that router1's interface on `five-net`, `02:42:05:00:01:01`, is the interface sending the packets to `server`, `02:42:05:00:00:64`.
+Next we see 2 couplets of `ICMP echo request` and `ICMP echo reply`s. In these packets, we can see that the IP address of the machine requesting the ping is `3.0.3.1`, or router3's interface on `3.0.0.0/8`. The destination machine is `5.0.0.100`, or `server`'s interface on `5.0.0.0/8`. But! This also tells us the MAC addresses that are involved in the direct communication with `server`. So, when we see `02:42:05:00:01:01 > 02:42:05:00:00:64`, we can use what we know about how docker creates MAC addresses and see that router1's interface on `5.0.0.0/8`, `02:42:05:00:01:01`, is the interface sending the packets to `server`, `02:42:05:00:00:64`.
 
 Now that you have router3 able to ping `server`, build out the rest of the internet! Check that things work using ping at every step of the way! We recommend building out one "hop" at a time, so from router3, build out router2's connections. Check that router2 can ping `server` and router5. Move to router4. Can it ping `server`, router3, router5, and router2? Can it ping each router on every interface that router has on any network? Check the `ping -h` help to see how you can originate your ping from a specific interface. Can you ping from a specific interface on a router to a specific interface on another router?
 
@@ -287,7 +215,7 @@ This means that the routing problem is on the response path back from Server => 
 But what's this `ICMP time exceeded in-transit`?
 > 21:31:52.871718 IP 3.0.3.1 > 5.0.0.100: ICMP time exceeded in-transit, length 92
 
-It appears that router3 on three-net is letting the server know that it is unable to route packets.
+It appears that router3 on 3.0.0.0/8 is letting the server know that it is unable to route packets.
 
 Before we can dive into that, we need to know how `ping` works. Let's start by looking at the output of a successful `ping` from Client to Router5:
 
@@ -398,9 +326,30 @@ Finally, we get to our last line... We see the same thing we saw in `seq 1`; rou
 
 We've found out loop! Next step: go check the `start-up-exercise.sh` and look at the routes going to `1.0.0.0/8` on both router2 and router3. Where should those point instead? Use the network map at the beginning of this chapter to determine where these packets *should* be getting forwarded to and update the routes. `byoi-rebuild` your containers and try your `ping` again!
 
-TODO:
+## Appendix
 
-* review and clean up both 004 readme and docker-routing-pitfalls
-* address comment in <https://github.com/psbanka/build-your-own-internet/pull/11>
-* find and address various TODOs
-* Ashish: remove new lines in appendix files
+### docker-compose settings
+
+We had to make some changes to the docker-compose file that generates the machines and networks for our internet. These changes were made to thwart default behavior that makes docker or linux work in better, more predicatable ways, but weren't advantageous to our particular scenario. Here's a summary of those changes:
+
+#### IP Masquerade
+
+First, each network definition now includes a `com.docker.network.bridge.enable_ip_masquerade: 'false'`. We discovered in trying to build out our initial internet that docker uses a default router to communicate between networks. This default router was intercepting packets that we were attempting to send between networks. This is intended behavior for docker! In most cases when you're using docker, you don't want to have to setup all the network configurations! But... in our case... we WANT to be able to configure our network at a minute level. Sooo... adding that `enable_ip_masquerade: false` line removes the default router on the network.
+
+If you'd like to see the notes from our investigation, check out [Miscellaneous: routing-pitfalls.md](../../miscellaneous/routing-pitfalls.md). Disclaimer: these notes are not the refined and beauteous things you are witnessing in the chapters. These are notes. But they do demonstrate our discovery process for identifying the problem.
+
+#### RP Filter
+
+`rp_filter`, or reverse path filter, is a setting on Linux machines that tells them to filter (or drop) packets that come in on one interface but are expected to go out a different interface on the return path. Let's look at an example. Look at the network map at the beginning of chapter 4. Packets coming from Client were sent to router4 via router5 on `200.1.1.16/29`, but, when router4 checked its routing table, it saw that its route back to Client was over `100.1.0.0/16`. Because the interfaces for incoming and outgoing packets to the same IP were different, router4 would drop the packets.
+
+If you'd like to see the rough notes of our discovery, checkout [Miscellaneous: discovery-rp_filter](../../miscellaneous/discovery-rp_filter.md). Again, these notes are not refined, but they do show our discovery process.
+
+### How to read an IP address; i.e. octets and subnets
+
+This requires a long and detailed description to really understand. For the sake of keeping this document brief, we've moved the explanation for this to [Appendix: prefixes-and-subnet-masks.md](../../appendix/prefixes-and-subnet-masks.md) in the appendix. Please read that document and come back here when you feel confident you have a basic understanding of what it contains!
+
+<!-- Links, reference style, inside docset -->
+[chonky internet map]:       ../../img/network-maps/internet-chonk-network-map.svg
+                             "A Chonky Internet Network Map"
+
+<!-- end of file -->
