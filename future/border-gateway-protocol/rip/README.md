@@ -20,8 +20,7 @@ Let's take a look at how RIP works, step-by-step. Let's start with a simple four
 
 **Step 1** Remember, each router starts with only the information it knows about through its physical interfaces. Therefore the routing table for each router is initially populated only with the networks it has physical interfaces on. 
 
-Because routing information needs to be disseminated throughout the internet between routers that are directly connected to each other, we're going to put special emphasis on pairs of routers that have this direct-connection. Routers that can talk directly to each other over a single network are called **neighbors**.
-
+Because routing information needs to be disseminated throughout the internet between routers that are directly connected to each other, we're going to put special emphasis on pairs of routers that have this direct-connection. Routers that can talk directly to each other over a single network are called [**neighbors**](../../../chapters/glossary.md#neighbor-in-a-routing-context).
 The RIP protocol will have each router communicate all information in its own routing table to each of its neighbors as seen in the steps that follow.
 
 **Step 2** router `R1` sends messages to its neighbors (routers `R2` and `R3`) that say this: "Hey! If you have a packet destined for either network `A` or network `B`, you can send those packets to me! I'll make sure to get those packets to their final destination. If you have a better way to get to those networks, that's fine -- but I'm here if you need me."
@@ -45,7 +44,7 @@ Hey, y'all, this is router `R2`, and guess what, I can reach networks `A`, `B`, 
 
 **Step 7** So router `r3` receives this communication from router `R4` and says to itself, "Sweet! Let me check my routing table for what needs to be updated! Oh, snap! I already have an entry for network `B`! Should I continue to send packets to router `r1`, or should I update my routing table to send packets to router `R4` instead? I'm so confused! (⊙.☉)7"
 
-🤔 Let's take a moment an think about this. Knowing what you know about the network (since you have a bird's eye view of what's going on), what do you think the right answer is to this question? If router `r3` sent packets destined for network `B` to router `r4`, would it get there faster or slower than sending them to router `r1`? Trace the diagram path it would take through each choice. All things being equal, having fewer routers involved in getting the packet to its destination is preferable.
+> 🤔 **Stop and Think!** Knowing what you know about the network (since you have a bird's eye view of what's going on), what do you think the right answer is to this question? If router `r3` sent packets destined for network `B` to router `r4`, would it get there faster or slower than sending them to router `r1`? Trace the diagram path it would take through each choice. All things being equal, having fewer routers involved in getting the packet to its destination is preferable.
 
 Therefore router `R3` **should** prefer using router `r1` for network `B`, but *how does it know* how to make that choice? To solve this problem, we're going to introduce a new wrinkle in how routers advertise their routes to each other.
 
@@ -68,124 +67,19 @@ BIRD is a software that routers can run that gives them access to a number of di
 - where routing information should come from
 - what we should do with that information
 
-What this means in practice will become more clear as we explore how the `bird` software does what it does.
-
-### How BIRD works
-
-This is complicated and it's okay if this takes a few read-throughs before you understand how this works. To make this more accessible, let's use a diagram to show the flow of information through BIRD and between routers.
-
-First, let's introduce a new diagram!
-
-<!-- TODO: CONSISTENT CAPITALIZATION: all "rx" should be "Rx" -->
-
-This diagram is a conceptual picture of `router-r1` communicating with routers `r2` and `r3`. This focuses first on `router-r1` and the BIRD software that runs on it. It shows further details of the constituent pieces of BIRD's inner workings and how those inner-workings interface with the machine itself and with the other routers.
-
-[![BIRD diagram explainer][BIRD diagram explainer]][BIRD diagram explainer]
-
-On the far left, we have stuff that exists "outside" of BIRD:
-
-- **eth0, eth1**: The network interfaces of the machine which connect it to the networks that it sends packets on
-- **route table**: the kernel's routing table which provides instructions for where to send packets to networks that it is **not** directly connected to.
-
-Moving to the right, we next encounter a giant box labelled **BIRD**. This is the BIRD software and all of its constituent pieces (i.e. "protocols"). As we move into BIRD, the first big yellow box represents the BIRD protocols we're going to be working with in this chapter. Let's briefly look at each of these:
-
-- `device`: empowers BIRD to learn what network interfaces (or "devices") exist on this machine and their up/down status.
-- `kernel`: controls how routing information gets into and out of the route table for this machine.
-- `RIP`: used in communicating with other routers using RIP on our little internet in the way we described in the last section.
-
-> 📝 **NOTE**: What does this ["protocol"](../../../chapters/glossary.md#protocol) word mean _in this context_? It feels pretty "jargonny!" BIRD uses the word "protocol" to indicate sources and destinations for _routing information_. We'll look at this in more depth as we continue through this explanation, but at a high level, it specifies where BIRD is able to learn about routes and where it's able to communicate that routing information.
-
-Finally, we have the box labelled **BIRD core** which manages organizing information **between protocols** to create a coherent routing table for the router.
-
-But what does this process look like on a larger internet? How exactly does route information get collected and distributed by BIRD amongst routers using RIP?
-
-To answer that question, we're going to give you a Giant Step-by-Step Diagram™! It's going to start with how the router collects information about its own network connections. Next, it will go through the process of how it uses the RIP protocol to communicate that information to other routers. This will enable each router to build a full routing table for the entire internet.
-
-[![BIRD Details steps 1 and 2][BIRD Details steps 1 and 2]][BIRD Details steps 1 and 2]
-
-**Step 1**. The `device` protocol in BIRD will learn about the local routes (i.e. the networks that the router has interfaces on). 
-
-**Step 2**. The BIRD software receives the routes it learned about from the router's local devices. BIRD core maintains its own routing table that is separate from the table the router uses to make routing decisions. Both routing tables could be identical copies of each other but they don't have to be.
-
-[![BIRD Details steps 3 and 4][BIRD Details steps 3 and 4]][BIRD Details steps 3 and 4]
-
-**Step 3** BIRD finds which protocols `export` their data. `export` is a setting on a protocol that tells BIRD-core that it is allowed to send routes **to** that protocol.
-
-To pass data around, BIRD has two keywords that each protocol can use to dictate how routing information flows through the system.  `import` dictates whether or not to pull information _from_ the protocol into the BIRD system. Once BIRD has imported routing information to its own routing table, `export` indicates which protocols should _receive_ that information.
-
-**Step 4** Since the RIP protocol _does_ have the `export` flag, it receives the routes from BIRD core.
-
-[![BIRD Details steps 5 and 6][BIRD Details steps 5 and 6]][BIRD Details steps 5 and 6]
-
-**Step 5** Now it's time to transmit packets about routing information to other routers! RIP will send broadcast messages on every network it's connected to about every route that BIRD core passed to it.
-
-**Step 6** Now we're looking at a neighbor router: `router-r2`! This router receives the routes from `router-r1`.
-
-[![BIRD Details steps 7 and 8][BIRD Details steps 7 and 8]][BIRD Details steps 7 and 8]
-
-**Step 7** BIRD-core on `router-r2` now `import`s the routes from the RIP protocol in order to add them to BIRD core's routing table.
-
-**Step 8** So now, BIRD-core communicates its routes to the kernel protocol which will write a copy of those routes to `router-r2`'s routing table. `router-r2` is now able to forward packets destined for networks connected to `router-r1` towards `router-r1`.
-
-**Step 9 (not pictured)** `router-r2` communicates out all of its routes (including locally-connected routes as well as those it heard about from `router-r1` to all of its locally-connected networks.
-
-Okay, that's it for theory. Now that we know how BIRD works, let's get some practical experience setting it up and getting it running!
+BIRD does this through a config file that we're going to explore as look at setting up BIRD on our internet. We're going to jump straight into running RIP in BIRD. If you're curious about learning more in depth about how BIRD works, refer to the [appendix](#how-bird-works).
 
 ### Implementing RIP in BIRD
 
-<!-- PASTED CRAP -->
-We need to configure BIRD so it knows what routes to share with other routers as well as _how_ to share those routes. To do that, we're going to start by using `vim` to modify the `bird.conf` file on `router-a2`. `hopon router-a2` and run vim:
+If you haven't yet already done a `byoi-rebuild`, for this chapter, do so now.
 
-```bash
-root@router-a2:/# vim /etc/bird/bird.conf
-```
+Before we look at BIRD itself, let's first take a look at the routes that `router-a2` already has in its routing table. We'll use our old friend `ip route`. Take a look at the network map:
 
-You'll see the default configuration that is installed with your BIRD software. It's not supposed to work yet. We need to change it so that it will work on our system.
-
-```bash
-# This is a minimal configuration file, which allows the bird daemon to start
-# but will not cause anything else to happen.
-#
-# Please refer to the documentation in the bird-doc package or BIRD User's
-# Guide on http://bird.network.cz/ for more information on configuring BIRD and
-# adding routing protocols.
-
-# Change this into your BIRD router ID. It's a world-wide unique identification
-# of your router, usually one of router's IPv4 addresses.
-router id 198.51.100.1;
-
-# The Kernel protocol is not a real routing protocol. Instead of communicating
-# with other routers in the network, it performs synchronization of BIRD's
-# routing tables with the OS kernel.
-protocol kernel {
-        scan time 60;
-        import none;
-#       export all;   # Actually insert routes into the kernel routing table
-}
-
-# The Device protocol is not a real routing protocol. It doesn't generate any
-# routes and it only serves as a module for getting information about network
-# interfaces from the kernel.
-protocol device {
-        scan time 60;
-}
-```
-
-<!-- WHERE WE LEFT OFF -->
-
-There's not much going on here yet. This basic configuration includes:
-
-- `router id`: (optional) the unique IP address of this router. While this is recommended, it's not necessary for BIRD to work.
-
-You probably noticed that these "protocols" have some options for "import" and "export". What does that mean here?
-
-
-One thing this standard BIRD configuration doesn't include is the protocol to use to communicate between routers. As we mentioned at the beginning of the chapter, we'll focus on the RIP protocol.
-Okay, so the first thing we're going to do is add `bird` to each of our routers. Lucky for you, we've already installed this software on the routers of this toy internet for this chapter. Next, we're going to start these routers up and begin playing with them, but first let's take a look at the network that we're going to be using in this chapter:
+<!-- TODO: the network map below introduces a lot of new symbols (e.g. clouds). Should we take the time to explain this network map or dramatically simplify it -->
 
 [![our map][our map]][our map]
 
-Go ahead and run `byoi-rebuild`, and let's run our old friend `ip route` on one of our routers, `router-a2`, to show the routing table on that router. If you look at the network map, you'll see that `router-a2` only has interfaces on `4.1.0.0/24` and `4.2.0.0/24`. Now, when we check the routes, you should see that it only has routes for those interfaces (because we've removed all the static routes):
+`router-a2` only has interfaces on `4.1.0.0/24` and `4.2.0.0/24`. Now, when we go onto the router and check the routes, you should see that it only has routes for those interfaces:
 
 ```bash
 root@router-a2:/# ip route
@@ -195,20 +89,23 @@ root@router-a2:/# ip route
 
 > 📝 **NOTE:** your interface names (eth0 and eth1) may be different
 
-We looked at the default configuration for BIRD and now we're going to give you a complete configuration for implementing RIP in BIRD. We'll move router-by-router and see how routing-tables are populated and look at some key controls that BIRD provides for us to check on the status of our RIP environment.
+Our next step is to configure the BIRD software to allow this router to learn routes from its neighbors and to spread the knowledge of its own routes far and wide across the internet.
 
-1. Hopon `router-a2`
-2. Before we get started with making configuration changes with BIRD, let's see what this router knows about our toy internet by using the `ip route` command. You should see something like this:
+We've already added the `bird` software to each of our routers in this chapter. Now we need to configure `bird` so it knows what routes to share with other routers as well as _how_ to share those routes. This is done using a configuration file.
+
+A working configuration for implementing RIP in BIRD is given below. We'll implement this configuration on `router-a2` first and then we'll move router-by-router and see how routing-tables are populated and look at some key controls that BIRD provides for us to check on the status of our RIP environment.
+
+#### Configure the first router
+
+The first step in configuring BIRD is to update the `/etc/bird/bird.conf` file. Here is the command that will update the configuration file and tell BIRD to talk RIP to any other routers that are neighbors.
+
+<!-- TODO: what is the best way to have the student make this configuration change ? -->
+
+<!-- TODO: take out comments and just explain stuff -->
 
 ```bash
-root@router-a2:/# ip route
-4.1.0.0/16 dev eth0 proto kernel scope link src 4.1.0.2
-4.2.0.0/16 dev eth1 proto kernel scope link src 4.2.0.2
-```
+$ cat > /etc/bird/bird.conf << EOF
 
-3. Next, let's start configuring BIRD. The first step is to update the `/etc/bird/bird.conf` file to match the following:
-
-```bash
 # If we run BIRD interactively, we can see logs go by for everything
 # it's doing
 debug protocols all;
@@ -256,26 +153,15 @@ protocol rip {
     version 2;
   };
 }
+
+EOF
 ```
 
-This configuration file is a lot to look at in one go! Let's not spend a lot of time right now going over this line-by-line. We'll do that more [later in the chapter](#the-rip-configuration-we-gave-you-in-the-first-place). Let's first just see this in action so we know what it's doing.
+This configuration file is a lot to look at in one go! Let's not spend a lot of time right now going over this line-by-line. You have two choices: if you want to dig into this configuration file and understand exactly what it does and how it works, jump over to [the appendix](#how-bird-works). Alternatively, if you're the type of person that would rather first just play around with the system and see it in action, you can continue with the flow of this chapter to get your hands dirty.
 
-#### 4. Restart the BIRD daemon in interactive debugging mode
+#### Start the BIRD daemon in interactive debugging mode with the new config
 
-Remember to use the `ps aux` command to list all the running processes on the machine. Find the line that has `bird` in it and look at the `PID` column for that line to find the process-id. Next, issue the `kill` command with process-id that you found. This will stop `bird` from running in the background. It should look something like this:
-
-```bash
-root@router-a2:/# ps aux
-USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
-root           1  0.0  0.0   4032  2816 ?        Ss   18:32   0:00 /bin/bash /router-start-up.sh
-root          12  0.0  0.0   2796  1408 ?        Ss   18:32   0:00 /usr/sbin/bird -c /etc/bird/bird.conf
-root          13  0.0  0.0   2268  1024 ?        S    18:32   0:00 /bin/sleep infinity
-root          14  0.0  0.0   4296  3456 pts/0    Ss   18:32   0:00 /bin/bash
-root          25  0.0  0.0   7628  3456 pts/0    R+   18:32   0:00 ps aux
-root@router-a2:/# kill 12
-```
-
-Next, let's run `bird` with this new configuration in interactive debugging mode by adding the `-d` flag when we start it:
+Let's run `bird` with this new configuration in interactive debugging mode by giving it the `-d` flag when we start it:
 
 ```bash
 root@router-a2:/# bird -d
@@ -291,7 +177,7 @@ bird: Chosen router ID 4.1.0.2 according to interface eth0
 ...
 ```
 
-Don't panic! You're going to see a lot of debugging information here. Scan through this output and see what you can understand. It's okay if it doesn't all (or even mostly!) make sense to you. Find the bits that do make sense and see if you can understand them in context. Once the `bird` has completed its initialization, you should see the following lines continuing to output:
+Don't panic! You're going to see a lot of debugging information here. Scan through this output and see what you can understand. It's okay if it doesn't all (or even mostly!) make sense to you. Find the bits that **do** make sense and see if you can understand them in context. Once the `bird` has completed its initialization, you should see the following lines continuing to output:
 
 ```bash
 bird: device1: Scanning interfaces
@@ -307,11 +193,11 @@ bird: kernel1: Pruning table master
 
 This is telling us that `bird` is scanning to see what routes it could be learning. SO, let's go take a look at those routes!
 
-5. Check your routes on `router-a2`
+#### Check your routes on `router-a2`
 
-Leave the `bird -d` output scrolling in this window, and open a **new** window and hopon `router-a2` once again so we can watch the route table update as we add new [neighbors](../../../chapters/glossary.md#neighbor-in-a-routing-context).
+Leave the `bird -d` output scrolling in this window, and open a **new** window and `hopon router-a2` once again so we can watch the route table update as we add new neighbors.
 
-Let's take a look at how `router-a2`'s routing table has changed! We're going to use the `watch` command with the `ip route` command so that we can see the routes refresh in real time as we make changes:
+Let's take a look at how `router-a2`'s routing table has changed! We're going to use the [`watch`](../../../chapters/command-reference-guide.md#watch) command with the `ip route` command so that we can see the routes refresh in real time as we make changes:
 
 ```bash
 root@router-a2:/# watch ip route
@@ -324,19 +210,17 @@ Every 2.0s: ip route       router-a2: Wed Apr 16 20:23:21 2025
 4.2.0.0/16 dev eth1 proto kernel scope link src 4.2.0.2
 ```
 
-So what this is going to do, if you're not familiar with `watch`, is to run the command you give it and show you the output every two seconds. This means we get a refresh of what routes this machine knows every two seconds. 
+This is going to display an updated list of routes this machine knows about every two seconds. 
 
-You might feel a slight sense of disappointment that you don't see any new routes yet. Why did we do all that work with bird just to have the router do nothing?! Well, with only one router running RIP, there is nothing for it to communicate with and so no new route information is coming into this router. This is like one hand clapping: no sound yet!
+You might feel a slight sense of disappointment that you don't see any new routes yet. Why did we do all that work with BIRD just to have the router do nothing?! Well, with only one router running RIP, there is nothing for it to communicate with and so no new route information is coming into this router. This is like one hand clapping: no sound yet!
 
-6. Add a neighbor
+#### Add a neighbor
 
-In order to see some interesting results, we need to have at least two routers that [neighbor](../../../chapters/glossary.md#neighbor-in-a-routing-context) each other running RIP. So let's configure `router-a3` the same way and watch the changes roll in!
+In order to see some interesting results, we need to have at least two routers that neighbor each other running RIP. So let's configure `router-a3` the same way and watch the changes roll in!
 
 Open a **third** window, this time to `router-a3`, and update the `/etc/bird/bird.conf` file on _that_ router to match the configuration that we gave you for `router-a2`. All of these routers will take _exactly the same_ configuration file. Easy, huh?
 
-We recommend starting `bird` in "interactive debugging mode" so that we can see exactly how these routers are going to communicate. That's what we're currently running on `router-a2`.
-
-Run the `ps` command as above with router-a3 and run the `kill` command again to terminate the `bird` process on this router. Then run `bird` on router-a3 with the debugging switch. You should see something like this:
+Run `bird` on `router-a3` with the debugging switch. You should see something like this:
 
 ```bash
 root@router-a3:/# bird -d
@@ -351,7 +235,7 @@ bird: device1: State changed to feed
 bird: Chosen router ID 3.4.0.3 according to interface eth2
 ```
 
-In your window running `watch ip route`, you should suddenly see some new routes show up `router-a2`'s routing table!
+In your window on `router-a2` that is running `watch ip route`, you should suddenly see some new routes show up!
 
 ```bash
 Every 2.0s: ip route       router-a2: Wed Apr 16 20:34:35 2025
@@ -395,13 +279,15 @@ bird: kernel1: 3.4.0.0/16: seen
 bird: kernel1: 4.3.0.0/16: seen
 ```
 
-This debugging output is a little simpler than the debugging output that we've seen from `tcpdump`. Take a minute and see if you can make a little sense of what's happening here. Take a minute to go through the output line-by-line and write down what you think each line might mean.
+This debugging output is a little simpler than the debugging output that we've seen from `tcpdump`. Take a minute and see if you can make a little sense of what's happening here. Go through the output line-by-line and write down what you think each line might mean.
 
-The gist of this is that we're watching `bird` use the communication happening over the RIP protocol to learn new routes and save them into its local ("kernel") routing table.
+The gist of this is that we're watching `bird` use the communication happening over the RIP protocol to learn new routes and save them into its local routing table.
 
-7. Rinse and repeat!
+Because we'll know if each new router we add is successful by watching the output on `router-a2`, we don't need to continue watching the debugging on `router-a3`. We're therefore going to terminate the BIRD program and re-start it in background mode. Type `Control` + `C` to stop the running BIRD and re-start it _without_ the `-d` flag in order to have it run in the background. When you run it this way, you'll see nothing in the terminal output, instead you'll be taken back to the command-line prompt. If you want to confirm that BIRD is running, try using the [`ps aux`](../../../chapters/command-reference-guide.md#ps) command to see your background processes.
 
-Okay, we've got two routers running RIP and communicating routes successfully to each other. Guess what... we have nineteen more to go!
+#### Rinse and repeat!
+
+Okay, we've got two routers running RIP and communicating routes successfully to each other. Guess what... we have **nineteen** more to go!
 
 Here are the rest of the routers that need to be configured:
 
@@ -425,19 +311,24 @@ Here are the rest of the routers that need to be configured:
 - router-g4
 - router-g2
 
+<!-- TODO: if the network make is updated, also update this paragraph below -->
+
+> 🤔 **Stop and Think!** We are only running BIRD on the routers. Would there be a benefit to setting it up on servers and clients? Complex networks **may** use BIRD on their servers to configure their own microcosm (for example, the "Google Cloud Services" network could have simpler configuration if the servers participated in the RIP network). This could save network administrators significant time and headache. However, you may not want to trust communication that is coming from **outside** your network. This is a conversation that will come up again when we discuss another routing protocol: BGP!
+
 It's time to roll out the configuration to each and every one of these little guys! Note that these routers have been given in a specific order. The reason for this has to do with the concept of "neighbors" that we've talked about earlier. Remember that the RIP protocol has to communicate over Ethernet (meaning, on-the-same-network) to other routers. Those routers are "neighbors" because they are adjacent to each other on a larger internet. If we start running RIP on a router that doesn't have direct communication with another router running RIP, then there's no way for the routes to populate. Once we've filled the gap and have a contiguous line of routers running RIP, the routes will populate eventually. But since we'd like to see updates on `router-a2` for each and every router that we configure, we want to make sure that we're always configuring a new router that neighbors a router that's already configured.
 
 Here's what you'll need to do for each router in the list:
 
 - `hopon <router-name>`
 - update the `/etc/bird/bird.conf` file to match what we gave you for `router-a2` and `router-a3`.
-- find the bird process with `ps -aux`
-- run the kill command to restart the `bird` process (i.e. `kill -HUP <process-id>`)
+- start the `bird` process (just run `bird` on the command-line **without** the `-d` flag)
 - pay attention to the open windows for `router-a2` to see the new routes populate.
 
-## Validate that shit!
+Since you're running BIRD in the background (i.e. without the `-d` flag), you don't need to stay logged in to the router for the BIRD software to do its thing.
 
-1. Spot-check your routes!
+### Validate that shit!
+
+#### Spot-check your routes!
 
 By the time you're done with all that serious labor, the output of the `watch ip route` command on `router-a2` should have gotten pretty huge! It should look a lil' somethin' like this:
 
@@ -481,9 +372,9 @@ Every 2.0s: ip route                                                            
 
 Look at all those great `bird` routes! `bird` rules! 🐦💪
 
-2. Ping around and find out!
+#### Ping around and find out!
 
-Next, now that we think we've got everything configured, let's make sure that our internet functions exactly the way it has in our previous routing chapters (remember the bad old days when we had to configure all the routes statically by hand?).
+Now that we think we've got everything configured, let's make sure that our internet functions exactly the way it has in our previous routing chapters (remember the bad old days when we had to configure all the routes statically by hand? eew).
 
 Try using your old friend `ping` to send a packet from `client-c1` to `server-s2`. `hopon client-c1` and run the `ping` command as follows:
 
@@ -499,7 +390,10 @@ rtt min/avg/max/mdev = 0.326/0.326/0.326/0.000 ms
 
 💥 Dope! We have network connectivity across this great toy internet of ours! If this doesn't work, you'll need to troubleshoot your routes. Refer to the [discover the breakage](../../../chapters/1.3-routing-internet-chonk/README.md#discover-the-breakage) troubleshooting section from chapter 1.3 if you need some assistance.
 
-3. Do a complete check of the whole network using the `byoi-validate` script
+#### Do a complete check of the whole network using the `byoi-validate` script
+
+ <!-- TODO, if we change our network map, change this -->
+<!-- TODO: update this path when promoted to chapters -->
 
 We're going to finish by running a script called `byoi-validate` to ensure that all of the routes across the network are working as expected. This is a `bash` script which automatically performs `ping` tests for you. It's going to run tests from one machine in each "eyeball-network" to every other machine on our internet. This ensures that there is correct routing out of each network. You'll need to be in the same directory that you've been running the `hopon` commands from (i.e. `build-your-own-internet/future/border-gateway-protocol/rip`), and you'll run the command `byoi-validate`. The output from that command, if everything is working correctly, should look like this:
 
@@ -522,7 +416,9 @@ Testing IP connectivity from server-a1
 
 If that script reports any errors, your job is to go and fix them! Refer to the [discover the breakage](../../../chapters/1.3-routing-internet-chonk/README.md#discover-the-breakage) troubleshooting section from chapter 1.3 if you need some assistance.
 
-## Break that shit!
+<!-- HERE IS WHERE WE ACTUALLY LEFT OFF : Aug 8 25 -->
+
+### Break that shit!
 
 That's great, we did a whole bunch of work to wind up exactly as we started! why did we do that? Let's take a look at the power of using a routing protocol to determine your routes: namely, healing broken routes.
 
@@ -659,6 +555,7 @@ Let's talk about how we configure BIRD a little before we're done with this chap
 
 We want to make sure you're comfortable with how BIRD is configured using RIP, so let's talk about the config section-by-section. We'll then invite you to try a different configuration using a different routing protocol as an exercise later.
 
+<!-- TODO: REMOVE OR PUT IN THE APPENDIX? -->
 ### The RIP configuration we gave you in the first place
 
 As we go through this configuration file, it might be helpful to reference the [flowchart on how rip works section](#how-bird-works). Let's start with this section of the configuration file:
@@ -766,6 +663,68 @@ Things to observe:
 3. Do the same exercise we did above, killing `router-z7`. What differences did you notice in how quickly the routers healed their connections? What differences did you see when you started `router-z7` back up?
 
 ## Appendix
+
+### How BIRD works
+
+This is complicated and it's okay if this takes a few read-throughs before you understand how this works. To make this more accessible, let's use a diagram to show the flow of information through BIRD and between routers.
+
+First, let's introduce a new diagram!
+
+<!-- TODO: CONSISTENT CAPITALIZATION: all "rx" should be "Rx" -->
+
+This diagram is a conceptual picture of `router-r1` communicating with routers `r2` and `r3`. This focuses first on `router-r1` and the BIRD software that runs on it. It shows further details of the constituent pieces of BIRD's inner workings and how those inner-workings interface with the machine itself and with the other routers.
+
+[![BIRD diagram explainer][BIRD diagram explainer]][BIRD diagram explainer]
+
+On the far left, we have stuff that exists "outside" of BIRD:
+
+- **eth0, eth1**: The network interfaces of the machine which connect it to the networks that it sends packets on
+- **route table**: the kernel's routing table which provides instructions for where to send packets to networks that it is **not** directly connected to.
+
+Moving to the right, we next encounter a giant box labelled **BIRD**. This is the BIRD software and all of its constituent pieces (i.e. "protocols"). As we move into BIRD, the first big yellow box represents the BIRD protocols we're going to be working with in this chapter. Let's briefly look at each of these:
+
+- `device`: empowers BIRD to learn what network interfaces (or "devices") exist on this machine and their up/down status.
+- `kernel`: controls how routing information gets into and out of the route table for this machine.
+- `RIP`: used in communicating with other routers using RIP on our little internet in the way we described in the last section.
+
+> 📝 **NOTE**: What does this ["protocol"](../../../chapters/glossary.md#protocol) word mean _in this context_? It feels pretty "jargonny!" BIRD uses the word "protocol" to indicate sources and destinations for _routing information_. We'll look at this in more depth as we continue through this explanation, but at a high level, it specifies where BIRD is able to learn about routes and where it's able to communicate that routing information.
+
+Finally, we have the box labelled **BIRD core** which manages organizing information **between protocols** to create a coherent routing table for the router.
+
+But what does this process look like on a larger internet? How exactly does route information get collected and distributed by BIRD amongst routers using RIP?
+
+To answer that question, we're going to give you a Giant Step-by-Step Diagram™! It's going to start with how the router collects information about its own network connections. Next, it will go through the process of how it uses the RIP protocol to communicate that information to other routers. This will enable each router to build a full routing table for the entire internet.
+
+[![BIRD Details steps 1 and 2][BIRD Details steps 1 and 2]][BIRD Details steps 1 and 2]
+
+**Step 1**. The `device` protocol in BIRD will learn about the local routes (i.e. the networks that the router has interfaces on). 
+
+**Step 2**. The BIRD software receives the routes it learned about from the router's local devices. BIRD core maintains its own routing data.
+
+[![BIRD Details steps 3 and 4][BIRD Details steps 3 and 4]][BIRD Details steps 3 and 4]
+
+**Step 3** BIRD finds which protocols `export` their data. `export` is a setting on a protocol that tells BIRD-core that it is allowed to send routes **to** that protocol.
+
+To pass data around, BIRD has two keywords that each protocol can use to dictate how routing information flows through the system.  `import` dictates whether or not to pull information _from_ the protocol into the BIRD system. Once BIRD has imported routing information to its own routing table, `export` indicates which protocols should _receive_ that information.
+
+**Step 4** Since the RIP protocol _does_ have the `export` flag, it receives the routes from BIRD core.
+
+[![BIRD Details steps 5 and 6][BIRD Details steps 5 and 6]][BIRD Details steps 5 and 6]
+
+**Step 5** Now it's time to transmit packets about routing information to other routers! RIP will send broadcast messages on every network it's connected to about every route that BIRD core passed to it.
+
+**Step 6** Now we're looking at a neighbor router: `router-r2`! This router receives the routes from `router-r1`.
+
+[![BIRD Details steps 7 and 8][BIRD Details steps 7 and 8]][BIRD Details steps 7 and 8]
+
+**Step 7** BIRD-core on `router-r2` now `import`s the routes from the RIP protocol in order to add them to BIRD core's routing table.
+
+**Step 8** So now, BIRD-core communicates its routes to the kernel protocol which will write a copy of those routes to `router-r2`'s routing table. `router-r2` is now able to forward packets destined for networks connected to `router-r1` towards `router-r1`.
+
+**Step 9 (not pictured)** `router-r2` communicates out all of its routes (including locally-connected routes as well as those it heard about from `router-r1` to all of its locally-connected networks.
+
+Okay, that's it for theory. Now that we know how BIRD works, let's get some practical experience setting it up and getting it running!
+
 
 ### Handy commands!
 

@@ -21,6 +21,7 @@ You might run into terms that you don't know the definition to. Sometimes they a
   - [network](#network)
   - [packets (a.k.a `IP packets`)](#packets-aka-ip-packets)
   - [protocol](#protocol)
+  - [process (or running process)](#process-or-running-process)
   - [proxy](#proxy)
   - [resolver](#resolver)
   - [route](#route)
@@ -128,6 +129,18 @@ All traffic on an internet is wrapped up in IP packets. IP packets provide a hea
 ## protocol
 
 A **protocol** is like a set of rules that computers agree to follow so they can talk to each other. It’s kind of like how everyone agrees to speak the same language when playing a game together. Even if the computers are different or made by different people, they can still understand each other if they follow the same rules. These rules help them share things like names, messages, or pictures. Without protocols, computers would just be confused and not know what to do!
+
+## process (or running process)
+
+Think of a program on your computer like a recipe in a cookbook. It's just a set of instructions sitting there. A **process** is what happens when the computer actually starts "cooking" that recipe. It's a program that is actively running. A computer's operating system is like a master chef in a busy kitchen, managing many different processes at once, making sure each one gets the resources it needs (like memory and CPU time) to do its job.
+
+In the command-line world you'll be working in, processes generally come in two flavors:
+
+1.  **Foreground Processes:** When you type a command like `ping google.com` and hit enter, you're starting a foreground process. It takes over your terminal, printing output directly to your screen. You can't type any new commands until it finishes or you stop it (usually with `Ctrl` + `C`).
+
+2.  **Background Processes:** These are processes that run without tying up your terminal. They're essential for running services that need to be available all the time, like a web server or the routing software you'll be using. These are often called daemons.
+
+To manage processes on your machine, you'll use the [ps](./command-reference-guide.md#ps) command.
 
 ## proxy
 
