@@ -416,27 +416,61 @@ Testing IP connectivity from server-a1
 
 If that script reports any errors, your job is to go and fix them! Refer to the [discover the breakage](../../../chapters/1.3-routing-internet-chonk/README.md#discover-the-breakage) troubleshooting section from chapter 1.3 if you need some assistance.
 
-<!-- HERE IS WHERE WE ACTUALLY LEFT OFF : Aug 8 25 -->
-
 ### Break that shit!
 
-That's great, we did a whole bunch of work to wind up exactly as we started! why did we do that? Let's take a look at the power of using a routing protocol to determine your routes: namely, healing broken routes.
+We just did a bunch of work that may not feel as easy or as simple as the work we did in the [basic routing chapters](../../../chapters/1.3-routing-internet-chonk/README.md). Why did we do that? Let's take a look at the power of using a routing protocol instead of statically-defined routes: namely, healing broken routes.
 
-Take a look at your network map. Trace the path that you think packets should take from `client-c1` to `server-a3`. There are lots of possible options! Ideally, the routers are going to pick the shortest path from source to destination and back again. This means that, for this example, the path **should** be:
+[![Simplified network map][Simplified network map]][Simplified network map]
 
-- `router-c3`
-- `router-z6`
-- `router-z7`
-- `router-a4`
-- `server-a3`
+Here's a simplified version of our network map that will focus on a problem we'd like to explore. Trace the path that you think packets should take from `client-c1` to `server-a3`. There are lots of possible options! Ideally, the routers are going to pick the shortest path from source to destination and back again. This means that, for this example, the path **should** be:
 
-What happens when one of those routers goes down? Since we've built our toy internet with redundant paths from one side of it to the other, it would be best if we could have our packets automatically re-routed to a less-optimal route. Well, our routing protocol (RIP) should be able to do this for us. Let's see if it can.
+1. `router-c3`
+2. `router-z6`
+3. `router-z7`
+4. `router-a4`
+5. `server-a3`
 
-Let's first validate our assumptions about the path that we think packets will take from `client-c1` to `server-a3`. Since all packets that leave the comcast network must be sent through `router-z6`, this machine is the crux of this operation. So let's `hopon router-z6` and take a look at its routing table:
+What happens when one of those routers goes down? Since we've built our toy internet with redundant paths from one side of it to the other, it would be best if we could have our packets automatically re-routed to a less-optimal route. Well, our routing protocol (RIP) should be able to do this for us. Let's see if it can!
+
+The exercise we're going to do is to take `router-z7` offline and see if the RIP protocol can successfully re-route traffic to another path. What path do you think packets should take if `router-z7` goes offline? Our suggestion would be:
+
+1. `router-c3`
+2. `router-z6`
+3. `router-z8`
+4. `router-i2`
+5. `router-t8`
+6. `router-t7`
+7. `router-a3`
+8. `server-a3`
+
+Clearly, this path is not as good, but at least packets still get to their destination.
+
+So let's give this a try, but let's set up some monitoring on a few key routers so we can have a front-row seat to the action that BIRD is taking to mend our network! We're therefore going to ask you to open up a **bunch** of terminal windows. We recommend that you organize your terminal windows something like the following so that you can remember what terminal is connected to what system:
+```
+  ┌────────────┐┌────────────┐┌─────────────┐┌────────────┐┌─────────────┐      
+  │router-z5   ││router-z6   ││ router-z7   ││ router-z8  ││ client-c1   │      
+  │            ││            ││             ││            ││             │      
+  │            ││            ││             ││            ││             │      
+  │            ││            ││             ││            ││             │      
+  │            ││            ││             ││            ││             │      
+  │            ││            ││             ││            ││             │      
+  │            ││            ││             ││            ││             │      
+  │            ││            ││             │└────────────┘│             │      
+  │            ││            ││             │┌────────────┐│             │      
+  │            ││            ││             ││ router-z8  ││             │      
+  │            ││            ││             ││            ││             │      
+  │            ││            ││             ││            ││             │      
+  │            ││            ││             ││            ││             │      
+  │            ││            ││             ││            ││             │      
+  │            ││            ││             ││            ││             │      
+  └────────────┘└────────────┘└─────────────┘└────────────┘└─────────────┘      
+```
+
+1. In the windows for `router-z6`, `router-z5` and `router-z8`, run the command `watch ip route`. All of these routers should have the same route for `4.1.0.0/16`, `4.2.0.0/16`, and `4.3.0.0/16`. Hopefully this will eventually change when RIP reconfigures itself after `router-z7` goes down. Leave these commands running in these windows. We'll be going back and watching these windows soon.
+
+By the way, looking at the output of the `ip route` command, we can validate our assumptions about the path that we think packets currently take from `client-c1` to `server-a3`. Since all packets that leave the comcast <!-- TODO: deal with this if we remove clouds from the network map --> network must be sent through `router-z6`, this machine is the crux of this operation. So notice the routing table for routes destined to aws (i.e. `4.0.0.0/8`) in all of these windows:
 
 ```bash
-$ hopon router-z6
-root@router-z6:/# ip route
 ...
 4.1.0.0/16 via 2.6.7.7 dev eth3 proto bird
 4.2.0.0/16 via 2.6.7.7 dev eth3 proto bird
@@ -444,17 +478,13 @@ root@router-z6:/# ip route
 ...
 ```
 
-There are a lot of routes here, since we only care about the routes to the aws network, we're only showing the routes that start with `4.`. As you can see from this printout, `router-z6` wants to send packets to `2.6.7.7` (a.k.a. `router-z7`) for all these networks, which is perfect!
+There are a lot of routes here. Since we only care about the routes to the aws network, we're only showing the routes that start with `4.`. As you can see from this printout, each router wants to send packets to `2.6.7.7` (a.k.a. `router-z7`) for all these networks, which is perfect!
 
-To watch RIP help our internet re-route our packets around a failure, we're going to take down `router-z7` and see what happens. Before we do that, let's set up some monitoring so we can see exactly what happens!
+2. If you look at the network map, you'll see that, if `router-z7` goes down, the only other path that packets can take to exit this network is `router-z8`. Watching what's happening on this router will give us a lot of information! Therefore, on the second window to `router-z8`, we want to see debugging information from `bird`. To do this, we need to restart BIRD in debugging mode. You're going to first need to `kill` the existing running background process for BIRD. Use the [ps and kill commands](../../../chapters/command-reference-guide.md#ps) to find the running `bird` process and stop it. Then run `bird -d` to restart BIRD in the foreground in debugging mode. 
 
-1. Open separate windows to `router-z6`, `router-z5` and `router-z8`. Run the command `watch ip route` on each of them. All of these routers should have the same route for `4.1.0.0/16`, `4.2.0.0/16`, and `4.3.0.0/16`. Hopefully this will eventually change when RIP reconfigures itself after `router-z7` goes down. Leave these commands running in these windows. We'll be going back and watching these windows soon.
+3. Next, on the `client-c1` window, run `ping 4.1.0.13` to have a continuous ping going on so we can see when packets start getting lost and hopefully when the network is healed and packets start going through again.
 
-2. Open an **additional** window to `router-z8` so that we can see debugging information from `bird` here. Follow [the directions for restarting bird in debugging mode](#4-restart-the-bird-daemon-in-interactive-debugging-mode) for this router.
-
-3. Next, open a window to `client-c1` and run `ping 4.1.0.13` to have a continuous ping going on so we can see when packets start getting lost and hopefully when the network is healed and packets start going through again.
-
-4. Finally, we're going to shut down all of the network interfaces on `router-z7`. This will effectively cut this router off of the network entirely and force all the other routers on our toy internet to make new routing decisions for the aws destinations. So let's open a new window and `hopon router-z7`.
+Finally, we're going to use that last window which is open to `router-z7`. We're going to shut down all of the network interfaces on this router to effectively cut the router off of the network entirely and force all the other routers on our toy internet to make new routing decisions for the aws destinations.
 
 We're going to make a little script to shut all the interfaces down at once. Paste the following into the terminal for `router-z7`:
 
@@ -472,6 +502,8 @@ EOF
 What you just did creates a new file called `kill-links.sh`. In this file, we run the `ip link` command. This command is similar to the `ip addr` command that we've used in previous chapters. The `ip link` command gives us control of the network interfaces on this machine. By setting them `down`, those interfaces will no longer send or receive packets.
 
 Before you run that script, take a moment and think about what you expect to happen. What is going to happen with the `ping` output on `client-c1`? Will it stop immediately? How will it stop? What messages might you see? On each of the routers, what do you think might happen to each of the routing tables over time?
+
+<!-- HERE IS WHERE WE ACTUALLY LEFT OFF : Aug 15 25 -->
 
 ### Let's watch the fireworks
 
@@ -769,5 +801,8 @@ birdc show route all
                              
 [BIRD Details steps 7 and 8]:         ../../../img/bird-rip/BIRD-details-7+8.svg
                              "BIRD Details steps 7 and 8"
+
+[Simplified network map]:         ../../../img/bird-rip/simplified-network-map-for-breaking.svg
+                             "Simplified network map"
 
 <!-- end of file -->
