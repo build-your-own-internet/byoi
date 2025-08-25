@@ -418,6 +418,8 @@ If that script reports any errors, your job is to go and fix them! Refer to the 
 
 ### Break that shit!
 
+#### Setting up monitoring
+
 We just did a bunch of work that may not feel as easy or as simple as the work we did in the [basic routing chapters](../../../chapters/1.3-routing-internet-chonk/README.md). Why did we do that? Let's take a look at the power of using a routing protocol instead of statically-defined routes: namely, healing broken routes.
 
 [![Simplified network map][Simplified network map]][Simplified network map]
@@ -507,17 +509,15 @@ Before you run that script, take a moment and think about what you expect to hap
 
 ### Let's watch the fireworks
 
-One thing to keep in mind is that RIP is not a very efficient routing protocol. It has what is known as "slow convergence time," meaning, it takes a long time for it to figure out how to re-route packets when there's an outage. You might therefore have to wait as long as ten minutes for things to settle down and reach stable-state. Some routes will change immediately when you shut all the interfaces off on `router-z7`, and some routes will take longer. Some routes may "flap" around, meaning that they change multiple times before they settle down. Luckily, this gives you plenty of time to observe!
+One thing to keep in mind is that RIP is not a very efficient routing protocol. It has what is known as slow "convergence" time, meaning, it takes a long time for it to figure out how to re-route packets when there's an outage. You might therefore have to wait as long as ten minutes for things to settle down and reach stable-state. Some routes will change immediately when you shut all the interfaces off on `router-z7`, and some routes will take longer. Some routes may "flap" around, meaning that they change multiple times before they settle down. Luckily, this gives you plenty of time to observe!
 
 Okay, without further ado, let's run the script by typing `bash kill-links.sh` into `router-z7` and watch the sparks fly!
 
 How long does it take for an error message to show up on the client? Did you notice that the `ping` output stopped immediately on the client? You can type an `<ENTER>` in the `client-c1` terminal to make it obvious that ping is no longer sending messages and to make it more obvious when it restarts.
 
-You may see some of the following:
+You may see some of the following, think about what each of these might mean:
 
 `client-c1` window: `From 2.1.0.6 icmp_seq=1059 Destination Host Unreachable`
-
-What does this mean?
 
 `client-c1` window: `From 1.1.0.3 icmp_seq=1203 Destination Net Unreachable`
 
