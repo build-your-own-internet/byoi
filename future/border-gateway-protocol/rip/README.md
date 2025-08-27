@@ -505,8 +505,6 @@ What you just did creates a new file called `kill-links.sh`. In this file, we ru
 
 Before you run that script, take a moment and think about what you expect to happen. What is going to happen with the `ping` output on `client-c1`? Will it stop immediately? How will it stop? What messages might you see? On each of the routers, what do you think might happen to each of the routing tables over time?
 
-<!-- HERE IS WHERE WE ACTUALLY LEFT OFF : Aug 15 25 -->
-
 ### Let's watch the fireworks
 
 One thing to keep in mind is that RIP is not a very efficient routing protocol. It has what is known as slow "convergence" time, meaning, it takes a long time for it to figure out how to re-route packets when there's an outage. You might therefore have to wait as long as ten minutes for things to settle down and reach stable-state. Some routes will change immediately when you shut all the interfaces off on `router-z7`, and some routes will take longer. Some routes may "flap" around, meaning that they change multiple times before they settle down. Luckily, this gives you plenty of time to observe!
@@ -517,16 +515,15 @@ How long does it take for an error message to show up on the client? Did you not
 
 You may see some of the following, think about what each of these might mean:
 
-`client-c1` window: `From 2.1.0.6 icmp_seq=1059 Destination Host Unreachable`
+- `client-c1` window: `From 2.1.0.6 icmp_seq=1059 Destination Host Unreachable`
+- `client-c1` window: `From 1.1.0.3 icmp_seq=1203 Destination Net Unreachable`
+- `router z8` window: `4.3.0.0/16 via 2.8.0.2 dev eth0 proto bird`
 
-`client-c1` window: `From 1.1.0.3 icmp_seq=1203 Destination Net Unreachable`
+If you want to verify your understanding of these things, go check [the appendix](#deciphering-terminal-output-from-broken-rip-route-exercise).
 
-`router z8` window: `4.3.0.0/16 via 2.8.0.2 dev eth0 proto bird`
-
-`router-z8` bird window:
+Furthermore, make sure to take a moment to read through the BIRD logging output on `router-z8`:
 
 ```bash
-0.0/16 via 2.7.8.7 on eth2
 bird: kernel1 < removed 4.3.0.0/16 via 2.7.8.7 on eth2
 bird: rip1 < removed 4.3.0.0/16 via 2.7.8.7 on eth2
 bird: rip1 > removed [sole] 4.2.0.0/16 via 2.7.8.7 on eth2
@@ -563,23 +560,68 @@ bird: kernel1 < removed 101.0.1.0/24 via 2.7.8.7 on eth2
 bird: rip1 < removed 101.0.1.0/24 via 2.7.8.7 on eth2
 ```
 
-Take a moment to read through the output. Compare it with what you saw in your `ip addr` output. If it doesn't make sense immediately, google some answers, try it again, or otherwise play around with it until it feels like you can tell the story of what's going on here.
+If it doesn't make sense immediately, google some answers, try it again, or otherwise play around with it until it feels like you can tell the story of what's going on here.
 
-One trick we have found in digesting output we don't understand is to take it line-by-line. Look at a single line, think about the diagram we showed above, think about the network map, and think about what you know from the `ip addr` output. Try to tell the story one line at a time. Not every line has to make complete sense, and if you have to skip over a few lines before you have something to sink your teeth into, that's okay.
+One trick we have found in digesting output we don't understand is to take it line-by-line. Look at a single line, think about the network map and think about what you know from the `ip addr` output. Try to tell the story one line at a time. Not every line has to make complete sense, and if you have to skip over a few lines before you have something to sink your teeth into, that's okay.
 
 ### Exercise: Bring the router back online
 
-To take the router offline, we provided you with a script. That script called to an `ip` command: `ip link`. Can you modify that script so that it brings the interfaces back up? Watch the network notice that the router has come back and that it finds better routes through the reinstated router.
+To take the router offline, we provided you with a script. That script called to an `ip` command: `ip link`. Can you modify that script so that it brings the interfaces back up on `router-z7`?
+
+Once you do, you'll know you've done things correctly if you watch the terminal output and see that our routers have found the better route through the reinstated `router-z7`.
+
+### Exercise: Try a better routing protocol!
+
+The routing protocol people tend to reach for when they're doing stuff like what we're doing with RIP is called "OSPF". OSPF stands for "Open Shortest Path First", which really doesn't make any sense. But they're trying to say "This Is A Cool Routing Protocol That Does Stuff Efficiently", but `TIACRPTDSE` is a bad acronym.
+
+We're going to give you a configuration for OSPF so that you can try it in your toy internet and see how it works. We've already shown you a path for rolling out configuration and shown you some techniques for testing it. So we think you're ready to give it a try on your own. If you get stuck there's a configuration in `final` that you can use.
+
+On each of your routers, replace the `rip` section in `/etc/bird/bird.conf` with a new `ospf` section, as follows:
+
+```bash
+protocol ospf {
+  export all;  # Send all BIRD routes into OSPF (e.g., direct routes)
+  import all;  # Accept all OSPF-learned routes
+
+  area 0 {
+    interface "*" {
+      type broadcast;     # good for Ethernet, or switch-style topologies
+      hello 10;           # seconds between hellos (default: 10)
+      wait 40;            # wait time before DR election (default: 40)
+      dead 40;            # time to consider neighbor down (default: 40)
+    };
+  };
+}
+```
+
+Remember that you'll have to restart the `bird` daemon to see your configuration changes. Before you restart, what do you think you'll see when you have `ospf` running on a single machine?
+
+Things to observe:
+
+1. Keep a window open on your first ospf router, running `watch ip route` on it. What changes do you see as you enable ospf router-by-router?
+2. Do RIP and OSPF communicate directly with each other?
+3. Do the same exercise we did above, killing `router-z7`. What differences did you notice in how quickly the routers healed their connections? What differences did you see when you started `router-z7` back up?
+
 
 ## Future / summary / thinking about next chapter
 
-In this chapter, we looked at our first "routing protocol": RIP. RIP allowed us to propagate routes to networks acreoss our toy net without manually configuring each router. WHat problems did you see solved by RIP? How would this make the process of adding new networks easier?
+In this chapter, we looked at our first "routing protocol": RIP. RIP allowed us to propagate routes to networks across our toy internet without manually configuring each router. What problems did you see solved by RIP? How would this make the process of adding new networks easier?
 
-Now let's talk about the limitations of RIP. There's a reason nobody uses RIP anymore, in favor of other routing protocols. You probably noticed a common refrain of "does it scale?" and "is it secure?" in most of our other chapters. Clearly, RIP can scale to some degree, but what security did we have across the networks in our toy internet (hint: almost none)?
+Now let's talk about the *limitations* of RIP. There's a reason nobody uses RIP anymore. The "Real Internet" has long since upgraded to newer, more efficient, more secure routing protocols. You probably noticed a common refrain in these chapters of "does it scale?" and "is it secure?". 
 
-Think about how RIP decided to heal our network problems: it used ISC as a transit network from Zayo to Telia. Could you imagine setting up a datacenter and having two redundant network connections to two different internet providers for the sake of making sure that your network services were 100% reliable and finding out that your network providers were using *you* to heal their network connectivity problems. That would be ¡super no bueno! Let's say Zayo and Telia had an agreement to route traffic through Google in the case of an emergency: we'd want to use a routing protocol that could implement an agreement like that and not just pick some random sucker network like ISC to route its traffic through.
+Let's take for example, about how RIP decided to heal our network problems: it used ISC as a "transit" network from Zayo to Telia.
 
-Also, did you notice just how slow RIP was in fixing the problem of a downed router? I bet other routing protocols do this better.
+Let's think about this as a solution to Zayo and Telia's problems. First of all, it's common for an organization like ISC to want to have more than one network connection in case they have a network provider that experiences an outage. ISC has servers that clients need to hit and by having redundant network connections, it can ensure that clients can always reach them. Typically, when a company like ISC gets these connections from a transit provider like Zayo or Telia, they are paying for bandwidth that is exclusively theirs to use.
+
+Could you imagine setting up a datacenter and having two redundant network connections to two different internet providers for the sake of making sure that your network services were 100% reliable and finding out that your network providers were using *you* to heal **their** network connectivity problems. That would be ¡super no bueno! Let's say Zayo and Telia had an agreement to route traffic through Google in the case of an emergency: we'd want to use a routing protocol that could implement an agreement like that and not just pick some random sucker network like ISC to route its traffic through.
+
+Clearly, RIP **can** scale to some degree, but it doesn't have a nuanced business understanding of the relationships that take place between various network entities. That's a security problem!
+
+In a future chapter, we'll take a look at BGP, which will address understanding the problem of business relationships between network providers.
+
+## Appendix
+
+<!-- WHERE WE LEFT OFF ON AUG 27: Review this appendix section -->
 
 ## BIRD Configurations
 
@@ -662,41 +704,46 @@ protocol rip {
 
 `protocol rip` configures what each router is communicating to other routers and what this router is willing to import from other routers using the rip protocol. `interface "*"` simply tells bird that you want to send and receive rip messages on every network interface that the router has. There might be some situations (which we'll see in future chapters) where you do not want to run RIP on every possible network.
 
-### Exercise: Try a better routing protocol!
+### Deciphering terminal output from broken RIP route exercise
 
-The routing protocol people tend to reach for when they're doing stuff like what we're doing with rip is called "OSPF". OSPF stands for "Open Shortest Path First", which really doesn't make any sense. But they're trying to say "This Is A Cool Routing Protocol That Does Stuff Efficiently", but `TIACRPTDSE` is a bad acronym.
+#### Destination Host Unreachable
 
-We're going to give you a configuration for OSPF so that you can try it in your toy internet and see how it works. We've already shown you a path for rolling out configuration and shown you some techniques for testing it. So we think you're ready to give it a try on your own. If you get stuck there's a configuration in `final` that you can use.
+When the routes are first broken, one of the messages you might see on `client-c1` is this:
 
-On each of your routers, replace the `rip` section in `/etc/bird/bird.conf` with a new `ospf` section, as follows:
-
-```bash
-protocol ospf {
-  export all;  # Send all BIRD routes into OSPF (e.g., direct routes)
-  import all;  # Accept all OSPF-learned routes
-
-  area 0 {
-    interface "*" {
-      type broadcast;     # good for Ethernet, or switch-style topologies
-      hello 10;           # seconds between hellos (default: 10)
-      wait 40;            # wait time before DR election (default: 40)
-      dead 40;            # time to consider neighbor down (default: 40)
-    };
-  };
-}
+```
+From 2.1.0.6 icmp_seq=1059 Destination Host Unreachable
 ```
 
-Remember that you'll have to restart the `bird` daemon to see your configuration changes. Before you restart, what do you think you'll see when you have `ospf` running on a single machine?
+**"Destination Host Unreachable"** is an error message that shows up when an ARP request fails to resolve. If you need a refresher on how packets are forwarded from one machine to another on a network using ARP, refer to the appendix on [IP and Ethernet Addresses](../../../appendix/ip-and-mac-addresses.md).
 
-Things to observe:
+`2.1.0.6` is `router-z6`'s interface on the network connecting Comcast to Zayo. We know that `router-z6` wants to forward packets destined for AWS to `router-z7` (i.e. 2.6.7.7). Since `router-z6` has a cached ARP entry for `router-z7`, it will continue to forward packets in that direction. However, that cached ARP entry will eventually expire! When it does, `router-z6` will send an ARP request to refresh the ethernet address for that `router-z7`. But, `router-z7` is incapable of responding to those requests, `router-z6` eventually gives up and sends an ICMP message back to `client-c1` stating the machine it's trying to forward packets to is now offline, and so we see this "Host Unreachable" message.
 
-1. Keep a window open on your first ospf router, running `watch ip route` on it. What changes do you see as you enable ospf router-by-router?
-2. Do RIP and OSPF communicate directly with each other?
-3. Do the same exercise we did above, killing `router-z7`. What differences did you notice in how quickly the routers healed their connections? What differences did you see when you started `router-z7` back up?
 
-## Appendix
+#### Destination Net Unreachable
 
-### How BIRD works
+Another error we might see from `client-c1` is:
+
+```
+From 1.1.0.3 icmp_seq=1203 Destination Net Unreachable
+```
+
+**Destination Net Unreachable** indicates that some router on the path the packet is taking looks at the destination address and says, "I actually have no idea how to get to that network." 
+
+SO specifically, in this case, the router `1.1.0.3` (aka `router-c3`), has lost its entry for the destination IP (i.e. `4.1.0.13` in the case of the exercise where we break `router-z7`). Since it doesn't know the next hop to forward the packet to, it sends a message back to `client-c1` indicating that there's a routing error. 
+
+#### Updates to `router-z8`'s routing table
+
+Eventually you'll see a message on `router-z8` that it has learned a new path to reach the AWS network:
+
+```bash
+4.3.0.0/16 via 2.8.0.2 dev eth0 proto bird
+```
+
+Looking at the new next-hop address, `2.8.0.2`, we can see that `router-z8` now wants to route packets through `router-i2`. While this route is less-efficient, our routing infrastructure is healed, and packets can once again travel from the Comcast network to the AWS network.
+
+<!-- WHERE WE LEFT OFF AUG 17: review this section also -->
+
+## How BIRD works
 
 This is complicated and it's okay if this takes a few read-throughs before you understand how this works. To make this more accessible, let's use a diagram to show the flow of information through BIRD and between routers.
 
@@ -757,8 +804,7 @@ To pass data around, BIRD has two keywords that each protocol can use to dictate
 
 Okay, that's it for theory. Now that we know how BIRD works, let's get some practical experience setting it up and getting it running!
 
-
-### Handy commands!
+## Handy commands!
 
 Here are some things that we have found helpful in debugging `bird` !
 

@@ -166,7 +166,7 @@ When we see `Destination Host Unreachable`, the packets were correctly routed to
 
 We know that the problem we're seeing in this exercise is not that the machine doesn't exist because we're not getting back this `Destination Host Unreachable` error. Instead, the issue is going to be a routing issue.
 
-Another case we could see is if a router doesn't have a route defined to a network in its routing table AND it doesn't have a default gateway. If that were the case, we would see a similar error message to what we saw when trying to ping a non-existant host:
+Another case we could see is if a router doesn't have a route defined to a network in its routing table AND it doesn't have a default gateway. If that were the case, we would see a similar error message to what we saw when trying to ping a non-existent host:
 
 ```bash
 root@client:/# ping 9.0.0.1
