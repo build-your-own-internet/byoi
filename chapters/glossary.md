@@ -20,18 +20,22 @@ You might run into terms that you don't know the definition to. Sometimes they a
   - [neighbor (in a routing context)](#neighbor-in-a-routing-context)
   - [network](#network)
   - [packets (a.k.a `IP packets`)](#packets-aka-ip-packets)
+  - [protocol](#protocol)
+  - [process (or running process)](#process-or-running-process)
   - [proxy](#proxy)
   - [resolver](#resolver)
+  - [route](#route)
   - [router (a.k.a `gateway`)](#router-aka-gateway)
   - [routing table](#routing-table)
   - [service](#service)
   - [server](#server)
+  - [static routes](#static-routes)
   - [TCP (Transmission Control Protocol)](#tcp-transmission-control-protocol)
   - [UDP (User Datagram Protocol)](#udp-user-datagram-protocol)
 
 ## client
 
-A client is any host that initiates a connection/request to a server on the network or the larger internet. A common example is a browser or curl request to a web resource. In future chapters, we might explore how clients are protected by the network either via firewall or through other means but this definition is sufficient for our current use case.
+A client is any host that initiates a connection/request to another machine on the network or the larger internet. A common example is a browser or curl request to a web resource. In future chapters, we might explore how clients are protected by the network either via firewall or through other means but this definition is sufficient for our current use case.
 
 ## container
 
@@ -122,6 +126,22 @@ Sometimes when people use the term "network," they mean "internet." Since "inter
 
 All traffic on an internet is wrapped up in IP packets. IP packets provide a header that contains a bit of metadata that is necessary to be able to correctly route and manage the data container within the packet.
 
+## protocol
+
+A **protocol** is like a set of rules that computers agree to follow so they can talk to each other. It’s kind of like how everyone agrees to speak the same language when playing a game together. Even if the computers are different or made by different people, they can still understand each other if they follow the same rules. These rules help them share things like names, messages, or pictures. Without protocols, computers would just be confused and not know what to do!
+
+## process (or running process)
+
+Think of a program on your computer like a recipe in a cookbook. It's just a set of instructions sitting there. A **process** is what happens when the computer actually starts "cooking" that recipe. It's a program that is actively running. A computer's operating system is like a master chef in a busy kitchen, managing many different processes at once, making sure each one gets the resources it needs (like memory and CPU time) to do its job.
+
+In the command-line world you'll be working in, processes generally come in two flavors:
+
+1.  **Foreground Processes:** When you type a command like `ping google.com` and hit enter, you're starting a foreground process. It takes over your terminal, printing output directly to your screen. You can't type any new commands until it finishes or you stop it (usually with `Ctrl` + `C`).
+
+2.  **Background Processes:** These are processes that run without tying up your terminal. They're essential for running services that need to be available all the time, like a web server or the routing software you'll be using. These are often called daemons.
+
+To manage processes on your machine, you'll use the [ps](./command-reference-guide.md#ps) command.
+
 ## proxy
 
 A proxy is a stand-in for something else. In computing, a proxy is a system that understands a network protocol and acts as an endpoint. A proxy will pretend to be the real system that is being communicated with while secretly relying on the real entity to serve the request.
@@ -129,6 +149,20 @@ A proxy is a stand-in for something else. In computing, a proxy is a system that
 ## resolver
 
 A resolver is a piece of software that performs DNS lookups.
+
+## route
+
+A "route" is an entry in a table that points to the next machine a packet should be sent to in order for that packet to get closer to its final destination. For example, if you run `ip route`, you might see the following route entry:
+
+```bash
+root@router-a2:/# ip route
+4.3.0.0/16 via 4.1.0.3 dev eth0 proto bird
+1.1.0.0/16 via 4.1.0.4 dev eth0 proto bird
+4.1.0.0/16 dev eth0 proto kernel scope link src 4.1.0.2
+4.2.0.0/16 dev eth1 proto kernel scope link src 4.2.0.2
+```
+
+Think of these like signposts you might find when you're hiking through a forest. You might encounter a junction along your path with a sign that says, "Mount Baker this way" or "Virginia City that way" kind of thing. These routes are like that. They tell the router what path to take next without knowing anything else about how far or if that path will *actually* get you to your destination.
 
 ## router (a.k.a `gateway`)
 
@@ -144,7 +178,11 @@ A process on a server which responds to requests. E.g. a website, API, DNS, TLS 
 
 ## server
 
-A server is any machine whose purpose is to serve a network request to a client. If the server fails to serve the request, it can return an appropriate error back to the client.
+A server is any machine whose purpose is to answer a network request from a client. If the server fails to serve the request, it can return an appropriate error back to the client.
+
+## static routes
+
+A "static" route is a hard-coded entry into a routing table. There is no software that updates or changes this route based on network conditions. If it needs to be changed, a human being needs to log into that router and change it. This is in contrast to "dynamic routes" that we'll be playing with in this chapter and going forward.
 
 ## TCP (Transmission Control Protocol)
 

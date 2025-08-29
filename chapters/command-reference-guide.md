@@ -11,6 +11,7 @@
   - [ps](#ps)
   - [tcpdump](#tcpdump)
   - [traceroute](#traceroute)
+  - [watch](#watch)
 
 We provide a lot of commands in creating, exploring, and troubleshooting our internet. It's easy to forget which command does what. Here's a reference guide to help you remember the commands we've used and what they do.
 
@@ -104,12 +105,30 @@ ping -c 2 <some_ip_address>
 
 ## ps
 
-`ps` stands for "process status" and is tool that can be used to see which processes are currently running on a machine.
-
-> Example command:
+To see all the processes running on your machine, you can use the `ps` (process status) command. A common way to run it is:
 
 ```bash
 ps aux
+```
+
+This will show you a list of all processes. The output can be long, but two of the most important columns are:
+
+-   `PID`: The **P**rocess **ID**. This is a unique number the operating system assigns to each process. It's like a serial number for a running program.
+-   `COMMAND`: The command that was used to start the process.
+
+Here's a snippet of what you might see:
+
+```bash
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root           1  0.0  0.0   4032  2816 ?        Ss   18:32   0:00 /bin/bash /router-start-up.sh
+root          12  0.0  0.0   2796  1408 ?        Ss   18:32   0:00 /usr/sbin/bird -c /etc/bird/bird.conf
+...
+```
+
+If you need to stop a process (for example, to restart a service with a new configuration), you can use the `kill` command with its PID. For example, to stop the `bird` process from the output above, you would run:
+
+```bash
+kill 12
 ```
 
 ## tcpdump
@@ -141,3 +160,22 @@ tcpdump -ni eth1
 ```bash
 traceroute <some_ip_address>
 ```
+
+## watch
+
+`watch`, runs a command you give it and displays the output of that command every two seconds (by default). This is useful for monitoring when the output of a command would change. For example, if your routing table on a machine is changing because you're implementing a new routing protocol, it could be helpful to run the `ip route` command over and over again, watching the output of that command change as the routing protocol learns new routes from other routers. 
+
+For example:
+
+```bash
+root@router-a2:/# watch ip route
+```
+
+```bash
+Every 2.0s: ip route       router-a2: Wed Apr 16 20:23:21 2025
+
+4.1.0.0/16 dev eth0 proto kernel scope link src 4.1.0.2
+4.2.0.0/16 dev eth1 proto kernel scope link src 4.2.0.2
+```
+
+The `watch` command will run forever until you tell it to exit. Type `Control` + `c` on your keyboard to give it the exit command.

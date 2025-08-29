@@ -6,6 +6,6 @@ cp /vimrc /etc/vim/vimrc.local
 BIRD_CONF_FILE="/etc/bird/bird.conf"
 
 mkdir -p /run/bird
-/usr/sbin/bird -c $BIRD_CONF_FILE
 
 /bin/sleep infinity
+
