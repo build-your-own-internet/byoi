@@ -8,9 +8,9 @@ We are trying to solve a complex problem in this chapter.
 
 We have a bunch of computers that are on an internet. Every computer needs to be able to send messages to (potentially) every other computer on our internet. In previous chapters, we explored how these special computers called "routers" have interfaces on multiple networks which allow them to pass packets from computers on one network to computers on another network. We manually told each and every one of these routers what the best path is to be able to reach computers on every network.
 
-Okay, so if we're not going to go around manually configuring the entire set of routers on the internet, where do we start? Well, we know that each router already knows what networks it has an interface on. Those will be the first entries on its [routing table](../../../chapters/glossary.md#routing-table). The router also knows whether or not each interface is "up" or "down" (i.e. if it can send and receive packets on that interface).
+Okay, so if we're not going to go around manually configuring the entire set of routers on the internet, where do we start? Well, we know that each router already knows what networks it has an interface on. Those will be the first entries on its [routing table](../glossary.md#routing-table). The router also knows whether or not each interface is "up" or "down" (i.e. if it can send and receive packets on that interface).
 
-So, if each router already has intrinsic information about networks its connected to, the next thing we need is a method to communicate this information to each **other** router. This communication is called a "routing [protocol](../../../chapters/glossary.md#protocol)." There is more than one routing protocol, so let's start by examining the simplest of all the routing protocols: "RIP" (which stands for "Routing Information Protocol").
+So, if each router already has intrinsic information about networks its connected to, the next thing we need is a method to communicate this information to each **other** router. This communication is called a "routing [protocol](../glossary.md#protocol)." There is more than one routing protocol, so let's start by examining the simplest of all the routing protocols: "RIP" (which stands for "Routing Information Protocol").
 
 > ⚠️ **DISCLAIMER**:RIP is not widely used by network professionals in the world today because it has lots of problems that were discovered over time when people started building massively huge networks with security concerns. But for our purposes, its simplicity will help us understand what a routing protocol does without getting mired in the complexity of more advanced routing protocols.
 
@@ -20,7 +20,7 @@ Let's take a look at how RIP works, step-by-step. Let's start with a simple four
 
 **Step 1** Remember, each router starts with only the information it knows about through its physical interfaces. Therefore the routing table for each router is initially populated only with the networks it has physical interfaces on. 
 
-Because routing information needs to be disseminated throughout the internet between routers that are directly connected to each other, we're going to put special emphasis on pairs of routers that have this direct-connection. Routers that can talk directly to each other over a single network are called [**neighbors**](../../../chapters/glossary.md#neighbor-in-a-routing-context).
+Because routing information needs to be disseminated throughout the internet between routers that are directly connected to each other, we're going to put special emphasis on pairs of routers that have this direct-connection. Routers that can talk directly to each other over a single network are called [**neighbors**](../glossary.md#neighbor-in-a-routing-context).
 The RIP protocol will have each router communicate all information in its own routing table to each of its neighbors as seen in the steps that follow.
 
 **Step 2** router `R1` sends messages to its neighbors (routers `R2` and `R3`) that say this: "Hey! If you have a packet destined for either network `A` or network `B`, you can send those packets to me! I'll make sure to get those packets to their final destination. If you have a better way to get to those networks, that's fine -- but I'm here if you need me."
@@ -128,7 +128,7 @@ This configuration file is a lot to look at in one go! Let's not spend a lot of 
 
 If you're that kinda nerd, we have some options for you:
 
-- [The nitty-gritty on BIRD internals](../../../appendix/how-bird-works.md)
+- [The nitty-gritty on BIRD internals](../../appendix/how-bird-works.md)
 - [The BIRD configuration file for RIP](#bird-configurations)
 
 However, neither of these are necessary to understand RIP. We encourage you come back and look at this content after you've finished this chapter.
@@ -173,7 +173,7 @@ This is telling us that `bird` is scanning to see what routes it could be learni
 
 Leave the `bird -d` output scrolling in this window, and open a **new** window and `hopon router-a2` once again so we can watch the route table update as we add new neighbors.
 
-Let's take a look at how `router-a2`'s routing table has changed! We're going to use the [`watch`](../../../chapters/command-reference-guide.md#watch) command with the `ip route` command so that we can see the routes refresh in real time as we make changes:
+Let's take a look at how `router-a2`'s routing table has changed! We're going to use the [`watch`](../command-reference-guide.md#watch) command with the `ip route` command so that we can see the routes refresh in real time as we make changes:
 
 ```bash
 root@router-a2:/# watch ip route
@@ -259,7 +259,7 @@ This debugging output is a little simpler than the debugging output that we've s
 
 The gist of this is that we're watching `bird` use the communication happening over the RIP protocol to learn new routes and save them into its local routing table.
 
-Because we'll know if each new router we add is successful by watching the output on `router-a2`, we don't need to continue watching the debugging on `router-a3`. We're therefore going to terminate the BIRD program and re-start it in background mode. Type `Control` + `C` to stop the running BIRD and re-start it _without_ the `-d` flag in order to have it run in the background. When you run it this way, you'll see nothing in the terminal output, instead you'll be taken back to the command-line prompt. If you want to confirm that BIRD is running, try using the [`ps aux`](../../../chapters/command-reference-guide.md#ps) command to see your background processes.
+Because we'll know if each new router we add is successful by watching the output on `router-a2`, we don't need to continue watching the debugging on `router-a3`. We're therefore going to terminate the BIRD program and re-start it in background mode. Type `Control` + `C` to stop the running BIRD and re-start it _without_ the `-d` flag in order to have it run in the background. When you run it this way, you'll see nothing in the terminal output, instead you'll be taken back to the command-line prompt. If you want to confirm that BIRD is running, try using the [`ps aux`](../command-reference-guide.md#ps) command to see your background processes.
 
 #### Rinse and repeat!
 
@@ -362,7 +362,7 @@ PING 9.2.0.12 (9.2.0.12) 56(84) bytes of data.
 rtt min/avg/max/mdev = 0.326/0.326/0.326/0.000 ms
 ```
 
-💥 Dope! We have network connectivity across this great toy internet of ours! If this doesn't work, you'll need to troubleshoot your routes. Refer to the [discover the breakage](../../../chapters/1.3-routing-internet-chonk/README.md#discover-the-breakage) troubleshooting section from chapter 1.3 if you need some assistance.
+💥 Dope! We have network connectivity across this great toy internet of ours! If this doesn't work, you'll need to troubleshoot your routes. Refer to the [discover the breakage](../1.3-routing-internet-chonk/README.md#discover-the-breakage) troubleshooting section from chapter 1.3 if you need some assistance.
 
 #### Do a complete check of the whole network using the `byoi-validate` script
 
@@ -385,13 +385,13 @@ Testing IP connectivity from server-a1
 ✅ No errors! Everything is working!
 ```
 
-If that script reports any errors, your job is to go and fix them! Refer to the [discover the breakage](../../../chapters/1.3-routing-internet-chonk/README.md#discover-the-breakage) troubleshooting section from chapter 1.3 if you need some assistance.
+If that script reports any errors, your job is to go and fix them! Refer to the [discover the breakage](../1.3-routing-internet-chonk/README.md#discover-the-breakage) troubleshooting section from chapter 1.3 if you need some assistance.
 
 ### Break that shit!
 
 #### Setting up monitoring
 
-We just did a bunch of work that may not feel as easy or as simple as the work we did in the [basic routing chapters](../../../chapters/1.3-routing-internet-chonk/README.md). Why did we do that? Let's take a look at the power of using a routing protocol instead of statically-defined routes: namely, healing broken routes.
+We just did a bunch of work that may not feel as easy or as simple as the work we did in the [basic routing chapters](../1.3-routing-internet-chonk/README.md). Why did we do that? Let's take a look at the power of using a routing protocol instead of statically-defined routes: namely, healing broken routes.
 
 [![Simplified network map][Simplified network map]][Simplified network map]
 
@@ -419,25 +419,8 @@ The exercise we're going to do is to take `router-z7` offline and see if the RIP
 Clearly, this path is not as good, but at least packets still get to their destination.
 
 So let's give this a try, but let's set up some monitoring on a few key routers so we can have a front-row seat to the action that BIRD is taking to mend our network! We're therefore going to ask you to open up a **bunch** of terminal windows. We recommend that you organize your terminal windows something like the following so that you can remember what terminal is connected to what system:
-```
-  ┌────────────┐┌────────────┐┌─────────────┐┌────────────┐┌─────────────┐      
-  │router-z5   ││router-z6   ││ router-z7   ││ router-z8  ││ client-c1   │      
-  │            ││            ││             ││            ││             │      
-  │            ││            ││             ││            ││             │      
-  │            ││            ││             ││            ││             │      
-  │            ││            ││             ││            ││             │      
-  │            ││            ││             ││            ││             │      
-  │            ││            ││             ││            ││             │      
-  │            ││            ││             │└────────────┘│             │      
-  │            ││            ││             │┌────────────┐│             │      
-  │            ││            ││             ││ router-z8  ││             │      
-  │            ││            ││             ││            ││             │      
-  │            ││            ││             ││            ││             │      
-  │            ││            ││             ││            ││             │      
-  │            ││            ││             ││            ││             │      
-  │            ││            ││             ││            ││             │      
-  └────────────┘└────────────┘└─────────────┘└────────────┘└─────────────┘      
-```
+
+[![Terminal setup][Terminal setup]][Terminal setup]
 
 1. In the windows for `router-z6`, `router-z5` and `router-z8`, run the command `watch ip route`. All of these routers should have the same route for `4.1.0.0/16`, `4.2.0.0/16`, and `4.3.0.0/16`. Hopefully this will eventually change when RIP reconfigures itself after `router-z7` goes down. Leave these commands running in these windows. We'll be going back and watching these windows soon.
 
@@ -453,7 +436,7 @@ By the way, looking at the output of the `ip route` command, we can validate our
 
 There are a lot of routes here. Since we only care about the routes to the aws network, we're only showing the routes that start with `4.`. As you can see from this printout, each router wants to send packets to `2.6.7.7` (a.k.a. `router-z7`) for all these networks, which is perfect!
 
-2. If you look at the network map, you'll see that, if `router-z7` goes down, the only other path that packets can take to exit this network is `router-z8`. Watching what's happening on this router will give us a lot of information! Therefore, on the second window to `router-z8`, we want to see debugging information from `bird`. To do this, we need to restart BIRD in debugging mode. You're going to first need to `kill` the existing running background process for BIRD. Use the [ps and kill commands](../../../chapters/command-reference-guide.md#ps) to find the running `bird` process and stop it. Then run `bird -d` to restart BIRD in the foreground in debugging mode. 
+2. If you look at the network map, you'll see that, if `router-z7` goes down, the only other path that packets can take to exit this network is `router-z8`. Watching what's happening on this router will give us a lot of information! Therefore, on the second window to `router-z8`, we want to see debugging information from `bird`. To do this, we need to restart BIRD in debugging mode. You're going to first need to `kill` the existing running background process for BIRD. Use the [ps and kill commands](../command-reference-guide.md#ps) to find the running `bird` process and stop it. Then run `bird -d` to restart BIRD in the foreground in debugging mode. 
 
 3. Next, on the `client-c1` window, run `ping 4.1.0.13` to have a continuous ping going on so we can see when packets start getting lost and hopefully when the network is healed and packets start going through again.
 
@@ -592,7 +575,7 @@ In a future chapter, we'll take a look at BGP, which will address understanding 
 
 Also, remember that we did some hand-waving about how BIRD accomplishes its tasks for implementing RIP. Now might be a good opportunity to spend some quality-time understanding the internals of BIRD.
 
-- [The nitty-gritty on BIRD internals](../../../appendix/how-bird-works.md)
+- [The nitty-gritty on BIRD internals](../../appendix/how-bird-works.md)
 - [The BIRD configuration file for RIP](#bird-configurations)
 
 ## Appendix
@@ -603,7 +586,7 @@ Let's talk about how we configure BIRD a little before we're done with this chap
 
 We want to make sure you're comfortable with how BIRD is configured using RIP, so let's talk about the [RIP config we used in this chapter](#configure-the-first-router) section-by-section.
 
-As we go through this configuration file, it might be helpful to reference the [flowchart on how rip works section](../../../appendix/how-bird-works.md).
+As we go through this configuration file, it might be helpful to reference the [flowchart on how rip works section](../../appendix/how-bird-works.md).
 
 The first section we'll look at deals with the network interfaces on the machine:
 
@@ -670,7 +653,7 @@ When the routes are first broken, one of the messages you might see on `client-c
 From 2.1.0.6 icmp_seq=1059 Destination Host Unreachable
 ```
 
-**"Destination Host Unreachable"** is an error message that shows up when an ARP request fails to resolve. If you need a refresher on how packets are forwarded from one machine to another on a network using ARP, refer to the appendix on [IP and Ethernet Addresses](../../../appendix/ip-and-mac-addresses.md).
+**"Destination Host Unreachable"** is an error message that shows up when an ARP request fails to resolve. If you need a refresher on how packets are forwarded from one machine to another on a network using ARP, refer to the appendix on [IP and Ethernet Addresses](../../appendix/ip-and-mac-addresses.md).
 
 `2.1.0.6` is `router-z6`'s interface on the network connecting Comcast to Zayo. We know that `router-z6` wants to forward packets destined for AWS to `router-z7` (i.e. 2.6.7.7). Since `router-z6` has a cached ARP entry for `router-z7`, it will continue to forward packets in that direction. However, that cached ARP entry will eventually expire! When it does, `router-z6` will send an ARP request to refresh the ethernet address for that `router-z7`. But, `router-z7` is incapable of responding to those requests, `router-z6` eventually gives up and sends an ICMP message back to `client-c1` stating the machine it's trying to forward packets to is now offline, and so we see this "Host Unreachable" message.
 
@@ -698,26 +681,29 @@ Eventually you'll see a message on `router-z8` that it has learned a new path to
 Looking at the new next-hop address, `2.8.0.2`, we can see that `router-z8` now wants to route packets through `router-i2`. While this route is less-efficient, our routing infrastructure is healed, and packets can once again travel from the Comcast network to the AWS network.
 
 <!-- Links, reference style, inside docset -->
-[our map]:         ../../../img/network-maps/rip-routing.svg
+[our map]:         ../../img/network-maps/rip-routing.svg
                              "Our Map"
 
-[BIRD diagram explainer]:         ../../../img/bird-rip/bird-diagram-explainer.svg
+[BIRD diagram explainer]:         ../../img/bird-rip/bird-diagram-explainer.svg
                              "BIRD diagram explainer"
 
-[RIP protocol steps 1 and 2]:         ../../../img/bird-rip/steps-1-and-2.svg
+[RIP protocol steps 1 and 2]:         ../../img/bird-rip/steps-1-and-2.svg
                              "RIP protocol steps 1 and 2"
 
-[RIP protocol steps 3 and 4]:         ../../../img/bird-rip/steps-3-and-4.svg
+[RIP protocol steps 3 and 4]:         ../../img/bird-rip/steps-3-and-4.svg
                              "RIP protocol steps 3 and 4"
 
-[RIP protocol steps 5 and 6]:         ../../../img/bird-rip/steps-5-and-6.svg
+[RIP protocol steps 5 and 6]:         ../../img/bird-rip/steps-5-and-6.svg
                              "RIP protocol steps 5 and 6"
 
-[RIP protocol step 7]:         ../../../img/bird-rip/steps-7.svg
+[RIP protocol step 7]:         ../../img/bird-rip/steps-7.svg
                              "RIP protocol step 7"
 
-[RIP protocol steps 6 and 7 revised]:         ../../../img/bird-rip/step-6-and-7-revised.svg
+[RIP protocol steps 6 and 7 revised]:         ../../img/bird-rip/step-6-and-7-revised.svg
                              "RIP protocol steps 6 and 7 revised"
 
-[Simplified network map]:         ../../../img/bird-rip/simplified-network-map-for-breaking.svg
+[Simplified network map]:         ../../img/bird-rip/simplified-network-map-for-breaking.svg
                              "Simplified network map"
+
+[Terminal setup]:         ../../img/bird-rip/terminal-setup.jpg
+                             "Terminal setup"
