@@ -2,6 +2,7 @@
 
 - [Command Reference Guide](#command-reference-guide)
   - [dig](#dig)
+  - [here document](#here-document)
   - [ip](#ip)
     - [ip addr](#ip-addr)
     - [ip route](#ip-route)
@@ -30,6 +31,48 @@ This is a command-line tool that allows you to check name-resolution.
 - `dig www.google.com` - find out what IP address (or addresses) resolve from the name "www.google.com"
 - `dig @8.8.8.8 www.google.com` - same as above, but use the resolver at `8.8.8.8` instead of whatever is configured in your machine's `/etc/resolv.conf` file
 - `dig AAAA www.google.com` - also finds out what IP address resolves for the name "www.google.com", but *THIS TIME* we're asking for the "IP version 6" IP address instead of the default "IP version 4" address.
+
+## here document
+
+A here document (often called a “here doc”) in bash is a way to feed a block of text directly into a command, without needing to store that text in a file first. Instead of typing everything on one line, you can write multiple lines of input right in your script or terminal, and bash will pass it all to the command as though it were coming from a file or the keyboard. This is especially handy when you want to provide longer bits of input (like configuration, SQL queries, or documentation) in a clean and readable way.
+
+The syntax uses `<<` followed by a word of your choice (often `EOF`, meaning “end of file”). You then type as many lines as you want, and finish by repeating the same word on its own line. For example:
+
+```bash
+cat <<EOF
+This is line one.
+This is line two.
+EOF
+```
+
+Here, everything between the two `EOF` markers gets sent into the cat command, which just prints it back out.
+
+For instance, you could use a here doc to send JSON data with `curl` in a POST request:
+
+```bash
+curl -X POST https://example.com/api \
+  -H "Content-Type: application/json" \
+  -d @- <<EOF
+{
+  "name": "Alice",
+  "email": "alice@example.com"
+}
+EOF
+```
+
+In this case, the JSON body is provided inline, without needing to create a separate `.json` file.
+
+You can also use a here doc to create a file with `cat`:
+
+```bash
+cat <<EOF > greeting.txt
+Hello there!
+This file was created with a here doc.
+EOF
+```
+
+This will write the two lines into a new file called `greeting.txt`.
+
 
 ## ip
 
