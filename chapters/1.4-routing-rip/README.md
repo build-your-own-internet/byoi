@@ -392,13 +392,15 @@ If that script reports any errors, your job is to go and fix them! Refer to the 
 
 ### Break that shit!
 
-#### Setting up monitoring
+We just did a bunch of work that **may** not feel as easy or as simple as the work we did in setting up static routes. Why did we do that? Well, let's take a look one of the powers of using a routing protocol instead of statically-defined routes: namely, healing broken routes.
 
-We just did a bunch of work that may not feel as easy or as simple as the work we did in the [basic routing chapters](../1.3-routing-internet-chonk/README.md). Why did we do that? Let's take a look at the power of using a routing protocol instead of statically-defined routes: namely, healing broken routes.
+Here's a simplified version of our network map that will focus on a problem we'd like to explore:
 
 [![Simplified network map][Simplified network map]][Simplified network map]
 
-Here's a simplified version of our network map that will focus on a problem we'd like to explore. Trace the path that you think packets should take from `client-c1` to `server-a3`. There are lots of possible options! Ideally, the routers are going to pick the shortest path from source to destination and back again. This means that, for this example, the path **should** be:
+Trace the path that you think packets should take from `client-c1` to `server-a3`. There are lots of possible options! Ideally, the routers are going to pick the shortest path from source to destination and back again. This means that, for this example, the path **should** be:
+
+<!-- TODO: Maybe do the map with arrows -->
 
 1. `router-c3`
 2. `router-z6`
@@ -406,7 +408,7 @@ Here's a simplified version of our network map that will focus on a problem we'd
 4. `router-a4`
 5. `server-a3`
 
-What happens when one of those routers goes down? Since we've built our toy internet with redundant paths from one side of it to the other, it would be best if we could have our packets automatically re-routed to a less-optimal route. Well, our routing protocol (RIP) should be able to do this for us. Let's see if it can!
+What happens when one of those routers goes down? Since we've built our toy internet with redundant paths from one side of it to the other, it would be best if we could have our packets automatically re-routed to a less-optimal route rather than connectivity being permanently broken until a network administrator goes and fixes it! Well, our routing protocol (RIP) should be able to do this for us. Let's see if it can!
 
 The exercise we're going to do is to take `router-z7` offline and see if the RIP protocol can successfully re-route traffic to another path. What path do you think packets should take if `router-z7` goes offline? Our suggestion would be:
 
@@ -419,15 +421,19 @@ The exercise we're going to do is to take `router-z7` offline and see if the RIP
 7. `router-a3`
 8. `server-a3`
 
-Clearly, this path is not as good, but at least packets still get to their destination.
+Clearly, this path is not as good, but at least packets still get to their destination and nobody had to be paged to fix the problem manually.
+
+#### Setting up monitoring
 
 So let's give this a try, but let's set up some monitoring on a few key routers so we can have a front-row seat to the action that BIRD is taking to mend our network! We're therefore going to ask you to open up a **bunch** of terminal windows. We recommend that you organize your terminal windows something like the following so that you can remember what terminal is connected to what system:
 
 [![Terminal setup][Terminal setup]][Terminal setup]
 
-1. In the windows for `router-z6`, `router-z5` and `router-z8`, run the command `watch ip route`. All of these routers should have the same route for `4.1.0.0/16`, `4.2.0.0/16`, and `4.3.0.0/16`. Hopefully this will eventually change when RIP reconfigures itself after `router-z7` goes down. Leave these commands running in these windows. We'll be going back and watching these windows soon.
+##### 1. run the `watch ip route` commands
 
-By the way, looking at the output of the `ip route` command, we can validate our assumptions about the path that we think packets currently take from `client-c1` to `server-a3`. Since all packets that leave the comcast network must be sent through `router-z6`, this machine is the crux of this operation. So notice the routing table for routes destined to aws (i.e. `4.0.0.0/8`) in all of these windows:
+In the windows for `router-z6`, `router-z5` and `router-z8`, run the command `watch ip route`. All of these routers should have the same route for `4.1.0.0/16`, `4.2.0.0/16`, and `4.3.0.0/16`. Hopefully this will eventually change when RIP reconfigures itself after `router-z7` goes down. Leave these commands running in these windows. We'll be going back and watching these windows soon.
+
+By the way, looking at the output of the `ip route` command, we can validate our assumptions about the path that we think packets currently take from `client-c1` to `server-a3`. Since all packets that leave the comcast network must be sent through `router-z6`, this machine is the crux of this operation. So notice the routing table for routes destined to AWS (i.e. `4.0.0.0/8`) in all of these windows:
 
 ```bash
 ...
@@ -437,15 +443,21 @@ By the way, looking at the output of the `ip route` command, we can validate our
 ...
 ```
 
-There are a lot of routes here. Since we only care about the routes to the aws network, we're only showing the routes that start with `4.`. As you can see from this printout, each router wants to send packets to `2.6.7.7` (a.k.a. `router-z7`) for all these networks, which is perfect!
+There are a lot of routes here. Since we only care about the routes to the AWS network, we're only showing the routes that start with `4.`. As you can see from this printout, each router wants to send packets to `2.6.7.7` (a.k.a. `router-z7`) for all these networks, which is perfect!
 
-2. If you look at the network map, you'll see that, if `router-z7` goes down, the only other path that packets can take to exit this network is `router-z8`. Watching what's happening on this router will give us a lot of information! Therefore, on the second window to `router-z8`, we want to see debugging information from BIRD. To do this, we need to restart BIRD in debugging mode. You're going to first need to `kill` the existing running background process for BIRD. Use the [ps and kill commands](../command-reference-guide.md#ps) to find the running BIRD process and stop it. Then run `bird -d` to restart BIRD in the foreground in debugging mode. 
+##### 2. Restart `router-z8` in debugging mode
 
-3. Next, on the `client-c1` window, run `ping 4.1.0.13` to have a continuous ping going on so we can see when packets start getting lost and hopefully when the network is healed and packets start going through again.
+If you look at the network map, you'll see that, if `router-z7` goes down, the only other path that packets can take to exit this network is `router-z8`. Watching what's happening on this router will give us a lot of information! Therefore, on the second window to `router-z8`, we want to see debugging information from BIRD. To do this, we need to restart BIRD in debugging mode. You're going to first need to `kill` the existing running background process for BIRD. Use the [ps and kill commands](../command-reference-guide.md#ps) to find the running BIRD process and stop it. Then run `bird -d` to restart BIRD in the foreground in debugging mode. 
 
-Finally, we're going to use that last window which is open to `router-z7`. We're going to shut down all of the network interfaces on this router to effectively cut the router off of the network entirely and force all the other routers on our toy internet to make new routing decisions for the aws destinations.
+##### 3. Run `ping` from `client-c1`
 
-We're going to make a little script to shut all the interfaces down at once. Paste the following into the terminal for `router-z7`:
+Next, on the `client-c1` window, run `ping 4.1.0.13` to have a continuous ping going on so we can see when packets start getting lost and hopefully when the network is healed and packets start going through again.
+
+##### 4. Prepare `router-z7` to be shut down
+
+Finally, we're going to use that last window which is open to `router-z7`. We're going to shut down all of the network interfaces on this router to effectively cut the router off of the network entirely and force all the other routers on our toy internet to make new routing decisions for the AWS destinations.
+
+We're going to make a little script to shut all the interfaces down at once. Paste the following [here doc](../command-reference-guide.md#here-document) into the terminal for `router-z7`:
 
 ```bash
 cat << EOF > kill-links.sh
@@ -460,25 +472,25 @@ EOF
 
 What you just did creates a new file called `kill-links.sh`. In this file, we run the `ip link` command. This command is similar to the `ip addr` command that we've used in previous chapters. The `ip link` command gives us control of the network interfaces on this machine. By setting them `down`, those interfaces will no longer send or receive packets.
 
-Before you run that script, take a moment and think about what you expect to happen. What is going to happen with the `ping` output on `client-c1`? Will it stop immediately? How will it stop? What messages might you see? On each of the routers, what do you think might happen to each of the routing tables over time?
-
 ### Let's watch the fireworks
+
+Before we shut down `router-z7`, let's take a moment and think about what we expect to happen. What is going to happen with the `ping` output on `client-c1`? Will it stop immediately? How will it stop? What messages might you see? On each of the routers, what do you think might happen to each of the routing tables over time?
 
 One thing to keep in mind is that RIP is not a very efficient routing protocol. It has what is known as slow "convergence" time, meaning, it takes a long time for it to figure out how to re-route packets when there's an outage. You might therefore have to wait as long as ten minutes for things to settle down and reach stable-state. Some routes will change immediately when you shut all the interfaces off on `router-z7`, and some routes will take longer. Some routes may "flap" around, meaning that they change multiple times before they settle down. Luckily, this gives you plenty of time to observe!
 
 Okay, without further ado, let's run the script by typing `bash kill-links.sh` into `router-z7` and watch the sparks fly!
 
-How long does it take for an error message to show up on the client? Did you notice that the `ping` output stopped immediately on the client? You can type an `<ENTER>` in the `client-c1` terminal to make it obvious that ping is no longer sending messages and to make it more obvious when it restarts.
+How long does it take for an error message to show up on the client? Did you notice that the `ping` output stopped immediately on the client? You can type an `<ENTER>` in the `client-c1` terminal to make it obvious that ping is no longer receiving response messages from `server-a3` and to make it more obvious when it restarts.
 
-You may see some of the following, think about what each of these might mean:
+You may see some of the following. Think about what each of these might mean:
 
 - `client-c1` window: `From 2.1.0.6 icmp_seq=1059 Destination Host Unreachable`
 - `client-c1` window: `From 1.1.0.3 icmp_seq=1203 Destination Net Unreachable`
 - `router z8` window: `4.3.0.0/16 via 2.8.0.2 dev eth0 proto bird`
 
-If you want to verify your understanding of these things, go check [the appendix](#deciphering-terminal-output-from-broken-rip-route-exercise).
+What do you think each of these messages means? Do you remember what ICMP errors are from previous chapters? If you want to verify your understanding of these things, go check [the appendix](#deciphering-terminal-output-from-broken-rip-route-exercise).
 
-Furthermore, make sure to take a moment to read through the BIRD logging output on `router-z8`:
+Make sure to take a moment to read through the BIRD logging output on `router-z8`, which should look something like this:
 
 ```bash
 bird: kernel1 < removed 4.3.0.0/16 via 2.7.8.7 on eth2
@@ -521,6 +533,10 @@ If it doesn't make sense immediately, google some answers, try it again, or othe
 
 One trick we have found in digesting output we don't understand is to take it line-by-line. Look at a single line, think about the network map and think about what you know from the `ip addr` output. Try to tell the story one line at a time. Not every line has to make complete sense, and if you have to skip over a few lines before you have something to sink your teeth into, that's okay.
 
+Once everything settles down and you feel confident about what happened, let's move on the next exercise: bringing the router back online.
+
+## Exercises
+
 ### Exercise: Bring the router back online
 
 To take the router offline, we provided you with a script. That script called to an `ip` command: `ip link`. Can you modify that script so that it brings the interfaces back up on `router-z7`?
@@ -531,7 +547,7 @@ Once you do, you'll know you've done things correctly if you watch the terminal 
 
 The routing protocol people tend to reach for when they're doing stuff like what we're doing with RIP is called "OSPF". OSPF stands for "Open Shortest Path First", which really doesn't make any sense. But they're trying to say "This Is A Cool Routing Protocol That Does Stuff Efficiently", but `TIACRPTDSE` is a bad acronym.
 
-We're going to give you a configuration for OSPF so that you can try it in your toy internet and see how it works. We've already shown you a path for rolling out configuration and shown you some techniques for testing it. So we think you're ready to give it a try on your own. If you get stuck there's a configuration in `final` that you can use.
+We're going to give you a configuration for OSPF so that you can try it in your toy internet and see how it works. We've already shown you a path for rolling out configuration and shown you some techniques for testing it. So we think you're ready to give it a try on your own. If you get stuck there's a `bird-ospf.conf` configuration you can copy from in the `final` directory.
 
 On each of your routers, replace the `rip` section in `/etc/bird/bird.conf` with a new `ospf` section, as follows:
 
@@ -559,37 +575,108 @@ Things to observe:
 2. Do RIP and OSPF communicate directly with each other?
 3. Do the same exercise we did above, killing `router-z7`. What differences did you notice in how quickly the routers healed their connections? What differences did you see when you started `router-z7` back up?
 
-
 ## Future / summary / thinking about next chapter
 
 In this chapter, we looked at our first "routing protocol": RIP. RIP allowed us to propagate routes to networks across our toy internet without manually configuring each router. What problems did you see solved by RIP? How would this make the process of adding new networks easier?
 
 Now let's talk about the *limitations* of RIP. There's a reason nobody uses RIP anymore. The "Real Internet" has long since upgraded to newer, more efficient, more secure routing protocols. You probably noticed a common refrain in these chapters of "does it scale?" and "is it secure?". 
 
-Let's take for example, about how RIP decided to heal our network problems: it used ISC as a "transit" network from Zayo to Telia.
+As for scaling, we saw in the exercises that OSPF heals routing problems much faster than RIP does. But what about security? Let's take for example, how RIP decided to heal our network problems: it used ISC as a "transit" network from Zayo to Telia. But what if ISC doesn't want to be a transit network? That would be like having a big fancy mansion with a circular driveway and, when a huge pothole shows up in the road, all the traffic decides to route through your driveway. Not cool, man!
 
 Let's think about this as a solution to Zayo and Telia's problems. First of all, it's common for an organization like ISC to want to have more than one network connection in case they have a network provider that experiences an outage. ISC has servers that clients need to hit and by having redundant network connections, it can ensure that clients can always reach them. Typically, when a company like ISC gets these connections from a transit provider like Zayo or Telia, they are paying for bandwidth that is exclusively theirs to use.
 
 Could you imagine setting up a datacenter and having two redundant network connections to two different internet providers for the sake of making sure that your network services were 100% reliable and finding out that your network providers were using *you* to heal **their** network connectivity problems. That would be ¡super no bueno! Let's say Zayo and Telia had an agreement to route traffic through Google in the case of an emergency: we'd want to use a routing protocol that could implement an agreement like that and not just pick some random sucker network like ISC to route its traffic through.
 
-Clearly, RIP **can** scale to some degree, but it doesn't have a nuanced business understanding of the relationships that take place between various network entities. That's a security problem!
+Clearly, RIP doesn't have a nuanced business understanding of the relationships that take place between various network entities. That's a security problem!
 
 In a future chapter, we'll take a look at BGP, which will address understanding the problem of business relationships between network providers.
 
-Also, remember that we did some hand-waving about how BIRD accomplishes its tasks for implementing RIP. Now might be a good opportunity to spend some quality-time understanding the internals of BIRD.
+Finally, remember that we did some hand-waving about how BIRD accomplishes its tasks for implementing RIP. Now might be a good opportunity to spend some quality-time understanding the internals of BIRD.
 
-- [The nitty-gritty on BIRD internals](../../appendix/how-bird-works.md)
+- [The nitty-gritty on BIRD internals](#how-bird-works)
 - [The BIRD configuration file for RIP](#bird-configurations)
 
 ## Appendix
 
-### BIRD Configurations
+### How BIRD works
 
-Let's talk about how we configure BIRD a little before we're done with this chapter. We gave you [a big configuration file](#implementing-rip-in-bird) at the beginning of "learning how RIP works" and we said, "don't worry, we'll talk about this later." Well now is later.
+This is complicated and it's okay if this takes a few read-throughs before you understand how this works. To make this more accessible, let's use a diagram to show the flow of information through BIRD and between routers.
+
+First, let's introduce a new diagram!
+
+<!-- TODO: CONSISTENT CAPITALIZATION: all "rx" should be "Rx" -->
+
+This diagram is a conceptual picture of `router-R1` communicating with routers `R2` and `R3`. This focuses first on `router-R1` and the BIRD software that runs on it. It shows further details of the constituent pieces of BIRD's inner workings and how those inner-workings interface with the machine itself and with the other routers.
+
+[![BIRD diagram explainer][BIRD diagram explainer]][BIRD diagram explainer]
+
+On the far left, we have stuff that exists "outside" of BIRD:
+
+- **eth0, eth1**: The network interfaces of the machine which connect it to the networks that it sends packets on
+- **route table**: the machine's routing table which provides instructions for where to send packets to networks.
+
+Moving to the right, we next encounter a giant box labelled **BIRD**. This is the BIRD software and all of its constituent pieces (i.e. "protocols"). As we move into BIRD, the first big yellow box represents the BIRD protocols we're worked with in this chapter. Let's briefly look at each of these:
+
+- `device`: empowers BIRD to learn what network interfaces (or "devices") exist on this machine and their up/down status.
+- `kernel`: controls how routing information gets into and out of the route table for this machine.
+- `RIP`: configures communication with other routers using RIP.
+
+> 📝 **NOTE**: What does this ["protocol"](./glossary.md#protocol) word mean _in this context_? It feels pretty "jargonny!" BIRD uses the word "protocol" to indicate sources and destinations for _routing information_. We'll look at this in more depth as we continue through this explanation, but at a high level, it specifies where BIRD is able to learn about routes and where it's able to communicate that routing information.
+
+Finally, we have the box labelled **BIRD core** which manages organizing information **between protocols** to create a coherent routing table for the router.
+
+But what does this process look like on a larger internet? How exactly does route information get collected and distributed by BIRD amongst routers using RIP?
+
+To answer that question, we're going to give you a Giant Step-by-Step Diagram™! It's going to start with how the router collects information about its own network connections. Next, it will go through the process of how it uses the RIP protocol to communicate that information to other routers. This will enable each router to build a full routing table for the entire internet.
+
+[![BIRD Details steps 1 and 2][BIRD Details steps 1 and 2]][BIRD Details steps 1 and 2]
+
+**Step 1**. The `device` protocol in BIRD will learn about the local routes (i.e. the networks that the router has interfaces on). 
+
+**Step 2**. The BIRD software receives the routes it learned about from the router's local devices. BIRD-core maintains its own routing data.
+
+[![BIRD Details steps 3 and 4][BIRD Details steps 3 and 4]][BIRD Details steps 3 and 4]
+
+**Step 3** BIRD finds which protocols `export` their data. `export` is a setting on a protocol that tells BIRD-core that it is allowed to send routes **to** that protocol.
+
+To pass data around, BIRD has two keywords that each protocol can use to dictate how routing information flows through the system.  `import` dictates whether or not to pull information _from_ the protocol into BIRD-core. Once BIRD has imported routing information to its own routing table, `export` indicates which protocols should _receive_ that information.
+
+**Step 4** In our chapter's RIP configuration, the RIP protocol _does_ have the `export` flag, it receives the routes from BIRD-core.
+
+[![BIRD Details steps 5 and 6][BIRD Details steps 5 and 6]][BIRD Details steps 5 and 6]
+
+**Step 5** Now it's time to transmit packets about routing information to other routers! BIRD will send RIP broadcast messages on every network it's connected to about every route that BIRD-core passed to it.
+
+**Step 6** Now we're looking at a neighbor router: `router-R2`! This router receives the routes from `router-R1`.
+
+[![BIRD Details steps 7 and 8][BIRD Details steps 7 and 8]][BIRD Details steps 7 and 8]
+
+**Step 7** BIRD-core on `router-R2` now `import`s the routes from the RIP protocol in order to add them to BIRD-core's internal routing table. When routes are in BIRD-core's internal routing table, the router itself can't use those routes to make forwarding decisions yet because those routes haven't made it yet into the **machine's** route table.
+
+**Step 8** So now, BIRD-core communicates its routes to the kernel protocol which will write a copy of those routes to `router-R2`'s routing table. `router-R2` is now able to forward packets destined for networks connected to `router-R1` towards `router-R1`.
+
+**Step 9 (not pictured)** `router-R2` communicates out all of its routes (including locally-connected routes as well as those it heard about from `router-R1` to all of its locally-connected networks.
+
+<!-- Here is where we left off Sept 5, 2025 -->
+
+## Handy commands!
+
+<!-- TODO: give this context -->
+
+Here are some things that we have found helpful in debugging `bird` !
+
+```
+birdc show route export rip1
+birdc configure
+birdc show route all
+```
+
+
+### BIRD Configurations
 
 We want to make sure you're comfortable with how BIRD is configured using RIP, so let's talk about the [RIP config we used in this chapter](#configure-the-first-router) section-by-section.
 
-As we go through this configuration file, it might be helpful to reference the [flowchart on how rip works section](../../appendix/how-bird-works.md).
+As we go through this configuration file, it might be helpful to reference the [flowchart on how rip works section](#how-bird-works).
 
 The first section we'll look at deals with the network interfaces on the machine:
 
@@ -710,3 +797,16 @@ Looking at the new next-hop address, `2.8.0.2`, we can see that `router-z8` now 
 
 [Terminal setup]:         ../../img/bird-rip/terminal-setup.jpg
                              "Terminal setup"
+
+[BIRD Details steps 1 and 2]:         ../../img/bird-rip/BIRD-details-1+2.svg
+                             "BIRD Details steps 1 and 2"
+
+[BIRD Details steps 3 and 4]:         ../../img/bird-rip/BIRD-details-3+4.svg
+                             "BIRD Details steps 3 and 4"
+
+[BIRD Details steps 5 and 6]:         ../../img/bird-rip/BIRD-details-5+6.svg
+                             "BIRD Details steps 5 and 6"
+                             
+[BIRD Details steps 7 and 8]:         ../../img/bird-rip/BIRD-details-7+8.svg
+                             "BIRD Details steps 7 and 8"
+
