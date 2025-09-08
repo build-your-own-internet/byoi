@@ -74,8 +74,6 @@ If you haven't yet already done a `byoi-rebuild`, for this chapter, do so now.
 
 Before we look at BIRD itself, let's first take a look at the routes that `router-a2` already has in its routing table. Start by taking a look at the network map:
 
-<!-- TODO: the network map below introduces a lot of new symbols (e.g. clouds). GO UPDATE the how-to-read-a-network-mak.md file in the appendix -->
-
 [![our map][our map]][our map]
 
 `router-a2` only has interfaces on `4.1.0.0/24` and `4.2.0.0/24`. Now, let's go onto the router and check the routes. `hopon router-a2` and use our old friend, `ip route`. You should see that it only has routes for those interfaces:
@@ -400,8 +398,6 @@ Here's a simplified version of our network map that will focus on a problem we'd
 
 Trace the path that you think packets should take from `client-c1` to `server-a3`. There are lots of possible options! Ideally, the routers are going to pick the shortest path from source to destination and back again. This means that, for this example, the path **should** be:
 
-<!-- TODO: Maybe do the map with arrows -->
-
 1. `router-c3`
 2. `router-z6`
 3. `router-z7`
@@ -533,6 +529,8 @@ If it doesn't make sense immediately, google some answers, try it again, or othe
 
 One trick we have found in digesting output we don't understand is to take it line-by-line. Look at a single line, think about the network map and think about what you know from the `ip addr` output. Try to tell the story one line at a time. Not every line has to make complete sense, and if you have to skip over a few lines before you have something to sink your teeth into, that's okay.
 
+In addition to looking at logs and examining routes with the `ip route` command, you might want to refer to the [handy commands](#handy-commands) section in the appendix.
+
 Once everything settles down and you feel confident about what happened, let's move on the next exercise: bringing the router back online.
 
 ## Exercises
@@ -567,7 +565,9 @@ protocol ospf {
 }
 ```
 
-Remember that you'll have to restart the BIRD daemon to see your configuration changes. Before you restart, what do you think you'll see when you have `ospf` running on a single machine?
+To get BIRD to notice the changes to its configuration file, you can either restart the BIRD daemon using the `ps` and `kill` commands **or**, you can use the handy `birdc configure` command which will tell BIRD to re-read its configuration file.
+
+Before you restart, what do you think you'll see when you have `ospf` running on a single machine?
 
 Things to observe:
 
@@ -598,13 +598,33 @@ Finally, remember that we did some hand-waving about how BIRD accomplishes its t
 
 ## Appendix
 
+### Handy commands
+
+There are a few commands that you can run with `birdc` (which is like the "bird command-line interface" or something?) to help you understand what BIRD is doing. Here are some commands that we have found helpful in debugging `bird`!
+
+```
+birdc show route export rip1
+```
+
+This shows the routing table that bird is propagating out to all other routers who speak the rip protocol. Much of this output should look similar to when you type `ip route`. See if you can find which interface each route will take for the next-hop and the hop-count for the destination network. You can see **when** the route was learned from RIP.
+
+```
+birdc configure
+```
+
+When you want to make a change to BIRD's configuration, you have to modify the `/etc/bird/bird.conf` file. Software like BIRD reads its configuration file at startup time, but it doesn't continually check for changes to that file. When you make changes to the BIRD configuration file, you need to tell the software to re-load the configuration. In other places, we discover the process-id using [ps](../command-reference-guide.md#ps) and `kill`, but BIRD comes with this handy command which will tell BIRD to reload the config file without going through all those steps.
+
+```
+birdc show route all
+```
+
+This shows the internal BIRD routing table. Sometimes it's helpful to know what routes BIRD knows and how it knows them. This shows every route that BIRD has learned, either through directly-connected interfaces, routes that it may have learned through routing protocols such as RIP, or routes injected through other means (such as static routes).
+
 ### How BIRD works
 
 This is complicated and it's okay if this takes a few read-throughs before you understand how this works. To make this more accessible, let's use a diagram to show the flow of information through BIRD and between routers.
 
 First, let's introduce a new diagram!
-
-<!-- TODO: CONSISTENT CAPITALIZATION: all "rx" should be "Rx" -->
 
 This diagram is a conceptual picture of `router-R1` communicating with routers `R2` and `R3`. This focuses first on `router-R1` and the BIRD software that runs on it. It shows further details of the constituent pieces of BIRD's inner workings and how those inner-workings interface with the machine itself and with the other routers.
 
@@ -657,28 +677,13 @@ To pass data around, BIRD has two keywords that each protocol can use to dictate
 
 **Step 9 (not pictured)** `router-R2` communicates out all of its routes (including locally-connected routes as well as those it heard about from `router-R1` to all of its locally-connected networks.
 
-<!-- Here is where we left off Sept 5, 2025 -->
-
-## Handy commands!
-
-<!-- TODO: give this context -->
-
-Here are some things that we have found helpful in debugging `bird` !
-
-```
-birdc show route export rip1
-birdc configure
-birdc show route all
-```
-
-
 ### BIRD Configurations
 
 We want to make sure you're comfortable with how BIRD is configured using RIP, so let's talk about the [RIP config we used in this chapter](#configure-the-first-router) section-by-section.
 
 As we go through this configuration file, it might be helpful to reference the [flowchart on how rip works section](#how-bird-works).
 
-The first section we'll look at deals with the network interfaces on the machine:
+The first part of the config we'll look at deals with the network interfaces on the machine:
 
 ```bash
 protocol device {
@@ -690,7 +695,9 @@ protocol direct {
 }
 ```
 
-These two "protocols" work in conjunction. `protocol device` is used to gather information about what networks the router has _direct_ interfaces on. And then, once bird knows about the routes, `protocol direct` instructs bird to inject those routes into bird's routing table. Only once these routes are in bird's routing table can they be communicated out to other routers using protocols like RIP.
+> ⚠️ **Disclaimer**: Typically when you hear the word "protocol", we are talking about standard methods for computer programs to exchange information over a network. In the context of BIRD configuration files, "protocol" indicates how information is received and managed by BIRD.
+
+These two "protocols" work in conjunction. `protocol device` is used to gather information about what networks the router is connected to. And then, once BIRD knows about the routes, `protocol direct` instructs BIRD to inject those routes into bird's routing table. Only once these routes are in BIRD's routing table can they be communicated out to other routers using protocols like RIP.
 
 Next, let's look at how routing information is imported and exported from the machine's routing table:
 
@@ -703,7 +710,7 @@ protocol kernel {
 
 `protocol kernel` is used to influence the local routing table after receiving routing information from BIRD.
 
-Because this configuration has `export all`, that means that all of bird's routes will be "exported" (written to) to the kernel. This is why, when you have bird running and you type `ip route` in your bash terminal on a router, you see routes imported by bird (e.g. `4.1.0.0/16 via 2.6.7.7 dev eth3 proto bird`)
+Because this configuration has `export all`, that means that all of BIRD's routes will be "exported" (written to) to the kernel. This is why, when you have BIRD running and you type `ip route` in your bash terminal on a router, you see routes imported by BIRD (e.g. `4.1.0.0/16 via 2.6.7.7 dev eth3 proto bird`)
 
 `import none` prevents routes that have been defined in the kernel (i.e. with the bash command `ip route add`) from propagating up to BIRD and thus out to other routers. Since we're not defining any routes in the kernel, this doesn't really have any effect.
 
@@ -712,7 +719,7 @@ Because this configuration has `export all`, that means that all of bird's route
 - `hopon router-a2`
 - Edit up your `/etc/bird/bird.conf` file and change the `import none;` in the `kernel` configuration section to `import all;`.
 - Add another line: `learn yes;` immediately below `import all;`
-- Restart the bird process using the `kill -HUP` command we taught you.
+- Have BIRD re-read its configuration file with the command `birdc configure`
 - in another window, `hopon router-a4` and run `watch ip route`
 - in your `router-a2` window, run `ip route add 66.66.66.0/24 via 4.1.0.3`
 - See the route to `66.66.66.0` show up on `router-a4`
@@ -729,7 +736,11 @@ protocol rip {
 }
 ```
 
-`protocol rip` configures what each router is communicating to other routers and what this router is willing to import from other routers using the RIP protocol. `interface "*"` simply tells BIRD that you want to send and receive RIP messages on every network interface that the router has. There might be some situations (which we'll see in future chapters) where you do not want to run the routing protocol on every possible network.
+`protocol rip` is responsible for setting up three things:
+
+1. Communicating to other routers the routes that this router knows
+2. Determining what routes this router is willing to learn from other routers
+3. Determine which interfaces we want to communicate with neighbor routers using the RIP protocol
 
 That's it for RIP configuration in BIRD. We'll see many of these "protocols" used in future chapters. It's okay if you don't understand them now, but the more you play with them, the more sense it will make.
 

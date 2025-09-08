@@ -18,6 +18,9 @@ RUN apt-get update && apt-get install -y iproute2 \
     bird-bgp
 
 COPY ./init/router-start-up.sh /router-start-up.sh
+# Uncommend these lines and comment the line above if you want to run the "final" configuration
+# COPY ./final/bird.conf /bird.conf
+# COPY ./final/router-start-up.sh /router-start-up.sh
 RUN mkdir -p /etc/vim
 COPY ./init/vimrc /etc/vim/vimrc.local
 
