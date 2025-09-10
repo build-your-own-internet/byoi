@@ -23,7 +23,7 @@ set up with ssh access.
 4. Add the ssh key to your digital ocean account with the following command:
 
     ```bash
-    doctl compute ssh-key add --ssh-key-file ~/.ssh/id_ed25519.pub
+    doctl compute ssh-key create mytest --public-key "$(cat  ~/.ssh/id_ed25519.pub)"
     ```
 
 5. List your ssh keys with the following command:
