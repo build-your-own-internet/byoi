@@ -7,8 +7,8 @@
     test_user: test
     test_user_password: "{{ lookup('env', 'TEST_USER_PASSWORD') }}"
     git_repo_url: https://github.com/build-your-own-internet/byoi.git
-    git_repo_version: tech-summit-2024-base
-    clone_dest: "/home/{{ test_user }}/byoi"
+    git_repo_version: byoi-74
+    clone_dest: "/byoi"
     custom_motd_message: |
       ************************************************************
       Welcome to the build-your-own-internet dev server!
@@ -127,25 +127,11 @@
           - add_to_docker_group is succeeded
         fail_msg: "Adding '{{ test_user }}' to 'docker' group failed."
 
-    - name: Clone Git repository into user's home directory
-      git:
-        repo: "{{ git_repo_url }}"
-        dest: "{{ clone_dest }}"
-        version: "{{ git_repo_version }}"
-      become_user: "{{ test_user }}"
-      register: git_clone
-
-    - name: Check if Git repository was cloned successfully
-      assert:
-        that:
-          - git_clone is succeeded
-        fail_msg: "Git repository clone failed."
-
-    - name: Ensure '~/byoi/bin' is in user's PATH
+    - name: Ensure '/byoi/bin' is in user's PATH
       lineinfile:
         path: "/home/{{ test_user }}/.bashrc"
         regexp: '^export PATH=.*byoi/bin'
-        line: 'export PATH="$HOME/byoi/bin:$PATH"'
+        line: 'export PATH="/byoi/bin:$PATH"'
         state: present
         insertafter: EOF
       become_user: "{{ test_user }}"
@@ -154,7 +140,7 @@
       lineinfile:
         path: "/home/{{ test_user }}/.bashrc"
         regexp: '^export PS1=.*'
-        line: 'export PS1="$ "'
+        line: 'export PS1="\u@\h:\w\$ "'
         state: present
         insertafter: EOF
       become_user: "{{ test_user }}"
@@ -169,8 +155,8 @@
     - name: Automatically change directory on login for '{{ test_user }}'
       lineinfile:
         path: "/home/{{ test_user }}/.bashrc"
-        regexp: '^cd\s+~/byoi/future/name-resolution/recursive-dns/?$'
-        line: 'cd ~/byoi/future/name-resolution/recursive-dns/'
+        regexp: '^cd\s+/byoi/?$'
+        line: 'cd /byoi/'
         state: present
         insertafter: EOF
       become_user: "{{ test_user }}"

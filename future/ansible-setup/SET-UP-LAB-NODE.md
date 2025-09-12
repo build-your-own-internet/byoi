@@ -48,16 +48,16 @@ set up with ssh access.
         --ssh-keys $SSH_KEY_ID \
         --image ubuntu-24-04-x64 \
         --size s-2vcpu-4gb \
+        --user-data-file "./setup-ansible.sh" \
         --region sfo3 \
-        --vpc-uuid cf4f0a3a-a4b6-4ced-8378-19c060c48bd6 \
         $HOST_NAME
     ```
 
-2. Find the IP address of the droplet with the following command:
+2. Find the Public IP address of the droplet with the following command:
 
     ```bash
     while sleep 1; do
-    doctl compute droplet list --format ID,Name,PublicIPv4,PrivateIPv4
+    doctl compute droplet list --format PublicIPv4 --no-header
     done
     ```
 
@@ -89,10 +89,11 @@ set up with ssh access.
 
     ```bash
     cd byoi
-    git checkout tech-summit-2024-base
     ```
 
 6. Install Ansible:
+
+    This may take a few minutes.
 
     ```bash
     cd ansible-setup/
