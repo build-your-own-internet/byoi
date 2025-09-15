@@ -17,6 +17,7 @@ add-apt-repository --yes --update ppa:ansible/ansible
 apt install -y ansible
 
 # Create a password for the user
+export TEST_USER="test-user"
 export TEST_USER_PASSWORD=$(openssl passwd -6 "your-super-secret-password")
 
 # Use the ansible CLI to create a new user and sets the machine up the way we want it

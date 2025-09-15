@@ -79,50 +79,14 @@ set up with ssh access.
     Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
     ```
 
-4. Clone down the BYOI repo and run the playbook to set up the test user:
-
-    ```bash
-    git clone https://github.com/build-your-own-internet/byoi.git
-    ```
-
-5. Switch to the appropriate branch
-
-    ```bash
-    cd byoi
-    ```
-
-6. Install Ansible:
-
-    This may take a few minutes.
-
-    ```bash
-    cd ansible-setup/
-    apt update;apt install -y software-properties-common;add-apt-repository --yes --update ppa:ansible/ansible;apt install -y ansible;
-    ```
-
-7. Set the test user password:
-
-    Ansible requires that passwords be provided in an encrypted (hashed) format when setting user passwords. To set the password securely without storing it in the playbook, we can use an environment variable to pass the hashed password to the playbook.
-
-    ```bash
-    export TEST_USER_PASSWORD=$(openssl passwd -6 "your-super-secret-password")
-    ```
-
-8. Run the playbook:
-
-    ```bash
-    ansible-playbook setup_test_user.yml
-    ```
-
-9. Test that the test user can run BYOI commands:
+4. Test that the test user can run BYOI commands:
 
     Log out of the droplet. Then log back in as the test user with the following command:
 
     ```bash
     ssh test@$IP_ADDRESS
     ```
-
-10. Start the BYOI lab server:
+5. Start the BYOI lab server:
 
     Now, as the test user, run the following command to start the BYOI lab server:
 
