@@ -5,7 +5,7 @@ git clone https://github.com/build-your-own-internet/byoi.git
 cd byoi
 # Get the branch with all the work
 git fetch
-git checkout byoi-74
+git checkout main
 
 # Go where the work lives
 cd future/ansible-setup/

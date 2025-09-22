@@ -7,7 +7,7 @@
     test_user: "{{ lookup('env', 'TEST_USER') }}"
     test_user_password: "{{ lookup('env', 'TEST_USER_PASSWORD') }}"
     git_repo_url: https://github.com/build-your-own-internet/byoi.git
-    git_repo_version: byoi-74
+    git_repo_version: main
     clone_dest: "/byoi"
     custom_motd_message: |
       ************************************************************
