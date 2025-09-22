@@ -67,3 +67,6 @@ packages/ui-documentation-website/cypress/videos/
 
 # Storybook
 storybook-static
+
+# Ansible
+future/ansible-setup/setup-ansible.sh

@@ -5,4 +5,13 @@ set -o errexit
 bash $(dirname "$0")/meets-colima-requirements
 bash $(dirname "$0")/byoi-cleanup
 
-docker-compose up --detach
+docker_compose_exists=false
+if which docker-compose >/dev/null 2>&1; then
+    docker_compose_exists=true
+fi
+if [[ "$docker_compose_exists" == true ]]; then
+    docker-compose up --detach
+    exit 0
+fi
+
+docker compose up --detach
