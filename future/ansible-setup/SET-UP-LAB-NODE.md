@@ -38,60 +38,42 @@ set up with ssh access.
     export SSH_KEY_ID=<your-ssh-key-id>
     ```
 
-### Building the lab node
+## Building the lab node
 
-1. Create a droplet with the following command:
+1. Run the `future/ansible-setup/create-droplet-for-user.sh` script with a username and password. E.G.
 
     ```bash
-    export HOST_NAME=build-your-own-internet-lab-3
-    doctl compute droplet create \
-        --ssh-keys $SSH_KEY_ID \
-        --image ubuntu-24-04-x64 \
-        --size s-2vcpu-4gb \
-        --user-data-file "./setup-ansible.sh" \
-        --region sfo3 \
-        $HOST_NAME
+    bash create-droplet-for-user.sh username password
     ```
 
-2. Find the Public IP address of the droplet with the following command:
+2. Test that the test user can run BYOI commands:
+
+    Log into the droplet as the test user. The last line of output from the `create-droplet-for-user.sh` script will include a command to login. You will also need to accept the fingerprint. It will look something like so:
 
     ```bash
-    while sleep 1; do
-    doctl compute droplet list --format PublicIPv4 --no-header
-    done
-    ```
-
-    > 📝 NOTE: It may take a few minutes for the droplet to become active and for it to have an IP address.
-
-    Assign that IP address to the `IP_ADDRESS` environment variable:
-
-    ```bash
-    export IP_ADDRESS=<your-ip-address>
-    ```
-
-3. SSH into the droplet with the following command:
-
-    ```bash
-    $ ssh root@$IP_ADDRESS
+    ssh username@164.92.73.53
     The authenticity of host '137.184.179.253 (137.184.179.253)' can't be established.
     ED25519 key fingerprint is SHA256:ecjoIp/DNuZIvKIWdoVOhKedryaBhgjRZooH1iYMKGU.
     This key is not known by any other names.
     Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
     ```
 
-4. Test that the test user can run BYOI commands:
+3. Validate that shit got setup correctly:
 
-    Log out of the droplet. Then log back in as the test user with the following command:
+    Now, as the user you just created, run the following command to start the BYOI lab server. First, `cd` into a chapter:
 
     ```bash
-    ssh test@$IP_ADDRESS
+    cd chapters/1.3-routing-internet-chonk
     ```
-5. Start the BYOI lab server:
 
-    Now, as the test user, run the following command to start the BYOI lab server:
+    Then, run the following command to start an internet:
 
     ```bash
     byoi-rebuild
     ```
+
+4. Update the spreadsheet that tracks current users.
+
+5. Tell the new user their username and password. Let them know that we will be destroying their internet on whatever date, so they should hop to learning!
 
 You're done!
