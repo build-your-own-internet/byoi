@@ -1,8 +1,51 @@
 # Getting Started
 
+What needs to happen for 2 machines to communicate? First, the machines need some medium to transmit their messages over. This will usually be a cable or wire. Think about the cable connected to your modem. That cable runs between your house and some entrypoint into your Internet Service Provider. Once the cable is setup, the machines will then need to know how to send messages to each other. When 2 or more machines can communicate directly with each other, they are on what we call a 'network'. 
+
 ## Goals for this section
 
-We want to build a simple network where two machines can ping each other. To keep this simple and remote pairing friendly, we want to use docker containers to simulate machines on this network. We will use some simple common networking tools to understand the shape of our network and how and when successful communication is occurring.
+We want to build a simple network where two machines can "ping" each other. A "ping" is the simplest unit of message between 2 computers. Think of it like a simple "hey! are you there?" between machines.
+
+So, we'll start with 2 machines that have a wire connecting them, but they don't know how to talk to each other yet. Then, we'll teach them how they can communicate across that wire! This will establish our network for these 2 machines!
+
+## Understanding the Network
+
+We want to introduce a diagram of what this network will look like by the end of this chapter. You may have never seen a network diagram before. That's cool! Take a moment to read through the [appendix on How to Read a Network Map][appendix netmap]!.
+
+Here's what we expect our network to look like by the end of this chapter:
+
+[![Basic Network Map][basic network map]][basic network map]
+
+In this diagram, there are 2 machines, `client` and `server`. These machines are on a single network, `10.1.1.0/24`. What do those numbers mean? If you've ever seen an IP address before, the beginning of that network address might look a little familiar. This is what's called a network address. To understand more about network addresses, check out the [appendix entry on Prefixes and Subnet Masks][appendix prefixes]. For the purposes of this chapter, it will suffice to understand that this network can have a number of machines on it, but each machine must have its own IP address in the range from `10.1.1.0` through `10.1.1.255`. Looking at that diagram, we see that there's a `.3` noted next to the `client` machine. This indicates that `client` has the IP address `10.1.1.3`. Similarly, `server` has a `.2` next to it in the image, therefore, `server` has the IP address `10.1.1.2`.
+
+<!--TODO: describe that this will be a virtual environment. no actual cables or hardware needed! -->
+
+## Build a Network
+
+To start with, we'll need to get our `client` and `server` up and running. Fortunately, we created a script that will boot any and all machines for you and attach the virtual cables between them. To get started on this section, simply run `byoi-rebuild`.
+
+Now that we've got some machines up and running, let's network them together! To start with, let's just verify that `client` and `server` can't already talk to each other. We can check this by running a very simple program called [`ping`][ref ping]. We can provide `ping` with an IP address and it will see if it can send a simple request to the machine at the address provided. If a machine receives the type of request `ping` sends, it will send a response back. We're expecting there to be no response when `client` tries to `ping` `server`.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#######################################
+#
+# OLD CONTENT:
+#
+#######################################
+
+To keep this simple and friendly, we want to use docker containers to simulate machines on this network. We will use some simple common networking tools to understand the shape of our network and how and when successful communication is occurring.
 
 Here's what we expect our network to look like by the end of this chapter:
 
