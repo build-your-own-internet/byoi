@@ -187,3 +187,9 @@ A "static" route is a hard-coded entry into a routing table. There is no softwar
 ## TCP (Transmission Control Protocol)
 
 ## UDP (User Datagram Protocol)
+
+### Virtual Machine
+
+A virtual machine is like a computer inside your computer. It behaves just like a real machine — it has its own operating system, memory, CPU, and disk — but it’s created and run by software, not hardware.
+
+You can think of it like this: Your laptop (the host) is a building, and each virtual machine is a small apartment inside that building — with its own furniture, kitchen, and bathroom. They share the same building but live independently.

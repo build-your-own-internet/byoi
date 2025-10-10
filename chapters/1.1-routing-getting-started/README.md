@@ -16,16 +16,34 @@ Here's what we expect our network to look like by the end of this chapter:
 
 [![Basic Network Map][basic network map]][basic network map]
 
-In this diagram, there are 2 machines, `client` and `server`. These machines are on a single network, `10.1.1.0/24`. What do those numbers mean? If you've ever seen an IP address before, the beginning of that network address might look a little familiar. This is what's called a network address. To understand more about network addresses, check out the [appendix entry on Prefixes and Subnet Masks][appendix prefixes]. For the purposes of this chapter, it will suffice to understand that this network can have a number of machines on it, but each machine must have its own IP address in the range from `10.1.1.0` through `10.1.1.255`. Looking at that diagram, we see that there's a `.3` noted next to the `client` machine. This indicates that `client` has the IP address `10.1.1.3`. Similarly, `server` has a `.2` next to it in the image, therefore, `server` has the IP address `10.1.1.2`.
-
-<!--TODO: describe that this will be a virtual environment. no actual cables or hardware needed! -->
+In this diagram, there are 2 machines, `client` and `server`. These machines are on a single network, `10.1.1.0/24`. What do those numbers mean? If you've ever seen an IP address before, the beginning of that block might look a little familiar. This is what's called a network address. To understand more about network addresses, check out the [appendix entry on Prefixes and Subnet Masks][appendix prefixes]. For the purposes of this chapter, it will suffice to understand that this network can have a number of machines on it, but each machine must have its own IP address in the range from `10.1.1.0` through `10.1.1.254`. Looking at that diagram, we see that there's a `.3` noted next to the `client` machine. This indicates that `client` has the IP address `10.1.1.3`. Similarly, `server` has a `.2` next to it in the image, therefore, `server` has the IP address `10.1.1.2`.
 
 ## Build a Network
 
-To start with, we'll need to get our `client` and `server` up and running. Fortunately, we created a script that will boot any and all machines for you and attach the virtual cables between them. To get started on this section, simply run `byoi-rebuild`.
+To start with, we'll need to get our `client` and `server` up and running. You could go out and buy $100s of client and server hardware if you want, but... we're a fan of doing this on the cheap. Instead, for each of these chapters, we'll be building our toy internets using [virtual machines][glossary virtual-machine]. So, we'll need to boot up a set of virtual machines and then connect them together with virtual wires. Fortunately, we created a script that will boot any and all machines you need for each chapter and attach the virtual cables between them. To get started, in the chapter's directory, simply run `byoi-rebuild` in your terminal:
 
-Now that we've got some machines up and running, let's network them together! To start with, let's just verify that `client` and `server` can't already talk to each other. We can check this by running a very simple program called [`ping`][ref ping]. We can provide `ping` with an IP address and it will see if it can send a simple request to the machine at the address provided. If a machine receives the type of request `ping` sends, it will send a response back. We're expecting there to be no response when `client` tries to `ping` `server`.
+[![Terminal Showing Rebuild][terminal showing rebuild]][terminal showing rebuild]
 
+### Check the current state
+
+Now that we've got some machines up and running, let's network them together! To start with, let's just verify that `client` and `server` can't already talk to each other. We can check this by running a very simple program called [`ping`][ref ping]. We can provide `ping` with an IP address and it will see if it can send a simple request to the machine at the address provided. If a machine receives a `ping`, it will send a response back. We're expecting there to be no response when `client` tries to `ping` `server`.
+
+We need to get terminal sessions running on both `client` and `server` in order to send our `ping`s. 
+
+When you start a virtual machine, like `client` and `server` in this chapter, it’s like booting up another computer inside your computer. To access it, you usually open a terminal (command line) and connect to that virtual computer. When you do this, your terminal session switches — you’re no longer typing commands on your **real** computer. Instead, you’re typing commands inside the virtual machine. The commands you type there will not impact your real computer.
+
+The way you can connect to the virtual machines for each of these chapters is the `hopon` command. E.G.: `hopon client`. This will open an interactive terminal session on the `client` virtual machine. 
+
+<!-- Revisit the use of the word 'terminal' here. is therea better option? -->
+So now, use 2 windows in your terminal and `hopon client` in one session, and `hopon server` in the other. In the `client` session, run your `ping` command to `server` using its IP address, `10.1.1.2`:
+
+```bash
+$ hopon client
+root@client:/# ping 10.1.1.2
+ping: connect: Network is unreachable
+```
+
+Perfect! we were expecting that `ping` to fail. Fortunately, we get an error message that tells us what's happening: `Network is unreachable`. This means that `client` doesn't know how to send messages to the network (e.g. `10.1.1.0/24`) that the `ping` is attempting to reach. We need to start by configuring each machine on our internet to learn about the network we want it attached to.
 
 
 
@@ -45,53 +63,7 @@ Now that we've got some machines up and running, let's network them together! To
 #
 #######################################
 
-To keep this simple and friendly, we want to use docker containers to simulate machines on this network. We will use some simple common networking tools to understand the shape of our network and how and when successful communication is occurring.
-
-Here's what we expect our network to look like by the end of this chapter:
-
-[![Basic Network Map][basic network map]][basic network map]
-
-In this diagram, there are 2 machines, `client` and `server`, who are a single network, `10.1.1.0/24`. That network can be understood as: all IP addresses in the range from `10.1.1.0` through `10.1.1.255`. Any machine on that network will have an IP address that is within that range, so `client` has the IP address `10.1.1.3` and `server` has the IP address `10.1.1.2`.
-
-To understand more about reading network maps, please review the [appendix on How to Read a Network Map][appendix netmap]!
-
-To understand more about network addresses, check out the [appendix entry on Prefixes and Subnet Masks][appendix prefixes]!
-
-## Running your docker container
-
-We got this magic [Dockerfile](Dockerfile) that gets everything set up! Neat! Without going into too much detail, our Dockerfile:
-
-- builds a docker image on top of the specified OS (ubuntu)
-- installs a bunch of networking software
-- copies the bash script, `start-up.sh`, from this chapter into the docker image
-
-The `start-up.sh` script at this point is just call to run the `sleep` command forever. Why? Docker containers only stay alive for as long as it takes to process whatever commands are given to it. By running `sleep` in the background, we keep the container alive so we can pop in and out of them as we please. We will add more to this script in future chapters to create the exact docker image we need for a functional internet.
-
-To start with, we want to create 2 containers. We can use the same Docker image to generate both containers. To make it easy to differentiate between the containers, we're going to name them after my cats, `client` and `server`... Because what else would you do?
-
-To do so:
-
-1. `docker build .`
-1. Grab the image ID; the jumble of letters and numbers on the last line of the output from the previous command. Assign that ID to an environment variable (i.e. `export DOCKER_IMAGE=<image_id>`)
-1. `docker run -d --cap-add=NET_ADMIN --name=server $DOCKER_IMAGE`
-1. `docker run -d --cap-add=NET_ADMIN --name=client $DOCKER_IMAGE`
-
->**📝 NOTE:**
-> What is this `--cap-add=NET_ADMIN` all about, you ask? Check the "Problem Solving" section at the bottom for more information! Also see [this Stack Overflow post on RTNETLINK and Docker][stackoverflow rtnetlink] for more details.
-
-## Build a Network
-
-Now that we've got some machines up and running, let's network them together! To start with, let's just verify that `client` and `server` can't already talk to each other. We can check this by running a very simple program called [`ping`][ref ping]. We can provide `ping` with an IP address and it will see if it can send a simple request to the machine at the address provided. If a machine receives the type of request `ping` sends, it will send a response back. We're expecting there to be no response when `client` tries to `ping` `server`.
-
-### Check the current state
-
-Let's start by hopping onto `server`:
-
-```bash
-docker exec -it server /bin/bash
-```
-
-In order for `client` to `ping` `server`, we'll need to get `server`'s IP address. Let's start by seeing what IP address configuration Docker automatically created for `server` when it created the machine. There's a very simple command with a lot of confusing output that we can run to get this: [`ip addr`][ref ip addr].
+There's a very simple command with a lot of confusing output that we can run to get this: [`ip addr`][ref ip addr].
 
 ``` bash
 root@3daaaf641c2d:/# ip addr
@@ -107,73 +79,6 @@ root@3daaaf641c2d:/# ip addr
 
 There's a lot going on here, and we'll get more familiar with this output in future chapters. But, for now, what we're seeing is 2 network [interfaces][glossary interface] on `server`, one for loopback, `lo`, which is used in networking for routing queries back to the machine that made the initial query. The other interface, `eth0` shows us that `server` already has an IP address, `172.17.0.2`, on an existing network, `172.17.0.2/16`. The exact address may be different on your machine, but the principles are the same.
 
-Uh oh... Let's hopon `client` and see if that machine is on the same network:
-
-```bash
-docker exec -it client /bin/bash
-```
-
-```bash
-root@0513ee69aca0:/# ip addr
-1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
-    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-    inet 127.0.0.1/8 scope host lo
-       valid_lft forever preferred_lft forever
-860: eth0@if861: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
-    link/ether 02:42:ac:11:00:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0
-    inet 172.17.0.3/16 brd 172.17.255.255 scope global eth0
-       valid_lft forever preferred_lft forever
-```
-
-Yup... It looks like `eth0` on `client` is defined on the `172.17.0.3/16` network. If we run a `ping` from `client` to `server` at `172.17.0.2`, we'll see that we're getting response packets:
-
-```bash
-root@0513ee69aca0:/# ping 172.17.0.2 -w 2
-PING 172.17.0.2 (172.17.0.2) 56(84) bytes of data.
-64 bytes from 172.17.0.2: icmp_seq=1 ttl=64 time=0.341 ms
-64 bytes from 172.17.0.2: icmp_seq=2 ttl=64 time=0.456 ms
-
---- 172.17.0.2 ping statistics ---
-2 packets transmitted, 2 received, 0% packet loss, time 1048ms
-rtt min/avg/max/mdev = 0.341/0.398/0.456/0.057 ms
-```
-
-Well that's not what we want! For this chapter, we want the experience of manually building out the network. Part of this is teaching the hosts on the network how to reach each other. We don't want our hosts to be able to `ping` each other without us doing the work to make that happen!
-
-### Cleanup what docker created
-
-Sooooo, it turns out, when you create a new docker container, it is automatically assigned to a default bridge network. The first thing we need to do is disconnect our containers from the default network.
-
-### Remove default IP address configuration
-
-As we just discovered, on `server`, `eth0` is associated with the IP address `172.17.0.2/16`. We want to remove this IP address so we can manually configure our network. Let's do that by using the `ip addr del` command on `server`. Remember to update the IP address to match what you see returned in your `ip addr` command:
-
-```bash
-ip addr del 172.17.0.2/16 dev eth0
-```
-
-Now, if we hop onto `client` and try to `ping` `server`, we'll see that we have 100% packet loss:
-
-```bash
-root@0513ee69aca0:/# ping 172.17.0.2 -w 2
-PING 172.17.0.2 (172.17.0.2) 56(84) bytes of data.
-
---- 172.17.0.2 ping statistics ---
-2 packets transmitted, 0 received, 100% packet loss, time 1077ms
-```
-
-To complete this, go ahead and remove the IP address configuration on `client` as well. Once you've removed the current configuration, try running your `ping` to `server` again. You should get an error message instead of packet loss:
-
-```bash
-root@0513ee69aca0:/# ping 172.17.0.2 -w 2
-ping: connect: Network is unreachable
-```
-
-As the message indicates, that network is no longer available. `client` doesn't know how to send packets out to be able to have a hope of reaching that network, so instead of the packets disappearing into the ether, we get an error message indicating that the network isn't defined in any way `client` knows how to reach.
-
->**📝 NOTE:**
->`ip addr` is an abbreviation for the actual command, `ip address`
-> There is a bit of a tradition within networking CLIs to allow users to abbreviate commands (cisco CLIs are famous for this), and the `ip` command carries this forward.
 
 ### Add our own IP address configuration
 
@@ -342,12 +247,14 @@ The solution for the problem was adding the permission `--cap-add=NET_ADMIN` whe
 <!-- Links, reference style, inside docset -->
 
 [basic network map]:        ../../img/network-maps/basic-network-map.svg
+[terminal showing rebuild]: ../../img/terminal.png
 [appendix netmap]:          ../../appendix/how-to-read-a-network-map.md
 [appendix prefixes]:        ../../appendix/prefixes-and-subnet-masks.md
 [ref ip addr]:              ../command-reference-guide.md#ip-addr
 [ref ping]:                 ../command-reference-guide.md#ping
 [ref tcpdump]:              ../command-reference-guide.md#tcpdump
 [glossary interface]:       ../glossary.md#interface
+[glossary virtual-machine]: ../glossary.md#virtual-machine
 
 <!-- Links, reference style, to external resources -->
 [ext icmp responses]:        https://docs.netapp.com/us-en/e-series-santricity/sm-hardware/what-are-icmp-ping-responses.html
