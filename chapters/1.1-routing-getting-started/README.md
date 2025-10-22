@@ -16,7 +16,7 @@ Here's what we expect our network to look like by the end of this chapter:
 
 [![Basic Network Map][basic network map]][basic network map]
 
-In this diagram, there are 2 machines, `client` and `server`. These machines are on a single network, `10.1.1.0/24`. What do those numbers mean? If you've ever seen an IP address before, the beginning of that block might look a little familiar. This is what's called a network address. To understand more about network addresses, check out the [appendix entry on Prefixes and Subnet Masks][appendix prefixes]. For the purposes of this chapter, it will suffice to understand that this network can have a number of machines on it, but each machine must have its own IP address in the range from `10.1.1.0` through `10.1.1.254`. Looking at that diagram, we see that there's a `.3` noted next to the `client` machine. This indicates that `client` has the IP address `10.1.1.3`. Similarly, `server` has a `.2` next to it in the image, therefore, `server` has the IP address `10.1.1.2`.
+In this diagram, there are 2 machines, `client` and `server`. These machines are on a single network, `10.1.1.0/24`. What do those numbers mean? If you've ever seen an IP address before, the beginning of that block might look a little familiar. This is what's called a network address. To understand more about network addresses, check out the [appendix entry on Prefixes and Subnet Masks][appendix prefixes]. For the purposes of this chapter, it will suffice to understand that this network can have a number of machines on it, but each machine must have its own IP address in the range from `10.1.1.0` through `10.1.1.254`. Looking at that diagram, we see that there's a `.1` noted next to the `client` machine. This indicates that `client` has the IP address `10.1.1.1`. Similarly, `server` has a `.2` next to it in the image, therefore, `server` has the IP address `10.1.1.2`.
 
 ## Build a Network
 
@@ -26,16 +26,19 @@ To start with, we'll need to get our `client` and `server` up and running. You c
 
 ### Check the current state
 
-Now that we've got some machines up and running, let's network them together! To start with, let's just verify that `client` and `server` can't already talk to each other. We can check this by running a very simple program called [`ping`][ref ping]. We can provide `ping` with an IP address and it will see if it can send a simple request to the machine at the address provided. If a machine receives a `ping`, it will send a response back. We're expecting there to be no response when `client` tries to `ping` `server`.
+Now that we've got some machines up and running, let's network them together! To start with, let's just verify that `client` and `server` can't already talk to each other. We can check this by running a very simple program called [`ping`][ref ping]. 
 
-We need to get terminal sessions running on both `client` and `server` in order to send our `ping`s. 
+Think of `ping` the way you might "ping" a friend in real life. It's just a text that says, "Hey! 👋" — and your friend would likely respond with something like, "What's up?". That's it! It's just two machines saying hello to each other. Much like your text-message ping, we have to give it an address. For the `ping` command, give it the IP address of the other computer.
 
-When you start a virtual machine, like `client` and `server` in this chapter, it’s like booting up another computer inside your computer. To access it, you usually open a terminal (command line) and connect to that virtual computer. When you do this, your terminal session switches — you’re no longer typing commands on your **real** computer. Instead, you’re typing commands inside the virtual machine. The commands you type there will not impact your real computer.
+To try this out, then, we need to get terminal sessions running on both `client` and `server`. 
 
-The way you can connect to the virtual machines for each of these chapters is the `hopon` command. E.G.: `hopon client`. This will open an interactive terminal session on the `client` virtual machine. 
+#### Starting machines and connecting to them
 
-<!-- Revisit the use of the word 'terminal' here. is therea better option? -->
-So now, use 2 windows in your terminal and `hopon client` in one session, and `hopon server` in the other. In the `client` session, run your `ping` command to `server` using its IP address, `10.1.1.2`:
+When you start a virtual machine, like `client` and `server` in this chapter, it’s like booting up another computer *inside* your computer. To access it, you usually open a terminal (command line) and connect to that virtual computer. When you do this, your terminal session switches — you’re no longer typing commands on your **real** computer. Instead, you’re typing commands inside the virtual machine. The commands you type there will not impact your real computer.
+
+The way you can connect to the virtual machines for each of these chapters is the `hopon` command. E.G.: `hopon client`. `hopon` is a Build Your Own Internet command that we wrote to make it easy for you participate in these chapters. Running this command will result in opening an interactive terminal session on the `client` virtual machine. 
+
+So now, use two windows in your terminal and `hopon client` in one session, and `hopon server` in the other. In the `client` session, run your `ping` command to `server` using its IP address, `10.1.1.2`:
 
 ```bash
 $ hopon client
@@ -43,65 +46,46 @@ root@client:/# ping 10.1.1.2
 ping: connect: Network is unreachable
 ```
 
-Perfect! we were expecting that `ping` to fail. Fortunately, we get an error message that tells us what's happening: `Network is unreachable`. This means that `client` doesn't know how to send messages to the network (e.g. `10.1.1.0/24`) that the `ping` is attempting to reach. We need to start by configuring each machine on our internet to learn about the network we want it attached to.
+Perfect! we were expecting `ping` to fail. Fortunately, we get an error message that tells us what's happening: `Network is unreachable`. This means that `client` doesn't know how to send messages to the network (e.g. `10.1.1.0/24`) that the `ping` is attempting to reach. We need to configure each machine's IP address and network.
 
-
-
-
-
-
-
-
-
-
-
-
-
-#######################################
-#
-# OLD CONTENT:
-#
-#######################################
-
-There's a very simple command with a lot of confusing output that we can run to get this: [`ip addr`][ref ip addr].
+We can see the IP addresses and networks that a computer is attached to by running the [`ip address`][ref ip addr] command (`ip addr` for short):
 
 ``` bash
-root@3daaaf641c2d:/# ip addr
+root@client:/# ip addr
 1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
     link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
     inet 127.0.0.1/8 scope host lo
        valid_lft forever preferred_lft forever
-858: eth0@if859: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
-    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
-    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0
-       valid_lft forever preferred_lft forever
+11: eth0@if12: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:ac:12:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
 ```
 
-There's a lot going on here, and we'll get more familiar with this output in future chapters. But, for now, what we're seeing is 2 network [interfaces][glossary interface] on `server`, one for loopback, `lo`, which is used in networking for routing queries back to the machine that made the initial query. The other interface, `eth0` shows us that `server` already has an IP address, `172.17.0.2`, on an existing network, `172.17.0.2/16`. The exact address may be different on your machine, but the principles are the same.
-
+There's a lot going on here, and we'll get more familiar with this output in future chapters. But, for now, what we're seeing is 2 network [interfaces][glossary interface] on `client`: one for "loopback", `lo`, which is used when a computer wants to send messages to itself. The other interface, `eth0` shows us that `client` has an Ethernet interface with no IP address attached to it.
 
 ### Add our own IP address configuration
 
-Now that we've removed the default network docker created, let's get started creating a network of our own! Let's add IP addresses to each of these containers using the `ip addr add` command. In this example, we want to use the `10.1.1.0/24` network for these containers. `10.0.0.0/8` is one of the networks identified in [RFC 1918][RFC 1918] that is exclusively used for _private_ networking. This means that any IP packet that reaches the internet with an IP address in this range will be dropped. This is helpful in our tutorial because if our system is misconfigured to route to the Internet, we don't want a false-positive for ping tests. Therefore on `server`, we use the command
+Let's add IP addresses to each of these machines using the `ip addr add` command. In this exercise, we want to use the `10.1.1.0/24` network. Therefore on `client`, we use the command:
 
-`ip addr add 10.1.1.2/24 dev eth0`
+```bash
+root@client:/# ip addr add 10.1.1.1/24 dev eth0
+```
 
-You'll want to repeat this process on `client`, but in this case the ip address is `10.1.1.3/24`.
-
-But wait... why are we ending our addresses with `.2` and `.3`? Why aren't we starting with `.0` or `.1`??? In networking spaces, there are reserved IP addresses that can only be used for specific kinds of machines. Generally speaking, the first address in a network, in our case `10.1.1.0`, is the network address and cannot be used to identify specific machines. Similarly, the last address in a network space is reserved and cannot be used to identify specific machines.
+You'll want to repeat this process on `server`, but instead use the ip address `10.1.1.2/24`.
 
 ### Test the network connection
 
-Here, we're going to start exploring with a networking tool called [`tcpdump`][ref tcpdump]. `tcpdump` "sniffs" ethernet frames on the network interface identified in the command. What we'll end up running on `server` is:
+Here, we're going to start exploring with a networking tool called [`tcpdump`][ref tcpdump]. 
+When computers are sending messages back and forth to each other, `tcpdump` gives us a way to inspect those messages as they pass to and from the network.
+
+What we'll end up running on `server` is:
 
 ```bash
-tcpdump -ni eth0
+root@server:/# tcpdump -ni eth0
 ```
 
-Let's take a quick look at the flags used in that command:
+> 📝 **NOTE**: the `-ni` here is something you're going to see a lot of when running command-line tools. they're called "flags". You can often see what flags are available for any given command-line tool with the `--help` flag. In general, we're not going to explain all of these flags in these chapters unless it's particularly relevant to the topic.
 
-- `-n`: tells that program not to try to resolve hostnames via DNS
-- `-i eth0`: tells `tcpdump` which network interface to use
+In this case, the interesting flag here is: `-i eth0`, which tells `tcpdump` which network interface to use (the ethernet interface and not the loopback interface).
 
 The initial output of this command should be:
 
@@ -109,11 +93,13 @@ The initial output of this command should be:
 tcpdump: listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 ```
 
-This command command will sit and run, waiting for network traffic to come in over the `eth0` interface. Once it sees traffic, it will print to the terminal what it's sniffing on the network. You may not see anything else until you run the `ping` from `client`.
+This command will now sit and run, waiting for network traffic to come in over the `eth0` interface. Once it sees traffic, it will print to the terminal what it's seeing on the network. You may not see anything else until you run the `ping` from `client`.
 
-Now it's time to verify that the two containers can reach each other, so let's use the `ping` command. On `client`, run:
+Now it's time to verify that the two machines can reach each other, so let's use the `ping` command. On `client`, run:
 
-`ping -c 5 10.1.1.2`
+```bash
+root@client:/# ping -c 5 10.1.1.2
+```
 
 and you should see on `client`:
 
@@ -133,21 +119,31 @@ rtt min/avg/max/mdev = 0.091/0.218/0.341/0.080 ms
 And, you should see some variation on the following on `server` (the packets may be in a different order, so you may see the ARP requests later in the dump):
 
 ```bash
-19:52:30.295932 ARP, Request who-has 10.1.1.2 tell 10.1.1.3, length 28
-19:52:30.296116 ARP, Request who-has 10.1.1.3 tell 10.1.1.2, length 28
-19:52:30.297091 ARP, Reply 10.1.1.3 is-at 02:42:ac:16:00:02, length 28
+19:52:30.295932 ARP, Request who-has 10.1.1.2 tell 10.1.1.1, length 28
+19:52:30.296116 ARP, Request who-has 10.1.1.1 tell 10.1.1.2, length 28
+19:52:30.297091 ARP, Reply 10.1.1.1 is-at 02:42:ac:16:00:02, length 28
 19:52:30.297112 ARP, Reply 10.1.1.2 is-at 02:42:ac:16:00:03, length 28
-19:52:24.811978 IP 10.1.1.3 > 10.1.1.2: ICMP echo request, id 5, seq 1, length 64
-19:52:24.812031 IP 10.1.1.2 > 10.1.1.3: ICMP echo reply, id 5, seq 1, length 64
-19:52:25.820736 IP 10.1.1.3 > 10.1.1.2: ICMP echo request, id 5, seq 2, length 64
-19:52:25.820799 IP 10.1.1.2 > 10.1.1.3: ICMP echo reply, id 5, seq 2, length 64
-19:52:26.826028 IP 10.1.1.3 > 10.1.1.2: ICMP echo request, id 5, seq 3, length 64
-19:52:26.826081 IP 10.1.1.2 > 10.1.1.3: ICMP echo reply, id 5, seq 3, length 64
-19:52:27.865467 IP 10.1.1.3 > 10.1.1.2: ICMP echo request, id 5, seq 4, length 64
-19:52:27.865502 IP 10.1.1.2 > 10.1.1.3: ICMP echo reply, id 5, seq 4, length 64
-19:52:28.887895 IP 10.1.1.3 > 10.1.1.2: ICMP echo request, id 5, seq 5, length 64
-19:52:28.887926 IP 10.1.1.2 > 10.1.1.3: ICMP echo reply, id 5, seq 5, length 64
+19:52:24.811978 IP 10.1.1.1 > 10.1.1.2: ICMP echo request, id 5, seq 1, length 64
+19:52:24.812031 IP 10.1.1.2 > 10.1.1.1: ICMP echo reply, id 5, seq 1, length 64
+19:52:25.820736 IP 10.1.1.1 > 10.1.1.2: ICMP echo request, id 5, seq 2, length 64
+19:52:25.820799 IP 10.1.1.2 > 10.1.1.1: ICMP echo reply, id 5, seq 2, length 64
+19:52:26.826028 IP 10.1.1.1 > 10.1.1.2: ICMP echo request, id 5, seq 3, length 64
+19:52:26.826081 IP 10.1.1.2 > 10.1.1.1: ICMP echo reply, id 5, seq 3, length 64
+19:52:27.865467 IP 10.1.1.1 > 10.1.1.2: ICMP echo request, id 5, seq 4, length 64
+19:52:27.865502 IP 10.1.1.2 > 10.1.1.1: ICMP echo reply, id 5, seq 4, length 64
+19:52:28.887895 IP 10.1.1.1 > 10.1.1.2: ICMP echo request, id 5, seq 5, length 64
+19:52:28.887926 IP 10.1.1.2 > 10.1.1.1: ICMP echo reply, id 5, seq 5, length 64
 ```
+
+
+
+#######################################
+#
+# OLD CONTENT:
+#
+#######################################
+
+
 
 ### Understanding tcpdump and ping output
 
@@ -162,9 +158,9 @@ Basically, all you need to know about this is that `ping` is a program that send
 `server`'s tcpdump has much more going on. First, we see a series of messages that have `ARP` in them.
 
 ```bash
-19:52:30.295932 ARP, Request who-has 10.1.1.2 tell 10.1.1.3, length 28
-19:52:30.296116 ARP, Request who-has 10.1.1.3 tell 10.1.1.2, length 28
-19:52:30.297091 ARP, Reply 10.1.1.3 is-at 02:42:ac:16:00:02, length 28
+19:52:30.295932 ARP, Request who-has 10.1.1.2 tell 10.1.1.1, length 28
+19:52:30.296116 ARP, Request who-has 10.1.1.1 tell 10.1.1.2, length 28
+19:52:30.297091 ARP, Reply 10.1.1.1 is-at 02:42:ac:16:00:02, length 28
 19:52:30.297112 ARP, Reply 10.1.1.2 is-at 02:42:ac:16:00:03, length 28
 ```
 
@@ -173,8 +169,8 @@ ARP, which stands for Address Resolution Protocol,  is a protocol that allows a 
 After seeing the ARP packets go back and forth (which establish the ability for those two containers to talk to each other on the local network), we see the ICMP echo-request and echo-reply packets go back and forth in our `tcpdump` output.
 
 ```bash
-19:52:24.811978 IP 10.1.1.2 > 10.1.1.3: ICMP echo request, id 5, seq 1, length 64
-19:52:24.812031 IP 10.1.1.3 > 10.1.1.2: ICMP echo reply, id 5, seq 1, length 64
+19:52:24.811978 IP 10.1.1.2 > 10.1.1.1: ICMP echo request, id 5, seq 1, length 64
+19:52:24.812031 IP 10.1.1.1 > 10.1.1.2: ICMP echo reply, id 5, seq 1, length 64
 ```
 
 ## Clean up those containers
@@ -218,7 +214,7 @@ Make sure you're currently in the directory for this chapter. We are going to us
 - 1 network
   - ten-one-net (`10.1.1.0/24`)
 - 2 services, each with an interface on ten-one-net
-  - client (`10.1.1.3`)
+  - client (`10.1.1.1`)
   - server (`10.1.1.2`)
 
 To use this magical file to automate building out machines on our network, use the following command:
@@ -238,7 +234,7 @@ Now you can repeat the tests we did above by connecting to each container (this 
 tl;dr We initially could not edit our IP addresses for the containers within the network:
 
 ```bash
-/ # ip addr add 10.1.1.3/24 dev eth1
+/ # ip addr add 10.1.1.1/24 dev eth1
 ip: RTNETLINK answers: Operation not permitted
 ```
 
