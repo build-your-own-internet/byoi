@@ -8,6 +8,8 @@ We want to build a simple network where two machines can "ping" each other. A "p
 
 So, we'll start with 2 machines that have a wire connecting them, but they don't know how to talk to each other yet. Then, we'll teach them how they can communicate across that wire! This will establish our network for these 2 machines!
 
+Speaking in networking jargon, what you're going to learn how to do is be a "Network Administrator™" on a simple local-area network. This jargon boils down to: "can you get two or more machines on a single network to talk to each other?" With that in mind, let's get administrating!
+
 ## Understanding the Network
 
 We want to introduce a diagram of what this network will look like by the end of this chapter. You may have never seen a network diagram before. That's cool! Take a moment to read through the [appendix on How to Read a Network Map][appendix netmap]!.
@@ -169,37 +171,41 @@ After seeing the ARP packets go back and forth, we next see the ICMP `echo reque
 19:52:24.812031 IP 10.1.1.1 > 10.1.1.2: ICMP echo reply, id 5, seq 1, length 64
 ```
 
-## Closing
+## Summary so far
 
-We did it! We got two machines to talk to each other! Here are the basic concepts we learned:
+We did it! We got two machines to talk to each other! You've done your first task as a Network Administrator and set up a single local-area network! Here are the basic concepts we learned:
 
-1. What IP addresses and network addresses are for
-2. How to configure IP addressing for two machines on the same network
-3. What ARP does
-4. How `ping` works
-5. How to use `tcpdump`
+1. What IP addresses and network addresses are used for
+2. How to configure IP addressing for two machines on the same local-area network
+3. How `ping` works
+4. How to use `tcpdump`
+5. What ARP does
 
-At this point, if you had two machines at home with an ethernet cable connecting them, you should be able to use these tools to get them to establish basic network communications with each other. 
+At this point, if you had two machines at home with an ethernet cable connecting them, you should be able to use these tools to get them to establish basic network communications with each other.  <!-- TODO: How do to this with hardware appendix -->
 
 ## Exercises
 
 Now that you know how this works, let's struggle through some similar activities and see if you can interpret what is happening in each case.
 
-### Ping `10.1.1.12`
+### Ping `10.1.1.12` from the `client` machine
 
-From the `client` machine, run:
+We're going to ping `10.1.1.12` from the `client` machine. Do you expect that this will work? Why or why not?
+
+In the window that you have open on the `client` machine, run the following command and test your answer:
 
 ```bash
 root@client:/# ping -c 5 10.1.1.12
 ```
 
-What do you see in the output from this command? What do you see in the output from the `tcpdump` command that is running on `server`?
+What do you see in the output from this command? What do you think this output means?
 
-Take a moment and think about what might be happening here. It's okay if you don't understand yet.
+> 🚨 **JARGON ALERT**: You may not have come across the word "host" before. If that's the case, "host" is just a synonym for "another machine".
 
-### Add another IP address on the same subnet to one of the machines and try pinging that
+Take a look at the window that you still have open on the `server` machine. What do you see in the output from the `tcpdump` command after you ran that ping from `client`?
 
-In this chapter you learned how to set a new ethernet interface on a machine. Go back and review the commands for this chapter. 
+Take a moment and think about what might be happening here. It's okay if you don't understand yet!
+
+### Add `10.1.1.12` to the `server` machine
 
 Let's add the IP address that was failing on the previous exercise to the `server` machine.
 
@@ -207,17 +213,26 @@ Let's add the IP address that was failing on the previous exercise to the `serve
 root@server:/# ip addr add 10.1.1.12/24 dev eth0
 ```
 
-Now if you run the `ping` command from the previous exercise, you should see a successful response!
+Try the `ping` command again from the `client` machine. Does it work now? Why or why not? On the `tcpdump` output from the server machine, did you notice anything different? Specifically, you might try paying attention to those weird ARP messages. What was different about them this time?
+
+## Diagnosing problems
+
+<!-- TODO: Answer some of the questions we posed to the reader in the last exercise -->
+
+<!-- TODO: change the name of this section -->
 
 ### Pinging `100.100.100.100` from `client`
 
-This is very similar to the first exercise, except this time you're pinging a much different IP address:
+On the surface, this might look like the same as the first exercise. If you recall from [Understanding the network](#understanding-the-network), we said that valid IP address for the network we just built are from `10.1.1.0` through `10.1.1.254`. In this case you're pinging an IP address that is outside this range and so you're going to get a different error message:
 
 ```bash
 root@client:/# ping -c 5 100.100.100.100
+ping: connect: Network is unreachable
 ```
 
-Notice that there is one major difference in the output of the `tcpdump` command on the `server` machine between this exercise and the first exercise. Can you find it?
+The error message here `Network is unreachable`. Since our machines only know about the `10.1.1.0/24` network, `ping` doesn't even attempt to send a message to this address. You may notice, in fact, that the output of `tcpdump` on the `server` machine does **not** include any ARP messages.
+
+In addition, notice that there is one major difference in the output of the `tcpdump` command on the `server` machine between this exercise and the first exercise. Can you find it?
 
 Take a moment and think about what this means.
 
