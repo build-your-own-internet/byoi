@@ -135,27 +135,21 @@ And, you should see some variation on the following on `server` (the packets may
 19:52:28.887926 IP 10.1.1.2 > 10.1.1.1: ICMP echo reply, id 5, seq 5, length 64
 ```
 
+### Understanding `tcpdump` and `ping` output
 
+Earlier we introduced `ping` as a simple text message between computers. Let's spend a moment to get a little more technical with how `ping` actually works. Basically, `ping` is a program that sends packets across the network using a [protocol](../glossary.md#protocol) called ICMP, which stands for Internet Control Message Protocol. `echo request` and `echo reply` are two types of ICMP message. You can read more about them [here](https://docs.netapp.com/us-en/e-series-santricity/sm-hardware/what-are-icmp-ping-responses.html) if you want to know more.
 
-#######################################
-#
-# OLD CONTENT:
-#
-#######################################
-
-
-
-### Understanding tcpdump and ping output
-
-From `client`, we see some ping output like this:
+`ping` starts by sending an "Echo Request" message to the destination machine. If that machine receives a response ("Echo reply") back, then we see a line of output from the `ping` command which gives some useful information about that interaction. That output will look something like what we saw above, for example:
 
 ```bash
 64 bytes from 10.1.1.2: icmp_seq=3 ttl=64 time=0.240 ms
 ```
 
-Basically, all you need to know about this is that `ping` is a program that sends packets across the network using a protocol called ICMP, which stands for Internet Control Message Protocol. `echo request` and `echo reply` are two types of ICMP message. You can read more about them [here](https://docs.netapp.com/us-en/e-series-santricity/sm-hardware/what-are-icmp-ping-responses.html) if you want to know more. What we see here in this ping message is that it has both sent a packet to the destination (echo request), and the destination has replied (echo reply). The `icmp_seq=3` designation marks each individual request/response pair. If the ping did not go through, you might see various error messages, but the most common is that the `ping` command replies with `Request timeout for icmp_seq 0` type messages.
+The `icmp_seq` designation marks each individual request/response pair. `time` tells us exactly how much time elapsed between sending and receiving the response (in this case, less than a millisecond). The `ttl` value is something that gets involved when we start investigating large networks which we will come back to in a future chapter.
 
-`server`'s tcpdump has much more going on. First, we see a series of messages that have `ARP` in them.
+If the `ping` did **not** go through, you might see various error messages, but the most common is that the `ping` command errors out with `Request timeout for icmp_seq 0` type messages. 
+
+On the other side of the connection, `server`'s `tcpdump` has much more going on! First, we see a series of messages that have `ARP` in them:
 
 ```bash
 19:52:30.295932 ARP, Request who-has 10.1.1.2 tell 10.1.1.1, length 28
@@ -164,81 +158,84 @@ Basically, all you need to know about this is that `ping` is a program that send
 19:52:30.297112 ARP, Reply 10.1.1.2 is-at 02:42:ac:16:00:03, length 28
 ```
 
-ARP, which stands for Address Resolution Protocol,  is a protocol that allows a machine that is connected locally on one network to talk to another machine that is also connected to that same network (as opposed to a machine that wants to communicate over multiple networks). To learn more about ARP, checkout the [prefixes and subnet masks appendix][appendix prefixes].
+ARP, which stands for Address Resolution Protocol, allows two machines on the same network to know where to send messages to each other. ARP is a way for a computer to find the physical location of another device on the same network when it only knows its IP address. It does this by asking, “Who has this IP?” and the device with that address replies with its location. Without ARP, devices couldn’t actually deliver data to each other on a local network even if they knew each other’s IP addresses.
 
-After seeing the ARP packets go back and forth (which establish the ability for those two containers to talk to each other on the local network), we see the ICMP echo-request and echo-reply packets go back and forth in our `tcpdump` output.
+To learn more about ARP, check out the [prefixes and subnet masks appendix][appendix prefixes].
+
+After seeing the ARP packets go back and forth, we next see the ICMP `echo request` and `echo reply` packets go back and forth in our `tcpdump` output:
 
 ```bash
 19:52:24.811978 IP 10.1.1.2 > 10.1.1.1: ICMP echo request, id 5, seq 1, length 64
 19:52:24.812031 IP 10.1.1.1 > 10.1.1.2: ICMP echo reply, id 5, seq 1, length 64
 ```
 
-## Clean up those containers
+## Closing
 
-In a moment, we're going to look at how we can automate setting up our internet. But before we do that, let's tear down what we already created. We don't want to end up with accidental conflicts on our system!
+We did it! We got two machines to talk to each other! Here are the basic concepts we learned:
 
-If you already know how to do this, please follow your own path. If you don't though, here's what we recommend for computers that aren't using docker regularly for work.
+1. What IP addresses and network addresses are for
+2. How to configure IP addressing for two machines on the same network
+3. What ARP does
+4. How `ping` works
+5. How to use `tcpdump`
 
-First, kill all the containers. We can find the container ID on your system with the following command:
+At this point, if you had two machines at home with an ethernet cable connecting them, you should be able to use these tools to get them to establish basic network communications with each other. 
 
-```bash
-docker container ls
-```
+## Exercises
 
-Grab the container ID for each container and run:
+Now that you know how this works, let's struggle through some similar activities and see if you can interpret what is happening in each case.
 
-```bash
-docker container kill <container_id>
-```
+### Ping `10.1.1.12`
 
-Next, kill all the networks:
-
-```bash
-docker network prune
-```
-
-Finally, sweep the system to clear out any lingering images:
+From the `client` machine, run:
 
 ```bash
-docker system prune
+root@client:/# ping -c 5 10.1.1.12
 ```
 
-With that done, we're back to our regularly scheduled content.
+What do you see in the output from this command? What do you see in the output from the `tcpdump` command that is running on `server`?
 
-## Automate that shit
+Take a moment and think about what might be happening here. It's okay if you don't understand yet.
 
-At this point, there are a whole bunch of manual steps to get all this going.  Now that we have proven to ourselves that we know how to do this all manually, let's automate it! We have more containers to bring up and networks to build, and doing that all by hand will be a lot of toil.
+### Add another IP address on the same subnet to one of the machines and try pinging that
 
-Make sure you're currently in the directory for this chapter. We are going to use the `docker-compose` command which uses the [docker-compose.yml](docker-compose.yml) file in this directory to build, configure, and start our two containers on our network. If you check that file, you'll see that we're creating:
+In this chapter you learned how to set a new ethernet interface on a machine. Go back and review the commands for this chapter. 
 
-- 1 network
-  - ten-one-net (`10.1.1.0/24`)
-- 2 services, each with an interface on ten-one-net
-  - client (`10.1.1.1`)
-  - server (`10.1.1.2`)
-
-To use this magical file to automate building out machines on our network, use the following command:
+Let's add the IP address that was failing on the previous exercise to the `server` machine.
 
 ```bash
-docker-compose up -d
+root@server:/# ip addr add 10.1.1.12/24 dev eth0
 ```
 
-The `-d` flag tells docker compose that you want to continue using your terminal. When you're done with this session, you'll want to run `docker compose down` in the same directory as the [docker-compose.yml](docker-compose.yml) file.
+Now if you run the `ping` command from the previous exercise, you should see a successful response!
 
-Now you can repeat the tests we did above by connecting to each container (this time with commands `docker exec -it build-your-own-internet-001-client /bin/bash` and `docker exec -it build-your-own-internet-001-server /bin/bash`) and run the same `tcpdump` and `ping` commands as earlier with the same results.
+### Pinging `100.100.100.100` from `client`
 
-## Aside: Troubleshooting
-
-### Cannot edit IP addresses?
-
-tl;dr We initially could not edit our IP addresses for the containers within the network:
+This is very similar to the first exercise, except this time you're pinging a much different IP address:
 
 ```bash
-/ # ip addr add 10.1.1.1/24 dev eth1
-ip: RTNETLINK answers: Operation not permitted
+root@client:/# ping -c 5 100.100.100.100
 ```
 
-The solution for the problem was adding the permission `--cap-add=NET_ADMIN` when running `docker run` to get docker to allow us to be able to edit them.
+Notice that there is one major difference in the output of the `tcpdump` command on the `server` machine between this exercise and the first exercise. Can you find it?
+
+Take a moment and think about what this means.
+
+### Add `100.100.100.100` to the `server` machine
+
+Okay, we've been successful in solving this problem in the past, let's try to fix this the same way we did before. Let's just add `100.100.100.100` to the `server` machine:
+
+```bash
+root@server:/# ip addr add 100.100.100.100/24 dev eth0
+```
+
+And try pinging `100.100.100.100` from `client`. You will find that it still does not work.
+
+Why is that?
+
+Well, if you noticed in the previous exercise, the missing output from the `tcpdump` command was that the `server` machine **no longer saw ARP requests**. That is because 
+
+## Troubleshooting
 
 <!-- Links, reference style, inside docset -->
 
