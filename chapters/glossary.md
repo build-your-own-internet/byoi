@@ -32,6 +32,7 @@ You might run into terms that you don't know the definition to. Sometimes they a
   - [static routes](#static-routes)
   - [TCP (Transmission Control Protocol)](#tcp-transmission-control-protocol)
   - [UDP (User Datagram Protocol)](#udp-user-datagram-protocol)
+    - [Virtual Machine](#virtual-machine)
 
 ## client
 
@@ -77,7 +78,7 @@ A "host" is a machine that does not route packets. There are two sub-types of ho
 
 ## interface
 
-An `interface` (or, more properly said, `network interface`) is (typically) an ethernet port on a machine which allows it to send packets on an ethernet network. In a Docker environment, this interface is virtual, and not physical. Outside of docker, this interface will be connected to a physical wire or radio (WiFi) signal. In more exotic networking environments (such as a data-center), you may even see network interfaces other than Ethernet. Also, it's possible for a machine to have more than one interface, but that's uncommon (and typical only of routers).
+An `interface` (or, more properly said, `network interface`) is (typically) an ethernet port on a machine which allows it to send packets on an ethernet network. In these exercises, this interface is virtual, and not physical. On a real computer, this interface will be connected to a physical wire or radio (WiFi) signal. In more exotic networking environments (such as a data-center), you may even see network interfaces other than Ethernet.
 
 ## internet (or internetwork)
 
@@ -187,3 +188,9 @@ A "static" route is a hard-coded entry into a routing table. There is no softwar
 ## TCP (Transmission Control Protocol)
 
 ## UDP (User Datagram Protocol)
+
+### Virtual Machine
+
+A virtual machine is like a computer inside your computer. It behaves just like a real machine — it has its own operating system, memory, CPU, and disk — but it’s created and run by software, not hardware.
+
+You can think of it like this: Your laptop (the host) is a building, and each virtual machine is a small apartment inside that building — with its own furniture, kitchen, and bathroom. They share the same building but live independently.

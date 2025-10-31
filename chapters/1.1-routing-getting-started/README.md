@@ -1,159 +1,88 @@
 # Getting Started
 
+What needs to happen for two machines to communicate? First, the machines need some medium to transmit their messages over. This will usually be a cable or wire. Think about the cable connected to your modem. That cable runs between your house and some entrypoint into your Internet Service Provider. Once the cable is set up, the machines will then need to know how to send messages to each other. When two or more machines can communicate directly with each other, they are on what we call a 'network'. 
+
 ## Goals for this section
 
-We want to build a simple network where two machines can ping each other. To keep this simple and remote pairing friendly, we want to use docker containers to simulate machines on this network. We will use some simple common networking tools to understand the shape of our network and how and when successful communication is occurring.
+We want to build a simple network where two machines can communicate with each other. We'll start by setting up these two machines with a wire connecting them, but they don't know how to talk to each other yet. Next, we'll teach them how they can communicate across that wire! This will establish our network for these two machines!
 
-Here's what we expect our network to look like by the end of this chapter:
+Speaking in networking jargon, what you're going to learn how to do is be a "Network Administrator™" on a simple local-area network. This jargon boils down to: "can you get two or more machines on a single network to talk to each other?" With that in mind, let's get administrating!
+
+## Understanding the Network
+
+We want to introduce a diagram of what this network will look like by the end of this chapter. Here's what we expect our network to look like by the end of this chapter:
 
 [![Basic Network Map][basic network map]][basic network map]
 
-In this diagram, there are 2 machines, `client` and `server`, who are a single network, `10.1.1.0/24`. That network can be understood as: all IP addresses in the range from `10.1.1.0` through `10.1.1.255`. Any machine on that network will have an IP address that is within that range, so `client` has the IP address `10.1.1.3` and `server` has the IP address `10.1.1.2`.
+You may have never seen a network diagram before. That's cool, we gotchu!
 
-To understand more about reading network maps, please review the [appendix on How to Read a Network Map][appendix netmap]!
-
-To understand more about network addresses, check out the [appendix entry on Prefixes and Subnet Masks][appendix prefixes]!
-
-## Running your docker container
-
-We got this magic [Dockerfile](Dockerfile) that gets everything set up! Neat! Without going into too much detail, our Dockerfile:
-
-- builds a docker image on top of the specified OS (ubuntu)
-- installs a bunch of networking software
-- copies the bash script, `start-up.sh`, from this chapter into the docker image
-
-The `start-up.sh` script at this point is just call to run the `sleep` command forever. Why? Docker containers only stay alive for as long as it takes to process whatever commands are given to it. By running `sleep` in the background, we keep the container alive so we can pop in and out of them as we please. We will add more to this script in future chapters to create the exact docker image we need for a functional internet.
-
-To start with, we want to create 2 containers. We can use the same Docker image to generate both containers. To make it easy to differentiate between the containers, we're going to name them after my cats, `client` and `server`... Because what else would you do?
-
-To do so:
-
-1. `docker build .`
-1. Grab the image ID; the jumble of letters and numbers on the last line of the output from the previous command. Assign that ID to an environment variable (i.e. `export DOCKER_IMAGE=<image_id>`)
-1. `docker run -d --cap-add=NET_ADMIN --name=server $DOCKER_IMAGE`
-1. `docker run -d --cap-add=NET_ADMIN --name=client $DOCKER_IMAGE`
-
->**📝 NOTE:**
-> What is this `--cap-add=NET_ADMIN` all about, you ask? Check the "Problem Solving" section at the bottom for more information! Also see [this Stack Overflow post on RTNETLINK and Docker][stackoverflow rtnetlink] for more details.
+In this diagram, there are 2 machines, `client` and `server`. These machines are on a single network, `10.1.1.0/24`. What do those numbers mean? If you've ever seen an IP address before, the beginning of that block might look a little familiar. This is what's called a "network address." To understand more about network addresses, check out the [appendix entry on Prefixes and Subnet Masks][appendix prefixes]. For the purposes of this chapter, it will suffice to understand that this network can have a number of machines on it, but each machine must have an IP address in the range from `10.1.1.0` through `10.1.1.254`. Looking at that diagram, we see that there's a `.1` noted next to the `client` machine. This indicates that `client` has the IP address `10.1.1.1`. Similarly, `server` has a `.2` next to it in the image, therefore, `server` has the IP address `10.1.1.2`.
 
 ## Build a Network
 
-Now that we've got some machines up and running, let's network them together! To start with, let's just verify that `client` and `server` can't already talk to each other. We can check this by running a very simple program called [`ping`][ref ping]. We can provide `ping` with an IP address and it will see if it can send a simple request to the machine at the address provided. If a machine receives the type of request `ping` sends, it will send a response back. We're expecting there to be no response when `client` tries to `ping` `server`.
+To start with, we'll need to get our `client` and `server` machines up and running. You could go out and buy hundreds of dollars of computer hardware if you want, but... we're a fan of doing this on the cheap. Instead, for each of these chapters, we'll be building our toy internets using [virtual machines][glossary virtual-machine]. So, we'll need to boot up a set of virtual machines and then connect them together with virtual wires. Fortunately, we created a script that will boot any and all machines you need for each chapter and attach the virtual cables between them. To get started, in the chapter's directory, simply run `byoi-rebuild` in your terminal:
+
+[![Terminal Showing Rebuild][terminal showing rebuild]][terminal showing rebuild]
 
 ### Check the current state
 
-Let's start by hopping onto `server`:
+Now that we've got some machines up and running, let's network them together! To start with, let's just verify that `client` and `server` can't already talk to each other. We can check this by running a very simple program called [`ping`][ref ping]. 
+
+Think of `ping` the way you might "ping" a friend in real life. It's just a text that says, "Hey! 👋" — and your friend would likely respond with something like, "What's up?". That's it! It's just two machines saying hello to each other. Much like your text-message ping, we have to give it an address. For the `ping` command, we'll give it the IP address of the other computer.
+
+To try this out, we need to get terminal sessions running on both `client` and `server` machines. 
+
+#### Starting machines and connecting to them
+
+When you start a virtual machine, like `client` and `server` in this chapter, it’s like booting up another computer *inside* your computer. To access it, you usually open a terminal (command line) and connect to that virtual computer. When you do this, your terminal session switches — you’re no longer typing commands on your **real** computer. Instead, you’re typing commands inside the virtual machine. The commands you type there will not impact your real computer.
+
+The way you can connect to the virtual machines for each of these chapters is the `hopon` command. E.G.: `hopon client`. `hopon` is a Build Your Own Internet command that we wrote to make it easy for you participate in these chapters. Running this command will result in opening an interactive terminal session on the `client` virtual machine. 
+
+So now, use two windows in your terminal and `hopon client` in one session, and `hopon server` in the other. In the `client` session, run your `ping` command to `server` using its IP address, `10.1.1.2`:
 
 ```bash
-docker exec -it server /bin/bash
-```
-
-In order for `client` to `ping` `server`, we'll need to get `server`'s IP address. Let's start by seeing what IP address configuration Docker automatically created for `server` when it created the machine. There's a very simple command with a lot of confusing output that we can run to get this: [`ip addr`][ref ip addr].
-
-``` bash
-root@3daaaf641c2d:/# ip addr
-1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
-    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-    inet 127.0.0.1/8 scope host lo
-       valid_lft forever preferred_lft forever
-858: eth0@if859: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
-    link/ether 02:42:ac:11:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
-    inet 172.17.0.2/16 brd 172.17.255.255 scope global eth0
-       valid_lft forever preferred_lft forever
-```
-
-There's a lot going on here, and we'll get more familiar with this output in future chapters. But, for now, what we're seeing is 2 network [interfaces][glossary interface] on `server`, one for loopback, `lo`, which is used in networking for routing queries back to the machine that made the initial query. The other interface, `eth0` shows us that `server` already has an IP address, `172.17.0.2`, on an existing network, `172.17.0.2/16`. The exact address may be different on your machine, but the principles are the same.
-
-Uh oh... Let's hopon `client` and see if that machine is on the same network:
-
-```bash
-docker exec -it client /bin/bash
-```
-
-```bash
-root@0513ee69aca0:/# ip addr
-1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
-    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
-    inet 127.0.0.1/8 scope host lo
-       valid_lft forever preferred_lft forever
-860: eth0@if861: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
-    link/ether 02:42:ac:11:00:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0
-    inet 172.17.0.3/16 brd 172.17.255.255 scope global eth0
-       valid_lft forever preferred_lft forever
-```
-
-Yup... It looks like `eth0` on `client` is defined on the `172.17.0.3/16` network. If we run a `ping` from `client` to `server` at `172.17.0.2`, we'll see that we're getting response packets:
-
-```bash
-root@0513ee69aca0:/# ping 172.17.0.2 -w 2
-PING 172.17.0.2 (172.17.0.2) 56(84) bytes of data.
-64 bytes from 172.17.0.2: icmp_seq=1 ttl=64 time=0.341 ms
-64 bytes from 172.17.0.2: icmp_seq=2 ttl=64 time=0.456 ms
-
---- 172.17.0.2 ping statistics ---
-2 packets transmitted, 2 received, 0% packet loss, time 1048ms
-rtt min/avg/max/mdev = 0.341/0.398/0.456/0.057 ms
-```
-
-Well that's not what we want! For this chapter, we want the experience of manually building out the network. Part of this is teaching the hosts on the network how to reach each other. We don't want our hosts to be able to `ping` each other without us doing the work to make that happen!
-
-### Cleanup what docker created
-
-Sooooo, it turns out, when you create a new docker container, it is automatically assigned to a default bridge network. The first thing we need to do is disconnect our containers from the default network.
-
-### Remove default IP address configuration
-
-As we just discovered, on `server`, `eth0` is associated with the IP address `172.17.0.2/16`. We want to remove this IP address so we can manually configure our network. Let's do that by using the `ip addr del` command on `server`. Remember to update the IP address to match what you see returned in your `ip addr` command:
-
-```bash
-ip addr del 172.17.0.2/16 dev eth0
-```
-
-Now, if we hop onto `client` and try to `ping` `server`, we'll see that we have 100% packet loss:
-
-```bash
-root@0513ee69aca0:/# ping 172.17.0.2 -w 2
-PING 172.17.0.2 (172.17.0.2) 56(84) bytes of data.
-
---- 172.17.0.2 ping statistics ---
-2 packets transmitted, 0 received, 100% packet loss, time 1077ms
-```
-
-To complete this, go ahead and remove the IP address configuration on `client` as well. Once you've removed the current configuration, try running your `ping` to `server` again. You should get an error message instead of packet loss:
-
-```bash
-root@0513ee69aca0:/# ping 172.17.0.2 -w 2
+$ hopon client
+root@client:/# ping 10.1.1.2
 ping: connect: Network is unreachable
 ```
 
-As the message indicates, that network is no longer available. `client` doesn't know how to send packets out to be able to have a hope of reaching that network, so instead of the packets disappearing into the ether, we get an error message indicating that the network isn't defined in any way `client` knows how to reach.
+<!-- TODO -->
 
->**📝 NOTE:**
->`ip addr` is an abbreviation for the actual command, `ip address`
-> There is a bit of a tradition within networking CLIs to allow users to abbreviate commands (cisco CLIs are famous for this), and the `ip` command carries this forward.
+Perfect! we were expecting `ping` to fail. Fortunately, we get an error message that tells us what's happening: `Network is unreachable`. This means that `client` doesn't know how to send messages to the network (e.g. `10.1.1.0/24`) that the `ping` is attempting to reach. We need to configure each machine's IP address and network.
+
+We can see the IP addresses and networks that a computer is attached to by running the [`ip address`][ref ip addr] command (`ip addr` for short):
+
+``` bash
+root@client:/# ip addr
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+11: eth0@if12: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:ac:12:00:02 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+```
+
+There's a lot going on here, and we'll get more familiar with this output in future chapters. But, for now, what we're seeing is two network [interfaces][glossary interface] on `client`: one for "loopback", `lo`, which is used when a computer wants to send messages to itself. The other interface, `eth0` shows us that `client` has an Ethernet interface with no IP address attached to it.
 
 ### Add our own IP address configuration
 
-Now that we've removed the default network docker created, let's get started creating a network of our own! Let's add IP addresses to each of these containers using the `ip addr add` command. In this example, we want to use the `10.1.1.0/24` network for these containers. `10.0.0.0/8` is one of the networks identified in [RFC 1918][RFC 1918] that is exclusively used for _private_ networking. This means that any IP packet that reaches the internet with an IP address in this range will be dropped. This is helpful in our tutorial because if our system is misconfigured to route to the Internet, we don't want a false-positive for ping tests. Therefore on `server`, we use the command
+Let's add IP addresses to each of these machines using the `ip addr add` command. In this exercise, we want to use the `10.1.1.0/24` network. Therefore on `client`, we use the command:
 
-`ip addr add 10.1.1.2/24 dev eth0`
+```bash
+root@client:/# ip addr add 10.1.1.1/24 dev eth0
+```
 
-You'll want to repeat this process on `client`, but in this case the ip address is `10.1.1.3/24`.
-
-But wait... why are we ending our addresses with `.2` and `.3`? Why aren't we starting with `.0` or `.1`??? In networking spaces, there are reserved IP addresses that can only be used for specific kinds of machines. Generally speaking, the first address in a network, in our case `10.1.1.0`, is the network address and cannot be used to identify specific machines. Similarly, the last address in a network space is reserved and cannot be used to identify specific machines.
+You'll want to repeat this process on `server`, but instead use the ip address `10.1.1.2/24`.
 
 ### Test the network connection
 
-Here, we're going to start exploring with a networking tool called [`tcpdump`][ref tcpdump]. `tcpdump` "sniffs" ethernet frames on the network interface identified in the command. What we'll end up running on `server` is:
+Next, we're going to start exploring with a networking tool called [`tcpdump`][ref tcpdump]. When computers are sending messages back and forth to each other, `tcpdump` gives us a way to inspect those messages as they pass to and from the network.
+
+What we'll end up running on `server` is:
 
 ```bash
-tcpdump -ni eth0
+root@server:/# tcpdump
 ```
-
-Let's take a quick look at the flags used in that command:
-
-- `-n`: tells that program not to try to resolve hostnames via DNS
-- `-i eth0`: tells `tcpdump` which network interface to use
 
 The initial output of this command should be:
 
@@ -161,11 +90,13 @@ The initial output of this command should be:
 tcpdump: listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 ```
 
-This command command will sit and run, waiting for network traffic to come in over the `eth0` interface. Once it sees traffic, it will print to the terminal what it's sniffing on the network. You may not see anything else until you run the `ping` from `client`.
+This command will now sit and run, waiting for network traffic to come in over the `eth0` interface. Once it sees traffic, it will print to the terminal what it's seeing on the network. You may not see anything else until you run the `ping` from `client`.
 
-Now it's time to verify that the two containers can reach each other, so let's use the `ping` command. On `client`, run:
+Now it's time to verify that the two machines can reach each other, so let's use the `ping` command. On `client`, run:
 
-`ping -c 5 10.1.1.2`
+```bash
+root@client:/# ping -c 5 10.1.1.2
+```
 
 and you should see on `client`:
 
@@ -185,126 +116,157 @@ rtt min/avg/max/mdev = 0.091/0.218/0.341/0.080 ms
 And, you should see some variation on the following on `server` (the packets may be in a different order, so you may see the ARP requests later in the dump):
 
 ```bash
-19:52:30.295932 ARP, Request who-has 10.1.1.2 tell 10.1.1.3, length 28
-19:52:30.296116 ARP, Request who-has 10.1.1.3 tell 10.1.1.2, length 28
-19:52:30.297091 ARP, Reply 10.1.1.3 is-at 02:42:ac:16:00:02, length 28
+19:52:30.295932 ARP, Request who-has 10.1.1.2 tell 10.1.1.1, length 28
+19:52:30.296116 ARP, Request who-has 10.1.1.1 tell 10.1.1.2, length 28
+19:52:30.297091 ARP, Reply 10.1.1.1 is-at 02:42:ac:16:00:02, length 28
 19:52:30.297112 ARP, Reply 10.1.1.2 is-at 02:42:ac:16:00:03, length 28
-19:52:24.811978 IP 10.1.1.3 > 10.1.1.2: ICMP echo request, id 5, seq 1, length 64
-19:52:24.812031 IP 10.1.1.2 > 10.1.1.3: ICMP echo reply, id 5, seq 1, length 64
-19:52:25.820736 IP 10.1.1.3 > 10.1.1.2: ICMP echo request, id 5, seq 2, length 64
-19:52:25.820799 IP 10.1.1.2 > 10.1.1.3: ICMP echo reply, id 5, seq 2, length 64
-19:52:26.826028 IP 10.1.1.3 > 10.1.1.2: ICMP echo request, id 5, seq 3, length 64
-19:52:26.826081 IP 10.1.1.2 > 10.1.1.3: ICMP echo reply, id 5, seq 3, length 64
-19:52:27.865467 IP 10.1.1.3 > 10.1.1.2: ICMP echo request, id 5, seq 4, length 64
-19:52:27.865502 IP 10.1.1.2 > 10.1.1.3: ICMP echo reply, id 5, seq 4, length 64
-19:52:28.887895 IP 10.1.1.3 > 10.1.1.2: ICMP echo request, id 5, seq 5, length 64
-19:52:28.887926 IP 10.1.1.2 > 10.1.1.3: ICMP echo reply, id 5, seq 5, length 64
+19:52:24.811978 IP 10.1.1.1 > 10.1.1.2: ICMP echo request, id 5, seq 1, length 64
+19:52:24.812031 IP 10.1.1.2 > 10.1.1.1: ICMP echo reply, id 5, seq 1, length 64
+19:52:25.820736 IP 10.1.1.1 > 10.1.1.2: ICMP echo request, id 5, seq 2, length 64
+19:52:25.820799 IP 10.1.1.2 > 10.1.1.1: ICMP echo reply, id 5, seq 2, length 64
+19:52:26.826028 IP 10.1.1.1 > 10.1.1.2: ICMP echo request, id 5, seq 3, length 64
+19:52:26.826081 IP 10.1.1.2 > 10.1.1.1: ICMP echo reply, id 5, seq 3, length 64
+19:52:27.865467 IP 10.1.1.1 > 10.1.1.2: ICMP echo request, id 5, seq 4, length 64
+19:52:27.865502 IP 10.1.1.2 > 10.1.1.1: ICMP echo reply, id 5, seq 4, length 64
+19:52:28.887895 IP 10.1.1.1 > 10.1.1.2: ICMP echo request, id 5, seq 5, length 64
+19:52:28.887926 IP 10.1.1.2 > 10.1.1.1: ICMP echo reply, id 5, seq 5, length 64
 ```
 
-### Understanding tcpdump and ping output
+### Understanding `tcpdump` and `ping` output
 
-From `client`, we see some ping output like this:
+`ping` starts by sending an "Echo Request" message to the destination machine. If the sending machine receives a response ("Echo reply") back, then we see a line of output from the `ping` command which gives some useful information about that interaction. That output will look something like what we saw above, for example:
 
 ```bash
 64 bytes from 10.1.1.2: icmp_seq=3 ttl=64 time=0.240 ms
 ```
 
-Basically, all you need to know about this is that `ping` is a program that sends packets across the network using a protocol called ICMP, which stands for Internet Control Message Protocol. `echo request` and `echo reply` are two types of ICMP message. You can read more about them [here](https://docs.netapp.com/us-en/e-series-santricity/sm-hardware/what-are-icmp-ping-responses.html) if you want to know more. What we see here in this ping message is that it has both sent a packet to the destination (echo request), and the destination has replied (echo reply). The `icmp_seq=3` designation marks each individual request/response pair. If the ping did not go through, you might see various error messages, but the most common is that the `ping` command replies with `Request timeout for icmp_seq 0` type messages.
+The `icmp_seq` designation marks each individual request/response pair. `time` tells us exactly how much time elapsed between sending and receiving the response (in this case, less than a millisecond). The `ttl` value is something that gets involved when we start investigating large networks which we will come back to in a future chapter.
 
-`server`'s tcpdump has much more going on. First, we see a series of messages that have `ARP` in them.
+If the `ping` did **not** go through, you might see various error messages, but the most common is that the `ping` command errors out with `Request timeout for icmp_seq 0` type messages. 
+
+On the other side of the connection, `server`'s `tcpdump` has much more going on! First, we see a series of messages that have `ARP` in them:
 
 ```bash
-19:52:30.295932 ARP, Request who-has 10.1.1.2 tell 10.1.1.3, length 28
-19:52:30.296116 ARP, Request who-has 10.1.1.3 tell 10.1.1.2, length 28
-19:52:30.297091 ARP, Reply 10.1.1.3 is-at 02:42:ac:16:00:02, length 28
+19:52:30.295932 ARP, Request who-has 10.1.1.2 tell 10.1.1.1, length 28
+19:52:30.296116 ARP, Request who-has 10.1.1.1 tell 10.1.1.2, length 28
+19:52:30.297091 ARP, Reply 10.1.1.1 is-at 02:42:ac:16:00:02, length 28
 19:52:30.297112 ARP, Reply 10.1.1.2 is-at 02:42:ac:16:00:03, length 28
 ```
 
-ARP, which stands for Address Resolution Protocol,  is a protocol that allows a machine that is connected locally on one network to talk to another machine that is also connected to that same network (as opposed to a machine that wants to communicate over multiple networks). To learn more about ARP, checkout the [prefixes and subnet masks appendix][appendix prefixes].
+ARP, which stands for Address Resolution Protocol, allows two machines on the same network to know where to send messages to each other. ARP is a way for a computer to find the physical location of another device on the same network when it only knows its IP address. It does this sending by a message to every machine on the network, and asking “Who has this IP?”. Then, if there is a device with that address, the machine that owns that IP address replies with its location. Without ARP, devices couldn’t actually deliver data to each other on a local network even if they knew each other’s IP addresses.
 
-After seeing the ARP packets go back and forth (which establish the ability for those two containers to talk to each other on the local network), we see the ICMP echo-request and echo-reply packets go back and forth in our `tcpdump` output.
+To learn more about ARP, check out the [prefixes and subnet masks appendix][appendix prefixes].
 
-```bash
-19:52:24.811978 IP 10.1.1.2 > 10.1.1.3: ICMP echo request, id 5, seq 1, length 64
-19:52:24.812031 IP 10.1.1.3 > 10.1.1.2: ICMP echo reply, id 5, seq 1, length 64
-```
-
-## Clean up those containers
-
-In a moment, we're going to look at how we can automate setting up our internet. But before we do that, let's tear down what we already created. We don't want to end up with accidental conflicts on our system!
-
-If you already know how to do this, please follow your own path. If you don't though, here's what we recommend for computers that aren't using docker regularly for work.
-
-First, kill all the containers. We can find the container ID on your system with the following command:
+After seeing the ARP packets go back and forth, we next see the ICMP `echo request` and `echo reply` packets go back and forth in our `tcpdump` output:
 
 ```bash
-docker container ls
+19:52:24.811978 IP 10.1.1.2 > 10.1.1.1: ICMP echo request, id 5, seq 1, length 64
+19:52:24.812031 IP 10.1.1.1 > 10.1.1.2: ICMP echo reply, id 5, seq 1, length 64
 ```
 
-Grab the container ID for each container and run:
+## Summary so far
+
+We did it! We got two machines to talk to each other! You've done your first task as a Network Administrator and set up a single local-area network! Here are the basic concepts we learned:
+
+1. What IP addresses and network addresses are used for
+2. How to configure IP addressing for two machines on the same local-area network
+3. How `ping` works
+4. How to use `tcpdump`
+5. What ARP does
+
+At this point, if you had two machines at home with an ethernet cable connecting them, you should be able to use these tools to get them to establish basic network communications with each other.  <!-- TODO: How do to this with hardware appendix -->
+
+## Exercises
+
+Now that you know how this works, let's struggle through some similar activities and see if you can interpret what is happening in each case. We'll walk through the answers in the next section.
+
+### Ping `10.1.1.12` from the `client` machine
+
+You might want to refresh yourself with the [network map](#understanding-the-network) real quick before doing these exercises. We're going to start by attempting to ping a new IP address, `10.1.1.12`, from the `client` machine. Do you expect that this will work? Why or why not?
+
+In the window that you have open on the `client` machine, run the following command and test your answer:
 
 ```bash
-docker container kill <container_id>
+root@client:/# ping -c 5 10.1.1.12
 ```
 
-Next, kill all the networks:
+What do you see in the output from this command? What do you think this output means?
+
+> 🚨 **JARGON ALERT**: You may not have come across the word "host" before. If that's the case, "host" is just a synonym for "another machine".
+
+Now take a look at the window that you still have open on the `server` machine. What do you see in the output from the `tcpdump` command after you ran that ping from `client`?
+
+Take a moment and think about what might be happening there. It's okay if you don't understand yet!
+
+### Add `10.1.1.12` to the `server` machine
+
+In the previous exercise, we saw a message: `From 10.1.1.1 icmp_seq=1 Destination Host Unreachable`. This indicated that our ping failed because our client machine couldn't find another machine that would respond to that IP address.
+
+Now let's go ahead and add the IP address that was failing in the previous exercise to the `server` machine. Leave your `tcpdump` session on `server` running and open a new window. In the new window, `hopon server` and issue the following command:
 
 ```bash
-docker network prune
+root@server:/# ip addr add 10.1.1.12/24 dev eth0
 ```
 
-Finally, sweep the system to clear out any lingering images:
+Try the `ping` command again from the `client` machine. Does it work now? Why or why not? On the `tcpdump` output from the server machine, did you notice anything different? Specifically, you might try paying attention to those weird ARP messages. What was different about them this time?
+
+### Understanding ARP messages
+
+Before we added the `10.1.1.12` address to `server`, you probably saw some messages like this in your `tcpdump` output:
+
+```
+19:17:32.755567 ARP, Request who-has 10.1.1.12 tell 10.1.1.1, length 28
+19:17:33.756936 ARP, Request who-has 10.1.1.12 tell 10.1.1.1, length 28
+19:17:34.784211 ARP, Request who-has 10.1.1.12 tell 10.1.1.1, length 28
+19:17:35.808529 ARP, Request who-has 10.1.1.12 tell 10.1.1.1, length 28
+19:17:36.830046 ARP, Request who-has 10.1.1.12 tell 10.1.1.1, length 28
+19:17:37.856908 ARP, Request who-has 10.1.1.12 tell 10.1.1.1, length 28
+```
+
+Remember when we introduced how ARP works? It's used to find a machine that owns an IP address by sending out messages to every machine connected to the network. This is called "broadcasting." Think of a room full of people. Whenever anyone in that room shouts, everyone else in the room can hear them. But someone standing in another room isn't able to hear those shouts. Networks function in the same way: machines can shout (or "broadcast") to one another, but any machine on a different network will never hear those shouts. Technically, a "network" is defined by all the machines that can receive a broadcast message.
+
+Now let's look back at that `tcpdump` output again. What we're seeing is an incoming (broadcast) ARP request asking, "Who is 10.1.1.12"? There are two observations we can make:
+
+1. there are repeated requests for this address, so we can assume that nobody is responding to the message
+2. since we happened to set this network up ourselves and we know all the machines connected to it, we know that there are no machines with that IP address.
+
+Once we add the IP address to `server`, we get a different story:
+
+```
+19:18:19.477837 ARP, Request who-has 10.1.1.12 tell 10.1.1.1, length 28
+19:18:19.477853 ARP, Reply 10.1.1.12 is-at 02:42:ac:12:00:03, length 28
+19:18:19.477929 IP 10.1.1.1 > 10.1.1.12: ICMP echo request, id 6, seq 1, length 64
+19:18:19.477957 IP 10.1.1.12 > 10.1.1.1: ICMP echo reply, id 6, seq 1, length 64
+```
+
+Notice that this ARP request now has a matching reply that says there **is** a machine with the `10.1.1.12` IP address.
+
+### Pinging `100.100.100.100` from `client`
+
+On the surface, this might look the same as the first exercise. But, if you recall from [Understanding the network](#understanding-the-network), we said that valid IP addresses for the network we just built are from `10.1.1.0` through `10.1.1.254`. Now you're going to be pinging an IP address that is **outside** this range and so you're going to get a different error message:
 
 ```bash
-docker system prune
+root@client:/# ping -c 5 100.100.100.100
+ping: connect: Network is unreachable
 ```
 
-With that done, we're back to our regularly scheduled content.
+The error message here is `Network is unreachable`. Since our machines only know about the `10.1.1.0/24` network, `ping` doesn't even attempt to send a message to this address. You may notice, in fact, that the output of `tcpdump` on the `server` machine does **not** include any ARP messages.
 
-## Automate that shit
+You could try adding that ip address to the `server` machine (e.g. `ip addr add 100.100.100.100/24 dev eth0`), but the `ping` messages will never be successful. 
 
-At this point, there are a whole bunch of manual steps to get all this going.  Now that we have proven to ourselves that we know how to do this all manually, let's automate it! We have more containers to bring up and networks to build, and doing that all by hand will be a lot of toil.
-
-Make sure you're currently in the directory for this chapter. We are going to use the `docker-compose` command which uses the [docker-compose.yml](docker-compose.yml) file in this directory to build, configure, and start our two containers on our network. If you check that file, you'll see that we're creating:
-
-- 1 network
-  - ten-one-net (`10.1.1.0/24`)
-- 2 services, each with an interface on ten-one-net
-  - client (`10.1.1.3`)
-  - server (`10.1.1.2`)
-
-To use this magical file to automate building out machines on our network, use the following command:
-
-```bash
-docker-compose up -d
-```
-
-The `-d` flag tells docker compose that you want to continue using your terminal. When you're done with this session, you'll want to run `docker compose down` in the same directory as the [docker-compose.yml](docker-compose.yml) file.
-
-Now you can repeat the tests we did above by connecting to each container (this time with commands `docker exec -it build-your-own-internet-001-client /bin/bash` and `docker exec -it build-your-own-internet-001-server /bin/bash`) and run the same `tcpdump` and `ping` commands as earlier with the same results.
-
-## Aside: Troubleshooting
-
-### Cannot edit IP addresses?
-
-tl;dr We initially could not edit our IP addresses for the containers within the network:
-
-```bash
-/ # ip addr add 10.1.1.3/24 dev eth1
-ip: RTNETLINK answers: Operation not permitted
-```
-
-The solution for the problem was adding the permission `--cap-add=NET_ADMIN` when running `docker run` to get docker to allow us to be able to edit them.
+Why is that? We'll get into that in the **next** chapter!
 
 <!-- Links, reference style, inside docset -->
 
 [basic network map]:        ../../img/network-maps/basic-network-map.svg
+[terminal showing rebuild]: ../../img/terminal.png
 [appendix netmap]:          ../../appendix/how-to-read-a-network-map.md
 [appendix prefixes]:        ../../appendix/prefixes-and-subnet-masks.md
 [ref ip addr]:              ../command-reference-guide.md#ip-addr
 [ref ping]:                 ../command-reference-guide.md#ping
 [ref tcpdump]:              ../command-reference-guide.md#tcpdump
 [glossary interface]:       ../glossary.md#interface
+[glossary virtual-machine]: ../glossary.md#virtual-machine
 
 <!-- Links, reference style, to external resources -->
 [ext icmp responses]:        https://docs.netapp.com/us-en/e-series-santricity/sm-hardware/what-are-icmp-ping-responses.html
