@@ -2,43 +2,17 @@
 
 ## Goals for this section
 
-In the previous chapter, we build a small network of 2 machines that could ping each other. Now, we want to build on that structure to add a second network. Once we have another network, we'll need to start building routes for machines on each network to be able to communicate with each other. This will create an internetwork, or internet. The collection of networks that communicate to and across each other on the World Wide Web is one example of an internet!
+In the previous chapter, we built a small network of two machines that could ping each other. Now, we want to build on that structure to add a second network. Once we have another network, we'll need to start building routes for machines on each network to be able to communicate with each other. This will create an **internetwork**, or internet.
 
 Here's what we expect our internet to look like by the end of this chapter:
 
 [![A Smol Internet Map][smol internet map]][smol internet map]
 
-You'll notice in this network diagram that we've built on the smol network from Chapter 1.1. Here, we've added a new network, `10.1.2.0/24`, and we've added a new machine, `router`. A [router](../glossary.md#router-aka-gateway) is a machine that has an [interface](../glossary.md#interface) on multiple networks and can forward packets across those networks. In this case, our router has an interface on both `10.1.1.0/24` and `10.1.2.0/24`.
+You'll notice in this network diagram that we've built on the smol network from Chapter 1.1. Here, we've added a **new** network, `10.1.2.0/24`, and we've added a new machine, `router`. A [router](../glossary.md#router-aka-gateway) is a machine that has an [interface](../glossary.md#interface) on multiple networks and can forward packets across those networks. In this case, our router has an interface on both `10.1.1.0/24` and `10.1.2.0/24`.
 
 Now that we've got a bit of an internet drawn out in our network diagram above, let's take a moment to really understand how to read what we're seeing there. Think of this diagram like a street map. Each line is a path we can take to get from one location to another. So, if we wanted to travel from `client` to `server`, we'd leave `client` on the `10.1.1.0/24` network until we got to `router`. `router` is a bridge between `10.1.1.0/24` and `10.1.2.0/24`, so we'd pass through `router` to get to `10.1.2.0/24`. Once there, we could find `server` and go visit that machine. We've added the IP addresses for the machines and networks to make it easier to reference and understand which machine is talking to which other machine on which network.
 
-For the setup of this chapter, we've already added all of the machines and all of the networks we need to work with to the [docker-compose.yml file for this chapter](docker-compose.yml). Take a look at that file and find where we define `router`, `server`, `client`, and each network.
-
-## Aside: Efficiencies
-
-### Scripts
-
-Before we get started, let's look at a couple scripts we added. On the root level of this repo, there's a `bin` folder. We've started adding simple scripts there to make our lives easier. Here's the scripts we've added thus far:
-
-* `hopon`: in order to jump on a container, we had to type a long-ish command `docker exec -it 002-smol-internet-router-1 /bin/bash`. This allows us to simply type `hopon router`, which we will be using for the rest of our exploration.
-* `byoi-rebuild`: in experimenting with various setups in both our `Dockerfile` and `docker-compose.yml`, we needed to cleanup the images our containers were built from regularly. Now, we can simply type `byoi-rebuild` instead of finding and removing each container.
-
-The `byoi-rebuild` script performs a check that you have the Docker management software `colima` installed and running. If you are using `docker desktop` or another Docker management software, this check will always fail for you. To make this command work, comment out line 5, `bash meets-colima-requirements` in the [byoi-rebuild script](../../bin/byoi-rebuild). Just make sure you have your Docker management software up and running whenever you're following along in these chapters!
-
-Because the scripts are dependent on a version of `docker-compose.yml` that exists in each chapter subfolder, whenever you run the scripts, make sure you are in a `chapters` subdirectory. Each chapter going forward will contain everything you need to make the scripts work.
-
-Finally, in order to make it easy to call our scripts, we need to add the scripts to our `PATH` from the root of this directory:
-
-```bash
-# Make sure to run this command in the root of this repository, or it won't work!
-export PATH="$PATH:`pwd`/bin"
-```
-
-Running an `export` in a new window means that the variable exported only lives for the life of that session. So, if you close that window or you open a new window, that variable doesn't exist. That's a bit of a pain, so, alternatively, if you don't want to have to add the path in every window you open, you can update your PATH in your terminal profile:
-
-```bash
-export PATH=$PATH:/path/to/repo/build-your-own-internet/bin
-```
+Similar to our previous chapter, we've already added all of the machines and all of the networks we need to work with. To start your internet from this chapter's directory, run `byoi-rebuild`.
 
 ### The /final folder
 
