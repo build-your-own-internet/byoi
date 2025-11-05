@@ -5,9 +5,11 @@ services:
     container_name: build-your-own-internet-001-client
     image: build-your-own-internet-001-client
     hostname: client
+    {% if final %}
     networks:
       ten-one-net:
         ipv4_address: 10.1.1.3
+    {% endif %}
     cap_add:
       - NET_ADMIN
   server:
@@ -15,12 +17,15 @@ services:
     container_name: build-your-own-internet-001-server
     image: build-your-own-internet-001-server
     hostname: server
+    {% if final %}
     networks:
       ten-one-net:
         ipv4_address: 10.1.1.2
+    {% endif %}
     cap_add:
       - NET_ADMIN
 
+{% if final %}
 networks:
   ten-one-net:
     name: build-your-own-internet-001-ten-one-net
@@ -29,3 +34,4 @@ networks:
       driver: default
       config:
         - subnet: 10.1.1.0/24
+{% endif %}
