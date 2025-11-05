@@ -1,17 +1,78 @@
-#!/bin/bash
+#!/usr/bin/env python3
+import subprocess
+import os
+import shutil
+import sys
+import argparse
+from jinja2 import Environment, FileSystemLoader
+from pathlib import Path
+    
+def render_dockerfile_from_template(filename, final: bool):
+    output_filename = filename.stem
+    print(f"Rendering {filename} to {output_filename}...")
 
-set -o errexit
+    env = Environment(
+        loader=FileSystemLoader(filename.parent),
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+    template = env.get_template(filename.name)
 
-bash $(dirname "$0")/meets-colima-requirements
-bash $(dirname "$0")/byoi-cleanup
+    dockerfile_text = template.render(
+        config_dir = "final" if final else "init"
+    )
+    with open(output_filename, "w", encoding="utf-8") as f:
+        f.write(dockerfile_text)
 
-docker_compose_exists=false
-if which docker-compose >/dev/null 2>&1; then
-    docker_compose_exists=true
-fi
-if [[ "$docker_compose_exists" == true ]]; then
-    docker-compose up --detach
-    exit 0
-fi
+def main(final: bool):
+    """
+    Rebuilds the docker environment by running pre-requisite checks,
+    cleaning up, and then starting docker compose.
+    """
+    script_dir = os.path.dirname(os.path.abspath(__file__))
 
-docker compose up --detach
+    # Run pre-requisite checks
+    meets_reqs_script = os.path.join(script_dir, "meets-colima-requirements")
+    print(f"--> Running {meets_reqs_script}...")
+    try:
+        subprocess.run(["bash", meets_reqs_script], check=True)
+    except subprocess.CalledProcessError as e:
+        sys.exit(1)
+
+    # Run cleanup
+    cleanup_script = os.path.join(script_dir, "byoi-cleanup")
+    print(f"--> Running {cleanup_script}...")
+    try:
+        subprocess.run(["bash", cleanup_script], check=True)
+    except subprocess.CalledProcessError as e:
+        sys.exit(2)
+
+    template_files = Path('.').glob('*.jinja2')
+    for filename in template_files:
+        render_dockerfile_from_template(filename, final)
+
+    # Check for docker-compose (hyphenated) vs docker compose (space)
+    command_line_arguments = ["docker", "compose", "up", "--detach"]
+    if shutil.which("docker-compose"):
+        print("--> Found 'docker-compose'. Running 'docker-compose up --detach'...")
+        command_line_arguments = ["docker-compose", "up", "--detach"]
+
+    # Run docker compose
+    try:
+        subprocess.run(command_line_arguments, check=True)
+    except subprocess.CalledProcessError as e:
+        sys.exit(3)
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Bring up the BYOI environment"
+    )
+    parser.add_argument(
+        "--final",
+        action="store_true",
+        required=False,
+        default=False,
+        help="Build the BYOI Internet™ in its final state for this chapter",
+    )
+    args = parser.parse_args()
+    main(args.final)
