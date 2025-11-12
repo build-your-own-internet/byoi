@@ -8,14 +8,14 @@ from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 from typing import Literal
 
-DEPLOYMENT_TYPES = Literal["exercise", "final", "init"]
+DeploymentType = Literal["exercise", "final", "init"]
 
 def make_shit_executable(filename: Path):
     st = os.stat(filename)
     os.chmod(filename, st.st_mode | 0o111)
     return filename
 
-def render_dockerfile_from_template(filename, deployment_type: DEPLOYMENT_TYPES):
+def render_dockerfile_from_template(filename, deployment_type: DeploymentType):
     output_filename = filename.stem
     print(f"Rendering {filename} to {output_filename}...")
 
@@ -35,7 +35,7 @@ def render_dockerfile_from_template(filename, deployment_type: DEPLOYMENT_TYPES)
     if (output_filename.endswith(".sh")):
         make_shit_executable(output_filename)
 
-def main(deployment_type: DEPLOYMENT_TYPES):
+def main(deployment_type: DeploymentType):
     """
     Rebuilds the docker environment by running pre-requisite checks,
     cleaning up, and then starting docker compose.
@@ -97,7 +97,7 @@ if __name__ == "__main__":
         parser.print_help()
         sys.exit(1)
 
-    deployment_type: DEPLOYMENT_TYPES = "init"
+    deployment_type: DeploymentType = "init"
     if args.final:
         deployment_type = "final"
     elif args.exercise:
