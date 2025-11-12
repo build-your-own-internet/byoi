@@ -1,5 +1,6 @@
 #!/bin/sh
 
+# REMOVE ALL IP ADDRESSES IN INIT VERSION
 # Get all IP addresses on eth0
 ips=$(ip -o -4 addr show dev eth0 | awk '{print $4}')
 

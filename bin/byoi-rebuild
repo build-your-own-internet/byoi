@@ -6,13 +6,16 @@ import sys
 import argparse
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
+from typing import Literal
+
+DEPLOYMENT_TYPES = Literal["exercise", "final", "init"]
 
 def make_shit_executable(filename: Path):
     st = os.stat(filename)
     os.chmod(filename, st.st_mode | 0o111)
     return filename
 
-def render_dockerfile_from_template(filename, final: bool):
+def render_dockerfile_from_template(filename, deployment_type: DEPLOYMENT_TYPES):
     output_filename = filename.stem
     print(f"Rendering {filename} to {output_filename}...")
 
@@ -24,15 +27,15 @@ def render_dockerfile_from_template(filename, final: bool):
     template = env.get_template(filename.name)
 
     dockerfile_text = template.render(
-        config_dir = "final" if final else "init",
-        final=final
+        config_dir = deployment_type,
+        final=deployment_type != "init"
     )
     with open(output_filename, "w", encoding="utf-8") as f:
         f.write(dockerfile_text)
     if (output_filename.endswith(".sh")):
         make_shit_executable(output_filename)
 
-def main(final: bool):
+def main(deployment_type: DEPLOYMENT_TYPES):
     """
     Rebuilds the docker environment by running pre-requisite checks,
     cleaning up, and then starting docker compose.
@@ -57,13 +60,13 @@ def main(final: bool):
 
     template_files = Path('.').glob('*.jinja2')
     for filename in template_files:
-        render_dockerfile_from_template(filename, final)
+        render_dockerfile_from_template(filename, deployment_type)
 
     # Check for docker-compose (hyphenated) vs docker compose (space)
-    command_line_arguments = ["docker", "compose", "up", "--detach"]
+    command_line_arguments = ["docker", "compose", "up", "--detach", "--force-recreate"]
     if shutil.which("docker-compose"):
         print("--> Found 'docker-compose'. Running 'docker-compose up --detach'...")
-        command_line_arguments = ["docker-compose", "up", "--detach"]
+        command_line_arguments = ["docker-compose", "up", "--detach", "--force-recreate"]
 
     # Run docker compose
     try:
@@ -76,6 +79,13 @@ if __name__ == "__main__":
         description="Bring up the BYOI environment"
     )
     parser.add_argument(
+        "--exercise",
+        action="store_true",
+        required=False,
+        default=False,
+        help="Build the BYOI Internet™ for the exercise in this chapter",
+    )
+    parser.add_argument(
         "--final",
         action="store_true",
         required=False,
@@ -83,4 +93,14 @@ if __name__ == "__main__":
         help="Build the BYOI Internet™ in its final state for this chapter",
     )
     args = parser.parse_args()
-    main(args.final)
+    if args.final and args.exercise:
+        parser.print_help()
+        sys.exit(1)
+
+    deployment_type: DEPLOYMENT_TYPES = "init"
+    if args.final:
+        deployment_type = "final"
+    elif args.exercise:
+        deployment_type = "exercise"
+
+    main(deployment_type)

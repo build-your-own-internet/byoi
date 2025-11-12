@@ -1,0 +1,17 @@
+version: "3.0"
+services:
+  client:
+    build: .
+    container_name: build-your-own-internet-001-client
+    image: build-your-own-internet-001-client
+    hostname: client
+    cap_add:
+      - NET_ADMIN
+  server:
+    build: .
+    container_name: build-your-own-internet-001-server
+    image: build-your-own-internet-001-server
+    hostname: server
+    cap_add:
+      - NET_ADMIN
+
