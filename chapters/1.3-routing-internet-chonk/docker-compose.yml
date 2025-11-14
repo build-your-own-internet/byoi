@@ -2,8 +2,8 @@ version: "3.0"
 services:
   server:
     build: .
-    container_name: build-your-own-internet-003-server
-    image: build-your-own-internet-003-server
+    container_name: build-your-own-internet-server
+    image: build-your-own-internet-server
     hostname: server
     networks:
       five-net:
@@ -14,8 +14,8 @@ services:
       - net.ipv4.ip_forward=0
   client:
     build: .
-    container_name: build-your-own-internet-003-client
-    image: build-your-own-internet-003-client
+    container_name: build-your-own-internet-client
+    image: build-your-own-internet-client
     hostname: client
     networks:
       one-net:
@@ -26,8 +26,8 @@ services:
       - net.ipv4.ip_forward=0
   router1:
     build: .
-    container_name: build-your-own-internet-003-router1
-    image: build-your-own-internet-003-router1
+    container_name: build-your-own-internet-router1
+    image: build-your-own-internet-router1
     hostname: router1
     networks:
       five-net:
@@ -35,7 +35,7 @@ services:
       three-net:
         ipv4_address: 3.0.1.1
       p2p-eight:
-        ipv4_address: 200.1.1.10
+        ipv4_address: 2.1.1.10
     cap_add:
       - NET_ADMIN
     sysctls:
@@ -43,8 +43,8 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   router3:
     build: .
-    container_name: build-your-own-internet-003-router3
-    image: build-your-own-internet-003-router3
+    container_name: build-your-own-internet-router3
+    image: build-your-own-internet-router3
     hostname: router3
     networks:
       three-net:
@@ -58,16 +58,16 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   router2:
     build: .
-    container_name: build-your-own-internet-003-router2
-    image: build-your-own-internet-003-router2
+    container_name: build-your-own-internet-router2
+    image: build-your-own-internet-router2
     hostname: router2
     networks:
       one-hundo-net:
         ipv4_address: 100.1.2.1
       p2p-eight:
-        ipv4_address: 200.1.1.11
+        ipv4_address: 2.1.1.11
       p2p-zero:
-        ipv4_address: 200.1.1.2
+        ipv4_address: 2.1.1.2
     cap_add:
       - NET_ADMIN
     sysctls:
@@ -75,16 +75,16 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   router4:
     build: .
-    container_name: build-your-own-internet-003-router4
-    image: build-your-own-internet-003-router4
+    container_name: build-your-own-internet-router4
+    image: build-your-own-internet-router4
     hostname: router4
     networks:
       one-hundo-net:
         ipv4_address: 100.1.4.1
       p2p-sixteen:
-        ipv4_address: 200.1.1.18
+        ipv4_address: 2.1.1.18
       p2p-zero:
-        ipv4_address: 200.1.1.3
+        ipv4_address: 2.1.1.3
     cap_add:
       - NET_ADMIN
     sysctls:
@@ -92,14 +92,14 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   router5:
     build: .
-    container_name: build-your-own-internet-003-router5
-    image: build-your-own-internet-003-router5
+    container_name: build-your-own-internet-router5
+    image: build-your-own-internet-router5
     hostname: router5
     networks:
       one-hundo-net:
         ipv4_address: 100.1.5.1
       p2p-sixteen:
-        ipv4_address: 200.1.1.19
+        ipv4_address: 2.1.1.19
       one-net:
         ipv4_address: 1.0.5.1
     cap_add:
@@ -110,7 +110,7 @@ services:
 
 networks:
   five-net:
-    name: build-your-own-internet-003-five-net
+    name: build-your-own-internet-five-net
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
@@ -119,7 +119,7 @@ networks:
       config:
         - subnet: 5.0.0.0/8
   three-net:
-    name: build-your-own-internet-003-three-net
+    name: build-your-own-internet-three-net
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
@@ -128,7 +128,7 @@ networks:
       config:
         - subnet: 3.0.0.0/8
   one-net:
-    name: build-your-own-internet-003-one-net
+    name: build-your-own-internet-one-net
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
@@ -137,7 +137,7 @@ networks:
       config:
         - subnet: 1.0.0.0/8
   one-hundo-net:
-    name: build-your-own-internet-003-one-hundo-net
+    name: build-your-own-internet-one-hundo-net
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
@@ -146,29 +146,29 @@ networks:
       config:
         - subnet: 100.1.0.0/16
   p2p-eight:
-    name: build-your-own-internet-003-p2p-eight
+    name: build-your-own-internet-p2p-eight
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
-        - subnet: 200.1.1.8/29
+        - subnet: 2.1.1.8/29
   p2p-zero:
-    name: build-your-own-internet-003-p2p-zero
+    name: build-your-own-internet-p2p-zero
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
-        - subnet: 200.1.1.0/29
+        - subnet: 2.1.1.0/29
   p2p-sixteen:
-    name: build-your-own-internet-003-p2p-sixteen
+    name: build-your-own-internet-p2p-sixteen
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
-        - subnet: 200.1.1.16/29
+        - subnet: 2.1.1.16/29

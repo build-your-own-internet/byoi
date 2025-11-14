@@ -18,10 +18,10 @@ RUN apt-get update && apt-get install -y \
 
 RUN mkdir -p /etc/unbound
 
-COPY ./init/resolvers /init
-COPY init/resolvers/unbound.conf /etc/unbound/unbound.conf
-COPY init/resolvers/root.hints /etc/unbound/root.hints
-COPY init/resolvers/resolver-start-up.sh /resolver-start-up.sh
+COPY ./{{ config_dir }}/resolvers /init
+COPY {{ config_dir }}/resolvers/unbound.conf /etc/unbound/unbound.conf
+COPY {{ config_dir }}/resolvers/root.hints /etc/unbound/root.hints
+COPY {{ config_dir }}/resolvers/resolver-start-up.sh /resolver-start-up.sh
 COPY ./init/vimrc /vimrc
 
 EXPOSE 53/tcp

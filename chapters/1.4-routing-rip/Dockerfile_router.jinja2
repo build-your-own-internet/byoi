@@ -13,12 +13,16 @@ RUN apt-get update && apt-get install -y iproute2 \
     nano \
     busybox \
     curl \
-    links 
+    links \
+    procps \
+    bird-bgp
 
-RUN apt-get install -y procps
+COPY ./{{ config_dir }}/router-start-up.sh /router-start-up.sh
+{% if config_dir == "final" %}
+COPY ./final/bird.conf /bird.conf
+{% endif %}
 
-COPY ./final/host-start-up.sh /host-start-up.sh
 RUN mkdir -p /etc/vim
 COPY ./init/vimrc /etc/vim/vimrc.local
 
-CMD ["/host-start-up.sh"]
+CMD ["/router-start-up.sh"]

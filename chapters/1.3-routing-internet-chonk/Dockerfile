@@ -11,6 +11,6 @@ RUN apt-get update && apt-get install -y iproute2 \
     mtr \
     iptables
 
-COPY ./final/start-up.sh /start-up.sh
+COPY ./exercise/start-up.sh /start-up.sh
 
 CMD ["/start-up.sh"]

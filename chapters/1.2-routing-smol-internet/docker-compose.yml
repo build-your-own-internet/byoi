@@ -2,7 +2,7 @@ version: "3.0"
 services:
   router:
     build: .
-    container_name: build-your-own-internet-001-router
+    container_name: build-your-own-internet-router
     image: "build-your-own-internet-host"
     hostname: router
     networks:
@@ -17,7 +17,7 @@ services:
   client:
     build: .
     image: "build-your-own-internet-host"
-    container_name: build-your-own-internet-001-client
+    container_name: build-your-own-internet-client
     hostname: client
     networks:
       ten-one-net:
@@ -30,7 +30,7 @@ services:
   server:
     build: .
     image: "build-your-own-internet-host"
-    container_name: build-your-own-internet-001-server
+    container_name: build-your-own-internet-server
     hostname: server
     networks:
       ten-two-net:

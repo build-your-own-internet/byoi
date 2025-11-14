@@ -12,6 +12,7 @@ services:
       - NET_ADMIN
     sysctls:
       - net.ipv4.ip_forward=0
+{% if config_dir == "final" %}
     extra_hosts:
       host-b: 5.0.0.102
       host-c: 6.0.0.103
@@ -19,6 +20,7 @@ services:
       host-e: 8.0.0.105
       host-f: 6.0.0.106
       host-g: 2.0.0.107
+{% endif %}
   host-b:
     container_name: "build-your-own-internet-host-b"
     build: .
@@ -31,6 +33,7 @@ services:
       - NET_ADMIN
     sysctls:
       - net.ipv4.ip_forward=0
+{% if config_dir == "final" %}
     extra_hosts:
       host-a: 1.0.0.101
       host-c: 6.0.0.103
@@ -38,6 +41,7 @@ services:
       host-e: 8.0.0.105
       host-f: 6.0.0.106
       host-g: 2.0.0.107
+{% endif %}
   host-c:
     container_name: "build-your-own-internet-host-c"
     build: .
@@ -50,6 +54,7 @@ services:
       - NET_ADMIN
     sysctls:
       - net.ipv4.ip_forward=0
+{% if config_dir == "final" %}
     extra_hosts:
       host-a: 1.0.0.101
       host-b: 5.0.0.102
@@ -57,6 +62,7 @@ services:
       host-e: 8.0.0.105
       host-f: 6.0.0.106
       host-g: 2.0.0.107
+{% endif %}
   host-d:
     container_name: "build-your-own-internet-host-d"
     build: .
@@ -69,6 +75,7 @@ services:
       - NET_ADMIN
     sysctls:
       - net.ipv4.ip_forward=0
+{% if config_dir == "final" %}
     extra_hosts:
       host-a: 1.0.0.101
       host-b: 5.0.0.102
@@ -76,6 +83,7 @@ services:
       host-e: 8.0.0.105
       host-f: 6.0.0.106
       host-g: 2.0.0.107
+{% endif %}
   host-e:
     container_name: "build-your-own-internet-host-e"
     build: .
@@ -88,6 +96,7 @@ services:
       - NET_ADMIN
     sysctls:
       - net.ipv4.ip_forward=0
+{% if config_dir == "final" %}
     extra_hosts:
       host-a: 1.0.0.101
       host-b: 5.0.0.102
@@ -95,6 +104,7 @@ services:
       host-d: 7.0.0.104
       host-f: 6.0.0.106
       host-g: 2.0.0.107
+{% endif %}
   host-f:
     container_name: "build-your-own-internet-host-f"
     build: .
@@ -107,6 +117,7 @@ services:
       - NET_ADMIN
     sysctls:
       - net.ipv4.ip_forward=0
+{% if config_dir == "final" %}
     extra_hosts:
       host-a: 1.0.0.101
       host-b: 5.0.0.102
@@ -114,6 +125,7 @@ services:
       host-d: 7.0.0.104
       host-e: 8.0.0.105
       host-g: 2.0.0.107
+{% endif %}
   host-g:
     container_name: "build-your-own-internet-host-g"
     build: .
@@ -126,6 +138,7 @@ services:
       - NET_ADMIN
     sysctls:
       - net.ipv4.ip_forward=0
+{% if config_dir == "final" %}
     extra_hosts:
       host-a: 1.0.0.101
       host-b: 5.0.0.102
@@ -133,6 +146,7 @@ services:
       host-d: 7.0.0.104
       host-e: 8.0.0.105
       host-f: 6.0.0.106
+{% endif %}
 
   router-1:
     container_name: "build-your-own-internet-router-1"
