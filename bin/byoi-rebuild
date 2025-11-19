@@ -16,7 +16,8 @@ def make_shit_executable(filename: Path):
     return filename
 
 def render_dockerfile_from_template(filename, config_dir: ConfigDir):
-    output_filename = filename.stem
+    # Write the file back to where it came from
+    output_filename = os.path.join(filename.parent, filename.stem)
     print(f"Rendering {filename} to {output_filename}...")
 
     env = Environment(
@@ -57,8 +58,10 @@ def main(config_dir: ConfigDir):
     except subprocess.CalledProcessError as e:
         sys.exit(2)
 
-    template_files = Path('.').glob('*.jinja2')
-    for filename in template_files:
+    # Modify template files in root dir and init dir
+    for filename in Path('.').glob('*.jinja2'):
+        render_dockerfile_from_template(filename, config_dir)
+    for filename in Path('./init').glob('*.jinja2'):
         render_dockerfile_from_template(filename, config_dir)
 
     # Check for docker-compose (hyphenated) vs docker compose (space)

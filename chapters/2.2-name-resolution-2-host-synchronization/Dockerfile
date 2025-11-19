@@ -13,9 +13,8 @@ RUN apt-get update && apt-get install -y iproute2 \
     nano \
     busybox \
     curl \
-    links
-
-RUN apt-get install -y avahi-utils pimd
+    links \
+    avahi-utils
 
 COPY www /home/www
 COPY /init/ /init

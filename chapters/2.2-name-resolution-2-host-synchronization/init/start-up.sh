@@ -19,7 +19,7 @@ case $HOSTNAME in
     ip route add default via 8.0.5.1 
     ;;
   (host-f) 
-    ip route add default via 4.0.3.1 
+    ip route add default via 6.0.3.1 
     ;;
   (host-g) 
     ip route add default via 2.0.6.1 
@@ -65,17 +65,18 @@ cp /init/resolv.conf /etc/resolv.conf
 
 # use our special avahi-daemon configs that turns off enable-dbus... whatever that does.
 mv /init/avahi-daemon.conf /etc/avahi/avahi-daemon.conf
+
 rm -rf /init
 
-if [[ $(hostname) =~ host.* ]]; then  
+if [[ $(hostname) =~ host.* ]]; then
   avahi-daemon --daemonize
 
   # copy in all the image files for each specific host
   cp -a /home/www/$(hostname) /var/www
   rm -rf /home/www
-  
   # start an http server on each host
   /usr/bin/busybox httpd -h /var/www -f
 else
+  avahi-daemon --daemonize
   /bin/sleep infinity
 fi
