@@ -125,9 +125,6 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
-      - net.ipv4.conf.eth2.rp_filter=0
   router-2:
     container_name: "build-your-own-internet-router-2"
     build: .
@@ -146,9 +143,6 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
-      - net.ipv4.conf.eth2.rp_filter=0
   router-3:
     container_name: "build-your-own-internet-router-3"
     build: .
@@ -165,8 +159,6 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
   router-4:
     container_name: "build-your-own-internet-router-4"
     build: .
@@ -185,9 +177,6 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
-      - net.ipv4.conf.eth2.rp_filter=0
   router-5:
     container_name: "build-your-own-internet-router-5"
     build: .
@@ -206,9 +195,6 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
-      - net.ipv4.conf.eth2.rp_filter=0
   router-6:
     container_name: "build-your-own-internet-router-6"
     build: .
@@ -225,8 +211,6 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-      - net.ipv4.conf.eth0.rp_filter=0
-      - net.ipv4.conf.eth1.rp_filter=0
 
 networks:
   one-net:

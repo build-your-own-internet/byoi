@@ -1,0 +1,8 @@
+host-a.byoi.net
+host-b.byoi.net
+host-c.byoi.net
+host-d.byoi.net
+host-e.byoi.net
+host-f.byoi.net
+host-dns.byoi.net
+

@@ -15,8 +15,13 @@ RUN apt-get update && apt-get install -y iproute2 \
     curl \
     links
 
-COPY /{{ config_dir }}/ /init
-COPY ./{{ config_dir }}/dns-start-up.sh /dns-start-up.sh
+{% if config_dir == "final" %}
+COPY ./final/knot.conf /config/knot.conf
+COPY ./final/byoi.net.zone /etc/knot/byoi.net.zone
+{% endif %}
+
+COPY ./resolv.conf /resolv.conf
+COPY ./dns-start-up.sh /dns-start-up.sh
 
 
 CMD ["/dns-start-up.sh"]
