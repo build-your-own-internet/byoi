@@ -1310,22 +1310,22 @@ Dear lord... `resolver-c` just wants to know everything abou the internet. Each 
 Now that we've gone through reading the basic `tcpdump` output, we encourage the reader to go back through this exercise again, this time running `tcpdump -nvv` to get the verbose output. See if you can read what's happening with each request when you get even more information!
 
 <!-- Links, reference style, inside docset -->
-[largenet DNS infra]:        ../img/network-maps/name-resolution/recursive-dns.svg
+[largenet DNS infra]:        ../../img/network-maps/name-resolution/recursive-dns.svg
                              "large internet with DNS infrastructure"
 
-[largenet DNS infra client]: ../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-1.svg
+[largenet DNS infra client]: ../../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-1.svg
                              "large internet with DNS infrastructure with a pointer to the client machine"
 
-[largenet DNS infra client-recursive]: ../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-2.svg
+[largenet DNS infra client-recursive]: ../../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-2.svg
                                        "large internet with DNS infrastructure with the path between the client machine and the recursive resolver highlighted"
 
-[largenet DNS infra recursive-root]:   ../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-3.svg
+[largenet DNS infra recursive-root]:   ../../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-3.svg
                                        "large internet with DNS infrastructure with the path between the recursive resolver and the root DNS servers highlighted"
 
-[largenet DNS infra recursive-comtld]: ../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-4.svg
+[largenet DNS infra recursive-comtld]: ../../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-4.svg
                                        "large internet with DNS infrastructure with the path between the recursive resolver and the COM TLD server highlighted"
 
-[largenet DNS infra recursive-auth]:   ../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-5.svg
+[largenet DNS infra recursive-auth]:   ../../img/network-maps/name-resolution/recursive-dns-explanation/simplified-dns-map-5.svg
                                        "large internet with DNS infrastructure with the path between the recursive resolver and the Authoritative DNS server highlighted"
 
 [netmap large internetwork]:           ../../img/network-maps/name-resolution/recursive-dns.svg

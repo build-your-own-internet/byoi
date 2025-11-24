@@ -19,10 +19,10 @@ RUN chown root:unbound /etc/unbound
 
 RUN mkdir -p /etc/unbound
 
-COPY ./{{ config_dir }}/resolvers /init
-COPY {{ config_dir }}/resolvers/unbound.conf /etc/unbound/unbound.conf
-COPY {{ config_dir }}/resolvers/root.hints /etc/unbound/root.hints
-COPY {{ config_dir }}/resolvers/resolver-start-up.sh /resolver-start-up.sh
+COPY ./final/resolvers /init
+COPY final/resolvers/unbound.conf /etc/unbound/unbound.conf
+COPY final/resolvers/root.hints /etc/unbound/root.hints
+COPY final/resolvers/resolver-start-up.sh /resolver-start-up.sh
 COPY ./init/vimrc /vimrc
 
 EXPOSE 53/tcp
