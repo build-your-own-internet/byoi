@@ -1,0 +1,4 @@
+dns-start-up.sh
+Dockerfile_dns
+Dockerfile
+resolv.conf
