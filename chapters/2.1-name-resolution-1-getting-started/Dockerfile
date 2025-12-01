@@ -6,5 +6,7 @@ RUN apt-get install -y busybox curl links
 COPY ./init /init
 COPY ./init/start-up.sh /start-up.sh
 COPY www /home/www
+RUN mkdir -p /etc/vim
+COPY .vimrc /etc/vim/vimrc.local
 
 CMD ["/start-up.sh"]

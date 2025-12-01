@@ -23,6 +23,6 @@ COPY ./final/bird.conf /bird.conf
 {% endif %}
 
 RUN mkdir -p /etc/vim
-COPY ./init/vimrc /etc/vim/vimrc.local
+COPY .vimrc /etc/vim/vimrc.local
 
 CMD ["/router-start-up.sh"]

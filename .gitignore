@@ -73,3 +73,6 @@ storybook-static
 
 # Ansible
 future/ansible-setup/setup-ansible.sh
+
+# common resources
+.vimrc

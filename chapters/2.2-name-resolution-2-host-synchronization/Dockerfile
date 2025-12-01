@@ -19,5 +19,7 @@ RUN apt-get update && apt-get install -y iproute2 \
 COPY www /home/www
 COPY /init/ /init
 COPY ./init/start-up.sh /start-up.sh
+RUN mkdir -p /etc/vim
+COPY .vimrc /etc/vim/vimrc.local
 
 CMD ["/start-up.sh"]

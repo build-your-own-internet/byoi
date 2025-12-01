@@ -26,6 +26,8 @@ function ding() {
   fi
 }
 
+# NOTE: this function is unused. We should revisit this at some point
+# so that we are not using "ping" to check for name-resolution.
 # dost is docker host because ping most likely is already installed locally
 function dost() {
   local source="build-your-own-internet-$1"

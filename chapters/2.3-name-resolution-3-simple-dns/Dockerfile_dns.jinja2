@@ -22,6 +22,8 @@ COPY ./final/byoi.net.zone /etc/knot/byoi.net.zone
 
 COPY ./resolv.conf /resolv.conf
 COPY ./dns-start-up.sh /dns-start-up.sh
+RUN mkdir -p /etc/vim
+COPY .vimrc /etc/vim/vimrc.local
 
 
 CMD ["/dns-start-up.sh"]

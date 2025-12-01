@@ -23,7 +23,8 @@ COPY ./{{ config_dir }}/resolvers /init
 COPY {{ config_dir }}/resolvers/unbound.conf /etc/unbound/unbound.conf
 COPY {{ config_dir }}/resolvers/root.hints /etc/unbound/root.hints
 COPY {{ config_dir }}/resolvers/resolver-start-up.sh /resolver-start-up.sh
-COPY ./init/vimrc /vimrc
+RUN mkdir -p /etc/vim
+COPY .vimrc /etc/vim/vimrc.local
 
 EXPOSE 53/tcp
 EXPOSE 53/udp

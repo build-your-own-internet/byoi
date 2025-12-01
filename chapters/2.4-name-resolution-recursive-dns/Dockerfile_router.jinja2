@@ -19,6 +19,7 @@ RUN apt-get install -y procps
 
 COPY ./{{ config_dir }}/routers /init
 COPY ./{{ config_dir }}/routers/router-start-up.sh /router-start-up.sh
-COPY ./init/vimrc /vimrc
+RUN mkdir -p /etc/vim
+COPY .vimrc /etc/vim/vimrc.local
 
 CMD ["/router-start-up.sh"]
