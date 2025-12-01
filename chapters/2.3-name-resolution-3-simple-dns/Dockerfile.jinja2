@@ -20,5 +20,7 @@ RUN apt-get install -y procps
 COPY resolv.conf /resolv.conf
 COPY www /home/www
 COPY ./start-up.sh /start-up.sh
+RUN mkdir -p /etc/vim
+COPY .vimrc /etc/vim/vimrc.local
 
 CMD ["/start-up.sh"]
