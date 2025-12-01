@@ -38,7 +38,7 @@ set up with ssh access.
     export SSH_KEY_ID=<your-ssh-key-id>
     ```
 
-## Building the lab node
+## Building the lab node (start here if you've already set your stuff up)
 
 1. Run the `future/ansible-setup/create-droplet-for-user.sh` script with a username and password. E.G.
 
@@ -77,3 +77,20 @@ set up with ssh access.
 5. Tell the new user their username and password. Let them know that we will be destroying their internet on whatever date, so they should hop to learning!
 
 You're done!
+
+# Removing a lab node
+
+Find the droplet:
+
+```bash
+$ doctl compute droplet list --format ID,Name
+ID           Name
+533795100    build-your-own-internet-lab-funkernickel
+```
+
+look for the droplet ID associated with the user you want to remove
+
+remove it:
+```bash
+$ doctl compute droplet delete 533795100
+```

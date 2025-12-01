@@ -127,6 +127,16 @@
           - add_to_docker_group is succeeded
         fail_msg: "Adding '{{ test_user }}' to 'docker' group failed."
 
+    # TODO: TEST THIS PIP STUFF
+    - name: Install pip for python dependencies
+      apt:
+        name: python3-pip
+        state: present
+
+    - name: Install python dependencies for byoi tooling
+      pip:
+        requirements: "{{ clone_dest }}/bin/requirements.txt"
+
     - name: Ensure '/byoi/bin' is in user's PATH
       lineinfile:
         path: "/home/{{ test_user }}/.bashrc"
