@@ -56,6 +56,16 @@ done
 
 echo -n "Waiting for cloud-init to finish on the droplet (this may take a few minutes)..."
 
+while true; do
+    if (exec 3<>/dev/tcp/$IP_ADDRESS/22) >/dev/null 2>&1; then
+        exec 3>&-  # close FD
+        break
+    else
+        sleep 1
+        echo -n "."
+    fi
+done
+
 if ! ssh root@$IP_ADDRESS -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "echo hello world" >/dev/null 2>&1; then
     echo "" >&2
     echo "Error: Unable to SSH into the droplet as root." >&2
@@ -72,7 +82,7 @@ while true; do
         echo "Cloud-init has finished and the droplet is ready."
         echo "You can now SSH into the machine with:"
         echo "ssh $USERNAME@$IP_ADDRESS"
-        break
+        exit 1
     fi
     echo -n "."
     sleep 10
