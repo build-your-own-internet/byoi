@@ -56,6 +56,14 @@ done
 
 echo -n "Waiting for cloud-init to finish on the droplet (this may take a few minutes)..."
 
+if ! ssh root@$IP_ADDRESS -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "echo hello world" >/dev/null 2>&1; then
+    echo "" >&2
+    echo "Error: Unable to SSH into the droplet as root." >&2
+    echo "This could be an issue with your SSH key." >&2
+    echo "Please verify that the key associated with ID '$SSH_KEY_ID' is correct and has been added to your DigitalOcean account." >&2
+    exit 1
+fi
+
 while true; do
     # Use ssh to check for the existence of the boot-finished file.
     # The command exits with 0 on success (file exists). We suppress output for a clean UI.

@@ -40,13 +40,15 @@ set up with ssh access.
 
 ## Building the lab node (start here if you've already set your stuff up)
 
-1. Run the `future/ansible-setup/create-droplet-for-user.sh` script with a username and password. E.G.
+1. change directory into `future/ansible-setup` 
+
+2. Run the `create-droplet-for-user.sh` script in that directory with a username and password. E.G.
 
     ```bash
-    bash create-droplet-for-user.sh username password
+    $ ./create-droplet-for-user.sh username password
     ```
 
-2. Test that the test user can run BYOI commands:
+3. Test that the test user can run BYOI commands:
 
     Log into the droplet as the test user. The last line of output from the `create-droplet-for-user.sh` script will include a command to login. You will also need to accept the fingerprint. It will look something like so:
 
@@ -58,7 +60,7 @@ set up with ssh access.
     Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
     ```
 
-3. Validate that shit got setup correctly:
+4. Validate that shit got setup correctly:
 
     Now, as the user you just created, run the following command to start the BYOI lab server. First, `cd` into a chapter:
 
@@ -72,9 +74,9 @@ set up with ssh access.
     byoi-rebuild
     ```
 
-4. Update the spreadsheet that tracks current users.
+5. Update the spreadsheet that tracks current users.
 
-5. Tell the new user their username and password. Let them know that we will be destroying their internet on whatever date, so they should hop to learning!
+6. Tell the new user their username and password. Let them know that we will be destroying their internet on whatever date, so they should hop to learning!
 
 You're done!
 
