@@ -3,7 +3,7 @@ services:
   host-a:
     container_name: "build-your-own-internet-host-a"
     build: .
-    image: "build-your-own-internet-host"
+    image: "build-your-own-internet"
     hostname: host-a
     networks:
       one-net:
@@ -15,7 +15,7 @@ services:
   host-b:
     container_name: "build-your-own-internet-host-b"
     build: .
-    image: "build-your-own-internet-host"
+    image: "build-your-own-internet"
     hostname: host-b
     networks:
       five-net:
@@ -27,7 +27,7 @@ services:
   host-c:
     container_name: "build-your-own-internet-host-c"
     build: .
-    image: "build-your-own-internet-host"
+    image: "build-your-own-internet"
     hostname: host-c
     networks:
       six-net:
@@ -39,7 +39,7 @@ services:
   host-d:
     container_name: "build-your-own-internet-host-d"
     build: .
-    image: "build-your-own-internet-host"
+    image: "build-your-own-internet"
     hostname: host-d
     networks:
       seven-net:
@@ -51,7 +51,7 @@ services:
   host-e:
     container_name: "build-your-own-internet-host-e"
     build: .
-    image: "build-your-own-internet-host"
+    image: "build-your-own-internet"
     hostname: host-e
     networks:
       eight-net:
@@ -63,7 +63,7 @@ services:
   host-f:
     container_name: "build-your-own-internet-host-f"
     build: .
-    image: "build-your-own-internet-host"
+    image: "build-your-own-internet"
     hostname: host-f
     networks:
       six-net:
@@ -75,7 +75,7 @@ services:
   host-g:
     container_name: "build-your-own-internet-host-g"
     build: .
-    image: "build-your-own-internet-host"
+    image: "build-your-own-internet"
     hostname: host-g
     networks:
       two-net:
@@ -87,7 +87,7 @@ services:
   host-h:
     container_name: "build-your-own-internet-host-h"
     build: .
-    image: "build-your-own-internet-host"
+    image: "build-your-own-internet"
     hostname: host-h
     networks:
       four-net:
@@ -100,7 +100,7 @@ services:
   router-1:
     container_name: "build-your-own-internet-router-1"
     build: .
-    image: "build-your-own-internet-router"
+    image: "build-your-own-internet"
     hostname: router-1
     networks:
       one-net:
@@ -117,7 +117,7 @@ services:
   router-2:
     container_name: "build-your-own-internet-router-2"
     build: .
-    image: "build-your-own-internet-router"
+    image: "build-your-own-internet"
     hostname: router-2
     networks:
       four-net:
@@ -134,7 +134,7 @@ services:
   router-3:
     container_name: "build-your-own-internet-router-3"
     build: .
-    image: "build-your-own-internet-router"
+    image: "build-your-own-internet"
     hostname: router-3
     networks:
       four-net:
@@ -149,7 +149,7 @@ services:
   router-4:
     container_name: "build-your-own-internet-router-4"
     build: .
-    image: "build-your-own-internet-router"
+    image: "build-your-own-internet"
     hostname: router-4
     networks:
       four-net:
@@ -166,7 +166,7 @@ services:
   router-5:
     container_name: "build-your-own-internet-router-5"
     build: .
-    image: "build-your-own-internet-router"
+    image: "build-your-own-internet"
     hostname: router-5
     networks:
       three-net:
@@ -183,7 +183,7 @@ services:
   router-6:
     container_name: "build-your-own-internet-router-6"
     build: .
-    image: "build-your-own-internet-router"
+    image: "build-your-own-internet"
     hostname: router-6
     networks:
       two-net:
