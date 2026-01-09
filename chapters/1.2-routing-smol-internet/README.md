@@ -2,7 +2,7 @@
 
 ## Goals for this section
 
-In the previous chapter, we built a small network of two machines that could ping each other. Now, we want to build on that structure to add a second network. Once we have another network, we'll need to start building routes for machines on each network to be able to communicate with each other. This will create an **internetwork**, or internet.
+In the previous chapter, we built a single network of two machines that could ping each other. Now, we want to build on that structure to add a second network. Once we have another network, we'll need to start building routes for machines on each network to be able to communicate with each other. This will create an **internetwork**, or internet.
 
 Here's what we expect our internet to look like by the end of this chapter:
 
@@ -14,29 +14,22 @@ Now that we've got a bit of an internet drawn out in our network diagram above, 
 
 Similar to our previous chapter, we've already added all of the machines and all of the networks we need to work with. To start your internet from this chapter's directory, run `byoi-rebuild`.
 
-### The /final folder
-
-You'll notice that this chapter also contains a new `/final` folder. This folder contains [the start-up.sh script](./final/start-up.sh), which looks how we expect it to look by the end of the chapter.
-
-Now, onward! To the building of the internet!
-
 ## Make those networks communicate with each other
 
-How do machines communicate across networks? Well, first they need to have a router. Sure, docker has its own built in router, but we want to build our own.  What is a router, but another machine on the network. A router has 2 special properties that make it a router instead of just a regular machine on the network:
+How do machines communicate across networks? Well, first they need to have a router. What is a router, but another machine on the network. A router has 2 special properties that make it a router instead of just a regular machine on the network:
 
-* an interface on more than one network
-* the ability to forward packets that are not destined for itself to other machines
+1. an interface on more than one network
+2. the ability to forward packets that are not destined for itself to other machines
 
 ### Check our `router` configuration
 
-Let's start by re-building our containers and see how `router` is currently configured:
+Let's see how `router` is currently configured. Once you're `byoi-rebuild` is done running, `hopon` the router:
 
 ```bash
-byoi-rebuild
 hopon router
 ```
 
-Now, let's check what interfaces exist on `router`:
+Now, let's check what interfaces exist on `router` with the `ip addr` command:
 
 ```bash
 root@router:/# ip addr
@@ -64,7 +57,7 @@ root@router:/# ip route
 
 ### Can `router` `ping` `server`?
 
-BOOM! `router` has routes for both the `10.1.1.0/24` and `10.1.2.0/24` networks! Remember: `server` still only knows about `10.1.2.0/24`. So at this point, `router` knows how to reach machines on the `10.1.2.0/24` network, but `server` still doesn't know anything about the `10.1.1.0/24` network... Let's see what happens when `router` tries to `ping` `server`:
+BOOM! `router` has routes for both the `10.1.1.0/24` and `10.1.2.0/24` networks! Let's confirm this is configured correctly when `router` tries to `ping` `server`:
 
 ```bash
 root@router:/# ping 10.1.2.2 -c 2
@@ -109,45 +102,6 @@ We can see why `server` is able to respond to `router` from the first line of th
 ```
 
 Here we see the incoming `ping` or `ICMP echo request`. The source machine is `10.1.2.3`, which is `router`'s IP address on `10.1.2.0/24`! This means that the request is coming from an IP address on a network that `server` has an interface on! `server` can respond! The next line is `server`, `10.1.2.2` responding back to `router`, `10.1.2.3`, with an `ICMP echo reply`.
-
-> **What's with those ARP requests?**
-
-You may or may not see in your own session some odd looking packets identified as `ARP` in the tcpdump:
-
-```bash
-18:53:54.166970 ARP, Request who-has 10.1.2.3 tell 10.1.2.2, length 28
-18:53:54.167080 ARP, Request who-has 10.1.2.2 tell 10.1.2.3, length 28
-18:53:54.167123 ARP, Reply 10.1.2.2 is-at 02:42:0a:01:02:02, length 28
-18:53:54.167168 ARP, Reply 10.1.2.3 is-at 02:42:0a:01:02:03, length 28
-```
-
-We go over this in more detail in [ip-and-mac-addresses.md in the appendix](../../appendix/ip-and-mac-addresses.md), but let's look at a high level at what's going on here. IP addresses, like `10.1.2.3`, are used by machines for identifying where packets should be routed across an internet. So what we've been working with so far is designed to help machines communicate when there are multiple networks. HOWEVER. Within a network, machines are not identified by an IP address, but instead by a MAC address. In order for packets to be sent from one machine on a network to another machine on the same network, each machine needs to discover the MAC address that corresponds to the IP address identified in the packets. ARP, or Address Resolution Protocol, is the process by which this is done.
-
-Let's read what's happening with the `ARP` requests we see above:
-
-```bash
-18:53:54.166970 ARP, Request who-has 10.1.2.3 tell 10.1.2.2, length 28
-```
-
-A request is sent out asking the network which machine should respond to the IP address `10.1.2.3`. The request is also asking that the response to this query be sent to `10.1.2.2`.
-
-```bash
-18:53:54.167080 ARP, Request who-has 10.1.2.2 tell 10.1.2.3, length 28
-```
-
-How is the machine that responds to `10.1.2.3` supposed to know who to tell their MAC address to if they don't have the MAC address of the machine that's requesting? This is a request being sent out to discover the MAC address for `10.1.2.2`.
-
-```bash
-18:53:54.167123 ARP, Reply 10.1.2.2 is-at 02:42:0a:01:02:02, length 28
-```
-
-Here's the MAC address for `10.1.2.2`, so now the machine on `10.1.2.3` knows who to respond to, which it does in the next `Reply`:
-
-```bash
-18:53:54.167168 ARP, Reply 10.1.2.3 is-at 02:42:0a:01:02:03, length 28
-```
-
-Now back to our regularly scheduled exploration!
 
 ### Can `server` ping `router` on the `10.1.1.0/24` network?
 
@@ -305,35 +259,6 @@ But it looks like there's routing information in our `ip addr` output? What is t
 Looking at the output of `ip route`, we see a default gateway identified, `default via 10.1.2.1 dev eth0`. This default gateway is what will be used for any outgoing packets that are not on the otherwise defined routes. `ip route` shows routes on active interfaces. `ip addr` displays all available interfaces on a machine, even ones that are not currently active.
 
 `ip route` deals entirely with layer 3 information; whereas `ip addr` has information about both layer 2 and layer 3.
-
-### How does a machine know if it should forward packets?
-
-This is a linux kernel setting within the machine. You can see it like so:
-
-```bash
-root@router:/# cat /proc/sys/net/ipv4/ip_forward
-1
-```
-
-It looks like docker, by default, sets the value on every container to `1`, which means, "yeah, forward those packets!" Let's change that value to 0 and see what happens! There's a lot of permission shenanigans happening with docker...  So, in order to turn off packet forwarding on `router`, we need to change our docker-compose.yml file. docker-compose exposes `sysctls` which allows us to change default kernel settings. We have explicitly added that setting to `router` and it should currently be set to `1`. Change it to `0` to disable ip forwarding.
-
-```yml
-  router:
-    build: .
-    container_name: build-your-own-internet-001-router
-    hostname: router
-    networks:
-      ten-one-net:
-        ipv4_address: 10.1.1.3
-      ten-two-net:
-        ipv4_address: 10.1.2.3
-    cap_add:
-      - NET_ADMIN
-    sysctls:
-      - net.ipv4.ip_forward=0
-```
-
-For the sake of ensuring the rest of this chapter works as expected, we will not disable ip forwarding. HOWEVER, going forward, we are going to disable ip forwarding for any machine we do not explicitly want to be a router.
 
 ### What is happening with that `0 packets dropped by kernel` from `tcpdump` when packets were dropped?
 
