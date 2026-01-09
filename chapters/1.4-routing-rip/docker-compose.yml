@@ -18,9 +18,6 @@ services:
       - net.ipv4.ip_forward=0
   client-c2:
     container_name: "build-your-own-internet-client-c2"
-    build:
-      context: .
-      dockerfile: Dockerfile_host
     image: "build-your-own-internet-host"
     hostname: client-c2
     networks:
@@ -34,9 +31,6 @@ services:
 
   server-c1:
     container_name: "build-your-own-internet-server-c1"
-    build:
-      context: .
-      dockerfile: Dockerfile_host
     image: "build-your-own-internet-host"
     hostname: server-c1
     networks:
@@ -68,9 +62,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   router-c3:
     container_name: "build-your-own-internet-router-c3"
-    build:
-      context: .
-      dockerfile: Dockerfile_router
     image: "build-your-own-internet-router"
     hostname: router-c3
     networks:
@@ -90,9 +81,6 @@ services:
   # Zayo
   router-z5:
     container_name: "build-your-own-internet-router-z5"
-    build:
-      context: .
-      dockerfile: Dockerfile_router
     image: "build-your-own-internet-router"
     hostname: router-z5
     networks:
@@ -110,9 +98,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   router-z6:
     container_name: "build-your-own-internet-router-z6"
-    build:
-      context: .
-      dockerfile: Dockerfile_router
     image: "build-your-own-internet-router"
     hostname: router-z6
     networks:
@@ -132,9 +117,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   router-z7:
     container_name: "build-your-own-internet-router-z7"
-    build:
-      context: .
-      dockerfile: Dockerfile_router
     image: "build-your-own-internet-router"
     hostname: router-z7
     networks:
@@ -156,9 +138,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   router-z8:
     container_name: "build-your-own-internet-router-z8"
-    build:
-      context: .
-      dockerfile: Dockerfile_router
     image: "build-your-own-internet-router"
     hostname: router-z8
     networks:
@@ -180,9 +159,6 @@ services:
   # Telia
   router-t5:
     container_name: "build-your-own-internet-router-t5"
-    build:
-      context: .
-      dockerfile: Dockerfile_router
     image: "build-your-own-internet-router"
     hostname: router-t5
     networks:
@@ -202,9 +178,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   router-t6:
     container_name: "build-your-own-internet-router-t6"
-    build:
-      context: .
-      dockerfile: Dockerfile_router
     image: "build-your-own-internet-router"
     hostname: router-t6
     networks:
@@ -224,9 +197,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   router-t7:
     container_name: "build-your-own-internet-router-t7"
-    build:
-      context: .
-      dockerfile: Dockerfile_router
     image: "build-your-own-internet-router"
     hostname: router-t7
     networks:
@@ -246,9 +216,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   router-t8:
     container_name: "build-your-own-internet-router-t8"
-    build:
-      context: .
-      dockerfile: Dockerfile_router
     image: "build-your-own-internet-router"
     hostname: router-t8
     networks:
@@ -272,9 +239,6 @@ services:
   # SuperCorp
   server-s1:
     container_name: "build-your-own-internet-server-s1"
-    build:
-      context: .
-      dockerfile: Dockerfile_host
     image: "build-your-own-internet-host"
     hostname: server-s1
     networks:
@@ -287,9 +251,6 @@ services:
       - net.ipv4.ip_forward=0
   client-s2:
     container_name: "build-your-own-internet-client-s2"
-    build:
-      context: .
-      dockerfile: Dockerfile_host
     image: "build-your-own-internet-host"
     hostname: client-s2
     networks:
@@ -302,9 +263,6 @@ services:
       - net.ipv4.ip_forward=0
   server-s3:
     container_name: "build-your-own-internet-server-s3"
-    build:
-      context: .
-      dockerfile: Dockerfile_host
     image: "build-your-own-internet-host"
     hostname: server-s3
     networks:
@@ -317,9 +275,6 @@ services:
       - net.ipv4.ip_forward=0
   server-s2:
     container_name: "build-your-own-internet-server-s2"
-    build:
-      context: .
-      dockerfile: Dockerfile_host
     image: "build-your-own-internet-host"
     hostname: server-s2
     networks:
@@ -332,9 +287,6 @@ services:
       - net.ipv4.ip_forward=0
   router-s2:
     container_name: "build-your-own-internet-router-s2"
-    build:
-      context: .
-      dockerfile: Dockerfile_router
     image: "build-your-own-internet-router"
     hostname: router-s2
     networks:
@@ -352,9 +304,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   router-s3:
     container_name: "build-your-own-internet-router-s3"
-    build:
-      context: .
-      dockerfile: Dockerfile_router
     image: "build-your-own-internet-router"
     hostname: router-s3
     networks:
@@ -372,9 +321,6 @@ services:
   # ISC
   router-i2:
     container_name: "build-your-own-internet-router-i2"
-    build:
-      context: .
-      dockerfile: Dockerfile_router
     image: "build-your-own-internet-router"
     hostname: router-i2
     networks:
@@ -392,9 +338,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   server-i1:
     container_name: "build-your-own-internet-server-i1"
-    build:
-      context: .
-      dockerfile: Dockerfile_host
     image: "build-your-own-internet-host"
     hostname: server-i1
     networks:
@@ -409,9 +352,6 @@ services:
   # verisign
   router-v4:
     container_name: "build-your-own-internet-router-v4"
-    build:
-      context: .
-      dockerfile: Dockerfile_router
     image: "build-your-own-internet-router"
     hostname: router-v4
     networks:
@@ -427,9 +367,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   server-v1:
     container_name: "build-your-own-internet-server-v1"
-    build:
-      context: .
-      dockerfile: Dockerfile_host
     image: "build-your-own-internet-host"
     hostname: server-v1
     networks:
@@ -444,9 +381,6 @@ services:
   # Netnod
   router-n2:
     container_name: "build-your-own-internet-router-n2"
-    build:
-      context: .
-      dockerfile: Dockerfile_router
     image: "build-your-own-internet-router"
     hostname: router-n2
     networks:
@@ -464,9 +398,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   server-n1:
     container_name: "build-your-own-internet-server-n1"
-    build:
-      context: .
-      dockerfile: Dockerfile_host
     image: "build-your-own-internet-host"
     hostname: server-n1
     networks:
@@ -479,9 +410,6 @@ services:
       - net.ipv4.ip_forward=0
   server-n2:
     container_name: "build-your-own-internet-server-n2"
-    build:
-      context: .
-      dockerfile: Dockerfile_host
     image: "build-your-own-internet-host"
     hostname: server-n2
     networks:
@@ -496,9 +424,6 @@ services:
   # Google Cloud Services
   router-g2:
     container_name: "build-your-own-internet-router-g2"
-    build:
-      context: .
-      dockerfile: Dockerfile_router
     image: "build-your-own-internet-router"
     hostname: router-g2
     networks:
@@ -514,9 +439,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   router-g3:
     container_name: "build-your-own-internet-router-g3"
-    build:
-      context: .
-      dockerfile: Dockerfile_router
     image: "build-your-own-internet-router"
     hostname: router-g3
     networks:
@@ -532,9 +454,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   router-g4:
     container_name: "build-your-own-internet-router-g4"
-    build:
-      context: .
-      dockerfile: Dockerfile_router
     image: "build-your-own-internet-router"
     hostname: router-g4
     networks:
@@ -550,9 +469,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   server-g1:
     container_name: "build-your-own-internet-server-g1"
-    build:
-      context: .
-      dockerfile: Dockerfile_host
     image: "build-your-own-internet-host"
     hostname: server-g1
     networks:
@@ -565,9 +481,6 @@ services:
       - net.ipv4.ip_forward=0
   server-g2:
     container_name: "build-your-own-internet-server-g2"
-    build:
-      context: .
-      dockerfile: Dockerfile_host
     image: "build-your-own-internet-host"
     hostname: server-g2
     networks:
@@ -580,9 +493,6 @@ services:
       - net.ipv4.ip_forward=0
   server-g3:
     container_name: "build-your-own-internet-server-g3"
-    build:
-      context: .
-      dockerfile: Dockerfile_host
     image: "build-your-own-internet-host"
     hostname: server-g3
     networks:
@@ -595,9 +505,6 @@ services:
       - net.ipv4.ip_forward=0
   server-g4:
     container_name: "build-your-own-internet-server-g4"
-    build:
-      context: .
-      dockerfile: Dockerfile_host
     image: "build-your-own-internet-host"
     hostname: server-g4
     networks:
@@ -612,9 +519,6 @@ services:
   # AWS
   router-a2:
     container_name: "build-your-own-internet-router-a2"
-    build:
-      context: .
-      dockerfile: Dockerfile_router
     image: "build-your-own-internet-router"
     hostname: router-a2
     networks:
@@ -630,9 +534,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   router-a3:
     container_name: "build-your-own-internet-router-a3"
-    build:
-      context: .
-      dockerfile: Dockerfile_router
     image: "build-your-own-internet-router"
     hostname: router-a3
     networks:
@@ -650,9 +551,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   router-a4:
     container_name: "build-your-own-internet-router-a4"
-    build:
-      context: .
-      dockerfile: Dockerfile_router
     image: "build-your-own-internet-router"
     hostname: router-a4
     networks:
@@ -668,9 +566,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   server-a1:
     container_name: "build-your-own-internet-server-a1"
-    build:
-      context: .
-      dockerfile: Dockerfile_host
     image: "build-your-own-internet-host"
     hostname: server-a1
     networks:
@@ -683,9 +578,6 @@ services:
       - net.ipv4.ip_forward=0
   server-a2:
     container_name: "build-your-own-internet-server-a2"
-    build:
-      context: .
-      dockerfile: Dockerfile_host
     image: "build-your-own-internet-host"
     hostname: server-a2
     networks:
@@ -698,9 +590,6 @@ services:
       - net.ipv4.ip_forward=0
   server-a3:
     container_name: "build-your-own-internet-server-a3"
-    build:
-      context: .
-      dockerfile: Dockerfile_host
     image: "build-your-own-internet-host"
     hostname: server-a3
     networks:
@@ -713,9 +602,6 @@ services:
       - net.ipv4.ip_forward=0
   server-a4:
     container_name: "build-your-own-internet-server-a4"
-    build:
-      context: .
-      dockerfile: Dockerfile_host
     image: "build-your-own-internet-host"
     hostname: server-a4
     networks:

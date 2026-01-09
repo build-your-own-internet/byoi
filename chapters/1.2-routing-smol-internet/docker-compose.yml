@@ -14,8 +14,8 @@ services:
       - NET_ADMIN
     sysctls:
       - net.ipv4.ip_forward=1
+
   client:
-    build: .
     image: "build-your-own-internet-host"
     container_name: build-your-own-internet-client
     hostname: client
@@ -28,7 +28,6 @@ services:
       - net.ipv4.ip_forward=0
 
   server:
-    build: .
     image: "build-your-own-internet-host"
     container_name: build-your-own-internet-server
     hostname: server

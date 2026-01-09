@@ -3,7 +3,7 @@ services:
   client:
     build: .
     container_name: build-your-own-internet-client
-    image: build-your-own-internet-client
+    image: build-your-own-internet
     hostname: client
     {% if config_dir == "final" %}
     networks:
@@ -13,9 +13,8 @@ services:
     cap_add:
       - NET_ADMIN
   server:
-    build: .
     container_name: build-your-own-internet-server
-    image: build-your-own-internet-server
+    image: build-your-own-internet
     hostname: server
     {% if config_dir == "final" %}
     networks:

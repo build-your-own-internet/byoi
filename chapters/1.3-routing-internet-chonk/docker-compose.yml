@@ -3,7 +3,7 @@ services:
   server:
     build: .
     container_name: build-your-own-internet-server
-    image: build-your-own-internet-server
+    image: build-your-own-internet
     hostname: server
     networks:
       five-net:
@@ -13,9 +13,8 @@ services:
     sysctls:
       - net.ipv4.ip_forward=0
   client:
-    build: .
     container_name: build-your-own-internet-client
-    image: build-your-own-internet-client
+    image: build-your-own-internet
     hostname: client
     networks:
       one-net:
@@ -25,9 +24,8 @@ services:
     sysctls:
       - net.ipv4.ip_forward=0
   router1:
-    build: .
     container_name: build-your-own-internet-router1
-    image: build-your-own-internet-router1
+    image: build-your-own-internet
     hostname: router1
     networks:
       five-net:
@@ -42,9 +40,8 @@ services:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
   router3:
-    build: .
     container_name: build-your-own-internet-router3
-    image: build-your-own-internet-router3
+    image: build-your-own-internet
     hostname: router3
     networks:
       three-net:
@@ -57,9 +54,8 @@ services:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
   router2:
-    build: .
     container_name: build-your-own-internet-router2
-    image: build-your-own-internet-router2
+    image: build-your-own-internet
     hostname: router2
     networks:
       one-hundo-net:
@@ -74,9 +70,8 @@ services:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
   router4:
-    build: .
     container_name: build-your-own-internet-router4
-    image: build-your-own-internet-router4
+    image: build-your-own-internet
     hostname: router4
     networks:
       one-hundo-net:
@@ -91,9 +86,8 @@ services:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
   router5:
-    build: .
     container_name: build-your-own-internet-router5
-    image: build-your-own-internet-router5
+    image: build-your-own-internet
     hostname: router5
     networks:
       one-hundo-net:

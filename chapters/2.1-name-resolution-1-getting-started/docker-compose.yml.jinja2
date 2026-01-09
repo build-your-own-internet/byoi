@@ -23,7 +23,6 @@ services:
 {% endif %}
   host-b:
     container_name: "build-your-own-internet-host-b"
-    build: .
     image: "build-your-own-internet"
     hostname: host-b
     networks:
@@ -44,7 +43,6 @@ services:
 {% endif %}
   host-c:
     container_name: "build-your-own-internet-host-c"
-    build: .
     image: "build-your-own-internet"
     hostname: host-c
     networks:
@@ -65,7 +63,6 @@ services:
 {% endif %}
   host-d:
     container_name: "build-your-own-internet-host-d"
-    build: .
     image: "build-your-own-internet"
     hostname: host-d
     networks:
@@ -86,7 +83,6 @@ services:
 {% endif %}
   host-e:
     container_name: "build-your-own-internet-host-e"
-    build: .
     image: "build-your-own-internet"
     hostname: host-e
     networks:
@@ -107,7 +103,6 @@ services:
 {% endif %}
   host-f:
     container_name: "build-your-own-internet-host-f"
-    build: .
     image: "build-your-own-internet"
     hostname: host-f
     networks:
@@ -128,7 +123,6 @@ services:
 {% endif %}
   host-g:
     container_name: "build-your-own-internet-host-g"
-    build: .
     image: "build-your-own-internet"
     hostname: host-g
     networks:
@@ -150,7 +144,6 @@ services:
 
   router-1:
     container_name: "build-your-own-internet-router-1"
-    build: .
     image: "build-your-own-internet"
     hostname: router-1
     networks:
@@ -167,7 +160,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   router-2:
     container_name: "build-your-own-internet-router-2"
-    build: .
     image: "build-your-own-internet"
     hostname: router-2
     networks:
@@ -184,7 +176,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   router-3:
     container_name: "build-your-own-internet-router-3"
-    build: .
     image: "build-your-own-internet"
     hostname: router-3
     networks:
@@ -199,7 +190,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   router-4:
     container_name: "build-your-own-internet-router-4"
-    build: .
     image: "build-your-own-internet"
     hostname: router-4
     networks:
@@ -216,7 +206,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   router-5:
     container_name: "build-your-own-internet-router-5"
-    build: .
     image: "build-your-own-internet"
     hostname: router-5
     networks:
@@ -233,7 +222,6 @@ services:
       - net.ipv4.conf.all.rp_filter=0
   router-6:
     container_name: "build-your-own-internet-router-6"
-    build: .
     image: "build-your-own-internet"
     hostname: router-6
     networks:
