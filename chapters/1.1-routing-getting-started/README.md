@@ -272,6 +272,4 @@ Why is that? We'll get into that in the **next** chapter!
 [ext icmp responses]:        https://docs.netapp.com/us-en/e-series-santricity/sm-hardware/what-are-icmp-ping-responses.html
 [RFC 1918]:                  https://www.rfc-editor.org/rfc/rfc1918
                              "RFC 1918"
-[stackoverflow rtnetlink]:   https://stackoverflow.com/questions/27708376/why-am-i-getting-an-rtnetlink-operation-not-permitted-when-using-pipework-with-d
-                             "Stackoverflow post on RTNETLINK and Docker"
 <!-- end of file -->
