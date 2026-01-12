@@ -8,8 +8,8 @@ services:
     networks:
       ten-one-net:
         ipv4_address: 10.1.1.3
-      ten-two-net:
-        ipv4_address: 10.1.2.3
+      one-nine-two-net:
+        ipv4_address: 192.168.1.3
     cap_add:
       - NET_ADMIN
     sysctls:
@@ -32,8 +32,8 @@ services:
     container_name: build-your-own-internet-server
     hostname: server
     networks:
-      ten-two-net:
-        ipv4_address: 10.1.2.2
+      one-nine-two-net:
+        ipv4_address: 192.168.1.2
     cap_add:
       - NET_ADMIN
     sysctls:
@@ -47,10 +47,10 @@ networks:
       driver: default
       config:
         - subnet: 10.1.1.0/24
-  ten-two-net:
-    name: "build-your-own-internet-ten-two-net"
+  one-nine-two-net:
+    name: "build-your-own-internet-one-nine-two-net"
     driver: bridge
     ipam:
       driver: default
       config:
-        - subnet: 10.1.2.0/24
+        - subnet: 192.168.1.0/24
