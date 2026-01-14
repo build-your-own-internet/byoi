@@ -4,10 +4,10 @@
 
 case $HOSTNAME in
 router1)
-  ip route add 1.0.0.0/8 via 3.0.3.1
-  ip route add 100.1.0.0/16 via 3.0.3.1
-  ip route add 2.1.1.0/29 via 2.1.1.11
-  ip route add 2.1.1.16/29 via 3.0.3.1
+  ip route add 10.1.0.0/16 via 10.3.3.1
+  ip route add 172.16.0.0/16 via 10.3.3.1
+  ip route add 192.168.1.0/29 via 192.168.1.11
+  ip route add 192.168.1.16/29 via 10.3.3.1
   ;;
 esac
 

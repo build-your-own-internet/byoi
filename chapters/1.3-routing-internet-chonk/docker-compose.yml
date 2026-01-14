@@ -6,8 +6,8 @@ services:
     image: build-your-own-internet
     hostname: server
     networks:
-      five-net:
-        ipv4_address: 5.0.0.100
+      ten-dot-five-net:
+        ipv4_address: 10.5.0.100
     cap_add:
       - NET_ADMIN
     sysctls:
@@ -17,8 +17,8 @@ services:
     image: build-your-own-internet
     hostname: client
     networks:
-      one-net:
-        ipv4_address: 1.0.0.100
+      ten-dot-one-net:
+        ipv4_address: 10.1.0.100
     cap_add:
       - NET_ADMIN
     sysctls:
@@ -28,12 +28,12 @@ services:
     image: build-your-own-internet
     hostname: router1
     networks:
-      five-net:
-        ipv4_address: 5.0.1.1
-      three-net:
-        ipv4_address: 3.0.1.1
+      ten-dot-five-net:
+        ipv4_address: 10.5.1.1
+      ten-dot-three-net:
+        ipv4_address: 10.3.1.1
       p2p-eight:
-        ipv4_address: 2.1.1.10
+        ipv4_address: 192.168.1.10
     cap_add:
       - NET_ADMIN
     sysctls:
@@ -44,10 +44,10 @@ services:
     image: build-your-own-internet
     hostname: router3
     networks:
-      three-net:
-        ipv4_address: 3.0.3.1
-      one-hundo-net:
-        ipv4_address: 100.1.3.1
+      ten-dot-three-net:
+        ipv4_address: 10.3.3.1
+      oneseventytwo-net:
+        ipv4_address: 172.16.3.1
     cap_add:
       - NET_ADMIN
     sysctls:
@@ -58,12 +58,12 @@ services:
     image: build-your-own-internet
     hostname: router2
     networks:
-      one-hundo-net:
-        ipv4_address: 100.1.2.1
+      oneseventytwo-net:
+        ipv4_address: 172.16.2.1
       p2p-eight:
-        ipv4_address: 2.1.1.11
+        ipv4_address: 192.168.1.11
       p2p-zero:
-        ipv4_address: 2.1.1.2
+        ipv4_address: 192.168.1.2
     cap_add:
       - NET_ADMIN
     sysctls:
@@ -74,12 +74,12 @@ services:
     image: build-your-own-internet
     hostname: router4
     networks:
-      one-hundo-net:
-        ipv4_address: 100.1.4.1
+      oneseventytwo-net:
+        ipv4_address: 172.16.4.1
       p2p-sixteen:
-        ipv4_address: 2.1.1.18
+        ipv4_address: 192.168.1.18
       p2p-zero:
-        ipv4_address: 2.1.1.3
+        ipv4_address: 192.168.1.3
     cap_add:
       - NET_ADMIN
     sysctls:
@@ -90,12 +90,12 @@ services:
     image: build-your-own-internet
     hostname: router5
     networks:
-      one-hundo-net:
-        ipv4_address: 100.1.5.1
+      oneseventytwo-net:
+        ipv4_address: 172.16.5.1
       p2p-sixteen:
-        ipv4_address: 2.1.1.19
-      one-net:
-        ipv4_address: 1.0.5.1
+        ipv4_address: 192.168.1.19
+      ten-dot-one-net:
+        ipv4_address: 10.1.5.1
     cap_add:
       - NET_ADMIN
     sysctls:
@@ -103,42 +103,42 @@ services:
       - net.ipv4.conf.all.rp_filter=0
 
 networks:
-  five-net:
-    name: build-your-own-internet-five-net
+  ten-dot-five-net:
+    name: build-your-own-internet-ten-dot-five-net
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
-        - subnet: 5.0.0.0/8
-  three-net:
-    name: build-your-own-internet-three-net
+        - subnet: 10.5.0.0/16
+  ten-dot-three-net:
+    name: build-your-own-internet-ten-dot-three-net
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
-        - subnet: 3.0.0.0/8
-  one-net:
-    name: build-your-own-internet-one-net
+        - subnet: 10.3.0.0/16
+  ten-dot-one-net:
+    name: build-your-own-internet-ten-dot-one-net
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
-        - subnet: 1.0.0.0/8
-  one-hundo-net:
-    name: build-your-own-internet-one-hundo-net
+        - subnet: 10.1.0.0/16
+  oneseventytwo-net:
+    name: build-your-own-internet-oneseventytwo-net
     driver: bridge
     driver_opts:
       com.docker.network.bridge.enable_ip_masquerade: 'false'
     ipam:
       driver: default
       config:
-        - subnet: 100.1.0.0/16
+        - subnet: 172.16.0.0/16
   p2p-eight:
     name: build-your-own-internet-p2p-eight
     driver: bridge
@@ -147,7 +147,7 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 2.1.1.8/29
+        - subnet: 192.168.1.8/29
   p2p-zero:
     name: build-your-own-internet-p2p-zero
     driver: bridge
@@ -156,7 +156,7 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 2.1.1.0/29
+        - subnet: 192.168.1.0/29
   p2p-sixteen:
     name: build-your-own-internet-p2p-sixteen
     driver: bridge
@@ -165,4 +165,4 @@ networks:
     ipam:
       driver: default
       config:
-        - subnet: 2.1.1.16/29
+        - subnet: 192.168.1.16/29

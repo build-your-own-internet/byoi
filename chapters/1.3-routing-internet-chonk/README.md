@@ -39,7 +39,7 @@ We want to create routing tables for each of the routers on the network we have 
 Based on that diagram, out of the 7 networks we've built, router1 already has interfaces on 3 of them:
 
 * `10.5.0.0/16`
-* `200.1.1.8/29`
+* `192.168.1.8/29`
 * `10.3.0.0/16`
 
 So, for router1 to participate in this internet, it needs to know how to route packets to each of the 4 networks it's not currently connected to. We can add routes to each of the 4 networks in our `start-up.sh` file to use a similar structure to what we used in chapter 2. So, we'll start by defining how router1 can reach each network through its connections with other routers. You'll see the following already defined in the `start-up.sh` file for this chapter:
@@ -49,8 +49,8 @@ case $HOSTNAME in
   (router1)
     ip route add 10.1.0.0/16 via 10.3.3.1
     ip route add 172.16.0.0/16 via 10.3.3.1
-    ip route add 200.1.1.0/29 via 200.1.1.11
-    ip route add 200.1.1.16/29 via 10.3.3.1
+    ip route add 192.168.1.0/29 via 192.168.1.11
+    ip route add 192.168.1.16/29 via 10.3.3.1
     ;;
 esac
 ```
