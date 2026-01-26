@@ -1,10 +1,8 @@
 # Let's make that Internet MOAR BIGGER
 
-<!-- TODO: FINISH IP ADDRESS CHANGING: P2P is the last one?! -->
-
 ## Goals for this section
 
-Let's use the tools and processes we've already discovered to make a much larger internet! In this case, we'll want to be able to traverse several networks to get machines who are not directly connected to be able to communicate with each other. Looking at the network diagram below, we can see that the `client` machine is connected to the `10.1.0.0/16` network. We want `client` to be able to traverse our internet to reach `server` connected to `10.5.0.0/16`.
+Let's use the tools and processes we've already discovered to make a much larger internet! In this case, we'll want to be able to traverse several networks to get machines who are not directly connected to communicate with each other. Looking at the network diagram below, we can see that the `client` machine is connected to the `10.1.0.0/16` network. We want `client` to be able to traverse our internet to reach `server` connected to `10.5.0.0/16`.
 
 Here's what we expect the internet to look like at the end of this chapter:
 
@@ -12,37 +10,25 @@ Here's what we expect the internet to look like at the end of this chapter:
 
 If this network map is a bit challenging to read, take a moment to review the [How to Read a Network Map](../../appendix/how-to-read-a-network-map.md) document.
 
-### How docker handles MAC addresses
-
-A MAC (media access control) address is the layer 2 address of a machine on a network. If you'd like to review what a MAC address is in detail, checkout [Appendix: ip-and-mac-addresses](../../appendix/ip-and-mac-addresses.md).
-
-Let's look at the output for one of our interfaces shown in `ip addr`:
-
-```bash
-38: eth0@if39: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
-    link/ether 02:42:0a:01:02:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0
-    inet 10.1.2.3/24 brd 10.1.2.255 scope global eth0
-       valid_lft forever preferred_lft forever
-```
-
-Here, we can see that the IP of the machine is `10.1.2.3` on a `/24` network. The MAC address listed on the line above is `02:42:0a:01:02:03`. It appears to keep things simple, when docker adds a new machine to a network, it has create an interface for that machine and put it on that network. That interface will have its own unique MAC address. Docker can assign whatever it wants for that MAC address, but, to help us, the humans, it will take the IP address for that machine and convert it into a human readable version in hexidecimal. So, the end of that MAC address, `0a:01:02:03`, converted from hexidecimal into decimal is `10.1.2.3`. This is great for us. It means when we look at MAC addresses in our tcpdump later in the chapter, it is much easier to see which machines our packets are being routed through.
-
-> **📝 NOTE:**
-> When you see ethernet packets in the wild, there is no correlation between the MAC address and the IP address. This is simply a docker convenience.
-
 ## There and Back Again - a setup journey
 
-In order for our little internet to work, we need a way for the machines on our networks to know how and where to route packets. Each router on the network will have a definition of all other networks on the internet and how it can reach machines on those networks. Think about it like this. When a driver is navigating our interstate highways to try to get from Portland to San Francisco, they're gonna see signs that direct them which lanes of traffic will take them in right direction. The driver follows those signs and ends up eventually in the right city. Our routers need those same little signs to follow. Each router will have a "routing table", which is like a list of all our little signs. These routing tables will have entries for how to send packets to each network on our internet.
+In order for our little internet to work, we need a way for the machines on our networks to know how and where to route packets. Each router on the network will have a definition of all other networks on the internet and how it can reach machines on those networks. Think about it like this: when a driver is navigating our interstate highways to try to get from Portland to San Francisco, they're gonna see signs that direct them which lanes of traffic will take them in right direction. The driver follows those signs and ends up eventually in the right city. Our routers need those same little signs to follow. Each router will have a "routing table", which is like a list of all our little signs. These routing tables will have entries for how to send packets to each network on our internet.
 
-We want to create routing tables for each of the routers on the network we have diagrammed at the top of this chapter. Each router will need to have entries on how to get to networks that the router does not already have a direct connection to. And, we need these routing tables to be defined as soon as we boot up our network. So, let's define all of the routes that are necessary for router1 and let's add them to the `start-up.sh` file that is run when we `byoi-rebuild` our whole system.
+We want to create routing tables for each of the routers on the network we have diagrammed at the top of this chapter. Each router will need to have entries on how to get to networks that the router does not already have a direct connection to. And, we need these routing tables to be defined as soon as we boot up our network.
 
-Based on that diagram, out of the 7 networks we've built, router1 already has interfaces on 3 of them:
+In previous chapters, we logged onto the individual routers and manually added routes. In the real world, there are many problems with this approach. We want to be able to write a config where we can see all of our routes at once and, if we restart our internet, we don't lose every route.
+
+In the previous chapter, we introduced the `start-up.sh` script. Let's open that `init/start-up.sh` file again for this chapter and define all of the routes that are necessary for `router1`.
+
+Based on that diagram, out of the 7 networks we've built, `router1` already has interfaces on 3 of them:
 
 * `10.5.0.0/16`
 * `192.168.1.8/29`
 * `10.3.0.0/16`
 
-So, for router1 to participate in this internet, it needs to know how to route packets to each of the 4 networks it's not currently connected to. We can add routes to each of the 4 networks in our `start-up.sh` file to use a similar structure to what we used in chapter 2. So, we'll start by defining how router1 can reach each network through its connections with other routers. You'll see the following already defined in the `start-up.sh` file for this chapter:
+So, for `router1` to participate in this internet, it needs to know how to route packets to each of the 4 networks it's _not_ currently connected to. We can add routes for each of the 4 networks in our `start-up.sh` file. We'll use a similar structure to what we used in chapter 2.
+
+So, we'll start by defining how `router1` can reach each network through its connections with other routers. You'll see the following already defined in the `start-up.sh` file for this chapter:
 
 ```bash
 case $HOSTNAME in
@@ -57,9 +43,9 @@ esac
 
 ## Exercise time: Build your routing tables
 
-The `start-up.sh` file already has some setup in it. Build out the routes for router3 similar to how you see the routes for router1 being done. Once you've got the routes created in `start-up.sh`, `byoi-rebuild` your little internet and `hopon router3`. Can you ping router1 with `ping 10.5.1.1 -w 4`? What about if we try to ping router1 with packets that originate from router3 on `172.16.0.0/16`? Try using `ping -I 172.16.3.1 10.5.1.1 -w 4` to do this.
+The `start-up.sh` file already has some setup in it. Build out the routes for `router3` similar to how you see the routes for `router1` being done. Once you've got the routes created in `start-up.sh`, `byoi-rebuild` your little internet and `hopon router3`. Can you ping `router1` with `ping 10.5.1.1 -w 4`? What about if we try to ping `router1` with packets that originate from `router3` on `172.16.0.0/16`? Try using `ping -I 172.16.3.1 10.5.1.1 -w 4` to do this.
 
-At this point, router3 knows how to send packets into `10.5.0.0/16`, but `server` doesn't know how to respond. If we try to ping `server` before we add routes telling `server` how to reach `10.3.0.0/16`, `server` will just drop those packets. Let's see what that looks like practically.
+At this point, `router3` knows how to send packets into `10.5.0.0/16`, but `server` doesn't know how to respond. If we try to ping `server` before we add routes telling `server` how to reach `10.3.0.0/16`, `server` will just drop those packets. Let's see what that looks like in reality:
 
 ```bash
 root@router3:/# ping 10.5.0.100 -w 2
@@ -69,56 +55,81 @@ PING 10.5.0.100 (10.5.0.100) 56(84) bytes of data.
 2 packets transmitted, 0 received, 100% packet loss, time 1031ms
 ```
 
-Here, we can see router3 attempting to ping `server` at `10.5.0.100`. There are no response packets received and the ping times out after 2 seconds (the `-w 2`). Now let's see what's happening on our `server`, we can watch for those incoming pings with a `tcpdump`:
+Here, we can see `router3` attempting to ping `server` at `10.5.0.100`. There are no response packets received and the ping times out after 2 seconds (the `-w 2`). Now let's see what's happening on our `server`, we can watch for those incoming pings with a `tcpdump`:
 
 ```bash
 root@server:/# tcpdump -ne
 tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
 listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
-18:12:02.367255 02:42:05:00:01:01 > 02:42:05:00:00:64, ethertype IPv4 (0x0800), length 98: 10.3.3.1 > 10.5.0.100: ICMP echo request, id 25, seq 1, length 64
-18:12:03.398455 02:42:05:00:01:01 > 02:42:05:00:00:64, ethertype IPv4 (0x0800), length 98: 10.3.3.1 > 10.5.0.100: ICMP echo request, id 25, seq 2, length 64
+18:12:02.367255 02:42:0a:05:01:01 > 02:42:0a:05:00:64, ethertype IPv4 (0x0800), length 98: 10.3.3.1 > 10.5.0.100: ICMP echo request, id 25, seq 1, length 64
+18:12:03.398455 02:42:0a:05:01:01 > 02:42:0a:05:00:64, ethertype IPv4 (0x0800), length 98: 10.3.3.1 > 10.5.0.100: ICMP echo request, id 25, seq 2, length 64
 ^C
 2 packets captured
 2 packets received by filter
 0 packets dropped by kernel
 ```
 
-There are 2 `ICMP echo request`s, but we don't see any `ICMP echo reply`s. Set up the route for `server` to know how to send packets to `10.3.0.0/16` in `start-up.sh`. Once that's setup, `byoi-rebuild`, and can you get router3 to ping `server`? If it's successful, you should see the `echo reply`s on the `tcpdump` in your `server`. Let's look at that `tcpdump` in a bit of detail.
+There are 2 `ICMP echo request`s, but we don't see any `ICMP echo reply`s. Set up the route for `server` to know how to send packets to `10.3.0.0/16` in `start-up.sh`. Once that's set up, `byoi-rebuild`, and can you get router3 to ping `server`? If it's successful, you should see the `echo reply`s on the `tcpdump` in your `server`. Let's look at that `tcpdump` in a bit of detail:
 
 ```bash
 root@server:/# tcpdump -ne
 tcpdump: verbose output suppressed, use -v[v]... for full protocol decode
 listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
-18:20:01.902137 02:42:05:00:01:01 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Request who-has 10.5.0.100 tell 10.5.1.1, length 28
-18:20:01.902154 02:42:05:00:00:64 > 02:42:05:00:01:01, ethertype ARP (0x0806), length 42: Reply 10.5.0.100 is-at 02:42:05:00:00:64, length 28
-18:20:01.902340 02:42:05:00:01:01 > 02:42:05:00:00:64, ethertype IPv4 (0x0800), length 98: 10.3.3.1 > 10.5.0.100: ICMP echo request, id 27, seq 1, length 64
-18:20:01.902384 02:42:05:00:00:64 > 02:42:05:00:01:01, ethertype IPv4 (0x0800), length 98: 10.5.0.100 > 10.3.3.1: ICMP echo reply, id 27, seq 1, length 64
-18:20:02.921575 02:42:05:00:01:01 > 02:42:05:00:00:64, ethertype IPv4 (0x0800), length 98: 10.3.3.1 > 10.5.0.100: ICMP echo request, id 27, seq 2, length 64
-18:20:02.921606 02:42:05:00:00:64 > 02:42:05:00:01:01, ethertype IPv4 (0x0800), length 98: 10.5.0.100 > 10.3.3.1: ICMP echo reply, id 27, seq 2, length 64
+21:56:39.729691 02:42:0a:05:01:01 > ff:ff:ff:ff:ff:ff, ethertype ARP (0x0806), length 42: Request who-has 10.5.0.100 tell 10.5.1.1, length 28
+21:56:39.729753 02:42:0a:05:00:64 > 02:42:0a:05:01:01, ethertype ARP (0x0806), length 42: Reply 10.5.0.100 is-at 02:42:0a:05:00:64, length 28
+21:56:39.729769 02:42:0a:05:01:01 > 02:42:0a:05:00:64, ethertype IPv4 (0x0800), length 98: 10.3.3.1 > 10.5.0.100: ICMP echo request, id 109, seq 1, length 64
+21:56:39.730068 02:42:0a:05:00:64 > 02:42:0a:05:01:01, ethertype IPv4 (0x0800), length 98: 10.5.0.100 > 10.3.3.1: ICMP echo reply, id 109, seq 1, length 64
+21:56:40.733744 02:42:0a:05:01:01 > 02:42:0a:05:00:64, ethertype IPv4 (0x0800), length 98: 10.3.3.1 > 10.5.0.100: ICMP echo request, id 109, seq 2, length 64
+21:56:40.733771 02:42:0a:05:00:64 > 02:42:0a:05:01:01, ethertype IPv4 (0x0800), length 98: 10.5.0.100 > 10.3.3.1: ICMP echo reply, id 109, seq 2, length 64
+^C
 6 packets captured
 6 packets received by filter
 0 packets dropped by kernel
 ```
 
-The first 2 packets in our `tcpdump` are `ARP` packets, i.e. `Request who-has 10.5.0.100 tell 10.5.1.1` and `Reply 10.5.0.100 is-at 02:42:05:00:00:64`. This is a machine on our network attempting to associate a MAC address with an IP address that it has learned about from an incoming request. For more details on what's happening here, check out the [appendix doc on IP and MAC addresses](../../appendix/ip-and-mac-addresses.md).
+The first 2 packets in our `tcpdump` are `ARP` packets, i.e. `Request who-has 10.5.0.100 tell 10.5.1.1` and `Reply 10.5.0.100 is-at 02:42:0a:05:00:64`. This is a machine on our network attempting to associate a MAC address with an IP address that it has learned about from an incoming request. For more details on what's happening here, check out the [appendix doc on IP and MAC addresses](../../appendix/ip-and-mac-addresses.md).
 
-Next we see 2 couplets of `ICMP echo request` and `ICMP echo reply`s. In these packets, we can see that the IP address of the machine requesting the ping is `10.3.3.1`, or router3's interface on `10.3.0.0/16`. The destination machine is `10.5.0.100`, or `server`'s interface on `10.5.0.0/16`. But! This also tells us the MAC addresses that are involved in the direct communication with `server`. So, when we see `02:42:05:00:01:01 > 02:42:05:00:00:64`, we can use what we know about how docker creates MAC addresses and see that router1's interface on `10.5.0.0/16`, `02:42:05:00:01:01`, is the interface sending the packets to `server`, `02:42:05:00:00:64`.
+Next we see 2 couplets of `ICMP echo request` and `ICMP echo reply`s. In these packets, we can see that the IP address of the machine requesting the ping is `10.3.3.1`, or `router3`'s interface on `10.3.0.0/16`. The destination machine is `10.5.0.100`, or `server`'s interface on `10.5.0.0/16`. But! This also tells us the MAC addresses that are involved in the direct communication with `server`. So, when we see `02:42:0a:05:01:01 > 02:42:0a:05:00:64,`, we can use what we know about how docker creates MAC addresses and see that router1's interface on `10.5.0.0/16`, `02:42:0a:05:01:01`, is the interface sending the packets to `server`, `02:42:0a:05:00:64`.
 
-Now that you have router3 able to ping `server`, build out the rest of the internet! Check that things work using ping at every step of the way! We recommend building out one "hop" at a time, so from router3, build out router2's connections. Check that router2 can ping `server` and router5. Move to router4. Can it ping `server`, router3, router5, and router2? Can it ping each router on every interface that router has on any network? Check the `ping -h` help to see how you can originate your ping from a specific interface. Can you ping from a specific interface on a router to a specific interface on another router?
+### ASIDE: MAC addresses
+
+ If you'd like to review what a MAC address is in detail, checkout [Appendix: ip-and-mac-addresses](../../appendix/ip-and-mac-addresses.md).
+
+We've been using this word "interface": what does that mean? If we think in real-world terms, your computer has a card or chip or plug or something that is used to connect it to the Internet. That card/chip thingy has an identifier similar to a serial-number that is burned into its silicon by the company that made it. The general purpose of a serial-number is to identify a specific unit uniquely. For your computer's network interface, that identifier is known as its "Media Access Control" or "MAC" address. Hardware companies that make network interfaces coordinate with each other to ensure that no two MAC addresses are the same throughout the entire world for all of time.
+
+Because this MAC address is used to uniquely identify your computer's network interface, a router can use it to ensure packets get to the correct destination. So when your computer joins a network, it will tell the router responsible for connecting it to the internet its MAC address. If you'll remember from Chapter 1.2, we had a brief aside on ARP (Address Resolution Protocol) which is the system that maps IP addresses to MAC addresses. This way, when packets are routed to and from your computer, the router can translate your computer's IP address to your computer's MAC address so that it can send those packets through your local network to your computer.
+
+The machines we're working with throughout _Build Your Own Internet_ don't have any actual hardware. So when you `hopon client` or any other machine, you're interacting with a virtualized hardware device and that virtual machine has a virtual MAC address. The software responsible for making that virtual hardware is called [Docker](https://www.docker.com/), and the way Docker makes MAC addresses is a little unusual. Because there's no actual silicon to burn a MAC address into, Docker has to create that MAC address out of thin air. It seems that Docker has chosen to use the IPv4 address of each interface on a machine to inform its decision on how to create the MAC address on that interface.
+
+For example, let's look at the output for one of our interfaces shown in `ip addr`:
+
+```bash
+38: eth0@if39: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default
+    link/ether 02:42:0a:01:02:03 brd ff:ff:ff:ff:ff:ff link-netnsid 0
+    inet 10.1.2.3/24 brd 10.1.2.255 scope global eth0
+       valid_lft forever preferred_lft forever
+```
+
+Here, we can see that the version-4 IP address of the machine is `10.1.2.3` on a `/24` network. The MAC address listed on the line above is `02:42:0a:01:02:03`. Docker takes the IP address for that machine and converts it to hexidecimal. So in this case, if we look at the end of that MAC address, `0a:01:02:03`, and we convert it from hexidecimal into decimal, we get `10.1.2.3`. This is great for us because it means that when we look at MAC addresses in our `tcpdump` output, it is much easier to correlate them to the machine associated with that IP address.
+
+> **📝 NOTE:**
+> When you see ethernet packets in the wild, there is no correlation between the MAC address and the IP address. This is simply a docker convenience.
+
+### Back to building routing tables...
+
+Now that you have `router3` able to ping `server`, build out the rest of the internet! Check that things work using ping at every step of the way! We recommend building out one "hop" at a time, so from `router3`, build out `router2`'s connections. Check that `router2` can ping `server` and `router5`. Move to `router4`. Can it ping `server`, `router3`, `router5`, and `router2`? Can it ping each router on every interface that router has on any network? 
 
 If you have problems creating your routing tables, the next exercise is going to cover troubleshooting!
 
-## Troubleshoot your internet
+## Exercise 2: Troubleshooting routing problems on your internet
 
-### What's the problem here
-
-We've built an internet! Yay! We have routing tables on each machine on our internet that tells it where to send packets bound for a machine on any other network on our internet! Neat! But... It appears our internet is broken. When we try to `ping` our `server` from our `client`, we're not seeing response packets coming back. We need to figure out what's happening and fix our internet! Let's setup your environment with the same break so you can investigate along with us.
+We've built an internet! Yay! But this is a fairly small internet and maybe you got everything right the first time. People rarely learn from things going right… SO! Let's see what happens when we have broken routing tables on our Internet and we have to find the problem. Let's setup your environment with a break so you can investigate along with us.
 
 ### Set up your environment
 
 The first thing we'll need to do is get your network set up with a break we can investigate! Lucky for you, we've already created a setup that is broken and ready to use.
 
-To start, you're going to run the `byoi-rebuild` command to set up this exercise as follows:
+To start, you're going to run the `byoi-rebuild` command with a special exercise flag to set up this exercise as follows:
 
 ```bash
 byoi-rebuild --exercise
@@ -126,7 +137,9 @@ byoi-rebuild --exercise
 
 ### Discover the breakage
 
-So, we've built out our internet! Let's make sure our client can `ping` our server:
+We have routing tables on each machine on our internet that tells it where to send packets bound for a machine on any other network on our internet! Neat! But... now when we try to `ping` our `server` from our `client`, we're not seeing response packets coming back. We need to figure out what's happening and fix our internet! 
+
+Let's first see what happens when our `client` tries to `ping` our `server`:
 
 ```bash
 root@client:/# ping 10.5.0.100 -w 2
@@ -136,16 +149,22 @@ PING 10.5.0.100 (10.5.0.100) 56(84) bytes of data.
 2 packets transmitted, 0 received, 100% packet loss, time 1046ms
 ```
 
-Uh oh! We're not getting any response back from our `ping`! Something is wrong in internet land! Let's go figure out what that could be. When a client isn't receiving response packets from it ping, there's only 2 things that could be going on.
+Here's a handy flowchart to help you reason about what's going on When a client isn't receiving response packets from a ping:
+
+[![ping troubleshooting][ping troubleshooting]][ping troubleshooting]
+
+<!-- WHERE WE LEFT OFF: Lets talk about this thing now! -->
 
 1. A router that is responsible for getting request packets to their destination thinks it is impossible to get to the destination IP address
 2. Packets are getting lost to or from the destination
 
-Let's explore what these three things mean a little.
+Let's explore what these two things mean a little.
 
 #### A router that is responsible for getting request packets to their destination thinks it is impossible to get to the destination IP address
 
-This can happen for 2 reasons. A router that has an interface on the network of the destination IP sees that there is no machine with the destination IP on that network. OR a router that does not have an interface on the network of the destination IP and doesn't have a default route doesn't have a route for the destination IP.
+This can happen for two reasons:
+
+##### 1. A router that has an interface on the network of the destination IP sees that there is no machine with the destination IP on that network.
 
 Basically, if the machine didn't exist, we would get an error response to our `ping`. For example, if we try to `ping 10.1.0.50`, a machine we've never created on our internet, we get back `Destination Host Unreachable`:
 
@@ -157,11 +176,13 @@ From 10.1.0.100 icmp_seq=1 Destination Host Unreachable
 
 When we see `Destination Host Unreachable`, the packets were correctly routed to the network indicated by the IP address. However, when they got there, the router performed an ARP request for the machine in the `ping`, `10.1.0.50`, but it didn't receive a response. Because the router couldn't find the machine on its network, it responded to the `ping` with an error.
 
-> ASIDE: This could be a potential security leak. It tells an attacker something about what machines exist on the network. In modern network achitechture, this error response will be turned off to prevent unintentionally revealing the network shape.
+> 💡 ASIDE: This could be a potential security leak. It tells an attacker something about what machines exist on the network. In modern network architecture, this error response will be turned off to prevent unintentionally revealing the network shape.
 
-*TODO* In a future chapter, let's look at firewall settings to prevent this security leak.
+<!-- *TODO* In a future chapter, let's look at firewall settings to prevent this security leak.-->
 
 We know that the problem we're seeing in this exercise is not that the machine doesn't exist because we're not getting back this `Destination Host Unreachable` error. Instead, the issue is going to be a routing issue.
+
+##### 2. A router that does not have an interface on the network of the destination IP and doesn't have a default route or doesn't have a route for the destination IP.
 
 Another case we could see is if a router doesn't have a route defined to a network in its routing table AND it doesn't have a default gateway. If that were the case, we would see a similar error message to what we saw when trying to ping a non-existent host:
 
@@ -323,8 +344,14 @@ Finally, we get to our last line... We see the same thing we saw in `seq 1`; rou
 
 We've found out loop! Next step: go check the `start-up-exercise.sh` and look at the routes going to `10.1.0.0/16` on both router2 and router3. Where should those point instead? Use the network map at the beginning of this chapter to determine where these packets *should* be getting forwarded to and update the routes. `byoi-rebuild` your containers and try your `ping` again!
 
+# Appendix:
+
+Check the `ping -h` help to see how you can originate your ping from a specific interface. Can you ping from a specific interface on a router to a specific interface on another router?
+
 <!-- Links, reference style, inside docset -->
 [chonky internet map]:       ../../img/network-maps/internet-chonk-network-map.png
                              "A Chonky Internet Network Map"
 
+[ping troubleshooting]:       ../../img/ping-troubleshooting.svg
+                             "Diagram for how to troubleshoot ping problems"
 <!-- end of file -->
