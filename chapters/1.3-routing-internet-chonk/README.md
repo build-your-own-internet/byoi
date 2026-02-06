@@ -121,9 +121,38 @@ Now that you have `router3` able to ping `server`, build out the rest of the int
 
 If you have problems creating your routing tables, the next exercise is going to cover troubleshooting!
 
-## Exercise 2: Troubleshooting routing problems on your internet
+## Exercise 2: Understanding and diagnosing routing problems on your internet
 
-We've built an internet! Yay! But this is a fairly small internet and maybe you got everything right the first time. People rarely learn from things going right… SO! Let's see what happens when we have broken routing tables on our Internet and we have to find the problem. Let's setup your environment with a break so you can investigate along with us.
+Here's a handy flowchart to help you understand the output you see in your terminal from a `ping` command:
+
+[![ping troubleshooting][ping troubleshooting]][ping troubleshooting]
+
+Basically, when you run a ping, there are three potential outputs you will see in your terminal:
+1. A successful response
+2. An error message (a few different varieties of these)
+3. No output
+
+A successful response should look familiar to you from all the work we've done so far. It indicates that a packet can successfully make a round-trip from your machine to the destination and back again. We're not going to dive into this.
+
+**When you get an error message**, you may see one of these:
+- `Network unreachable`: your machine doesn't even know where to *start* sending the packet.
+- `Destination net unreachable`: some router on the way to the destination doesn't know how to reach the destination network.
+- `Destination host unreachable`: a router connected to the destination network told us that there is no machine there by that address.
+- `Time to live exceeded`: this probably means we have a routing loop. We'll cover that in the next section 😘.
+
+All of these are error messages are _on the route to_ the destination. If you get an error message, this means that there's something wrong with the path going to the **destination** machine. The message on your screen will include the IP address of the router that generated the error message. This tells us two things: (1) where to look for the error, and (2) since the error message got back to you, you know that the network can deliver packets to and from the router that's reporting the error.
+
+**When you get no output**, this means that response packets to your machine were lost somewhere on the way back to your machine. The response packets could have been an error message like we saw above *or* a reply message from the destination. This is harder to troubleshoot because we don't know where the packets are getting lost.
+
+> 💡 **POP QUIZ!**: `hopon server` and try each of these pings. If you get an error message, provide an explanation for which machine generated the error message and why:
+>
+>- `ping 10.3.1.10`
+>- `ping 10.9.0.1`
+
+
+## Exercise 3: A nastier break
+
+We've built an internet! Yay! But this is a fairly small internet and maybe you got everything right the first time. People rarely learn from things going right… SO! Let's see what happens when we have broken routing tables on our Internet and we have to find the problem. Let's set up your environment with a break so you can investigate along with us.
 
 ### Set up your environment
 
@@ -137,26 +166,21 @@ byoi-rebuild --exercise
 
 ### Discover the breakage
 
-We have routing tables on each machine on our internet that tells it where to send packets bound for a machine on any other network on our internet! Neat! But... now when we try to `ping` our `server` from our `client`, we're not seeing response packets coming back. We need to figure out what's happening and fix our internet! 
-
-Let's first see what happens when our `client` tries to `ping` our `server`:
+Let's first see what happens when our `server` tries to `ping` our `client`:
 
 ```bash
-root@client:/# ping 10.5.0.100 -w 2
-PING 10.5.0.100 (10.5.0.100) 56(84) bytes of data.
+root@server:/# ping -c2 10.1.0.100
+PING 10.1.0.100 (10.1.0.100) 56(84) bytes of data.
+From 10.3.3.1 icmp_seq=1 Time to live exceeded
+From 10.3.3.1 icmp_seq=2 Time to live exceeded
 
---- 10.5.0.100 ping statistics ---
-2 packets transmitted, 0 received, 100% packet loss, time 1046ms
+--- 10.1.0.100 ping statistics ---
+2 packets transmitted, 0 received, +2 errors, 100% packet loss, time 1022ms
 ```
 
-Here's a handy flowchart to help you reason about what's going on When a client isn't receiving response packets from a ping:
+Go back to the flowchart in [exercise 2](#exercise-2-understanding-and-diagnosing-routing-problems-on-your-internet) above. What does this output tell you about the break we currently have?
 
-[![ping troubleshooting][ping troubleshooting]][ping troubleshooting]
-
-<!-- WHERE WE LEFT OFF: Lets talk about this thing now! -->
-
-1. A router that is responsible for getting request packets to their destination thinks it is impossible to get to the destination IP address
-2. Packets are getting lost to or from the destination
+<!-- GO TO EXPLANATION OF TTL -->
 
 Let's explore what these two things mean a little.
 
