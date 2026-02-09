@@ -1,10 +1,10 @@
 version: "3.0"
 services:
-  server:
+  client:
     build: .
-    container_name: build-your-own-internet-server
+    container_name: build-your-own-internet-client
     image: build-your-own-internet
-    hostname: server
+    hostname: client
     networks:
       ten-dot-five-net:
         ipv4_address: 10.5.0.100
@@ -12,10 +12,10 @@ services:
       - NET_ADMIN
     sysctls:
       - net.ipv4.ip_forward=0
-  client:
-    container_name: build-your-own-internet-client
+  server:
+    container_name: build-your-own-internet-server
     image: build-your-own-internet
-    hostname: client
+    hostname: server
     networks:
       ten-dot-one-net:
         ipv4_address: 10.1.0.100

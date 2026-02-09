@@ -239,6 +239,10 @@ We've already seen this in action. At this point, we need to tell `client` how t
 
 ## Now let's make this routing setup automatic
 
+<!-- FIXME: asking students to modify start-up.sh -->
+
+<!-- plus this is bullshit because it's templated -->
+
 We don't want to spend the time manually adding and removing routes every time we start our containers. To solve this problem, we've added a script that is run on every machine whenever your internet is rebuilt. Take a look at the [start-up.sh](./init/start-up.sh) script. We can use this file to conditionally add routes depending on the `hostname`, i.e. `server` or `client`. Add the following to your `start-up.sh` script and then run `byoi-rebuild` to restart your internet with those changes.
 
 ```bash
