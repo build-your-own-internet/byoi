@@ -17,7 +17,7 @@ def make_shit_executable(filename: Path):
     return filename
 
 def copy_common():
-    shutil.copyfile("../common-resources/vimrc", "./.vimrc")
+    shutil.copyfile("../../common-resources/vimrc", "./.vimrc")
 
 def render_dockerfile_from_template(filename, config_dir: ConfigDir):
     # Write the file back to where it came from
