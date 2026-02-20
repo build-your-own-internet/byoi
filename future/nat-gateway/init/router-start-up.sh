@@ -11,10 +11,10 @@ mkdir -p /run/bird
 
 case $HOSTNAME in
     (router-c2)
-        bash set-router-addys.sh 192.168.2.2 192.168.0.2
+        bash set-router-addys.sh 192.168.2.2/24 192.168.0.2/24
         ;;
     (router-c4)
-        bash set-router-addys.sh 192.168.1.4 192.168.0.4
+        bash set-router-addys.sh 192.168.1.4/24 192.168.0.4/24
         ;;
 esac
 
