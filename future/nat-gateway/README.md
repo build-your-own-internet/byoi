@@ -2,6 +2,8 @@
 
 Something about security and private networks here.
 
+[![NAT Gateway network map][NAT Gateway network map]][NAT Gateway network map]
+
 ## Introduction
 
 Comcast has a private network. Every machine on that network needs to be able to communicate with the outside world, but we dont' want to reveal the addresses of those machines to the outside world. 
@@ -73,3 +75,9 @@ Notice the outgoing IP on the echo request. It's router-c4's IP!
 <!-- TODO: Add another machine on the network. Discover how router-c4 knows which machine to pass response packets back to -->
 
 <!-- TODO: Investigate flushing all the docker iptables rules in the early chapters... -->
+
+
+<!-- Links, reference style, inside docset -->
+
+[NAT Gateway network map]:         ../../img/network-maps/nat-gateway.svg
+                             "A network map for our nat gateway setup"
