@@ -76,3 +76,6 @@ future/ansible-setup/setup-ansible.sh
 
 # common resources
 .vimrc
+
+# Python virtual environments
+bin/.venv
