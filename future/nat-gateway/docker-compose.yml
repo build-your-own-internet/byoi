@@ -28,6 +28,21 @@ services:
       - SYS_ADMIN
     sysctls:
       - net.ipv4.ip_forward=0
+  client-c3:
+    container_name: "build-your-own-internet-client-c3"
+    build:
+      context: .
+      dockerfile: Dockerfile_host
+    image: "build-your-own-internet-host"
+    hostname: client-c3
+    networks:
+      one-nine-two-c1-net:
+        ipv4_address: 192.168.1.201
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=0
 
   server-c1:
     container_name: "build-your-own-internet-server-c1"

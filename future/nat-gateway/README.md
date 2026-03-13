@@ -72,6 +72,24 @@ listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 
 Notice the outgoing IP on the echo request. It's router-c4's IP! 
 
+We added a second client to the same network. Both clients are pinging the same machine, `8.2.0.11`. How does the NAT know which client to send the response packets to? 
+
+Run `tcpdump` with the verbose flag: `-vvv`. Check out the ID on the packets:
+
+From client to NAT
+```bash
+21:11:46.860159 IP (tos 0x0, ttl 64, id 33018, offset 0, flags [DF], proto ICMP (1), length 84)
+    192.168.0.201 > 8.2.0.11: ICMP echo request, id 121, seq 9, length 64
+```
+
+From NAT to internet:
+```bash
+21:11:46.860652 IP (tos 0x0, ttl 63, id 33018, offset 0, flags [DF], proto ICMP (1), length 84)
+    1.4.0.4 > 8.2.0.11: ICMP echo request, id 121, seq 9, length 64
+```
+
+It uses the IDs to know which packet belongs to which client!
+
 <!-- TODO: Add another machine on the network. Discover how router-c4 knows which machine to pass response packets back to -->
 
 <!-- TODO: Investigate flushing all the docker iptables rules in the early chapters... -->

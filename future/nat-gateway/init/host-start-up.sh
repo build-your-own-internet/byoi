@@ -20,6 +20,11 @@ case $HOSTNAME in
   ip addr add 192.168.0.200/24 dev eth0
   ip route add default via 192.168.0.2
   ;;
+  (client-c3)
+  ip addr del 192.168.1.201/24 dev eth0
+  ip addr add 192.168.0.201/24 dev eth0
+  ip route add default via 192.168.0.4
+  ;;
   (server-c1)
   ip route add default via 1.2.0.3
   ;;
