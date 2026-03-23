@@ -1,8 +1,5 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
-# just because it's taking us so long to do this chapter
-future/border-gateway-protocol
-
 # compiled output
 /packages/**/dist
 /packages/design-tokens/dist/*/[!theme]*
