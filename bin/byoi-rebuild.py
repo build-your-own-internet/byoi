@@ -71,10 +71,10 @@ def main(config_dir: ConfigDir):
     copy_common()
 
     # Check for docker-compose (hyphenated) vs docker compose (space)
-    command_line_arguments = ["docker", "compose", "up", "--detach", "--force-recreate"]
+    command_line_arguments = ["docker", "compose", "up", "--detach", "--force-recreate", "--pull", "never"]
     if shutil.which("docker-compose"):
         print("--> Found 'docker-compose'. Running 'docker-compose up --detach'...")
-        command_line_arguments = ["docker-compose", "up", "--detach", "--force-recreate"]
+        command_line_arguments = ["docker-compose", "up", "--detach", "--force-recreate", "--pull", "never"]
 
     # Run docker compose
     try:
