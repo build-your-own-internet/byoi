@@ -20,8 +20,6 @@ RUN apt-get update && apt-get install -y iproute2 \
 COPY ./{{ config_dir }}/routers /init
 COPY ./{{ config_dir }}/routers/router-start-up.sh /router-start-up.sh
 
-COPY ./{{ config_dir }}/routers/bird.conf /bird.conf
-
 RUN mkdir -p /etc/vim
 COPY .vimrc /etc/vim/vimrc.local
 
