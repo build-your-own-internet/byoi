@@ -107,8 +107,10 @@ if __name__ == "__main__":
 
     config_dir: ConfigDir = "init"
     if args.final:
+        print("It's the final countdown!")
         config_dir = "final"
     elif args.exercise:
+        print("Let's exercise!")
         config_dir = "exercise"
 
     main(config_dir)
