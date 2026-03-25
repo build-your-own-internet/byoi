@@ -1,0 +1,13 @@
+$ORIGIN awesomecat.com.
+@       IN SOA (
+                host-dns.awesomecat.com.; MNAME.
+                admin.awesomecat.com.   ; RNAME
+                2024041501              ; serial
+                3600                    ; refresh (1 hour)
+                900                     ; retry (15 minutes)
+                604800                  ; expire (1 week)
+                86400                   ; minimum (1 day)
+                )
+
+www                 IN A    4.2.0.11
+
