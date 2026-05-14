@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y iproute2 \
     curl \
     links \
     procps \
-    bird-bgp
+    bird3
 
 COPY ./{{ config_dir }}/routers /init
 COPY ./{{ config_dir }}/routers/router-start-up.sh /router-start-up.sh
