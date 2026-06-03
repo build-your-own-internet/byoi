@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BYOI — Route Propagation</title>
+  <link rel="stylesheet" href="./style.css" />
+  <script src="./vendor/cytoscape.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <aside id="sidebar">
+      <header>
+        <h1>BYOI Route Propagation</h1>
+        <div id="run-meta" class="muted"></div>
+      </header>
+
+      <section>
+        <label class="section-label" for="prefix-search">Prefix</label>
+        <button id="all-routes-btn" type="button">▦ All routes — every advertisement</button>
+        <input id="prefix-search" type="search" placeholder="filter prefixes…" autocomplete="off" />
+        <div id="prefix-list"></div>
+      </section>
+
+      <section>
+        <label class="section-label">Protocol legend</label>
+        <ul id="legend"></ul>
+      </section>
+
+      <section id="detail">
+        <label class="section-label">Selected route</label>
+        <div id="detail-body" class="muted">Pick a prefix to watch it propagate.</div>
+      </section>
+    </aside>
+
+    <main id="stage">
+      <div id="cy"></div>
+      <div id="overlay-hint" class="muted">Loading run…</div>
+      <div id="rib-panel" class="hidden">
+        <header>
+          <span id="rib-title" class="mono"></span>
+          <span id="rib-count" class="muted"></span>
+          <button id="rib-close" title="Close">×</button>
+        </header>
+        <div id="rib-body"></div>
+      </div>
+    </main>
+  </div>
+
+  <footer id="timeline">
+    <button id="play" title="Play / pause">▶</button>
+    <input id="scrubber" type="range" min="0" max="0" value="0" step="1" />
+    <span id="clock" class="mono">t = 0.0s</span>
+    <span id="seq-label" class="mono muted"></span>
+    <span class="spacer"></span>
+    <button id="relayout" title="Recompute the map layout">⟳ map</button>
+    <label class="speed">speed
+      <select id="speed">
+        <option value="600">slow</option>
+        <option value="300" selected>normal</option>
+        <option value="120">fast</option>
+      </select>
+    </label>
+  </footer>
+
+  <script src="./app.js"></script>
+</body>
+</html>
