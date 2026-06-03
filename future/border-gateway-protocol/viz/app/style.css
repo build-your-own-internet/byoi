@@ -84,7 +84,9 @@ body {
 
 #legend { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
 #legend li { display: flex; align-items: center; gap: 9px; font-size: 12.5px; }
-#legend .swatch { width: 22px; height: 4px; border-radius: 2px; flex: none; }
+#legend svg.swatch { width: 26px; height: 10px; flex: none; }
+#legend .legend-note { margin-top: 6px; color: var(--muted); font-size: 11.5px; }
+#legend .arrow-glyph { width: 26px; text-align: center; color: var(--text); font-weight: bold; flex: none; }
 
 #detail-body { font-size: 12.5px; }
 #detail-body table { width: 100%; border-collapse: collapse; }
@@ -132,6 +134,33 @@ body {
 #rib-body .via { font-family: ui-monospace, monospace; color: var(--muted); }
 #rib-body .empty { padding: 16px 12px; color: var(--muted); }
 #rib-body tr.cur-prefix { background: #1f6feb22; }
+
+/* Ping controls + path readout */
+.ping-ctl {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  padding: 8px 12px; border-bottom: 1px solid var(--border);
+}
+.ping-ctl .lbl { color: var(--muted); font-size: 12px; }
+.ping-ctl select {
+  background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+  border-radius: 5px; padding: 3px 6px; font-size: 12px; font-family: ui-monospace, monospace;
+}
+.ping-ctl button {
+  background: #1f6feb33; color: var(--text); border: 1px solid var(--accent);
+  border-radius: 5px; padding: 3px 9px; font-size: 12px; cursor: pointer; margin-left: auto;
+}
+.ping-ctl button:hover { background: #1f6feb55; }
+.ping-block { padding: 8px 12px; border-bottom: 1px solid #ffffff08; }
+.ping-h { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+.ping-status { font-size: 12.5px; margin-bottom: 6px; }
+.ping-status .ok { color: #43a047; }
+.ping-status .fail { color: #e53935; }
+.ping-block .hop {
+  display: flex; align-items: center; gap: 6px; font-size: 12px; padding: 2px 0;
+}
+.ping-block .hop .r { font-family: ui-monospace, monospace; font-weight: 600; }
+.ping-block .hop .arr { color: var(--muted); }
+.ping-block .hop .via { margin-left: auto; color: var(--muted); font-family: ui-monospace, monospace; font-size: 11px; }
 
 /* Timeline */
 #timeline {
