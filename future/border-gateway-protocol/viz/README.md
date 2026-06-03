@@ -71,7 +71,7 @@ Pieces (each runnable on its own):
 | --- | --- |
 | `byoi_viz/configparse.py` | Parse `router-*.conf` → AS numbers, eBGP/iBGP map, OSPF interfaces |
 | `byoi_viz/birdc.py` | Parse `birdc show route all` / `show protocols` / `show ospf neighbors` |
-| `byoi_viz/topology.py` | Build the map graph from `docker inspect` + configs + live OSPF neighbors |
+| `byoi_viz/topology.py` | Build the map graph from `docker inspect` + configs + live OSPF neighbors; infer AS membership by flooding `local as` across OSPF adjacencies |
 | `byoi_viz/recorder.py` | Poll all routers on an interval → SQLite |
 | `byoi_viz/exporter.py` | Collapse a run → compact JSON timeline |
 | `byoi_viz/pipeline.py` | Glue: record → export → serve → open browser |
@@ -80,7 +80,14 @@ Pieces (each runnable on its own):
 The map is **auto-generated** — nodes/links/clouds come from the running
 network and the configs, so it stays correct when you change the topology.
 Routers are grouped into **org clouds** (by name letter: `z`→Zayo, `a`→AWS, …)
-nested inside their **AS boundary** (dashed, from `local as` in the configs).
+nested inside their **AS boundary** (dashed).
+
+**AS membership tracks the network on its own.** A router's AS comes from its
+own `local as` when it has one; routers without it (OSPF-only, default config)
+inherit the AS of their OSPF neighbors, since OSPF never crosses an AS boundary.
+Because OSPF adjacencies are read live, peeling an org into its own AS — which
+turns its cross-AS links from OSPF into eBGP — re-draws the AS boundaries
+automatically, with no edits to the visualizer.
 
 ### Requirements
 

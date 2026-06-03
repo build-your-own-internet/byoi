@@ -91,7 +91,9 @@ def build_topology(routers_dir: Path) -> dict:
             "label": r.split("-")[-1].upper(),  # Z7
             "org": org_key,
             "org_label": org_label,
-            "as": (cfg.local_as if cfg and cfg.local_as else asn),
+            # AS is seeded only from an explicit `local as` here; routers without
+            # one (OSPF-only, default config) get their AS inferred below.
+            "as": (cfg.local_as if cfg and cfg.local_as else None),
             "color": color,
             "ips": [],
         }
@@ -163,6 +165,37 @@ def build_topology(routers_dir: Path) -> dict:
                 continue
             seen.add(key)
             links.append({"source": r, "target": peer, "relation": "ospf"})
+
+    # Infer AS membership for routers that don't declare `local as` (the
+    # OSPF-only, default-config routers). OSPF never crosses an AS boundary, so
+    # a router shares its AS with everything it's OSPF-adjacent to. We seed from
+    # the routers that DO declare an AS and flood that label across OSPF edges.
+    # Because OSPF adjacencies are read live, this tracks AS changes on its own:
+    # when an org is peeled into its own AS, its cross-AS links stop being OSPF
+    # and the flood follows the new boundary -- no map edits needed.
+    ospf_adj: dict[str, set[str]] = {r: set() for r in nodes}
+    for l in links:
+        if l["relation"] == "ospf":
+            ospf_adj[l["source"]].add(l["target"])
+            ospf_adj[l["target"]].add(l["source"])
+
+    as_of = {r: n["as"] for r, n in nodes.items() if n["as"] is not None}
+    changed = True
+    while changed:  # propagate until no unknown router can learn an AS
+        changed = False
+        for r in nodes:
+            if r in as_of:
+                continue
+            for nb in ospf_adj[r]:
+                if nb in as_of:
+                    as_of[r] = as_of[nb]
+                    changed = True
+                    break
+
+    # Finalize. A router with neither an explicit AS nor any OSPF neighbor (a
+    # true island) falls back to the name-letter guess as a last resort.
+    for r, n in nodes.items():
+        n["as"] = as_of.get(r) or org_for_router(r)[2]
 
     as_groups: dict[str, list[str]] = {}
     org_groups: dict[str, list[str]] = {}
