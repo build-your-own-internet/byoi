@@ -36,16 +36,87 @@ class BgpSession:
 
 
 @dataclass
+class Protocol:
+    """One `protocol …{}` block — the bird-internals model for the UI."""
+    name: str          # display name, e.g. "ospf v2", "bgp ibgp_z7", "kernel"
+    kind: str          # device|direct|kernel|ospf|bgp|static|other
+    import_filter: str | None = None  # the `import …` clause, verbatim
+    export_filter: str | None = None  # the `export …` clause, verbatim
+    # BGP extras
+    neighbor_ip: str | None = None
+    local_ip: str | None = None
+    local_as: int | None = None
+    peer_as: int | None = None
+    bgp_kind: str | None = None       # ebgp|ibgp
+    next_hop_self: bool = False
+    # OSPF extras
+    interfaces: list[str] = field(default_factory=list)
+
+
+@dataclass
 class RouterConfig:
     router: str  # e.g. "router-z7"
     local_as: int | None = None
     bgp: dict[str, BgpSession] = field(default_factory=dict)  # keyed by proto name
     ospf_ifaces: list[str] = field(default_factory=list)
     has_ospf: bool = False
+    protocols: list[Protocol] = field(default_factory=list)
 
     def session_kind(self, proto_name: str) -> str | None:
         s = self.bgp.get(proto_name)
         return s.kind if s else None
+
+
+def _protocol_blocks(text: str):
+    """Yield (header, body) for each top-level `protocol …{…}`, brace-matched
+    so nested braces (e.g. OSPF area/interface blocks) don't end it early."""
+    i = 0
+    while True:
+        m = re.search(r"\bprotocol\b\s+([^{]+?)\{", text[i:])
+        if not m:
+            return
+        header = m.group(1).strip()
+        start = i + m.end() - 1  # index of the opening '{'
+        depth, j = 0, start
+        while j < len(text):
+            if text[j] == "{":
+                depth += 1
+            elif text[j] == "}":
+                depth -= 1
+                if depth == 0:
+                    break
+            j += 1
+        yield header, text[start + 1:j]
+        i = j + 1
+
+
+def parse_protocols(text: str) -> list[Protocol]:
+    protos: list[Protocol] = []
+    for header, body in _protocol_blocks(text):
+        kind = header.split()[0]
+        imp = re.search(r"\bimport\s+([^;]+);", body)
+        exp = re.search(r"\bexport\s+([^;]+);", body)
+        p = Protocol(
+            name=header, kind=kind,
+            import_filter=imp.group(1).strip() if imp else None,
+            export_filter=exp.group(1).strip() if exp else None,
+        )
+        if kind == "bgp":
+            lm = _LOCAL.search(body)
+            nm = _NEIGHBOR.search(body)
+            if lm:
+                p.local_ip = lm.group("ip")
+                p.local_as = int(lm.group("asn"))
+            if nm:
+                p.neighbor_ip = nm.group("ip")
+                p.peer_as = int(nm.group("asn"))
+            if p.local_as is not None and p.peer_as is not None:
+                p.bgp_kind = "ibgp" if p.local_as == p.peer_as else "ebgp"
+            p.next_hop_self = "next hop self" in body
+        elif kind == "ospf":
+            p.interfaces = _IFACE.findall(body)
+        protos.append(p)
+    return protos
 
 
 def parse_config_text(router: str, text: str) -> RouterConfig:
@@ -81,6 +152,8 @@ def parse_config_text(router: str, text: str) -> RouterConfig:
     if om:
         cfg.has_ospf = True
         cfg.ospf_ifaces = _IFACE.findall(om.group(0))
+
+    cfg.protocols = parse_protocols(text)
 
     return cfg
 

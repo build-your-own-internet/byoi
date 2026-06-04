@@ -91,11 +91,28 @@ def export_run(db_path: Path, out_path: Path | None = None) -> Path:
     # Sort prefixes: origin (direct) prefixes first, then by name.
     prefixes.sort(key=lambda p: (not p["origins"], p["prefix"]))
 
+    # Per-router, per-protocol state over time (collapsed to change-events).
+    # EVENT = [seq, state, info, imported, exported, preferred].
+    proto_rows = conn.execute(
+        "SELECT seq, router, name, state, info, imported, exported, preferred "
+        "FROM protocols ORDER BY router, name, seq"
+    ).fetchall()
+    proto_states: dict[str, dict[str, list]] = defaultdict(lambda: defaultdict(list))
+    last_key: dict[tuple, tuple] = {}
+    for row in proto_rows:
+        k = (row["router"], row["name"])
+        cur = (row["state"], row["info"], row["imported"], row["exported"],
+               row["preferred"])
+        if last_key.get(k) != cur:
+            proto_states[row["router"]][row["name"]].append([row["seq"], *cur])
+            last_key[k] = cur
+
     bundle = {
         "topology": topo,
         "snapshots": snaps,
         "seq_count": len(seqs),
         "prefixes": prefixes,
+        "protoStates": {r: dict(d) for r, d in proto_states.items()},
         "legend": [
             {"key": "eBGP", "label": "eBGP (between ASes)", "color": "#e53935"},
             {"key": "iBGP", "label": "iBGP (within an AS)", "color": "#fb8c00"},

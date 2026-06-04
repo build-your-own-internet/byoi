@@ -162,6 +162,39 @@ body {
 .ping-block .hop .arr { color: var(--muted); }
 .ping-block .hop .via { margin-left: auto; color: var(--muted); font-family: ui-monospace, monospace; font-size: 11px; }
 
+/* Bird internals view */
+#rib-panel.wide { width: 460px; }
+.bird-sec { padding: 8px 12px; border-bottom: 1px solid #ffffff08; }
+.bird-h {
+  font-size: 11px; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); margin-bottom: 6px;
+}
+.bird-if { font-size: 12px; padding: 1px 0; }
+.core-chips { display: flex; flex-wrap: wrap; gap: 4px 10px; }
+.core-chip { font-size: 12px; font-weight: 600; font-family: ui-monospace, monospace; }
+.bird-proto {
+  border-left: 3px solid #555; background: #ffffff06; border-radius: 4px;
+  padding: 6px 8px; margin-bottom: 6px;
+}
+.bird-ph { display: flex; align-items: center; gap: 6px; font-size: 12.5px; flex-wrap: wrap; }
+.bird-kind {
+  font-size: 10px; text-transform: uppercase; letter-spacing: .04em;
+  color: var(--muted); border: 1px solid var(--border); border-radius: 3px; padding: 0 4px;
+}
+.bird-status { color: #43a047; font-size: 11.5px; }
+.bird-counts { margin-left: auto; font-family: ui-monospace, monospace; font-size: 11px; color: var(--text); }
+.bird-tag {
+  font-size: 10px; color: var(--accent); border: 1px solid var(--accent);
+  border-radius: 3px; padding: 0 4px;
+}
+.bird-flt { font-size: 11px; margin-top: 3px; line-height: 1.35; }
+.bird-flt .fk {
+  display: inline-block; width: 46px; color: var(--muted);
+  text-transform: uppercase; font-size: 10px; letter-spacing: .04em;
+}
+.bird-flt .mono { color: var(--text); }
+.bird-redist { font-size: 11px; margin-top: 4px; color: var(--muted); }
+
 /* Timeline */
 #timeline {
   height: 54px; flex: none;

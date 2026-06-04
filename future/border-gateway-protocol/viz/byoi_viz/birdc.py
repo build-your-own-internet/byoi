@@ -165,6 +165,9 @@ class ProtoState:
     state: str  # up/down/start
     since: str
     info: str = ""
+    imported: int | None = None   # from `show protocols all` Routes: line
+    exported: int | None = None
+    preferred: int | None = None
 
 
 def parse_protocols(text: str) -> list[ProtoState]:
@@ -184,6 +187,45 @@ def parse_protocols(text: str) -> list[ProtoState]:
                 info=m.group("info").strip(),
             )
         )
+    return out
+
+
+def parse_protocols_all(text: str) -> list[ProtoState]:
+    """Parse `show protocols all`: the table rows plus each protocol's indented
+    'Routes: N imported, M exported, K preferred' line."""
+    out: list[ProtoState] = []
+    cur: ProtoState | None = None
+    for line in text.splitlines():
+        if not line.strip() or line.startswith("Name") or "ready" in line:
+            continue
+        if not line[0].isspace():  # a protocol table row (not indented)
+            m = _PROTO_ROW.match(line)
+            if m:
+                cur = ProtoState(
+                    name=m.group("name"), proto=m.group("proto"),
+                    state=m.group("state"), since=m.group("since").strip(),
+                    info=m.group("info").strip(),
+                )
+                # `since` can greedily absorb the status word (Established/
+                # Running); a status starts with a letter, a timestamp doesn't.
+                if not cur.info and " " in cur.since:
+                    *rest, last = cur.since.split()
+                    if last[:1].isalpha():
+                        cur.info, cur.since = last, " ".join(rest)
+                out.append(cur)
+            else:
+                cur = None
+            continue
+        if cur is not None and "imported" in line:  # the Routes: detail line
+            imp = re.search(r"(\d+)\s+imported", line)
+            exp = re.search(r"(\d+)\s+exported", line)
+            pref = re.search(r"(\d+)\s+preferred", line)
+            if imp:
+                cur.imported = int(imp.group(1))
+            if exp:
+                cur.exported = int(exp.group(1))
+            if pref:
+                cur.preferred = int(pref.group(1))
     return out
 
 

@@ -16,7 +16,7 @@ import json
 import subprocess
 from pathlib import Path
 
-from .configparse import RouterConfig, parse_router_dir
+from .configparse import RouterConfig, parse_config_text, parse_router_dir
 
 # Router-name letter -> (org key, human label, AS number, brand color).
 ORG_BY_LETTER = {
@@ -39,6 +39,23 @@ ORG_BY_OCTET = {
 
 NET_PREFIX = "build-your-own-internet-"
 ROUTER_PREFIX = NET_PREFIX + "router-"
+
+
+# BIRD route-source tokens -> friendly protocol names (for redistribution).
+_RTS_MAP = {
+    "RTS_BGP": "BGP", "RTS_OSPF": "OSPF", "RTS_OSPF_IA": "OSPF",
+    "RTS_OSPF_EXT1": "OSPF-E1", "RTS_OSPF_EXT2": "OSPF-E2",
+    "RTS_STATIC": "static", "RTS_DEVICE": "direct", "RTS_INHERIT": "direct",
+}
+
+
+def _redist_sources(expr: str | None) -> list[str]:
+    """Which protocols an export filter pulls from (e.g. `source = RTS_BGP`)."""
+    if not expr:
+        return []
+    import re
+    found = {_RTS_MAP.get(t, t) for t in re.findall(r"RTS_\w+", expr)}
+    return sorted(found)
 
 
 def _docker_json(args: list[str]) -> list | dict:
@@ -197,6 +214,38 @@ def build_topology(routers_dir: Path) -> dict:
     for r, n in nodes.items():
         n["as"] = as_of.get(r) or org_for_router(r)[2]
 
+    # Static "bird internals" model per router: interfaces + protocols with
+    # their import/export filters and what they redistribute.
+    ip_subnet: dict[str, str] = {}
+    for seg in segments:
+        for r, ip in seg["members"]:
+            if ip:
+                ip_subnet[ip] = seg["subnet"]
+    # Routers without a router-<x>.conf run the shared default bird.conf.
+    default_cfg = None
+    default_path = routers_dir / "bird.conf"
+    if default_path.exists():
+        default_cfg = parse_config_text("default", default_path.read_text(encoding="utf-8"))
+
+    bird: dict[str, dict] = {}
+    for r in nodes:
+        cfg = cfgs.get(r) or default_cfg
+        if cfg is None:
+            continue
+        ifaces = [{"ip": ip, "subnet": ip_subnet.get(ip, "")}
+                  for ip in nodes[r]["ips"]]
+        protos = []
+        for p in cfg.protocols:
+            protos.append({
+                "name": p.name, "kind": p.kind,
+                "import": p.import_filter, "export": p.export_filter,
+                "neighbor": ip_to_router.get(p.neighbor_ip or "", p.neighbor_ip),
+                "peer_as": p.peer_as, "bgp_kind": p.bgp_kind,
+                "nhs": p.next_hop_self, "ospf_ifaces": p.interfaces,
+                "redistributes": _redist_sources(p.export_filter),
+            })
+        bird[r] = {"interfaces": ifaces, "protocols": protos}
+
     as_groups: dict[str, list[str]] = {}
     org_groups: dict[str, list[str]] = {}
     for n in nodes.values():
@@ -212,6 +261,7 @@ def build_topology(routers_dir: Path) -> dict:
         "orgs": {k: {"label": v[1], "as": v[2], "color": v[3]}
                  for k, v in ORG_BY_LETTER.items()},
         "ip_to_router": ip_to_router,
+        "bird": bird,
     }
 
 

@@ -34,13 +34,14 @@ const state = {
   bundle: null, cy: null, prefix: null, seq: 0, maxSeq: 0,
   playing: false, timer: null, edgeIndex: new Map(), orgColor: new Map(),
   selectedRouter: null, selectedEdge: null, selectedAs: null, ping: null,
-  allMode: false, asOriginated: {},
+  bird: null, allMode: false, asOriginated: {},
 };
 
 function $(id) { return document.getElementById(id); }
 const keyPair = (a, b, rel) => [a, b].sort().join('|') + '|' + rel;
 const shortName = id => (id || '').replace('router-', '');
 const prefixSortKey = p => p.split('/')[0].split('.').map(Number);
+const escapeHtml = s => (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
 // ---- IP / CIDR helpers (for the ping path tracer) ----
 const ipToInt = ip => ip.split('.').reduce((a, o) => ((a << 8) >>> 0) + (+o), 0) >>> 0;
@@ -450,7 +451,9 @@ function renderRouterRib(r) {
     `<div class="ping-ctl"><span class="lbl">ping</span>` +
     `<select id="ping-target">` +
     others.map(id => `<option value="${id}">${shortName(id)}</option>`).join('') +
-    `</select><button id="ping-go">trace ▸</button></div>`;
+    `</select><button id="ping-go">trace ▸</button>` +
+    `<button id="bird-go" title="What's happening inside BIRD on this router">⌬ bird internals</button>` +
+    `</div>`;
 
   let tableHtml;
   if (!rows.length) {
@@ -472,6 +475,7 @@ function renderRouterRib(r) {
   }
   $('rib-body').innerHTML = pingCtl + tableHtml;
   $('ping-go').onclick = () => startPing(r, $('ping-target').value);
+  $('bird-go').onclick = () => openBird(r);
 }
 
 function renderEdgeRoutes(eid) {
@@ -539,6 +543,7 @@ function asBlocks(as) {
 
 function refreshInspector() {
   if (state.ping) renderPing();
+  else if (state.bird) renderBird(state.bird);
   else if (state.selectedRouter) renderRouterRib(state.selectedRouter);
   else if (state.selectedEdge) renderEdgeRoutes(state.selectedEdge);
   else if (state.selectedAs) renderAsDetail(state.selectedAs);
@@ -553,7 +558,9 @@ function clearSelStyles() {
 function beginSelection() {
   state.selectedRouter = state.selectedEdge = state.selectedAs = null;
   state.ping = null;
+  state.bird = null;
   $('rib-panel').classList.remove('hidden');
+  $('rib-panel').classList.remove('wide');
   clearSelStyles();
 }
 
@@ -702,10 +709,103 @@ function drawPing() {
   });
 }
 
+// ---- bird internals view ----
+function liveProtoName(router, p) {
+  const states = state.bundle.protoStates[router] || {};
+  if (p.kind === 'bgp') { const n = p.name.split(' ')[1]; return states[n] ? n : null; }
+  if (states[p.kind + '1']) return p.kind + '1';
+  return Object.keys(states).find(k => k.startsWith(p.kind)) || null;
+}
+function protoStateAt(router, liveName, seq) {
+  const evs = (state.bundle.protoStates[router] || {})[liveName];
+  if (!evs) return null;
+  let cur = null;
+  for (const e of evs) { if (e[0] <= seq) cur = e; else break; }
+  return cur;  // [seq, state, info, imp, exp, pref]
+}
+function protoColor(p) {
+  if (p.kind === 'bgp') return p.bgp_kind === 'ibgp' ? COLORS.iBGP : COLORS.eBGP;
+  if (p.kind === 'ospf') return COLORS.OSPF;
+  if (p.kind === 'direct') return COLORS.direct;
+  return '#8b949e';
+}
+const protoLabel = p =>
+  p.kind === 'bgp' ? (p.name.split(' ')[1] || 'bgp') : p.kind === 'ospf' ? 'OSPF' : p.kind;
+
+function openBird(router) {
+  beginSelection();
+  state.bird = router;
+  $('rib-panel').classList.add('wide');
+  state.cy.getElementById(router).addClass('router-selected');
+  applyTime(state.seq);
+}
+
+function renderBird(router) {
+  const bird = (state.bundle.topology.bird || {})[router];
+  $('rib-panel').classList.add('wide');
+  $('rib-title').innerHTML = `${shortName(router)} <span class="muted">· bird internals</span>`;
+  if (!bird) {
+    $('rib-count').textContent = '';
+    $('rib-body').innerHTML = '<div class="empty">No config captured for this router.</div>';
+    return;
+  }
+  const counts = {};
+  for (const r of ribAt(router, state.seq)) counts[r.cls] = (counts[r.cls] || 0) + 1;
+  const ribTotal = Object.values(counts).reduce((a, b) => a + b, 0);
+  $('rib-count').textContent = `${ribTotal} routes in RIB`;
+
+  const ifaceHtml = bird.interfaces.map(i =>
+    `<div class="bird-if"><span class="mono">${i.ip}</span> ` +
+    `<span class="muted mono">${i.subnet}</span></div>`).join('') ||
+    '<div class="muted">none</div>';
+
+  const order = ['eBGP', 'iBGP', 'OSPF', 'OSPF-E1', 'OSPF-E2', 'direct', 'static'];
+  const coreHtml = order.filter(c => counts[c]).map(c =>
+    `<span class="core-chip" style="color:${COLORS[c] || '#fff'}">${counts[c]} ${c}</span>`)
+    .join('') || '<span class="muted">empty</span>';
+
+  const protoCards = bird.protocols.map(p => {
+    const color = protoColor(p);
+    const ln = liveProtoName(router, p);
+    const st = ln ? protoStateAt(router, ln, state.seq) : null;
+    const status = st ? (st[2] || st[1] || '') : '';
+    const imp = st && st[3] != null ? st[3] : null;
+    const exp = st && st[4] != null ? st[4] : null;
+    const cnt = (imp != null || exp != null)
+      ? `<span class="bird-counts">${imp != null ? `▲ ${imp} in` : ''} ` +
+        `${exp != null ? `▼ ${exp} out` : ''}</span>` : '';
+    const nb = p.neighbor
+      ? ` <span class="muted">→ ${shortName(p.neighbor)}${p.peer_as ? ` (AS${p.peer_as})` : ''}</span>` : '';
+    const nhs = p.nhs ? ` <span class="bird-tag">next hop self</span>` : '';
+    const imF = p.import
+      ? `<div class="bird-flt"><span class="fk">import</span> <span class="mono">${escapeHtml(p.import)}</span></div>` : '';
+    const exF = p.export
+      ? `<div class="bird-flt"><span class="fk">export</span> <span class="mono">${escapeHtml(p.export)}</span></div>` : '';
+    const redist = (p.redistributes && p.redistributes.length)
+      ? `<div class="bird-redist">↻ redistributes ` +
+        p.redistributes.map(s => `<b style="color:${COLORS[s] || '#fff'}">${s}</b>`).join(', ') +
+        ` → ${protoLabel(p)}</div>` : '';
+    return `<div class="bird-proto" style="border-left-color:${color}">` +
+      `<div class="bird-ph"><b style="color:${color}">${protoLabel(p)}</b>` +
+      `<span class="bird-kind">${p.kind}</span>${nb}${nhs}` +
+      `<span class="bird-status">${status}</span>${cnt}</div>${imF}${exF}${redist}</div>`;
+  }).join('');
+
+  $('rib-body').innerHTML =
+    `<div class="ping-ctl"><button id="bird-back">↩ back to routes</button></div>` +
+    `<div class="bird-sec"><div class="bird-h">interfaces → BIRD</div>${ifaceHtml}</div>` +
+    `<div class="bird-sec"><div class="bird-h">BIRD core · RIB by source</div>` +
+    `<div class="core-chips">${coreHtml}</div></div>` +
+    `<div class="bird-sec"><div class="bird-h">protocols · import / export filters</div>${protoCards}</div>`;
+  $('bird-back').onclick = () => openRib(router);
+}
+
 function closeInspector() {
   state.selectedRouter = state.selectedEdge = state.selectedAs = null;
   state.ping = null;
+  state.bird = null;
   $('rib-panel').classList.add('hidden');
+  $('rib-panel').classList.remove('wide');
   clearSelStyles();
   applyTime(state.seq);  // revert map to its normal mode (all-routes / single-prefix)
 }
@@ -867,6 +967,8 @@ async function main() {
   if (asId && state.cy.getElementById(asId).length) openAs(asId);
   const pg = (qs.get('ping') || '').split(',');
   if (pg.length === 2 && nodeById(pg[0]) && nodeById(pg[1])) startPing(pg[0], pg[1]);
+  const birdR = qs.get('bird');
+  if (birdR && nodeById(birdR)) openBird(birdR);
   applyTime(seq);
 }
 

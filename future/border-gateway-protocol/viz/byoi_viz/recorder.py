@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS routes (
 );
 CREATE TABLE IF NOT EXISTS protocols (
     seq INTEGER, router TEXT, name TEXT, proto TEXT, state TEXT,
-    info TEXT, since TEXT
+    info TEXT, since TEXT, imported INTEGER, exported INTEGER, preferred INTEGER
 );
 CREATE INDEX IF NOT EXISTS idx_routes_seq ON routes(seq);
 CREATE INDEX IF NOT EXISTS idx_routes_prefix ON routes(prefix);
@@ -58,7 +58,7 @@ def _poll_router(container: str, bgp_kind: dict[str, str]):
     try:
         combined = subprocess.run(
             ["docker", "exec", container, "sh", "-c",
-             f"birdc show route all; echo {_SPLIT}; birdc show protocols"],
+             f"birdc show route all; echo {_SPLIT}; birdc show protocols all"],
             check=True, capture_output=True, text=True, timeout=15.0,
         ).stdout
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
@@ -72,8 +72,9 @@ def _poll_router(container: str, bgp_kind: dict[str, str]):
             r.iface, r.as_path, r.metric1, r.metric2, int(r.best),
         ))
     proto_rows = []
-    for p in birdc.parse_protocols(proto_out):
-        proto_rows.append((router, p.name, p.proto, p.state, p.info, p.since))
+    for p in birdc.parse_protocols_all(proto_out):
+        proto_rows.append((router, p.name, p.proto, p.state, p.info, p.since,
+                           p.imported, p.exported, p.preferred))
     return router, route_rows, proto_rows
 
 
@@ -130,7 +131,7 @@ def record(out_db: Path, routers_dir: Path, duration: float, interval: float,
                     [(seq, *row) for row in route_rows],
                 )
                 conn.executemany(
-                    "INSERT INTO protocols VALUES (?,?,?,?,?,?,?)",
+                    "INSERT INTO protocols VALUES (?,?,?,?,?,?,?,?,?,?)",
                     [(seq, *row) for row in proto_rows],
                 )
                 n_routes += len(route_rows)
