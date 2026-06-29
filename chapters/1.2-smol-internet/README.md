@@ -14,7 +14,7 @@ Here's what we expect our internet to look like by the end of this chapter:
 
 [![A Smol Internet Map][smol internet map]][smol internet map]
 
-You'll notice in this network diagram that we've built on the smol network from Chapter 1.1. Here, we've added a **new** network, `192.168.1.0/24`, and we've added a new machine, `router`. A [router](../glossary.md#router-aka-gateway) is a machine that has an [interface](../glossary.md#interface) on multiple networks and can forward packets across those networks. In this case, our router has an interface on both `10.1.1.0/24` and `192.168.1.0/24`.
+You'll notice in this network diagram that we've built on the smol network from Chapter 1.1. Here, we've added a **new** network, `192.168.1.0/24`, and we've added a new machine, `router`. A [router](../glossary.md#router) is a machine that has an [interface](../glossary.md#interface) on multiple networks and can forward packets across those networks. In this case, our router has an interface on both `10.1.1.0/24` and `192.168.1.0/24`.
 
 Now that we've got a bit of an internet drawn out in our network diagram above, let's take a moment to really understand how to read what we're seeing there. Think of this diagram like a street map. Each line is a path we can take to get from one location to another. So, if we wanted to travel from `client` to `server`, we'd leave `client` on the `10.1.1.0/24` network until we got to `router`. `router` is a bridge between `10.1.1.0/24` and `192.168.1.0/24`, so we'd pass through `router` to get to `192.168.1.0/24`. Once there, we could find `server` and go visit that machine. We've added the IP addresses for the machines and networks to make it easier to reference and understand which machine is talking to which other machine on which network.
 
@@ -232,7 +232,7 @@ What happened here?
   * checks the destination IP
   * sees that the request is not for itself
   * checks whether or not to forward the packet
-  * finds out that it should route the packets - Check the end of this chapter for [how does a machine know if it should forward packets](#how-does-a-machine-know-if-it-should-forward-packets)
+  * finds out that it should route the packets (packet forwarding is enabled by default)
   * and does an ARP request which finds `client`
 
 `router` knows where the packets go and sends them on to `client`.  That's the first half of the process! `client` has ping packets!
@@ -241,7 +241,7 @@ But then what? `client` needs to reply to the ping, `client` knows the response 
 
 ### Tell `client` how to respond to `server`
 
-We've already seen this in action. At this point, we need to tell `client` how to find the `192.168.1.0/24` network. We did this earlier in teaching `server` how to find the `10.1.1.0/24` network. We're going to leave this as an exercise for the reader to attempt on their own. If you need some guidance, review the [Make `server` ping hosts on the 10.1.1.0/24 network](#make-server-ping-hosts-on-the-10.1.1.0/24-network) section.
+We've already seen this in action. At this point, we need to tell `client` how to find the `192.168.1.0/24` network. We did this earlier in teaching `server` how to find the `10.1.1.0/24` network. We're going to leave this as an exercise for the reader to attempt on their own. If you need some guidance, review the "Make `server` ping hosts on the 10.1.1.0/24 network" section above.
 
 ## Now let's make this routing setup automatic
 

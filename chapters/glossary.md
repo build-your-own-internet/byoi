@@ -19,13 +19,13 @@ You might run into terms that you don't know the definition to. Sometimes they a
   - [name resolution](#name-resolution)
   - [neighbor (in a routing context)](#neighbor-in-a-routing-context)
   - [network](#network)
-  - [packets (a.k.a `IP packets`)](#packets-aka-ip-packets)
+  - [packets](#packets)
   - [protocol](#protocol)
   - [process (or running process)](#process-or-running-process)
   - [proxy](#proxy)
   - [resolver](#resolver)
   - [route](#route)
-  - [router (a.k.a `gateway`)](#router-aka-gateway)
+  - [router](#router)
   - [routing table](#routing-table)
   - [service](#service)
   - [server](#server)
@@ -123,9 +123,9 @@ Typically a network will have a "network address" which (if we're using version 
 
 Sometimes when people use the term "network," they mean "internet." Since "internet" is a lot of syllables, it's a lot easier to just shorten the word.
 
-## packets (a.k.a `IP packets`)
+## packets
 
-All traffic on an internet is wrapped up in IP packets. IP packets provide a header that contains a bit of metadata that is necessary to be able to correctly route and manage the data container within the packet.
+All traffic on an internet is wrapped up in IP packets (also called "IP packets"). IP packets provide a header that contains a bit of metadata that is necessary to be able to correctly route and manage the data container within the packet.
 
 ## protocol
 
@@ -165,13 +165,13 @@ root@router-a2:/# ip route
 
 Think of these like signposts you might find when you're hiking through a forest. You might encounter a junction along your path with a sign that says, "Mount Baker this way" or "Virginia City that way" kind of thing. These routes are like that. They tell the router what path to take next without knowing anything else about how far or if that path will *actually* get you to your destination.
 
-## router (a.k.a `gateway`)
+## router
 
-A router is any machine whose purpose is to connect networks together. It does so by forwarding packets further toward their destination. Each router has a routing table which serves much like a sign post on a highway: it tells the router where to send packets next on their way to their final destination. Each router makes decisions on its own for the most efficient way to send the packet to its destination. The internet, as we know today, is not possible without numerous routers facilitating the requests.
+A router (also called a "gateway") is any machine whose purpose is to connect networks together. It does so by forwarding packets further toward their destination. Each router has a routing table which serves much like a sign post on a highway: it tells the router where to send packets next on their way to their final destination. Each router makes decisions on its own for the most efficient way to send the packet to its destination. The internet, as we know today, is not possible without numerous routers facilitating the requests.
 
 ## routing table
 
-A routing table is a list of known network IP address ranges, and every machine connected to an internet has a routing table to reference. Machines use routing tables to determine what the next [hop](#hop) should be when they're sending [packets](#packets-aka-ip-packets) towards a destination IP address. If the routing table does not have a matching route for the destination IP address, the request can be sent out the default gateway in the hopes that another machine on that internet will know how to get the packets to their destination. Check [prefixes-and-subnet-masks.md in the appendix](../appendix/prefixes-and-subnet-masks.md) for more details on how routing tables work.
+A routing table is a list of known network IP address ranges, and every machine connected to an internet has a routing table to reference. Machines use routing tables to determine what the next [hop](#hop) should be when they're sending [packets](#packets) towards a destination IP address. If the routing table does not have a matching route for the destination IP address, the request can be sent out the default gateway in the hopes that another machine on that internet will know how to get the packets to their destination. Check [prefixes-and-subnet-masks.md in the appendix](../appendix/prefixes-and-subnet-masks.md) for more details on how routing tables work.
 
 ## service
 

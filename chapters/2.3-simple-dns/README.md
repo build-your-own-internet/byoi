@@ -206,13 +206,13 @@ You might be wondering why we have `udp 0 0 2.0.0.107:53 0.0.0.0:* 21/knotd` rep
 
 We are almost there! Before we can issue a `dig` command to see the DNS request working, we have one more thing to take care of.
 
-## Update your host-dns's `/etc/resolv.conf` file
+## Update your host-dns resolv.conf file
 
 The configuration we have done so far is to get knot running. Now, we need to configure host-dns to know how to resolve names.
 
 So now, in order to use the Knot server's information about the names on our internet, we need to tell the `host-dns` machine to use **itself** to resolve hostnames. This pattern should be familiar since we had to configure either `/etc/hosts` or `/etc/nsswitch.conf` for similar ends in our earlier exploration of name resolution.
 
-We talked in [chapter 1 of this section](../2.1-name-resolution-1-getting-started/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name) about how a machine knows who to ask to resolve a name. Take a moment and have a look at the `/etc/resolv.conf` file on the `host-dns` machine:
+We talked in [chapter 1 of this section](../2.1-basic-name-resolution/README.md#how-does-your-computer-know-where-to-go-to-resolve-a-name) about how a machine knows who to ask to resolve a name. Take a moment and have a look at the `/etc/resolv.conf` file on the `host-dns` machine:
 
 ```bash
 nano /etc/resolv.conf
@@ -315,7 +315,7 @@ _But,_ that only works for dig. Commands like `ping` or `links` will not get the
 
 We're going to leave it as an exercise for you to configure `host-a` (and then, each one of the hosts on this network) to resolve names across the board.
 
-> **HINT** Go look at [the host configuration section above](#update-your-host-dnss-etcresolvconf-file) for details on this.
+> **HINT** Go look at [the host configuration section above](#update-your-host-dns-resolv-conf-file) for details on this.
 
 As always, the working solution for having names resolving with DNS for the entire internet is store in the [final](./final/) directory. If you are confused about how to configure anything, you can always look there
 

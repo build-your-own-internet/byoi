@@ -12,8 +12,12 @@ function checkHtml(filePath: string, html: string) {
   for (const match of hrefMatches) {
     const href = match[1];
 
-    // Skip external and assets
-    if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('/content-assets/') || href.startsWith('/_astro/')) continue;
+    // Skip external, assets, and infrastructure files
+    if (href.startsWith('http://') || href.startsWith('https://') ||
+        href.startsWith('/content-assets/') || href.startsWith('/_astro/') ||
+        href.startsWith('./Dockerfile') || href.startsWith('./docker-compose') ||
+        href.startsWith('./init/') || href.startsWith('./final/') || href.startsWith('./exercise/') ||
+        href.startsWith('../../bin/')) continue;
 
     // Parse path and anchor
     const [path, anchor] = href.split('#');

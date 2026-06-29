@@ -369,7 +369,7 @@ PING 9.2.0.12 (9.2.0.12) 56(84) bytes of data.
 rtt min/avg/max/mdev = 0.326/0.326/0.326/0.000 ms
 ```
 
-💥 Dope! We have network connectivity across this great toy internet of ours! If this doesn't work, you'll need to troubleshoot your routes. Refer to the [discover the breakage](../1.3-routing-internet-chonk/README.md#discover-the-breakage) troubleshooting section from chapter 1.3 if you need some assistance.
+💥 Dope! We have network connectivity across this great toy internet of ours! If this doesn't work, you'll need to troubleshoot your routes. Refer to the [discover the breakage](../1.3-internet-chonk/README.md#discover-the-breakage) troubleshooting section from chapter 1.3 if you need some assistance.
 
 #### Do a complete check of the whole network using the `byoi-validate` script
 
@@ -392,7 +392,7 @@ Testing IP connectivity from server-a1
 ✅ No errors! Everything is working!
 ```
 
-If that script reports any errors, your job is to go and fix them! Refer to the [discover the breakage](../1.3-routing-internet-chonk/README.md#discover-the-breakage) troubleshooting section from chapter 1.3 if you need some assistance.
+If that script reports any errors, your job is to go and fix them! Refer to the [discover the breakage](../1.3-internet-chonk/README.md#discover-the-breakage) troubleshooting section from chapter 1.3 if you need some assistance.
 
 ### Break that shit!
 

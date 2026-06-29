@@ -24,7 +24,7 @@ Before we can look at the process, we need to learn a little bit about the speci
 
 [![large internet with DNS infrastructure][largenet DNS infra]][largenet DNS infra]
 
-Let's briefly break down what we're seeing in this network map. If you haven't already, it would behoove you to read over [How to Read a Network Map](how-to-read-a-network-map.md) before continuing this section.
+Let's briefly break down what we're seeing in this network map. If you haven't already, it would behoove you to read over [How to Read a Network Map](../appendix/how-to-read-a-network-map.md) before continuing this section.
 
 One major thing we added to this map is that the internet is made up of networks of networks. But the networks aren't necessarily a single prefix. Within a network, the owner can break up it's IP addresses however they want. So this network map shows that the internet knows about Comcast, for example, as a network. But within Comcast, they've broken up their larger prefixes. This bit is largely irrelevant to this discussion, but we wanted to call that out to avoid confusion!
 
@@ -361,7 +361,7 @@ So let's review what just happened here.
 - The authoritative server keeps track of the DNS records for any domain it is responsible for.
 - Once the resolver has an answer, it will send the final response back to the client who initiated the query.
 
-If you'd like to play around in this system, checkout our chapter on [name resolution with recursive DNS](../chapters/2.4-name-resolution-recursive-dns/README.md)!
+If you'd like to play around in this system, checkout our chapter on [name resolution with recursive DNS](/chapters/2.4-recursive-dns)!
 
 <!-- Links, reference style, inside docset -->
 [largenet DNS infra]:        ../img/network-maps/name-resolution/recursive-dns.svg

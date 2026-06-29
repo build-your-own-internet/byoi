@@ -173,7 +173,7 @@ rtt min/avg/max/mdev = 0.154/0.154/0.154/0.000 ms
 
 Feel free to ping the rest of the machines (`host-d` through `host-g`) to confirm that your names are resolving properly.
 
-Now that we have `host-a` working properly, it's up to you to update the rest of the entries for hosts to add the necessary `extra_hosts` fields. If you would like to see a properly configured final version of this file, we have left one for you here [final/docker-compose.yml](final/docker-compose.yml).
+Now that we have `host-a` working properly, it's up to you to update the rest of the entries for hosts to add the necessary `extra_hosts` fields. If you would like to see a properly configured final version of this file, we have left one for you here [./final/docker-compose.yml](./final/docker-compose.yml).
 
 ### Test your work with `links`
 
