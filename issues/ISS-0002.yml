@@ -1,0 +1,13 @@
+title: Code-block input/output styling not implemented
+description: |
+  Fenced code blocks with `bash input` or `bash output` info-string suffixes should render with
+  color-coded backgrounds (green for input, blue for output). CSS classes `.code-input` and
+  `.code-output` exist, but processHTML() doesn't detect the suffix and apply them.
+severity: medium
+type: feature
+status: fixed
+solution: |
+  Added custom marked renderer for code blocks that detects info-string pattern "<lang> <mode>"
+  and generates <pre class="code-{mode}"> tags. Had to use renderer instead of post-processor
+  because marked only passes first token to HTML (strips the suffix). CSS classes for .code-input
+  (green) and .code-output (blue) were already present.

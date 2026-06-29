@@ -1,0 +1,30 @@
+#!/bin/bash
+# Serve the BYOI route-propagation visualizer for the most recent recording.
+#
+# Run this from a chapter directory that ships the visualizer (one with a
+# ./viz/ package, e.g. future/border-gateway-protocol). It serves the latest
+# run-*.json recorded by `byoi-rebuild --record-data` and opens your browser.
+#
+# Examples:
+#   byoi-visualize                 # serve latest run on http://127.0.0.1:8089/
+#   byoi-visualize --port 9000     # serve on a different port
+#
+# To create a recording in the first place:
+#   byoi-rebuild --final --record-data
+
+set -e
+
+if [ ! -d "./viz/byoi_viz" ]; then
+  echo "No ./viz package found in $(pwd)."
+  echo "Run byoi-visualize from a chapter that ships the visualizer, e.g.:"
+  echo "  cd future/border-gateway-protocol && byoi-visualize"
+  exit 1
+fi
+
+if ! ls ./viz/data/run-*.json >/dev/null 2>&1; then
+  echo "No recordings found in ./viz/data/."
+  echo "Record one first with:  byoi-rebuild --final --record-data"
+  exit 1
+fi
+
+exec python3 -m viz.byoi_viz.pipeline --show-last "$@"

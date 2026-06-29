@@ -1,0 +1,13 @@
+$ORIGIN pippin.meow.
+@       IN SOA (
+                host-dns.pippin.meow.   ; MNAME
+                admin.pippin.meow.      ; RNAME
+                2024041501              ; serial
+                3600                    ; refresh (1 hour)
+                900                     ; retry (15 minutes)
+                604800                  ; expire (1 week)
+                86400                   ; minimum (1 day)
+                )
+
+www                 IN A    4.2.0.12
+@                   IN A    4.2.0.12

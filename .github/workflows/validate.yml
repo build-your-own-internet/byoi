@@ -1,0 +1,25 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: cd web && bun install
+
+      - name: TypeScript check
+        run: cd web && bun run typecheck
+
+      - name: Build site
+        run: cd web && bun run build
+
+      - name: Smoke test
+        run: cd web && bun run test

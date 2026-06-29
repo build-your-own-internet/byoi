@@ -31,7 +31,9 @@ else
     exit 1
 fi
 
-if [[ ! -e 'docker-compose.yml' ]]; then
+shopt -s nullglob
+files=(docker-compose.yml*)
+if [[ ${#files[@]} -eq 0 ]]; then
     echo "Please make sure you are in a specific chapter directory with a docker compose file."
     exit 1
 fi

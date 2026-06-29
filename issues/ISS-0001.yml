@@ -1,0 +1,12 @@
+title: Callout formatting not implemented
+description: |
+  Markdown callout syntax (> [!NOTE], > [!ALERT], > [!WARNING], > [!QUIZ], > [!TIP], > [!DISCLAIMER])
+  renders as plain blockquotes. Should add styled classes + emoji icons (📝 ⚠️ ❓ 💡 ⚙️).
+  CSS classes already exist in ChapterContent.module.css, just need to detect and inject them in processHTML().
+severity: medium
+type: feature
+status: fixed
+solution: |
+  Added regex post-processor in load-markdown.ts processHTML() that detects blockquotes starting
+  with [!TYPE] and injects class="callout callout-{type}" plus emoji icon spans. CSS classes were
+  already present in ChapterContent.module.css with color-coded backgrounds per type.

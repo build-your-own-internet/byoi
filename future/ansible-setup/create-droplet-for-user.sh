@@ -57,6 +57,24 @@ done
 echo -n "Waiting for cloud-init to finish on the droplet (this may take a few minutes)..."
 
 while true; do
+    if (exec 3<>/dev/tcp/$IP_ADDRESS/22) >/dev/null 2>&1; then
+        exec 3>&-  # close FD
+        break
+    else
+        sleep 1
+        echo -n "."
+    fi
+done
+
+if ! ssh root@$IP_ADDRESS -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "echo hello world" >/dev/null 2>&1; then
+    echo "" >&2
+    echo "Error: Unable to SSH into the droplet as root." >&2
+    echo "This could be an issue with your SSH key." >&2
+    echo "Please verify that the key associated with ID '$SSH_KEY_ID' is correct and has been added to your DigitalOcean account." >&2
+    exit 1
+fi
+
+while true; do
     # Use ssh to check for the existence of the boot-finished file.
     # The command exits with 0 on success (file exists). We suppress output for a clean UI.
     if ssh root@$IP_ADDRESS -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "test -f /var/lib/cloud/instance/boot-finished" >/dev/null 2>&1; then
@@ -64,7 +82,7 @@ while true; do
         echo "Cloud-init has finished and the droplet is ready."
         echo "You can now SSH into the machine with:"
         echo "ssh $USERNAME@$IP_ADDRESS"
-        break
+        exit 1
     fi
     echo -n "."
     sleep 10

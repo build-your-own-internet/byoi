@@ -1,0 +1,9 @@
+host-a.local
+host-b.local
+host-c.local
+host-d.local
+host-e.local
+host-f.local
+host-g.local
+host-h.local
+

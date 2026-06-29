@@ -1,4 +1,10 @@
-# Prequel: How does this work?
+---
+title: "Getting Started"
+section: "Getting Started"
+order: 0
+---
+
+# Getting Started
 
 So... you've decided to join us in building a tiny internet! Welcome to the journey! We hope you find it as fun and exciting as we did!
 

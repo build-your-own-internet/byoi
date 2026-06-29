@@ -1,0 +1,8 @@
+# Recorded runs and generated bundles are local artifacts, not source.
+data/*.db
+data/*.json
+app/run.json
+
+# Python bytecode
+__pycache__/
+*.pyc

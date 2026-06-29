@@ -26,6 +26,8 @@ function ding() {
   fi
 }
 
+# NOTE: this function is unused. We should revisit this at some point
+# so that we are not using "ping" to check for name-resolution.
 # dost is docker host because ping most likely is already installed locally
 function dost() {
   local source="build-your-own-internet-$1"
@@ -44,7 +46,7 @@ function dost() {
 ip_addresses=$(cat test-data/ip-addresses.txt)
 # Read the names that should resolve
 dns_names=$(cat test-data/dns-names.txt)
-# Resd the list of systems that tests are run from
+# Read the list of systems that tests are run from
 systems=$(cat test-data/systems.txt)
 
 # Loop through each system and each IP address to run the command
@@ -59,7 +61,7 @@ for system in $systems; do
   if [ $(echo $dns_names | wc -w) -ne 0 ]; then
     echo "Testing name resolution from $system"
     for dns_name in $dns_names; do
-      dost "$system" "$dns_name"
+      ding "$system" "$dns_name"
     done
   fi
 done

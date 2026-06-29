@@ -1,0 +1,29 @@
+FROM cznic/knot
+
+RUN apt-get update && apt-get install -y iproute2 \
+    tcpdump \
+    iputils-ping \
+    net-tools \
+    bind9-utils \
+    dnsutils \
+    vim \
+    inetutils-traceroute \
+    mtr \
+    iptables \
+    nano \
+    busybox \
+    curl \
+    links
+
+{% if config_dir == "final" %}
+COPY ./final/knot.conf /config/knot.conf
+COPY ./final/byoi.net.zone /etc/knot/byoi.net.zone
+{% endif %}
+
+COPY ./resolv.conf /resolv.conf
+COPY ./dns-start-up.sh /dns-start-up.sh
+RUN mkdir -p /etc/vim
+COPY .vimrc /etc/vim/vimrc.local
+
+
+CMD ["/dns-start-up.sh"]

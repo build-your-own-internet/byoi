@@ -1,17 +1,21 @@
 #!/bin/bash
+# Wrapper script that auto-manages Python virtual environment
 
-set -o errexit
+set -e
 
-bash $(dirname "$0")/meets-colima-requirements
-bash $(dirname "$0")/byoi-cleanup
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+VENV_DIR="$SCRIPT_DIR/.venv"
+PYTHON_SCRIPT="$SCRIPT_DIR/byoi-rebuild.py"
+REQUIREMENTS="$SCRIPT_DIR/requirements.txt"
 
-docker_compose_exists=false
-if which docker-compose >/dev/null 2>&1; then
-    docker_compose_exists=true
+# Create and setup venv if it doesn't exist
+if [ ! -d "$VENV_DIR" ]; then
+    echo "First run: setting up Python environment..."
+    python3 -m venv "$VENV_DIR"
+    "$VENV_DIR/bin/pip" install -q -r "$REQUIREMENTS"
+    echo "Setup complete!"
+    echo
 fi
-if [[ "$docker_compose_exists" == true ]]; then
-    docker-compose up --detach
-    exit 0
-fi
 
-docker compose up --detach
+# Run the Python script with venv Python, passing all arguments
+exec "$VENV_DIR/bin/python3" "$PYTHON_SCRIPT" "$@"

@@ -1,0 +1,13 @@
+title: Glossary anchors with "aka" don't match slugified IDs
+description: |
+  Glossary headings like "## Packets (aka IP Packets)" or "## Router (aka Gateway)" get slugified
+  to #packets-aka-ip-packets, but links reference them as just #packets. The slugify function
+  needs to strip parenthetical suffixes or links need updating.
+severity: medium
+type: bug
+status: fixed
+solution: |
+  Changed glossary headings from "## router (a.k.a `gateway`)" to "## router" with the
+  alternative name mentioned in the body text ("also called a gateway"). This removes special
+  characters from headings while preserving the information. Updated all references to use
+  the simplified anchors (#router instead of #router-aka-gateway).

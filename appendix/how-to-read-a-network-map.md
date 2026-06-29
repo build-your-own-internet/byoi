@@ -10,9 +10,11 @@ Let's start with a very simple network map:
 
 So, what's going on here? First, what's probably most obvious about this map is that we have 2 machines on our network: a `Client` and a `Server`. Now, look at how each machine has a thin line coming out of it that connects it to a thicker line. That thick line symbolizes the network, and the thin lines from each machine symbolize their connections to that network.
 
-So basically, in this picture, we have a single network and 2 machines that are connected to that network. But, we still need a way to programmatically identify the machines on the network. This is where IP addresses are going to come in. An IP address is a unique locator for one or more machines on an internet. But in order to find that machine, we need to know what network it's on. You'll see `10.1.1.0/24` under the thick black network line in this map. The network address is identified by an IP prefix, `10.1.1.0`, followed by a subnet mask, `/24`. You might take the time to read the appendix on [Prefixes and Subnet Masks](prefixes-and-subnet-masks.md), but much of what's discussed there will become clearer as you work through the chapters.
+So basically, in this picture, we have a single network and 2 machines that are connected to that network. But, we still need a way to programmatically identify the machines on the network. This is where IP addresses are going to come in. An IP address is a unique locator for one or more machines on an internet. But in order to find that machine, we need to know what network it's on. You'll see `10.1.1.0/24` under the thick black network line in this map. The network address is identified by an IP prefix, `10.1.1.0`, followed by a subnet mask, `/24`.
 
 So we've identified that the network is `10.1.1.0/24`, but we also need to know the specific IP addresses of the individual machines on this network. Find the single number under each machine, e.g. `.3` under `Client`. For our network maps, we're using that number in the final octet of the IP address to identify that machine. So, `Client` has an interface on the `10.1.1.0/24` network, and it has the `.3` identifier under it, so for this network map, `Client`'s IP address is going to be `10.1.1.3`.
+
+For more details on how IP prefixes and subnet masks work, see the appendix on [Prefixes and Subnet Masks](../appendix/prefixes-and-subnet-masks.md).
 
 ## Step it up a Notch: A Smol Internet(work)
 

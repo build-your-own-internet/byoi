@@ -1,8 +1,5 @@
 # See http://help.github.com/ignore-files/ for more about ignoring files.
 
-# just because it's taking us so long to do this chapter
-future/border-gateway-protocol
-
 # compiled output
 /packages/**/dist
 /packages/design-tokens/dist/*/[!theme]*
@@ -73,3 +70,15 @@ storybook-static
 
 # Ansible
 future/ansible-setup/setup-ansible.sh
+
+# common resources
+.vimrc
+
+# Python virtual environments
+bin/.venv
+
+# web/ build
+web/node_modules
+web/dist
+web/.astro
+web/public/content-assets

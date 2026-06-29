@@ -1,0 +1,28 @@
+---
+import AppHeaderBar from '../components/AppHeaderBar.astro';
+import TableOfContents from '../components/TableOfContents.astro';
+import '../styles/globals.css';
+import css from './SiteLayout.module.css';
+
+const { currentSlug } = Astro.props;
+---
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>Build Your Own Internet</title>
+</head>
+<body>
+  <site-layout class={css.class}>
+    <AppHeaderBar />
+    <main>
+      <toc-pane>
+        <TableOfContents currentSlug={currentSlug} />
+      </toc-pane>
+      <content-pane>
+        <slot />
+      </content-pane>
+    </main>
+  </site-layout>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "name": "byoi-web",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "predev": "bun scripts/sync-assets.ts",
+    "dev": "astro dev",
+    "prebuild": "bun scripts/sync-assets.ts",
+    "build": "astro build",
+    "postbuild": "bun scripts/check-links.ts",
+    "preview": "astro preview",
+    "check-links": "bun scripts/check-links.ts",
+    "typecheck": "tsc --noEmit",
+    "validate": "bun run typecheck && bun run build",
+    "test": "bun scripts/smoke-test.ts"
+  },
+  "dependencies": {
+    "astro": "^5.2.0",
+    "gray-matter": "^4.0.3",
+    "marked": "^18.0.5",
+    "unist-util-visit": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.3",
+    "lasertag": "^0.1.5",
+    "rehype": "^13.0.2"
+  }
+}

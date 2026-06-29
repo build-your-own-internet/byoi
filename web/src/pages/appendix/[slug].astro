@@ -1,0 +1,18 @@
+---
+import { loadAppendix } from '../../lib/load-markdown';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import ChapterContent from '../../components/ChapterContent.astro';
+
+export async function getStaticPaths() {
+  return ['how-bird-works', 'how-to-read-a-network-map', 'ip-and-mac-addresses', 'prefixes-and-subnet-masks', 'recursive-dns']
+    .map(slug => ({ params: { slug } }));
+}
+
+const { slug } = Astro.params;
+const doc = await loadAppendix(slug!);
+---
+<SiteLayout>
+  <ChapterContent>
+    <Fragment set:html={doc.html} />
+  </ChapterContent>
+</SiteLayout>
