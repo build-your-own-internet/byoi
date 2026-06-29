@@ -1,0 +1,20 @@
+name: Build Site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'chapters/**'
+      - 'appendix/**'
+      - 'img/**'
+      - 'web/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: cd web && bun install
+      - run: cd web && bun run build
+      # TODO: add deploy step when hosting chosen
