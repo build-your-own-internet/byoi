@@ -1,0 +1,12 @@
+---
+import { loadRef } from '../lib/load-markdown';
+import SiteLayout from '../layouts/SiteLayout.astro';
+import ChapterContent from '../components/ChapterContent.astro';
+
+const doc = await loadRef('glossary');
+---
+<SiteLayout>
+  <ChapterContent>
+    <Fragment set:html={doc.html} />
+  </ChapterContent>
+</SiteLayout>

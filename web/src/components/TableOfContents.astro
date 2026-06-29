@@ -1,0 +1,38 @@
+---
+import { loadChapters } from '../lib/load-markdown';
+import css from './TableOfContents.module.css';
+
+const { currentSlug } = Astro.props;
+const chapters = (await loadChapters()).sort((a, b) => a.order - b.order);
+const sections = [...new Set(chapters.map(c => c.section))];
+---
+<table-of-contents class={css.class}>
+  <nav>
+    <ol>
+      {sections.map(section => (
+        <li>
+          <strong>{section}</strong>
+          <ol>
+            {chapters.filter(c => c.section === section).map(ch => (
+              <li class={ch.id === currentSlug ? 'active' : ''}>
+                <a href={`/chapters/${ch.id}`}>{ch.title}</a>
+              </li>
+            ))}
+          </ol>
+        </li>
+      ))}
+      <li>
+        <strong>Reference</strong>
+        <ol>
+          <li><a href="/glossary">Glossary</a></li>
+          <li><a href="/reference">Command Reference</a></li>
+          <li><a href="/appendix/how-bird-works">How BIRD works</a></li>
+          <li><a href="/appendix/how-to-read-a-network-map">How to read a network map</a></li>
+          <li><a href="/appendix/ip-and-mac-addresses">IP and MAC addresses</a></li>
+          <li><a href="/appendix/prefixes-and-subnet-masks">Prefixes and subnet masks</a></li>
+          <li><a href="/appendix/recursive-dns">Recursive DNS</a></li>
+        </ol>
+      </li>
+    </ol>
+  </nav>
+</table-of-contents>

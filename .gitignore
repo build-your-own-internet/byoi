@@ -76,3 +76,9 @@ future/ansible-setup/setup-ansible.sh
 
 # Python virtual environments
 bin/.venv
+
+# web/ build
+web/node_modules
+web/dist
+web/.astro
+web/public/content-assets

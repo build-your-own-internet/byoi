@@ -1,0 +1,23 @@
+site-layout.class {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+site-layout.class > main {
+  display: grid;
+  grid-template-columns: 16rem 1fr;
+  flex: 1;
+}
+
+site-layout.class > main > toc-pane {
+  border-right: 1px solid var(--color-border);
+  overflow-y: auto;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+site-layout.class > main > content-pane {
+  overflow-y: auto;
+}

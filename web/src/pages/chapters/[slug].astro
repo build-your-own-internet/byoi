@@ -1,0 +1,17 @@
+---
+import { loadChapters } from '../../lib/load-markdown';
+import SiteLayout from '../../layouts/SiteLayout.astro';
+import ChapterContent from '../../components/ChapterContent.astro';
+
+export async function getStaticPaths() {
+  const chapters = await loadChapters();
+  return chapters.map(c => ({ params: { slug: c.id }, props: { chapter: c } }));
+}
+
+const { chapter } = Astro.props;
+---
+<SiteLayout currentSlug={chapter.id}>
+  <ChapterContent>
+    <Fragment set:html={chapter.html} />
+  </ChapterContent>
+</SiteLayout>

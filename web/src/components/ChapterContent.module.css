@@ -1,0 +1,45 @@
+chapter-content.class {
+  max-width: var(--max-content-width);
+  margin: 0 auto;
+  padding: 2rem var(--spacing);
+}
+
+chapter-content.class > h1 { font-size: 2rem; margin: 2rem 0 1rem; }
+chapter-content.class > h2 { font-size: 1.5rem; margin: 1.5rem 0 0.75rem; }
+chapter-content.class > h3 { font-size: 1.25rem; margin: 1.25rem 0 0.5rem; }
+chapter-content.class > p { margin: 1rem 0; }
+chapter-content.class > ul, chapter-content.class > ol { margin: 1rem 0; padding-left: 2rem; }
+chapter-content.class > pre { margin: 1rem 0; padding: 1rem; background: #2a2a2a; color: #e0e0e0; overflow-x: auto; border-radius: 4px; }
+chapter-content.class > code { font-family: monospace; background: #2a2a2a; color: #e0e0e0; padding: 0.125rem 0.25rem; border-radius: 2px; }
+
+@media (prefers-color-scheme: light) {
+  chapter-content.class > pre { background: #f5f5f5; color: inherit; }
+  chapter-content.class > code { background: #f5f5f5; color: inherit; }
+}
+chapter-content.class > img { margin: 1rem 0; }
+chapter-content.class > blockquote { margin: 1rem 0; padding-left: 1rem; border-left: 4px solid var(--color-border); font-style: italic; }
+chapter-content.class > table { margin: 1rem 0; border-collapse: collapse; width: 100%; }
+chapter-content.class > table th, chapter-content.class > table td { border: 1px solid var(--color-border); padding: 0.5rem; text-align: left; }
+chapter-content.class > details { margin: 1rem 0; border: 1px solid var(--color-border); border-radius: 4px; padding: 0.5rem; }
+chapter-content.class > details > summary { cursor: pointer; font-weight: 600; }
+chapter-content.class a { color: var(--color-accent); }
+
+/* ponytail: callout styles */
+chapter-content.class :global(.callout) {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  border-left: 4px solid;
+  border-radius: 4px;
+  display: flex;
+  gap: 0.75rem;
+}
+chapter-content.class :global(.callout-icon) { font-size: 1.25rem; flex-shrink: 0; }
+chapter-content.class :global(.callout-note) { background: #e8f4fd; border-color: #0066cc; }
+chapter-content.class :global(.callout-alert), chapter-content.class :global(.callout-warning) { background: #fff3cd; border-color: #ff9800; }
+chapter-content.class :global(.callout-quiz) { background: #f3e5f5; border-color: #9c27b0; }
+chapter-content.class :global(.callout-tip) { background: #e8f5e9; border-color: #4caf50; }
+chapter-content.class :global(.callout-disclaimer) { background: #f5f5f5; border-color: #757575; }
+
+/* ponytail: code-block input/output modes */
+chapter-content.class > :global(.code-input) { background: #e8f5e9 !important; border-left: 4px solid #4caf50; color: inherit; }
+chapter-content.class > :global(.code-output) { background: #e3f2fd !important; border-left: 4px solid #2196f3; color: inherit; }
