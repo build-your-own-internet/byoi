@@ -6,4 +6,8 @@ description: |
   Need to grep and update all cross-chapter references in markdown files.
 severity: high
 type: bug
-status: open
+status: fixed
+solution: |
+  Updated all cross-chapter link references to use new slugs. Fixed glossary anchor links by
+  removing "a.k.a" from headings. Updated appendix cross-references to use /chapters/ paths.
+  Simplified headings with special characters that were causing slug mismatches.

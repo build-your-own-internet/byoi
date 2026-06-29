@@ -5,4 +5,9 @@ description: |
   needs to strip parenthetical suffixes or links need updating.
 severity: medium
 type: bug
-status: open
+status: fixed
+solution: |
+  Changed glossary headings from "## router (a.k.a `gateway`)" to "## router" with the
+  alternative name mentioned in the body text ("also called a gateway"). This removes special
+  characters from headings while preserving the information. Updated all references to use
+  the simplified anchors (#router instead of #router-aka-gateway).

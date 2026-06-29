@@ -6,4 +6,9 @@ description: |
   expected-broken for hands-on lab content.
 severity: low
 type: bug
-status: open
+status: fixed
+solution: |
+  Updated link checker (web/scripts/check-links.ts) to skip infrastructure file links.
+  Added patterns to skip: ./Dockerfile, ./docker-compose, ./init/, ./final/, ./exercise/,
+  ../../bin/. These files are intentionally not part of the static site build and are only
+  used when running the tutorial exercises locally.
