@@ -1,0 +1,9 @@
+title: Document callout and code-block markdown extensions
+description: |
+  Callout (> [!NOTE]) and code-block mode (```bash input) syntax are implemented but undocumented.
+  Users attempting to use them don't know the correct syntax (e.g. missing the > blockquote marker).
+  Need to create documentation, either in web/MARKDOWN_EXTENSIONS.md or as comments/examples
+  in existing chapters.
+severity: medium
+type: feature
+status: open

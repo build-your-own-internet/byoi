@@ -1,0 +1,9 @@
+title: Dev-watch hot-reload not verified
+description: |
+  Plan (web/WEBSITE_INITIAL_DESIGN.md) specified empirical verification that editing a chapter
+  README triggers hot-reload in dev mode. Vite watch config added (fs.allow, watch.ignored),
+  but never actually tested by editing a file and confirming browser auto-refreshes.
+  May need additionalWatchPaths if it doesn't work.
+severity: low
+type: feature
+status: open

@@ -1,0 +1,9 @@
+title: Links to non-rendered infrastructure files break validation
+description: |
+  Some chapters link to Dockerfiles, init scripts, and other infra files (./Dockerfile,
+  ./init/start-up.sh, ./final/start-up.sh) that don't render as HTML pages. Link checker treats
+  them as broken. Either exclude these from checking, render them as code pages, or document as
+  expected-broken for hands-on lab content.
+severity: low
+type: bug
+status: open
