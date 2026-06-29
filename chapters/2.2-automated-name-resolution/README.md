@@ -1,4 +1,10 @@
-# Name Resolution
+---
+title: "Automated Name Resolution"
+section: "Name Resolution"
+order: 2.2
+---
+
+# Automated Name Resolution
 
 Okay, it's time to be honest with you. In the last chapter, we kinda cheated... we used our `docker-compose.yaml` file to insert entries into our `/etc/hosts` file for name resolution. We did this just to show you how name resolution basically works, but that is not a real-world solution to the problem of name-resolution. In the real world, doing this kind of thing is nearly impossible because we can't go around and edit a file on every single computer on the internet. Even if we could do that, keeping all those `/etc/hosts` files synchronized with each other would be unthinkable.
 

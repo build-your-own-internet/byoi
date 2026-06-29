@@ -1,4 +1,10 @@
-# Getting Started
+---
+title: "First network"
+section: "Routing"
+order: 1.1
+---
+
+# First network
 
 What needs to happen for two machines to communicate? First, the machines need some medium to transmit their messages over. This will usually be a cable or wire. Think about the cable connected to your modem. That cable runs between your house and some entrypoint into your Internet Service Provider. Once the cable is set up, the machines will then need to know how to send messages to each other. When two or more machines can communicate directly with each other, they are on what we call a 'network'. 
 
@@ -80,13 +86,13 @@ Next, we're going to start exploring with a networking tool called [`tcpdump`][r
 
 What we'll end up running on `server` is:
 
-```bash
+```bash input
 root@server:/# tcpdump
 ```
 
 The initial output of this command should be:
 
-```bash
+```bash output
 tcpdump: listening on eth0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 ```
 

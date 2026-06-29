@@ -1,4 +1,10 @@
-# Name Resolution
+---
+title: "Basic Name Resolution"
+section: "Name Resolution"
+order: 2.1
+---
+
+# Basic Name Resolution
 
 What is name resolution? What problem(s) does it solve? In previous chapters, we had to know the exact IP address of each [machine's](../glossary.md#machine) connection on each network to be able to ping. This became really tedious even with a network map in front of us to be able to see what the IP addresses should be. Wouldn't it be nice if we could reach machines over the internet using human-friendly names instead? That's where name resolution comes in! Name-resolution is the process of converting a human-friendly name into the IP address machines need to be able to route traffic across the Internet.
 

@@ -1,4 +1,10 @@
-# Let's make an Internet(work)
+---
+title: "Smol Internet"
+section: "Routing"
+order: 1.2
+---
+
+# Smol Internet
 
 ## Goals for this section
 

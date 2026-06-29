@@ -1,4 +1,10 @@
-# Let's explore how we can see our internet
+---
+title: "Traceroute"
+section: "Debugging"
+order: 3.1
+---
+
+# Traceroute
 
 ## Goals for this section
 

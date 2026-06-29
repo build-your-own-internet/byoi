@@ -1,3 +1,9 @@
+---
+title: "Automatic route configuration"
+section: "Routing"
+order: 1.4
+---
+
 # Automatic route configuration
 
 Up to this point, we have been manually configuring how our routers are able to find machines on our toy internet. As you can imagine, as the internet grows, this becomes quite the cumbersome process! If you look at something at the scale of The Real Internet™, it quickly becomes obvious that it's not possible to manually configure routes for all the machines on the entire Internet.

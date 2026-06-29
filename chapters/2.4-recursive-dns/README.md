@@ -1,3 +1,9 @@
+---
+title: "Recursive DNS"
+section: "Name Resolution"
+order: 2.4
+---
+
 # Recursive DNS
 
 In our previous chapter, we made a promise that we were going to build out a solution that could scale to the entire internet. But then, all we did was build a single DNS server.
@@ -60,7 +66,7 @@ Let's see how each of these machines is used in our recursive DNS lookup.
 
 ### The Process: A Recursive DNS Lookup in Slow Motion
 
-_**NOTE** For the purposes of this explanation, we're going to ignore that caching exists._
+> [!NOTE] For the purposes of this explanation, we're going to ignore that caching exists.
 
 First. Let’s just define the actual goal of what we’re trying to accomplish. Using the network map above, we're going to pretend we're sitting on a client machine.
 

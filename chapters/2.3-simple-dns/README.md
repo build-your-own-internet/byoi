@@ -1,4 +1,10 @@
-# Name Resolution
+---
+title: "Simple DNS"
+section: "Name Resolution"
+order: 2.3
+---
+
+# Simple DNS
 
 Okay, so much for anarchy and populism. In a real-world Internet, we can’t trust people to come up with their own names. Avahi is a cool solution, but it doesn’t scale into a huge, international network in which people don’t trust each other. Because of these reasons:
 

@@ -1,4 +1,10 @@
-# Let's make that Internet MOAR BIGGER
+---
+title: "Internet CHONK"
+section: "Routing"
+order: 1.3
+---
+
+# Internet CHONK
 
 ## Goals for this section
 
