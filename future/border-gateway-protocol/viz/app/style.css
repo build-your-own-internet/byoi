@@ -195,6 +195,18 @@ body {
 .bird-flt .mono { color: var(--text); }
 .bird-redist { font-size: 11px; margin-top: 4px; color: var(--muted); }
 
+/* Route-selection explainer */
+#rib-body tr.rrow { cursor: pointer; }
+#rib-body tr.rrow:hover { background: #1f6feb22; }
+table.route-cand { width: 100%; border-collapse: collapse; font-size: 12px; }
+table.route-cand th { color: var(--muted); font-size: 10px; text-transform: uppercase; text-align: left; padding: 2px 6px; }
+table.route-cand td { padding: 3px 6px; border-top: 1px solid #ffffff08; }
+table.route-cand tr.win td { background: #43a04722; }
+table.route-cand .pref { font-family: ui-monospace, monospace; color: var(--text); }
+table.route-cand .via { font-family: ui-monospace, monospace; color: var(--muted); }
+.route-why { font-size: 12px; margin-top: 8px; line-height: 1.4; }
+.onward { display: inline-block; margin-right: 10px; font-size: 12px; font-weight: 600; }
+
 /* Timeline */
 #timeline {
   height: 54px; flex: none;

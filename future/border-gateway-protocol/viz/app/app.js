@@ -34,7 +34,13 @@ const state = {
   bundle: null, cy: null, prefix: null, seq: 0, maxSeq: 0,
   playing: false, timer: null, edgeIndex: new Map(), orgColor: new Map(),
   selectedRouter: null, selectedEdge: null, selectedAs: null, ping: null,
-  bird: null, allMode: false, asOriginated: {},
+  bird: null, route: null, allMode: false, asOriginated: {},
+};
+
+// BIRD default route preferences (higher wins). This network uses the defaults.
+const PREF = {
+  'direct': 240, 'static': 200, 'OSPF': 150, 'OSPF-E1': 150, 'OSPF-E2': 150,
+  'eBGP': 100, 'iBGP': 100,
 };
 
 function $(id) { return document.getElementById(id); }
@@ -333,12 +339,14 @@ function applyTime(seq) {
   if (state.ping) { drawPing(); return; }
   if (state.allMode) { applyAllRoutes(seq); return; }
   if (!state.prefix) return;
+  colorPrefix(state.prefix, seq);
+}
 
-  const pObj = state.bundle.prefixes.find(p => p.prefix === state.prefix);
+function colorPrefix(prefix, seq) {
+  const pObj = state.bundle.prefixes.find(p => p.prefix === prefix);
+  resetGraphStyles();
   if (!pObj) return;
   const learned = stateAt(pObj, seq);
-
-  resetGraphStyles();
   state.cy.batch(() => {
     for (const [router, { cls, nh }] of learned) {
       const color = COLORS[cls] || '#fff';
@@ -464,8 +472,8 @@ function renderRouterRib(r) {
       const via = row.cls === 'direct'
         ? `direct · ${row.iface || ''}`
         : `${shortName(row.nhRouter) || row.nhIp || '?'}`;
-      const isCur = row.prefix === state.prefix ? ' class="cur-prefix"' : '';
-      return `<tr${isCur}><td class="pfx">${row.prefix}</td>` +
+      const cls = 'rrow' + (row.prefix === state.prefix ? ' cur-prefix' : '');
+      return `<tr class="${cls}" data-prefix="${row.prefix}"><td class="pfx">${row.prefix}</td>` +
         `<td class="proto" style="color:${color}">${row.cls}</td>` +
         `<td class="via">${via}</td><td class="via">${row.asPath || ''}</td></tr>`;
     }).join('');
@@ -476,6 +484,8 @@ function renderRouterRib(r) {
   $('rib-body').innerHTML = pingCtl + tableHtml;
   $('ping-go').onclick = () => startPing(r, $('ping-target').value);
   $('bird-go').onclick = () => openBird(r);
+  $('rib-body').querySelectorAll('tr.rrow').forEach(tr =>
+    tr.onclick = () => openRoute(r, tr.dataset.prefix));
 }
 
 function renderEdgeRoutes(eid) {
@@ -543,6 +553,7 @@ function asBlocks(as) {
 
 function refreshInspector() {
   if (state.ping) renderPing();
+  else if (state.route) renderRoute(state.route.router, state.route.prefix);
   else if (state.bird) renderBird(state.bird);
   else if (state.selectedRouter) renderRouterRib(state.selectedRouter);
   else if (state.selectedEdge) renderEdgeRoutes(state.selectedEdge);
@@ -559,6 +570,7 @@ function beginSelection() {
   state.selectedRouter = state.selectedEdge = state.selectedAs = null;
   state.ping = null;
   state.bird = null;
+  state.route = null;
   $('rib-panel').classList.remove('hidden');
   $('rib-panel').classList.remove('wide');
   clearSelStyles();
@@ -800,10 +812,100 @@ function renderBird(router) {
   $('bird-back').onclick = () => openRib(router);
 }
 
+// ---- route-selection explainer ----
+function candidatesAt(router, prefix, seq) {
+  const evs = (state.bundle.candidates[prefix] || {})[router] || [];
+  let cur = null;
+  for (const e of evs) { if (e[0] <= seq) cur = e; else break; }
+  return cur ? cur[1] : [];  // [[cls, nh, nhIp, asPath, metric, iface, best], ...]
+}
+
+function openRoute(router, prefix) {
+  beginSelection();
+  state.route = { router, prefix };
+  // Light this prefix on the map, exactly as if it were picked from the left.
+  state.allMode = false;
+  state.prefix = prefix;
+  $('all-routes-btn').classList.remove('active');
+  document.querySelectorAll('.prefix-item').forEach(el =>
+    el.classList.toggle('active', el.querySelector('.pfx').textContent === prefix));
+  state.cy.getElementById(router).addClass('router-selected');
+  applyTime(state.seq);
+}
+
+function renderRoute(router, prefix) {
+  $('rib-title').innerHTML =
+    `${shortName(router)} <span class="muted mono">${prefix}</span>`;
+  const ranked = candidatesAt(router, prefix, state.seq).map(p => ({
+    cls: p[0], nh: p[1], nhIp: p[2], asPath: p[3], metric: p[4], iface: p[5],
+    best: p[6], pref: PREF[p[0]] ?? 0,
+  })).sort((a, b) => b.pref - a.pref || b.best - a.best);
+  $('rib-count').textContent =
+    `${ranked.length} candidate${ranked.length === 1 ? '' : 's'}`;
+
+  if (!ranked.length) {
+    $('rib-body').innerHTML =
+      `<div class="ping-ctl"><button id="route-back">↩ back</button></div>` +
+      `<div class="empty">No route to ${prefix} here at this point in time.</div>`;
+    $('route-back').onclick = () => openRib(router);
+    return;
+  }
+
+  const rows = ranked.map(c => {
+    const color = COLORS[c.cls] || '#fff';
+    const via = c.cls === 'direct'
+      ? `on ${c.iface || '—'}`
+      : `${shortName(c.nh) || c.nhIp || '?'}${c.nhIp && c.nh ? ` (${c.nhIp})` : ''}`;
+    const extra = c.asPath ? `AS ${c.asPath}` : (c.metric != null ? `metric ${c.metric}` : '');
+    return `<tr class="${c.best ? 'win' : ''}">` +
+      `<td>${c.best ? '★' : ''}</td>` +
+      `<td class="proto" style="color:${color}">${c.cls}</td>` +
+      `<td class="pref">${c.pref}</td>` +
+      `<td class="via">${via}</td><td class="via">${extra}</td></tr>`;
+  }).join('');
+
+  const win = ranked.find(c => c.best) || ranked[0];
+  const others = ranked.filter(c => c !== win);
+  let why;
+  if (!others.length) {
+    why = `Only candidate — selected ${win.cls} (preference ${win.pref}).`;
+  } else {
+    const top = others[0];
+    if (top.pref < win.pref) {
+      why = `Highest preference wins: <b style="color:${COLORS[win.cls]}">${win.cls}</b> ` +
+        `(${win.pref}) beats <b style="color:${COLORS[top.cls]}">${top.cls}</b> (${top.pref}).`;
+    } else {
+      const tb = (win.cls === 'eBGP' || win.cls === 'iBGP')
+        ? 'shorter AS-path / BGP tie-break' : 'lower metric';
+      why = `Tie at preference ${win.pref} — broken by ${tb}.`;
+    }
+  }
+
+  // Where this router advertises the prefix onward (who learned it from here).
+  const pObj = state.bundle.prefixes.find(p => p.prefix === prefix);
+  const learned = pObj ? stateAt(pObj, state.seq) : new Map();
+  const onward = [];
+  for (const [r2, s] of learned) if (s.nh === router) onward.push({ r: r2, cls: s.cls });
+  const onwardHtml = onward.length
+    ? onward.sort((a, b) => a.r < b.r ? -1 : 1).map(o =>
+        `<span class="onward"><span style="color:${COLORS[o.cls]}">${o.cls}</span> → ${shortName(o.r)}</span>`).join(' ')
+    : '<span class="muted">nobody learned it from this router</span>';
+
+  $('rib-body').innerHTML =
+    `<div class="ping-ctl"><button id="route-back">↩ back to routes</button></div>` +
+    `<div class="bird-sec"><div class="bird-h">candidates · BIRD picks highest preference</div>` +
+    `<table class="route-cand"><thead><tr><th></th><th>proto</th><th>pref</th><th>via</th><th></th></tr></thead>` +
+    `<tbody>${rows}</tbody></table>` +
+    `<div class="route-why">${why}</div></div>` +
+    `<div class="bird-sec"><div class="bird-h">advertised onward to</div>${onwardHtml}</div>`;
+  $('route-back').onclick = () => openRib(router);
+}
+
 function closeInspector() {
   state.selectedRouter = state.selectedEdge = state.selectedAs = null;
   state.ping = null;
   state.bird = null;
+  state.route = null;
   $('rib-panel').classList.add('hidden');
   $('rib-panel').classList.remove('wide');
   clearSelStyles();
@@ -969,6 +1071,8 @@ async function main() {
   if (pg.length === 2 && nodeById(pg[0]) && nodeById(pg[1])) startPing(pg[0], pg[1]);
   const birdR = qs.get('bird');
   if (birdR && nodeById(birdR)) openBird(birdR);
+  const rt = (qs.get('route') || '').split(',');
+  if (rt.length === 2 && nodeById(rt[0])) openRoute(rt[0], rt[1]);
   applyTime(seq);
 }
 

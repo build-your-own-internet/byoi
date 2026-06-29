@@ -91,6 +91,35 @@ def export_run(db_path: Path, out_path: Path | None = None) -> Path:
     # Sort prefixes: origin (direct) prefixes first, then by name.
     prefixes.sort(key=lambda p: (not p["origins"], p["prefix"]))
 
+    # All candidate paths per (prefix, router) over time, for the route-selection
+    # explainer: every path BIRD considered, not just the chosen best. Collapsed
+    # to change-events. PATH = [proto_class, nh_router, nh_ip, as_path, metric1,
+    # iface, best].
+    from itertools import groupby
+    allrows = conn.execute(
+        "SELECT seq, router, prefix, proto_class, nexthop, iface, as_path, "
+        "metric1, best FROM routes ORDER BY router, prefix, seq"
+    ).fetchall()
+    by_rp: dict[tuple, list] = defaultdict(list)
+    keyf = lambda r: (r["router"], r["prefix"], r["seq"])
+    for (rt, pfx, seq), grp in groupby(allrows, key=keyf):
+        paths = []
+        for row in grp:
+            nh = ip_to_router.get(row["nexthop"] or "", None)
+            paths.append([row["proto_class"], nh, row["nexthop"], row["as_path"],
+                          row["metric1"], row["iface"], row["best"]])
+        paths.sort(key=lambda p: (p[0], p[1] or "", p[2] or ""))
+        by_rp[(rt, pfx)].append((seq, paths))
+    candidates: dict[str, dict[str, list]] = defaultdict(dict)
+    for (rt, pfx), seqlist in by_rp.items():
+        collapsed, last = [], None
+        for seq, paths in seqlist:
+            sig = json.dumps(paths)
+            if sig != last:
+                collapsed.append([seq, paths])
+                last = sig
+        candidates[pfx][rt] = collapsed
+
     # Per-router, per-protocol state over time (collapsed to change-events).
     # EVENT = [seq, state, info, imported, exported, preferred].
     proto_rows = conn.execute(
@@ -112,6 +141,7 @@ def export_run(db_path: Path, out_path: Path | None = None) -> Path:
         "snapshots": snaps,
         "seq_count": len(seqs),
         "prefixes": prefixes,
+        "candidates": {p: dict(d) for p, d in candidates.items()},
         "protoStates": {r: dict(d) for r, d in proto_states.items()},
         "legend": [
             {"key": "eBGP", "label": "eBGP (between ASes)", "color": "#e53935"},
