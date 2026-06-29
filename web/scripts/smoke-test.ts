@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 // ponytail: minimal smoke test — does site actually render?
-import { readdirSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const distDir = 'dist';
@@ -38,8 +38,8 @@ function checkPage(path: string, html: string, label: string) {
 // Check a few key pages
 const samples = [
   'chapters/000-getting-started/index.html',
-  'chapters/1.1-routing-getting-started/index.html',
-  'chapters/2.4-name-resolution-recursive-dns/index.html',
+  'chapters/1.1-first-network/index.html',
+  'chapters/2.4-recursive-dns/index.html',
   'glossary/index.html',
   'reference/index.html'
 ];
