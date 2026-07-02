@@ -2,6 +2,6 @@
   "name": "byoi-hooks",
   "private": true,
   "dependencies": {
-    "@celilo/capabilities": "^0.4.2"
+    "@celilo/capabilities": "^0.6.0"
   }
 }
