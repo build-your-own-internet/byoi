@@ -1,0 +1,7 @@
+{
+  "name": "byoi-e2e",
+  "private": true,
+  "dependencies": {
+    "@celilo/e2e": "file:../../../celilo/packages/e2e"
+  }
+}
