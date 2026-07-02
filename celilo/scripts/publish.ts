@@ -1,6 +1,6 @@
 import { defineHook } from '@celilo/capabilities';
 import { join } from 'node:path';
-import type { HookLogger, PublicWebCapability } from '@celilo/capabilities';
+import type { HookLogger, IdpCapability, PublicWebCapability } from '@celilo/capabilities';
 import type { ByoiConfig } from '../celilo/types';
 
 // scripts/ is one level below the module root, which sits beside web/ at the repo root
@@ -9,7 +9,8 @@ const defaultDistDir = join(import.meta.dir, '..', '..', 'web', 'dist');
 export interface ByoiPublishDeps {
   config: ByoiConfig;
   logger: HookLogger;
-  capabilities: { public_web?: PublicWebCapability };
+  capabilities: { public_web?: PublicWebCapability; idp?: IdpCapability };
+  secrets?: Record<string, string>;
   /** Overridable for tests so we can assert on the value without touching disk. */
   distDir?: string;
 }
@@ -35,12 +36,38 @@ export async function byoiPublish(deps: ByoiPublishDeps): Promise<void> {
   }
 
   logger.success(`Published ${result.filesUploaded} files to ${config.domain}`);
+
+  // Phase 2 (byoi_deployment.md §2.2): OIDC provisioning, guarded so Phase 1
+  // deploys still work without Authentik.
+  if (capabilities.idp) {
+    const password = deps.secrets?.admin_password;
+    if (!password) {
+      throw new Error('admin_password secret not available — required for idp provisioning');
+    }
+
+    // Static SPA → public client with PKCE, no secret. Both calls are idempotent.
+    const oidc = await capabilities.idp.create_oidc_client({
+      client_name: 'byoi',
+      redirect_uris: [`https://${config.domain}/auth/callback`],
+      client_type: 'public',
+      groups: ['byoi-admins', 'byoi-users'],
+    });
+    logger.info(`OIDC client 'byoi' provisioned (client_id ${oidc.client_id})`);
+
+    await capabilities.idp.create_user({
+      username: 'byoi_admin',
+      email: 'admin@example.org',
+      password,
+      groups: ['byoi-admins'],
+    });
+    logger.success('Provisioned byoi_admin user in byoi-admins');
+  }
 }
 
-export default defineHook<ByoiConfig, [], ['public_web', 'dns_registrar'], 'on_install'>({
+export default defineHook<ByoiConfig, [], ['public_web', 'dns_registrar', 'idp'], 'on_install'>({
   hook: 'on_install',
   requires: [],
-  optional: ['public_web', 'dns_registrar'],
-  handler: async ({ config, logger, capabilities }) =>
-    byoiPublish({ config, logger, capabilities }),
+  optional: ['public_web', 'dns_registrar', 'idp'],
+  handler: async ({ config, logger, capabilities, secrets }) =>
+    byoiPublish({ config, logger, capabilities, secrets }),
 });

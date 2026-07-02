@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 import { createSilentLogger } from '@celilo/capabilities';
 import type {
+  CreateOidcClientRequest,
+  CreateUserRequest,
+  IdpCapability,
   PublicWebCapability,
   PublishStaticSiteRequest,
 } from '@celilo/capabilities';
@@ -32,6 +35,30 @@ function makePublicWeb(
     async unregister_routes() {},
     async getServerIp() {
       return '10.0.20.5';
+    },
+  };
+}
+
+function makeIdp(): IdpCapability & {
+  oidcCalls: CreateOidcClientRequest[];
+  userCalls: CreateUserRequest[];
+} {
+  const oidcCalls: CreateOidcClientRequest[] = [];
+  const userCalls: CreateUserRequest[] = [];
+  return {
+    oidcCalls,
+    userCalls,
+    async create_oidc_client(req: CreateOidcClientRequest) {
+      oidcCalls.push(req);
+      return { client_id: 'cid', client_secret: '', provider_id: 1, application_slug: 'byoi' };
+    },
+    async revoke_oidc_client() {},
+    async create_user(req: CreateUserRequest) {
+      userCalls.push(req);
+      return { user_id: 1, created: true };
+    },
+    async create_token() {
+      return { token: 'tok', created: true };
     },
   };
 }
@@ -90,5 +117,66 @@ describe('byoiPublish', () => {
     });
 
     expect(logger.messages.some((m) => m.message.includes('Published 7 files'))).toBe(true);
+  });
+
+  test('skips OIDC provisioning when idp capability is absent', async () => {
+    const public_web = makePublicWeb();
+
+    await byoiPublish({
+      config: { domain: DOMAIN } as unknown as ByoiConfig,
+      logger: createSilentLogger(),
+      capabilities: { public_web },
+      distDir: '/tmp/fake-dist',
+    });
+
+    // no throw despite no secrets — Phase 1 deploys still work without Authentik
+  });
+
+  test('provisions OIDC client and admin user when idp is present', async () => {
+    const public_web = makePublicWeb();
+    const idp = makeIdp();
+
+    await byoiPublish({
+      config: { domain: DOMAIN } as unknown as ByoiConfig,
+      logger: createSilentLogger(),
+      capabilities: { public_web, idp },
+      secrets: { admin_password: 's3cret' },
+      distDir: '/tmp/fake-dist',
+    });
+
+    expect(idp.oidcCalls).toEqual([
+      {
+        client_name: 'byoi',
+        redirect_uris: [`https://${DOMAIN}/auth/callback`],
+        client_type: 'public',
+        groups: ['byoi-admins', 'byoi-users'],
+      },
+    ]);
+    expect(idp.userCalls).toEqual([
+      {
+        username: 'byoi_admin',
+        email: 'admin@example.org',
+        password: 's3cret',
+        groups: ['byoi-admins'],
+      },
+    ]);
+  });
+
+  test('throws when idp is present but admin_password secret is missing', async () => {
+    const public_web = makePublicWeb();
+    const idp = makeIdp();
+
+    await expect(
+      byoiPublish({
+        config: { domain: DOMAIN } as unknown as ByoiConfig,
+        logger: createSilentLogger(),
+        capabilities: { public_web, idp },
+        secrets: {},
+        distDir: '/tmp/fake-dist',
+      }),
+    ).rejects.toThrow(/admin_password secret not available/);
+
+    expect(idp.oidcCalls).toHaveLength(0);
+    expect(idp.userCalls).toHaveLength(0);
   });
 });
