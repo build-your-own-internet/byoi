@@ -1,11 +1,12 @@
 ---
 import css from './AppHeaderBar.module.css';
+import AuthButton from './AuthButton';
 ---
 <app-header-bar class={css.class}>
   <left-side>
     <strong>Build Your Own Internet</strong>
   </left-side>
   <right-side>
-    <button>Log in / Create account</button>
+    <AuthButton client:load />
   </right-side>
 </app-header-bar>

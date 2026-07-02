@@ -1,5 +1,7 @@
 import { defineConfig } from 'astro/config';
 
+import preact from '@astrojs/preact';
+
 export default defineConfig({
   vite: {
     server: {
@@ -13,6 +15,7 @@ export default defineConfig({
       }
     }
   },
+
   markdown: {
     remarkPlugins: [
       (await import('./src/lib/rehype-rewrite-links.ts')).remarkRewriteImages
@@ -20,5 +23,7 @@ export default defineConfig({
     rehypePlugins: [
       (await import('./src/lib/rehype-rewrite-links.ts')).default
     ]
-  }
+  },
+
+  integrations: [preact()]
 });
