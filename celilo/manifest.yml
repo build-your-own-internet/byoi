@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=../../celilo/schemas/module-manifest.schema.json
+celilo_contract: "1.0"
+id: byoi
+name: Build Your Own Internet
+version: 0.1.0
+description: Static Astro documentation site for Build Your Own Internet, served via Caddy.
+
+requires:
+  capabilities:
+    - name: public_web
+      version: 3.1.0
+    - name: dns_registrar
+      version: 4.0.0
+
+variables:
+  owns:
+    - name: domain
+      type: string
+      required: true
+      source: user
+      description: "Public domain this site serves on (must be a caddy hostname)."
+  imports: []
+
+secrets:
+  declares: []
+
+build:
+  command: "cd web && bun install && bun run build"
+  artifacts:
+    - web/dist/index.html
+
+hooks:
+  on_install:
+    script: ./scripts/publish.ts
+    timeout: 120000
+  health_check:
+    script: ./scripts/health-check.ts
+    timeout: 60000
+
+e2e:
+  tests_dir: e2e
