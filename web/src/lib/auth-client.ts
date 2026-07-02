@@ -114,6 +114,11 @@ export async function handleCallback(): Promise<void> {
 
 /** Current user from the stored ID token, or null if logged out/expired. */
 export function getUser(): AuthUser | null {
+  // by-9td.4: dev-mode auto-login. Only the `dev` script sets PUBLIC_AUTH_MODE;
+  // prod builds leave it unset, so Vite dead-code-eliminates this branch.
+  if (import.meta.env.PUBLIC_AUTH_MODE === 'dev') {
+    return { username: 'dev', groups: ['byoi-admins'] };
+  }
   try {
     const raw = localStorage.getItem(TOKENS_KEY);
     if (!raw) return null;

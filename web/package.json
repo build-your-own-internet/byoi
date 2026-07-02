@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "predev": "bun scripts/sync-assets.ts",
-    "dev": "astro dev",
+    "dev": "PUBLIC_AUTH_MODE=dev astro dev",
     "prebuild": "bun scripts/sync-assets.ts",
     "build": "astro build",
     "postbuild": "bun scripts/check-links.ts",
