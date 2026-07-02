@@ -6,6 +6,8 @@ import AuthCallback from '../../components/AuthCallback';
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width" />
   <title>Signing in — Build Your Own Internet</title>
+  <!-- Runtime OIDC config written at deploy time (by-9td.8); 404s harmlessly in dev. -->
+  <script is:inline src="/config.js"></script>
 </head>
 <body>
   <AuthCallback client:load />

@@ -1,4 +1,7 @@
 import { describe, expect, test } from 'bun:test';
+import { mkdtempSync, readFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { createSilentLogger } from '@celilo/capabilities';
 import type {
   CreateOidcClientRequest,
@@ -141,7 +144,7 @@ describe('byoiPublish', () => {
       logger: createSilentLogger(),
       capabilities: { public_web, idp },
       secrets: { admin_password: 's3cret' },
-      distDir: '/tmp/fake-dist',
+      distDir: mkdtempSync(join(tmpdir(), 'byoi-dist-')),
     });
 
     expect(idp.oidcCalls).toEqual([
@@ -160,6 +163,48 @@ describe('byoiPublish', () => {
         groups: ['byoi-admins'],
       },
     ]);
+  });
+
+  test('writes runtime config.js into dist before publishing when idp is present', async () => {
+    const public_web = makePublicWeb();
+    const distDir = mkdtempSync(join(tmpdir(), 'byoi-dist-'));
+    let configAtPublishTime = '';
+    public_web.publishStaticSite = async (req: PublishStaticSiteRequest) => {
+      configAtPublishTime = readFileSync(join(req.sourceDir, 'config.js'), 'utf-8');
+      return { success: true, path: '/', filesUploaded: 1, contentHash: 'x' };
+    };
+
+    await byoiPublish({
+      config: { domain: DOMAIN } as unknown as ByoiConfig,
+      logger: createSilentLogger(),
+      capabilities: { public_web, idp: makeIdp() },
+      secrets: { admin_password: 's3cret' },
+      distDir,
+    });
+
+    // config.js must already be in sourceDir at publish time so the upload ships it
+    expect(configAtPublishTime).toStartWith('window.__BYOI_CONFIG__ = ');
+    const parsed = JSON.parse(configAtPublishTime.replace('window.__BYOI_CONFIG__ = ', '').replace(/;\s*$/, ''));
+    expect(parsed).toEqual({
+      AUTHENTIK_URL: 'https://auth.buildyourowninternet.dev/application/o',
+      CLIENT_ID: 'cid',
+      APPLICATION_SLUG: 'byoi',
+      REDIRECT_URI: `https://${DOMAIN}/auth/callback`,
+    });
+  });
+
+  test('does not write config.js when idp capability is absent', async () => {
+    const public_web = makePublicWeb();
+    const distDir = mkdtempSync(join(tmpdir(), 'byoi-dist-'));
+
+    await byoiPublish({
+      config: { domain: DOMAIN } as unknown as ByoiConfig,
+      logger: createSilentLogger(),
+      capabilities: { public_web },
+      distDir,
+    });
+
+    expect(() => readFileSync(join(distDir, 'config.js'))).toThrow();
   });
 
   test('throws when idp is present but admin_password secret is missing', async () => {
