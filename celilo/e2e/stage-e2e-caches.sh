@@ -14,6 +14,11 @@ SITE_CACHE="$PKG_DIR/.celilo-website-cache"
 mkdir -p "$SITE_CACHE"
 [ -f "$SITE_CACHE/index.html" ] || echo '<!-- placeholder: staged by stage-e2e-caches.sh -->' > "$SITE_CACHE/index.html"
 
+# Target machines bind-mount ./docker-image-cache (app-zone image preloads,
+# e.g. authentik's postgres/redis); the preload skips missing tarballs, but
+# the mount source dir must exist or compose up fails.
+mkdir -p "$PKG_DIR/docker-image-cache"
+
 # ponytail: empty pool — apt-repo-sim only feeds the upstream bootstrap-apt
 # test's `apt install celilo-bootstrap`; byoi tests never use it, and the debs
 # aren't published anywhere fetchable. Empty-but-present builds the image.
