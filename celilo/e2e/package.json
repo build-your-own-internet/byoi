@@ -1,6 +1,9 @@
 {
   "name": "byoi-e2e",
   "private": true,
+  "scripts": {
+    "postinstall": "bash stage-e2e-caches.sh"
+  },
   "dependencies": {
     "@celilo/e2e": "^0.8.0"
   }
