@@ -11,6 +11,11 @@ requires:
       version: 3.1.0
     - name: dns_registrar
       version: 4.0.0
+
+# idp is optional: Phase 1 (byoi-deploy) runs without Authentik; the
+# on_install hook guards it (scripts/publish.ts declares it optional too).
+optional:
+  capabilities:
     - name: idp
       version: 1.2.0
 
@@ -34,7 +39,11 @@ secrets:
         encoding: base64
 
 build:
-  command: "cd web && bun install && bun run build"
+  # Packaging stages the module (celilo/) to a temp dir, so the repo-root
+  # web/ sibling is only reachable via $CELILO_MODULE_SOURCE_DIR. Build it
+  # in place, then copy dist into the staged module so it ships in the
+  # netapp (where scripts/publish.ts reads it as <module>/web/dist).
+  command: "(cd \"$CELILO_MODULE_SOURCE_DIR/../web\" && bun install && bun run build) && mkdir -p web && cp -R \"$CELILO_MODULE_SOURCE_DIR/../web/dist\" web/"
   artifacts:
     - web/dist/index.html
 

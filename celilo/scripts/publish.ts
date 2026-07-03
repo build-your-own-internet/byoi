@@ -4,8 +4,10 @@ import { join } from 'node:path';
 import type { HookLogger, IdpCapability, PublicWebCapability } from '@celilo/capabilities';
 import type { ByoiConfig } from '../celilo/types';
 
-// scripts/ is one level below the module root, which sits beside web/ at the repo root
-const defaultDistDir = join(import.meta.dir, '..', '..', 'web', 'dist');
+// scripts/ is one level below the module root. The packaged netapp carries the
+// built site at <module>/web/dist (staged there by the manifest build command),
+// so resolve dist relative to the module root, not the repo root.
+const defaultDistDir = join(import.meta.dir, '..', 'web', 'dist');
 
 export interface ByoiPublishDeps {
   config: ByoiConfig;

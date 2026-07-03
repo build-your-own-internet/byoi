@@ -19,11 +19,28 @@
  */
 
 import { afterAll, describe, expect, test } from 'bun:test';
+import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { network, progress } from '@celilo/e2e';
 import type { NetworkHandle } from '@celilo/e2e/types';
 
 const MODULE_DIR = join(import.meta.dir, '..');
+
+/**
+ * Package the module with the published @celilo/cli straight into the registry
+ * sim's uploads mount (node_modules/@celilo/e2e/netapps/). In npm-consumer
+ * mode net.publishModule() is unusable twice over: it packages via a
+ * monorepo-only CLI path, and it docker-cps into /uploads, which consumer mode
+ * bind-mounts read-only (upstream: celilo ce-i2i). The registry rescans
+ * /uploads on every request, so a host-side write is immediately importable.
+ */
+function packageModule(): void {
+  const netappPath = join(import.meta.dir, 'node_modules/@celilo/e2e/netapps/byoi.netapp');
+  execSync(
+    `bunx @celilo/cli package ${JSON.stringify(MODULE_DIR)} --output ${JSON.stringify(netappPath)}`,
+    { stdio: 'pipe', timeout: 300_000 },
+  );
+}
 const DOMAIN = 'iamtheinternet.org';
 const PEBBLE_CERT = '/usr/local/share/ca-certificates/pebble-acme-root.crt';
 const AUTHENTIK_API = 'http://10.0.20.30:9000/api/v3';
@@ -54,8 +71,8 @@ describe('byoi oidc', () => {
         .observe('publicInternet')
         .start();
 
-      progress('publishing byoi to e2e registry', 'module published');
-      await net.publishModule(MODULE_DIR);
+      progress('packaging byoi into e2e registry', 'module packaged');
+      packageModule();
 
       // The firewall provides the dmz/app zones before services are placed.
       progress('deploying firewall (provides dmz + app)', 'firewall deployed');

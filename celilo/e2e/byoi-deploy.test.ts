@@ -16,11 +16,28 @@
  */
 
 import { afterAll, describe, expect, test } from 'bun:test';
+import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { assertFrontedServicePositives, network, progress } from '@celilo/e2e';
 import type { NetworkHandle } from '@celilo/e2e/types';
 
 const MODULE_DIR = join(import.meta.dir, '..');
+
+/**
+ * Package the module with the published @celilo/cli straight into the registry
+ * sim's uploads mount (node_modules/@celilo/e2e/netapps/). In npm-consumer
+ * mode net.publishModule() is unusable twice over: it packages via a
+ * monorepo-only CLI path, and it docker-cps into /uploads, which consumer mode
+ * bind-mounts read-only (upstream: celilo ce-i2i). The registry rescans
+ * /uploads on every request, so a host-side write is immediately importable.
+ */
+function packageModule(): void {
+  const netappPath = join(import.meta.dir, 'node_modules/@celilo/e2e/netapps/byoi.netapp');
+  execSync(
+    `bunx @celilo/cli package ${JSON.stringify(MODULE_DIR)} --output ${JSON.stringify(netappPath)}`,
+    { stdio: 'pipe', timeout: 300_000 },
+  );
+}
 const DOMAIN = 'iamtheinternet.org';
 const PEBBLE_CERT = '/usr/local/share/ca-certificates/pebble-acme-root.crt';
 
@@ -46,8 +63,8 @@ describe('byoi deploy', () => {
         .observe('publicInternet')
         .start();
 
-      progress('publishing byoi to e2e registry', 'module published');
-      await net.publishModule(MODULE_DIR);
+      progress('packaging byoi into e2e registry', 'module packaged');
+      packageModule();
 
       // Honest model: the firewall provides the dmz zone before any dmz
       // service is placed.
@@ -138,9 +155,11 @@ describe('byoi deploy', () => {
     );
 
     progress('verifying site content', 'content verified');
+    // The Astro site's `/` is a meta-refresh redirect (not HTTP), so assert
+    // content on its canonical target chapter page.
     const page = await net.exec(
       'fw-ext',
-      `curl -sf --max-time 10 --cacert ${PEBBLE_CERT} https://${DOMAIN}/`,
+      `curl -sf --max-time 10 --cacert ${PEBBLE_CERT} https://${DOMAIN}/chapters/000-getting-started`,
     );
     expect(page.exitCode).toBe(0);
     expect(page.stdout.toLowerCase()).toContain('build your own internet');
