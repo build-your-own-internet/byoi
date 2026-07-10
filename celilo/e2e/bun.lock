@@ -5,16 +5,16 @@
     "": {
       "name": "byoi-e2e",
       "dependencies": {
-        "@celilo/e2e": "^0.8.0",
+        "@celilo/e2e": "^0.9.0",
       },
     },
   },
   "packages": {
     "@celilo/cli-display": ["@celilo/cli-display@0.1.9", "", {}, "sha512-hGLvkJhKogweAF+xJc0N87NpWDXFBWFGdyHSrZ6trvPHlBEPxM9u1RvcknBB3Hp7phRh9uwMWdA3xhFiVxgJDw=="],
 
-    "@celilo/e2e": ["@celilo/e2e@0.8.0", "", { "dependencies": { "@celilo/cli-display": "^0.1.9", "@celilo/event-bus": "^0.1.7", "yaml": "^2.8.0", "zod": "^3.24.1" }, "bin": { "cele2e": "bin/cele2e", "cele2e-wait": "bin/cele2e-wait", "celilo-e2e-run": "bin/e2e-run", "celilo-e2e-build": "bin/e2e-build", "celilo-e2e-load": "bin/e2e-load", "celilo-e2e-infra": "bin/e2e-infra" } }, "sha512-3vFRdKnpkrlyuYMfI3jyQROF3pmyOX5YlO3vgQu4NtnH05z8hZYMhSDC2QiUvk3va/RNMDJiCv9ABuXSbniQXQ=="],
+    "@celilo/e2e": ["@celilo/e2e@0.9.0", "", { "dependencies": { "@celilo/cli-display": "^0.1.9", "@celilo/event-bus": "^0.1.8", "yaml": "^2.8.0", "zod": "^3.24.1" }, "bin": { "cele2e": "bin/cele2e", "cele2e-wait": "bin/cele2e-wait", "celilo-e2e-run": "bin/e2e-run", "celilo-e2e-build": "bin/e2e-build", "celilo-e2e-load": "bin/e2e-load", "celilo-e2e-infra": "bin/e2e-infra" } }, "sha512-qoG4k2QncgoPgOOb0lXwfkhHlJnRaMxsbJwxRtHN1FxywA4M5mwc2nOkv0jlUiY0o7Bb7oh/9VOKfhq+fWy1pw=="],
 
-    "@celilo/event-bus": ["@celilo/event-bus@0.1.7", "", { "dependencies": { "zod": "^3.24.1" }, "bin": { "event-bus": "bin/event-bus" } }, "sha512-4KDq1cDAf8QnlKNrRyPvt9ucr88tQKNljtm2XB+LseP+Muhada5ryvkXxdQBGfxE8JTHOyxpDhButSNR3lyWpQ=="],
+    "@celilo/event-bus": ["@celilo/event-bus@0.1.8", "", { "dependencies": { "zod": "^3.24.1" }, "bin": { "event-bus": "bin/event-bus" } }, "sha512-e2jnkQthncDjW1cPe+RH2pifnEYmegQxSHR0EkpsM1KG4oZO3k0s1MVTphEALWLnSRJVxaIhdoPONUz9kprAmQ=="],
 
     "yaml": ["yaml@2.9.0", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA=="],
 

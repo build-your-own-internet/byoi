@@ -11,14 +11,6 @@ machines) and deploy this repo's site through the full Celilo flow.
   The simulated internet runs ~17 containers; a default 2 GiB colima VM
   fails in confusing ways (daemon restarts, lost routes, hung CLI calls).
 - **bun 1.3.x** (`bun --version`)
-- The `celilo-e2e/management:latest` and `celilo-e2e/management:vanilla` Docker
-  images present (`docker images | grep celilo-e2e/management`). These are
-  produced by `cele2e build-infra` **in the celilo monorepo** (its bake step
-  runs install.sh to put the celilo CLI in the image) and are not rebuilt by
-  test runs here. If `celilo system init` fails with
-  `/root/.bun/bin/celilo: No such file or directory`, the image on this host
-  was built without the bake — re-run `./cele2e build-infra` in the celilo
-  checkout.
 
 ## Install
 
@@ -27,9 +19,31 @@ cd celilo/e2e
 bun install
 ```
 
-`bun install` also runs `stage-e2e-caches.sh` (postinstall), which stages the
-build inputs the published `@celilo/e2e` package needs but doesn't ship — see
-that script's comments for details.
+## Build infra images
+
+```bash
+cd celilo/e2e
+node_modules/.bin/cele2e build-infra --published
+```
+
+This stages all build inputs from public sources (published @celilo tarballs,
+celilo.computer install.sh, apt pool, standard-module netapps from the
+registry), builds the simulator images, and bakes the published `@celilo/cli`
+into `celilo-e2e/management:latest`. Test runs don't rebuild images — re-run
+this after a new @celilo release or on a fresh Docker host. Requires network
+access (it fetches from npm and celilo.computer).
+
+**Known issue (@celilo/e2e 0.9.0, ISS-0009):** the `--published` bake is
+broken twice over — it installs the stale `@alpha` dist-tags (celilo
+0.5.0-alpha.12, rejected by the harness's `>=0.9.0` version contract) and
+`docker commit`s the image with `CMD ["sleep infinity"]` instead of
+`/startup.sh` (so target machines fail with `Timeout waiting for <machine>
+target-setup`). Repair the image after every build-infra (remove this step
+once the upstream fix ships):
+
+```bash
+bash e2e/bake-management.sh
+```
 
 ## Run
 
@@ -66,8 +80,12 @@ Full per-run logs are written under `celilo/results/<timestamp>/`.
 ## Troubleshooting
 
 - `docker compose ... build` fails with `"/.npm-registry-cache": not found` —
-  the staged caches are missing; run `bash e2e/stage-e2e-caches.sh` (or re-run
-  `bun install` in `celilo/e2e/`).
+  the staged caches are missing; re-run
+  `e2e/node_modules/.bin/cele2e build-infra --published`.
+- `celilo system init` fails with
+  `/root/.bun/bin/celilo: No such file or directory` — the management image
+  was built without the bake; re-run
+  `e2e/node_modules/.bin/cele2e build-infra --published`.
 - Run-lock busy: `e2e/node_modules/.bin/cele2e status`, and `cele2e release`
   if a previous run left the lock behind.
 - Leftover network state: `e2e/node_modules/.bin/cele2e down` tears everything

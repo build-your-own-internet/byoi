@@ -1,0 +1,36 @@
+title: Adopt @celilo/e2e 0.9.0 consumer-mode build-infra, drop local staging workarounds
+description: |
+  The published @celilo/e2e tarball (<= 0.8.0) shipped Dockerfiles that COPY
+  .npm-registry-cache/, .celilo-website-cache/ and .apt-repo-cache/pool —
+  gitignored build outputs only staged inside the celilo monorepo. Any npm
+  consumer's first `cele2e run` failed at `docker compose build` with
+  'failed to compute cache key: "/.npm-registry-cache": not found'.
+
+  This repo worked around it with celilo/e2e/stage-e2e-caches.sh (postinstall:
+  npm-packed the published @celilo tarballs, placeholder website cache, empty
+  apt pool, vendored netapps/) and celilo/e2e/bake-management.sh (baked the
+  published @celilo/cli over the monorepo dev CLI in management:latest).
+
+  Upstream fixed this in @celilo/e2e 0.9.0: consumer-mode build-infra stages
+  all inputs from public sources and `--published` bakes the published CLI.
+  Bump the dep and delete the workarounds. Tracked as bead by-16f.
+severity: medium
+type: bug
+status: fixed
+solution: |
+  Bumped @celilo/e2e ^0.8.0 -> ^0.9.0 (celilo/e2e/package.json + bun.lock),
+  removed the postinstall hook, deleted stage-e2e-caches.sh and the vendored
+  netapps/*.netapp, and rewrote RUNBOOK.md: infra images are now built with
+  `node_modules/.bin/cele2e build-infra --published` run from this repo (no
+  celilo monorepo checkout needed). 0.9.0's build-infra fetches the @celilo
+  tarballs from npm, install.sh from celilo.computer, the apt pool from
+  apt.celilo.computer, and standard-module netapps from the public registry;
+  its e2e-cache-images step creates the docker-image-cache mount source.
+
+  bake-management.sh was KEPT (planned for deletion, but 0.9.0's published
+  bake is broken — see ISS-0009 / upstream bead by-3a6) and patched with the
+  ce-fo6 rm-f-before-shim fix. Run it after every build-infra --published.
+
+  Verified end-to-end: wiped all pre-staged inputs from node_modules, ran a
+  clean consumer-mode `cele2e build-infra --published`, repaired the image
+  with bake-management.sh, and the byoi-deploy e2e suite passed (105s).

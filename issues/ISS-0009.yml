@@ -1,0 +1,32 @@
+title: "@celilo/e2e 0.9.0 published bake commits management:latest with CMD 'sleep infinity'"
+description: |
+  Upstream bug in @celilo/e2e 0.9.0 (bead by-3a6, fix belongs in celilo
+  packages/e2e). bin/e2e-bake-management's bakeViaPublished() starts the
+  vanilla container with `docker run ... sleep infinity` and commits it
+  without `--change 'CMD ["/startup.sh"]'`, so the baked
+  celilo-e2e/management:latest image's CMD becomes `sleep infinity`.
+  At test time management never runs /startup.sh, the shared ssh-keys
+  volume stays empty, fw-main crashloops on
+  'cp: cannot stat /ssh-keys/authorized_keys', and every target machine
+  fails with 'Timeout waiting for <machine> target-setup after 60000ms'.
+
+  Second defect in the same path: bakeViaPublished installs the @alpha
+  dist-tags, which are stale on npm (@celilo/cli alpha=0.5.0-alpha.12 vs
+  latest=0.10.0), so even with the CMD fixed the harness version contract
+  rejects the image: 'Management image has celilo 0.5.0-alpha.12, harness
+  requires >=0.9.0'.
+
+  The sim-mode bake is unaffected (it commits the compose-run management
+  container, whose Cmd is already /startup.sh). byoi's bake-management.sh
+  carried the correct --change flags and installs @latest; upstream dropped
+  both.
+severity: high
+type: bug
+status: open
+solution: |
+  (workaround only — real fix is upstream, bead by-3a6) Kept
+  celilo/e2e/bake-management.sh: run `bash e2e/bake-management.sh` after
+  every `cele2e build-infra --published`. It installs @celilo/cli@latest
+  from real npm and re-commits the image with ENTRYPOINT/CMD restored.
+  Documented in celilo/RUNBOOK.md. Delete the script and RUNBOOK note once
+  @celilo/e2e ships the fix.
