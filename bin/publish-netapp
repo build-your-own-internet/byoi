@@ -1,0 +1,46 @@
+#!/bin/bash
+# Publish a new version of the byoi module (byoi.netapp) to the Celilo registry.
+#
+# Usage:
+#   bin/publish-netapp "release message" [extra `celilo module publish` flags]
+#   npm run publish:netapp -- "release message"
+#
+# Prerequisites:
+#   1. Bump `celilo/manifest.yml` `version:` for a real release, then commit —
+#      otherwise the stale-version-drift check fails on purpose. (To publish a
+#      +revision of the SAME version instead, pass --allow-stale.)
+#   2. Export CELILO_PUBLISH_TOKEN. Mint/read it on the celilo-mgr box:
+#        ssh <user>@celilo-mgr \
+#          'sudo -u celilo celilo module secret get celilo-registry publish_tokens'
+#
+# Notes:
+#   - Runs `module check` first and aborts if it fails (drift, bad manifest, …).
+#   - Publishes against a throwaway CELILO_HOME so the release is hermetic and is
+#     never blocked by a stale local control-plane DB (drizzle migration clash).
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+MODULE_DIR="$REPO_ROOT/celilo"
+
+MSG="${1:-byoi release}"
+shift || true   # any remaining args pass through to `celilo module publish`
+
+if [ -z "${CELILO_PUBLISH_TOKEN:-}" ]; then
+  echo "error: CELILO_PUBLISH_TOKEN is not set." >&2
+  echo "  Fetch it from celilo-mgr:" >&2
+  echo "    ssh <user>@celilo-mgr 'sudo -u celilo celilo module secret get celilo-registry publish_tokens'" >&2
+  exit 1
+fi
+
+# Hermetic control-plane state: publish never touches (or is blocked by) a local
+# celilo install's SQLite DB.
+CELILO_HOME="$(mktemp -d)"
+export CELILO_HOME
+trap 'rm -rf "$CELILO_HOME"' EXIT
+
+echo "→ celilo module check ${MODULE_DIR}"
+bunx @celilo/cli module check "$MODULE_DIR"
+
+echo "→ celilo module publish ${MODULE_DIR}"
+bunx @celilo/cli module publish "$MODULE_DIR" --message "$MSG" "$@"
