@@ -73,6 +73,46 @@ Here's some interesting topics that came up in the course of our exploration tha
 * Firewalls
 * Caching
 
+## Publishing the byoi.netapp module
+
+This repo publishes itself as the `byoi.netapp` module to the Celilo registry via
+`npm run publish:netapp` (which runs `bin/publish-netapp`). It runs `celilo module
+check`, then `celilo module publish ./celilo` against a throwaway `CELILO_HOME` so
+the release is hermetic.
+
+**One-time setup — supply the token:**
+
+```bash
+cp .env-example .env   # .env is gitignored; never commit the real token
+```
+
+Then fill in `CELILO_PUBLISH_TOKEN` in `.env`. Fetch it from the celilo-mgr box:
+
+```bash
+ssh <user>@celilo-mgr 'sudo -u celilo celilo module secret get celilo-registry publish_tokens'
+```
+
+(An existing `CELILO_PUBLISH_TOKEN` exported in your shell wins over `.env`.)
+
+**Release a new version:**
+
+1. Bump `version:` in `celilo/manifest.yml` and commit — otherwise the
+   stale-version-drift check fails on purpose.
+2. Publish:
+
+   ```bash
+   npm run publish:netapp -- "what changed in this release"
+   ```
+
+**Re-publish the SAME version** (a `+revision` bump, no manifest change) with
+`--allow-stale`:
+
+```bash
+npm run publish:netapp -- "re-publish notes" --allow-stale
+```
+
+Any extra flags after the message pass straight through to `celilo module publish`.
+
 ## TODOs
 
 * improve footnotes

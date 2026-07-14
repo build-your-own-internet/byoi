@@ -1,27 +1,27 @@
 #!/bin/bash
 # Publish a new version of the byoi module (byoi.netapp) to the Celilo registry.
 #
-# Usage:
-#   bin/publish-netapp "release message" [extra `celilo module publish` flags]
-#   npm run publish:netapp -- "release message"
+# Usage:  bin/publish-netapp "release message" [extra `celilo module publish` flags]
+#         npm run publish:netapp -- "release message"
 #
-# Prerequisites:
-#   1. Bump `celilo/manifest.yml` `version:` for a real release, then commit —
-#      otherwise the stale-version-drift check fails on purpose. (To publish a
-#      +revision of the SAME version instead, pass --allow-stale.)
-#   2. Export CELILO_PUBLISH_TOKEN. Mint/read it on the celilo-mgr box:
-#        ssh <user>@celilo-mgr \
-#          'sudo -u celilo celilo module secret get celilo-registry publish_tokens'
-#
-# Notes:
-#   - Runs `module check` first and aborts if it fails (drift, bad manifest, …).
-#   - Publishes against a throwaway CELILO_HOME so the release is hermetic and is
-#     never blocked by a stale local control-plane DB (drizzle migration clash).
+# See the "Publishing the byoi.netapp module" section of README.md for the full
+# release flow (version bump, CELILO_PUBLISH_TOKEN via .env, --allow-stale, …).
 
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MODULE_DIR="$REPO_ROOT/celilo"
+
+# Auto-load a gitignored .env at the repo root (holds CELILO_PUBLISH_TOKEN, etc.)
+# so the token can live in a file instead of the shell. Anything already exported
+# in the environment wins over the .env.
+# ponytail: no quote-stripping/multiline — a token is a bare word; that's all .env holds.
+if [ -f "$REPO_ROOT/.env" ]; then
+  while IFS='=' read -r k v; do
+    case "$k" in ''|'#'*) continue ;; esac
+    [ -n "${!k:-}" ] || export "$k=$v"
+  done < "$REPO_ROOT/.env"
+fi
 
 MSG="${1:-byoi release}"
 shift || true   # any remaining args pass through to `celilo module publish`
