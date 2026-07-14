@@ -1,0 +1,42 @@
+title: "CI: auto-build + publish byoi.netapp on merge (Forgejo Actions build-bus)"
+description: |
+  Automate the byoi.netapp release. Today it is manual (README "Publishing the
+  byoi.netapp module"): bump celilo/manifest.yml `version:`, commit, then
+  `npm run publish:netapp -- "msg"`. Goal: a Forgejo Actions workflow on the
+  celilo forge that, on merge to the release branch (main), runs the publish
+  using CELILO_PUBLISH_TOKEN from a Forgejo Actions secret. This is the celilo
+  "build-bus" pattern (infra v2/BUILD_BUS.md, APP_CI_REFERENCE.md; lunacycle's
+  manifest wires source_forge + registry_publish for exactly this).
+
+  Bead: by-kei. Design-first spike — two external dependencies gate full
+  activation (see below).
+severity: medium
+type: feature
+status: in-progress
+solution: |
+  Added .forgejo/workflows/publish-netapp.yml — the build-bus workflow.
+
+  Design:
+  - Trigger: push to main, paths celilo/** (a merge = push to main here).
+  - Version gate: publish ONLY when celilo/manifest.yml `version:` changed vs
+    the parent commit (git diff HEAD~1..HEAD). Verified against real history —
+    fires on 075c070 (0.1.0 -> 0.1.1), skips when unchanged. This keeps
+    ordinary doc/site commits from triggering a release and avoids tripping the
+    stale-version-drift gate with an unchanged version. It reuses bin/publish-netapp
+    unchanged (hermetic CELILO_HOME, celilo module check + publish).
+  - Token: secrets.CELILO_PUBLISH_TOKEN (Forgejo Actions secret).
+
+  BLOCKERS before this workflow can run (activation, not code):
+  1. by-chz (adopt changesets) — replaces the manual manifest bump with a
+     `celilo module version` step that consumes pending changesets ahead of
+     publish. When it lands, insert that step before the publish; the version
+     gate still holds (changesets bumps manifest.yml `version:`, which is what
+     the gate keys on). Not required to merge this file, but required for a
+     bump to happen automatically rather than by hand.
+  2. celilo forge + secret — the byoi repo (currently github.com) must be
+     registered on the celilo forge and a CELILO_PUBLISH_TOKEN Actions secret
+     set there. Coordinate with the celilo mayor. Until then the workflow is a
+     ready-to-activate no-op (GitHub Actions won't run a .forgejo/ workflow).
+
+  Sequencing: land by-chz -> register byoi on celilo forge + set the secret ->
+  this workflow is live. Filed as design-first per by-kei.

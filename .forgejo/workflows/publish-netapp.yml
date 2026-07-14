@@ -1,0 +1,50 @@
+# Build-bus: auto-publish byoi.netapp to the Celilo registry on merge (by-kei).
+#
+# Runs on Forgejo Actions (celilo forge). On a push to the release branch it
+# publishes the module ONLY when celilo/manifest.yml `version:` actually changed
+# vs the previous commit — so ordinary doc/site commits don't trigger a release
+# and we never hit the stale-version-drift gate with an unchanged version.
+#
+# ACTIVATION (see issues/ISS-0010.yml): needs the byoi repo registered on the
+# celilo forge and a CELILO_PUBLISH_TOKEN Actions secret set there. Once
+# changesets lands (by-chz), the version bump becomes a `celilo module version`
+# step that consumes pending changesets ahead of publish — replacing the manual
+# manifest bump the gate below keys on.
+
+name: Publish byoi.netapp
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'celilo/**'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2   # need the parent commit to diff the manifest version
+
+      - name: Detect manifest version bump
+        id: bump
+        run: |
+          ver() { git show "$1:celilo/manifest.yml" 2>/dev/null | grep -E '^version:' | head -1 | awk '{print $2}'; }
+          new=$(ver HEAD); old=$(ver HEAD~1)
+          echo "old=$old new=$new"
+          if [ -n "$new" ] && [ "$new" != "$old" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "manifest version unchanged ($old) — nothing to publish"
+          fi
+
+      - uses: oven-sh/setup-bun@v2
+        if: steps.bump.outputs.changed == 'true'
+
+      - name: Publish to Celilo registry
+        if: steps.bump.outputs.changed == 'true'
+        env:
+          CELILO_PUBLISH_TOKEN: ${{ secrets.CELILO_PUBLISH_TOKEN }}
+        run: bin/publish-netapp "release ${{ steps.bump.outputs.new }} (merge ${{ github.sha }})"
