@@ -33,12 +33,9 @@ if [ -z "${CELILO_PUBLISH_TOKEN:-}" ]; then
   exit 1
 fi
 
-# Hermetic control-plane state: publish never touches (or is blocked by) a local
-# celilo install's SQLite DB.
-CELILO_HOME="$(mktemp -d)"
-export CELILO_HOME
-trap 'rm -rf "$CELILO_HOME"' EXIT
-
+# With CELILO_PUBLISH_TOKEN set, publish resolves the token from the env and never
+# opens a local celilo install's SQLite DB — no hermetic-state juggling needed.
+# See issues/ISS-0012.yml.
 echo "→ celilo module check ${MODULE_DIR}"
 bunx @celilo/cli module check "$MODULE_DIR"
 
