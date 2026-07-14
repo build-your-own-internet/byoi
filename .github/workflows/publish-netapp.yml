@@ -1,16 +1,24 @@
-# Auto-publish byoi.netapp to the Celilo registry on merge (by-d8z).
+# Auto-publish byoi.netapp to the Celilo registry on merge (by-d8z; changesets by-chz).
 #
-# GitHub Actions port of the by-kei Forgejo spike (.forgejo/workflows/publish-netapp.yml,
-# issues/ISS-0010.yml). Operator chose GitHub Actions over Forgejo; same gated logic.
+# byoi uses `version_source: { kind: changeset }` (celilo/manifest.yml): the payload
+# version is authored via .changeset/*.md, not a hand-typed number. On a push to main
+# this consumes any pending changesets — `celilo module version` stamps the new
+# `version:` + CHANGELOG.md and deletes the consumed changesets — then commits that
+# release back and publishes. A merge with NO pending changeset is a clean no-op, so
+# ordinary doc/site commits don't cut a release.
 #
-# On a push to main it publishes the module ONLY when celilo/manifest.yml `version:`
-# actually changed vs the previous commit — so ordinary doc/site commits don't trigger
-# a release and we never trip the stale-version-drift gate with an unchanged version.
+# The changeset-driven bump satisfies the registry's stale-version-drift gate (the
+# manifest version changed and no un-applied changesets remain), so publish needs no
+# --allow-stale. The release commit is pushed with GITHUB_TOKEN, which by design does
+# NOT re-trigger this workflow — no publish loop.
 #
-# ACTIVATION (see issues/ISS-0011.yml): needs a CELILO_PUBLISH_TOKEN repo secret set on
-# GitHub. Once changesets lands (by-chz), the version bump becomes a `celilo module version`
-# step that consumes pending changesets ahead of publish — replacing the manual manifest
-# bump the gate below keys on.
+# ACTIVATION:
+#   1. Set CELILO_PUBLISH_TOKEN as a repo Actions secret (see README / ISS-0011).
+#   2. Allow this workflow to push to main: give Actions write access
+#      (Settings → Actions → General → Workflow permissions: read+write) and, if
+#      main is a protected branch, allow github-actions[bot] to bypass the PR
+#      requirement. Without push access the "Commit release" step fails and no
+#      release ships (loudly, not silently).
 
 name: Publish byoi.netapp
 
@@ -20,29 +28,48 @@ on:
     paths:
       - 'celilo/**'
 
+permissions:
+  contents: write   # push the changeset-driven release commit back to main
+
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        # Full history so the release commit fast-forwards cleanly onto main.
         with:
-          fetch-depth: 2   # need the parent commit to diff the manifest version
-
-      - name: Detect manifest version bump
-        id: bump
-        run: |
-          ver() { git show "$1:celilo/manifest.yml" 2>/dev/null | grep -E '^version:' | head -1 | awk '{print $2}'; }
-          new=$(ver HEAD); old=$(ver HEAD~1)
-          echo "old=$old new=$new"
-          if [ -n "$new" ] && [ "$new" != "$old" ]; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "manifest version unchanged ($old) — nothing to publish"
-          fi
+          fetch-depth: 0
 
       - uses: oven-sh/setup-bun@v2
+
+      # Consume pending .changeset/*.md: bump celilo/manifest.yml#version + CHANGELOG,
+      # delete the consumed changesets. No changesets → working tree stays clean.
+      - name: Version from changesets
+        run: bunx @celilo/cli module version celilo
+
+      - name: Detect changeset-driven bump
+        id: bump
+        run: |
+          if git diff --quiet -- celilo/manifest.yml; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "no pending changesets — nothing to release"
+          else
+            new=$(grep -E '^version:' celilo/manifest.yml | head -1 | awk '{print $2}')
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "new=$new" >> "$GITHUB_OUTPUT"
+            echo "changeset-driven bump to $new"
+          fi
+
+      # Commit the release (bump + CHANGELOG + consumed changesets) back to main.
+      # [skip ci] + the GITHUB_TOKEN-push safeguard both prevent a re-trigger loop.
+      - name: Commit release
         if: steps.bump.outputs.changed == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add celilo/manifest.yml celilo/CHANGELOG.md celilo/.changeset
+          git commit -m "Release byoi ${{ steps.bump.outputs.new }} [skip ci]"
+          git push origin HEAD:main
 
       - name: Publish to Celilo registry
         if: steps.bump.outputs.changed == 'true'
