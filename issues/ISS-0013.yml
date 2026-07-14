@@ -1,0 +1,45 @@
+title: "Adopt changesets for byoi module auto-versioning"
+description: |
+  Replace the manual celilo/manifest.yml version bump with changesets so releases
+  auto-bump. byoi serves its own content (provides no capability), so it is a
+  changeset-kind module (MODULE_VERSIONING.md / ISS-0151): the payload version is
+  authored via .changeset/*.md, consumed by `celilo module version` at release.
+
+  Bead: by-chz. Follows the activation note in ISS-0011 solution #2.
+severity: medium
+type: feature
+status: fixed
+solution: |
+  Adopted the celilo changeset versioning mechanism (@celilo/cli >= 0.11.0).
+
+  Changes:
+  - celilo/manifest.yml — added `version_source: { kind: changeset }`. `celilo
+    module check` now reports the stale-version-drift gate as N/A ("changeset-
+    authored version, ordered by +N"), so publish needs no --allow-stale.
+  - celilo/.changeset/README.md — documents the convention: add a changeset per
+    behaviour-changing PR via `celilo module changeset celilo --bump <b>
+    --message "..."`; no changeset = no release.
+  - .github/workflows/publish-netapp.yml — rewired the version gate. Instead of
+    diffing a manual manifest bump vs HEAD~1, it runs `celilo module version
+    celilo` (consumes pending changesets → stamps version + CHANGELOG, deletes
+    consumed changesets), detects the bump via `git diff celilo/manifest.yml`,
+    commits the release back to main, then publishes. Pushing the release commit
+    with GITHUB_TOKEN does not re-trigger the workflow (belt-and-suspenders
+    [skip ci]), so there is no publish loop. Added `permissions: contents: write`.
+  - README.md — replaced the "manually bump version:" release steps with the
+    changeset flow.
+
+  Verified locally against @celilo/cli 0.11.0:
+  - `celilo module check celilo` with version_source=changeset and no pending
+    changesets: stale-drift gate = N/A, passes (no --allow-stale).
+  - `celilo module changeset celilo --bump patch` writes .changeset/<name>.md.
+  - `celilo module version celilo` consumes it: 0.1.1 → 0.1.2, writes CHANGELOG.md,
+    deletes the changeset. The version-diff gate then reports CHANGED.
+  Test bump/CHANGELOG reverted; this change ships only the plumbing (manifest
+  stays 0.1.1, no CHANGELOG yet — the first real changeset creates it).
+
+  ACTIVATION (not code):
+  - The workflow's "Commit release" step pushes to main. Requires Actions
+    read+write permission and, if main is protected, a github-actions[bot] bypass
+    of the PR requirement. Without push access the step fails loudly and no
+    release ships. CELILO_PUBLISH_TOKEN repo secret still required (ISS-0011).

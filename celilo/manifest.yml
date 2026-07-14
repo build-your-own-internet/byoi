@@ -5,6 +5,13 @@ name: Build Your Own Internet
 version: 0.1.1
 description: Static Astro documentation site for Build Your Own Internet, served via Caddy.
 
+# byoi serves its own content (provides no capability), so the payload version is
+# authored via changesets, not a manual number. `celilo module version` consumes
+# .changeset/*.md to stamp `version:` above at release; `celilo module check`
+# fails on un-applied changesets. See MODULE_VERSIONING.md / ISS-0151.
+version_source:
+  kind: changeset
+
 requires:
   capabilities:
     - name: public_web

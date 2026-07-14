@@ -94,15 +94,26 @@ ssh <user>@celilo-mgr 'sudo -u celilo celilo module secret get celilo-registry p
 
 (An existing `CELILO_PUBLISH_TOKEN` exported in your shell wins over `.env`.)
 
-**Release a new version:**
+**Release a new version (changesets — automated on merge):**
 
-1. Bump `version:` in `celilo/manifest.yml` and commit — otherwise the
-   stale-version-drift check fails on purpose.
-2. Publish:
+`celilo/manifest.yml#version` is `version_source: { kind: changeset }` — it's
+authored via changesets, not bumped by hand. In each behaviour-changing PR:
 
-   ```bash
-   npm run publish:netapp -- "what changed in this release"
-   ```
+```bash
+bunx @celilo/cli module changeset celilo --bump <major|minor|patch> --message "what changed"
+```
+
+On merge to `main`, `.github/workflows/publish-netapp.yml` runs `celilo module
+version` to consume the pending changesets (stamping `version:` + `CHANGELOG.md`),
+commits the release, and publishes. No manual bump, no `--allow-stale`. A PR with
+no changeset ships no release. See `celilo/.changeset/README.md`.
+
+**Manual publish** (same flow by hand — e.g. re-run after fixing the token):
+
+```bash
+bunx @celilo/cli module version celilo   # consume changesets, then commit the bump
+npm run publish:netapp -- "what changed in this release"
+```
 
 **Re-publish the SAME version** (a `+revision` bump, no manifest change) with
 `--allow-stale`:
