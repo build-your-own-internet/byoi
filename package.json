@@ -1,0 +1,8 @@
+{
+  "name": "byoi",
+  "private": true,
+  "description": "Build Your Own Internet — repo-level tooling. The deployable Celilo module lives in celilo/; the site in web/.",
+  "scripts": {
+    "publish:netapp": "bin/publish-netapp"
+  }
+}

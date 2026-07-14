@@ -2,7 +2,7 @@
 celilo_contract: "1.0"
 id: byoi
 name: Build Your Own Internet
-version: 0.1.0
+version: 0.1.1
 description: Static Astro documentation site for Build Your Own Internet, served via Caddy.
 
 requires:

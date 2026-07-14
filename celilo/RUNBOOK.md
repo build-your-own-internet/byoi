@@ -45,6 +45,12 @@ once the upstream fix ships):
 bash e2e/bake-management.sh
 ```
 
+The source fix landed upstream in `@celilo/e2e` 0.9.1 (both the `CMD` and the
+`@latest` install), but **do not bump to 0.9.1** — that release is a broken
+publish: its manifest ships `@celilo/cli-display` and `@celilo/event-bus` as
+`workspace:^`, so `bun install` fails to resolve them. Stay on 0.9.0 with this
+script until a fixed release (0.9.2+) installs cleanly.
+
 ## Run
 
 From the `celilo/` directory (the module root):
