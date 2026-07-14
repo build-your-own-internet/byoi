@@ -1,0 +1,38 @@
+title: "CI: auto-publish byoi.netapp on merge (GitHub Actions, version-gated)"
+description: |
+  Operator chose GitHub Actions over Forgejo for the byoi.netapp release
+  automation. Port the by-kei Forgejo spike (.forgejo/workflows/publish-netapp.yml,
+  issues/ISS-0010.yml) to a GitHub Actions workflow on the byoi GitHub repo, keeping
+  the same version-gated publish logic.
+
+  Bead: by-d8z (external byoi:by-kei).
+severity: medium
+type: feature
+status: fixed
+solution: |
+  Added .github/workflows/publish-netapp.yml — the GitHub Actions build workflow.
+
+  Design (identical gate to ISS-0010, GitHub Actions platform):
+  - Trigger: push to main, paths celilo/** (a merge = push to main here).
+  - Version gate: publish ONLY when celilo/manifest.yml `version:` changed vs the
+    parent commit (git show HEAD vs HEAD~1). Keeps ordinary doc/site commits from
+    triggering a release and avoids tripping the stale-version-drift gate with an
+    unchanged version. Reuses bin/publish-netapp unchanged (hermetic CELILO_HOME,
+    celilo module check + publish).
+  - Token: secrets.CELILO_PUBLISH_TOKEN (GitHub repo Actions secret).
+
+  The Forgejo spike was already written in GitHub-Actions-compatible syntax
+  ($GITHUB_OUTPUT, github.sha, secrets.*), so the port is the file location
+  (.github/workflows/) plus updated header comments.
+
+  ACTIVATION (not code):
+  1. Set CELILO_PUBLISH_TOKEN as a repo Actions secret on GitHub — the celilo
+     registry publish token (see README "Publishing the byoi.netapp module").
+     Until set, the publish step runs with an empty token and bin/publish-netapp
+     exits with a clear error, so a stray version bump fails loudly rather than
+     silently.
+  2. by-chz (adopt changesets) — when it lands, insert a `celilo module version`
+     step before publish to consume pending changesets; the version gate still
+     holds (changesets bumps manifest.yml `version:`, which the gate keys on).
+
+  Supersedes the Forgejo variant (ISS-0010) per operator's platform choice.
