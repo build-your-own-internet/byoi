@@ -23,3 +23,9 @@ jobs:
 
       - name: Smoke test
         run: cd web && bun run test
+
+      # celilo/scripts holds the module hooks (publish, health_check). Separate
+      # package from web/, so it needs its own install. celilo/e2e is NOT run
+      # here — it needs the sealed network.
+      - name: Celilo hook tests
+        run: cd celilo/scripts && bun install --frozen-lockfile && bun test
