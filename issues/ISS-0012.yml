@@ -1,0 +1,128 @@
+title: "Spike: celilo CLI DB-dependence in byoi release path — check/types are DB-free, publish only opens DB when no env token, and the CELILO_HOME workaround is a no-op"
+description: |
+  Spike/analysis (bead by-myn). Operator concern: the celilo CLI commands byoi
+  runs for releases — `module check`, `module publish`, `module types
+  generate/check` — appear to open (and migrate) the celilo control-plane SQLite
+  DB, which is why bin/publish-netapp uses a throwaway CELILO_HOME (a migration
+  clash on a stale DB otherwise blocks publish). But these operations are pure
+  functions of the module SOURCE + manifest.yml and should not need a DB.
+
+  Analyzed @celilo/cli@0.11.0 (current `latest`; `bunx @celilo/cli` resolves to
+  it — byoi pins nothing). Read the source from the npm tarball and validated
+  empirically. Findings below.
+
+  ── PER-COMMAND FINDINGS ──────────────────────────────────────────────
+
+  CI (.github/workflows/validate.yml): does NOT invoke celilo at all. It runs
+  `bun run typecheck/build/test` in web/ only. The DB concern is entirely in the
+  RELEASE path (bin/publish-netapp) and the types-sync convention — not CI.
+
+  1. `module check` — DB-FREE (confirmed, structural + empirical).
+     handleModuleCheck → runChecks(modulePath) in services/module-validator.
+     Pure filesystem + manifest + npm; the handler's own doc comment says
+     "No DB writes." Grep confirms nothing under services/module-validator or
+     module/packaging (the build path publish uses) imports db/client. Empirical:
+     ran `module check ./celilo` with an isolated CELILO_DATA_DIR → 0 files
+     created in the data dir.
+
+  2. `module types generate` / `module types check` — DB-FREE (confirmed).
+     handleModuleTypesGenerate/Check → loadManifest (readFile manifest.yml) →
+     generateModuleTypes → writeFile/compare types.d.ts. No db import anywhere in
+     the module-types path or module-types-generator. Empirical: `module types
+     check ./celilo` with isolated CELILO_DATA_DIR → 0 files created, printed
+     "Types file is in sync". Derives purely from manifest.yml, as hypothesized.
+
+  3. `module publish` — DB is touched ONLY as a token-resolution fallback, and
+     NOT when CELILO_PUBLISH_TOKEN is in the env (hypothesis CONFIRMED).
+     resolveToken() order: (1) --token flag → return; (2) CELILO_PUBLISH_TOKEN
+     env → return; (3) `new CrossModuleDataManager()` + initialize() +
+     getSecret('celilo-registry','publish_tokens'). Tier 3 is the ONLY DB access
+     in the whole publish path — the constructor eagerly calls createDbClient()
+     (cross-module-data-manager.ts: `this.db = db || createDbClient()`), and
+     createDbClient() runs drizzle `migrate()` on open (db/client.ts). Because
+     bin/publish-netapp exports CELILO_PUBLISH_TOKEN, resolveToken returns at
+     tier 2 and tier 3 is never reached → no DB open, no migration. The rest of
+     publishOneModule (buildModule, RegistryClient, capability/stale/bundled-dep
+     validators, git) is DB-free per grep.
+
+  So: with a token in env, the entire byoi release path (check → publish) and the
+  types-sync commands are DB-free on 0.11.0. The DB-open is lazy and incidental,
+  not genuinely needed for these operations.
+
+  ── THE WORKAROUND IS A NO-OP ─────────────────────────────────────────
+
+  bin/publish-netapp sets `CELILO_HOME="$(mktemp -d)"`. **@celilo/cli 0.11.0
+  never reads CELILO_HOME** (grep of the whole package: zero references). The CLI
+  resolves its data dir from CELILO_DATA_DIR (or platform default) and the DB
+  from CELILO_DB_PATH (config/paths.ts). So:
+    - The "hermetic" isolation is not actually happening — if publish DID open
+      the DB it would hit the real ~/Library/Application Support/celilo/celilo.db,
+      not the temp dir.
+    - It doesn't matter, because with the env token the publish path never opens
+      the DB anyway.
+  The workaround was presumably needed against an OLDER CLI (different env-var
+  name and/or resolveToken without the env short-circuit). Against current
+  `latest` it is dead code.
+
+  ── EVIDENCE ──────────────────────────────────────────────────────────
+  @celilo/cli@0.11.0 source (npm tarball). Key files:
+    src/cli/commands/module-check.ts        (runChecks; "No DB writes")
+    src/cli/commands/module-types.ts        (manifest→fs only)
+    src/cli/commands/module-publish.ts      (resolveToken 3-tier; DB only tier 3)
+    src/services/cross-module-data-manager.ts (ctor calls createDbClient())
+    src/db/client.ts                        (createDbClient runs migrate() on open)
+    src/config/paths.ts                     (reads CELILO_DATA_DIR/CELILO_DB_PATH,
+                                             NOT CELILO_HOME)
+  Empirical: `module check` and `module types check` against ./celilo with an
+  isolated CELILO_DATA_DIR created zero files. (publish not run — do-not-publish.)
+severity: low
+type: bug
+status: fixed
+solution: |
+  Analysis-only bead (by-myn) — no code changed to @celilo/cli, nothing
+  published. This ISS records the findings + recommendations; the deliverable is
+  the write-up.
+
+  ── RECOMMENDATIONS ───────────────────────────────────────────────────
+
+  A) byoi-side (this repo, safe, low-risk) — file/track separately:
+     1. Drop `CELILO_HOME="$(mktemp -d)"` from bin/publish-netapp: it is read by
+        nobody in @celilo/cli 0.11.0, so it isolates nothing. Keeping it is
+        harmless but misleading (implies protection that isn't there). If we want
+        real belt-and-suspenders isolation against a future CLI regression, set
+        the vars the CLI actually reads instead:
+          CELILO_DATA_DIR="$(mktemp -d)"   # (and it'd only matter if a token
+                                            #  were NOT in env — which it always is)
+        Recommendation: remove it and rely on CELILO_PUBLISH_TOKEN keeping the DB
+        untouched; add a one-line comment noting the env token is what makes
+        publish DB-free. Update the README release-flow note accordingly.
+     2. No change needed for check / types — already DB-free.
+     NB: do NOT unpin/bump anything here; byoi uses `bunx @celilo/cli` (latest).
+     If we ever want to guarantee the DB-free behavior, pin a known-good version.
+
+  B) Upstream asks to the celilo team (they own @celilo/cli — route via
+     gt-relay to celilo). Draft:
+     1. [defensive] `module publish`: when a token is resolved from --token or
+        CELILO_PUBLISH_TOKEN, guarantee no control-plane DB open. This already
+        holds in 0.11.0 (resolveToken short-circuits before
+        CrossModuleDataManager), but it's an implicit invariant one refactor away
+        from breaking. Ask: add a regression test asserting `module publish` with
+        CELILO_PUBLISH_TOKEN set never calls createDbClient()/migrate().
+     2. [robustness] Make CrossModuleDataManager's DB-open lazy rather than in the
+        constructor. Today `new CrossModuleDataManager()` opens+migrates the DB as
+        a side effect; a future caller that constructs it before checking the env
+        token would reintroduce the eager migration. Ask: open the DB on first use
+        (or via an explicit initialize()) so constructing the manager is cheap and
+        side-effect-free.
+     3. [nice-to-have] A `--no-db` / offline flag (or honor CELILO_OFFLINE) that
+        hard-fails any incidental DB access, so release scripts can assert
+        DB-free execution instead of relying on env-token ordering.
+     4. [confirmed DB-free, no action] `module check`, `module types
+        generate/check` need nothing — already pure manifest/fs. Worth a note in
+        celilo docs that these are safe to run without an initialized install.
+
+  Bottom line: the operator's instinct is right — these ops shouldn't need a DB,
+  and on 0.11.0 they don't (given an env token). The byoi CELILO_HOME workaround
+  is obsolete/no-op and can be removed. Remaining risk is only the implicit,
+  untested invariant in @celilo/cli — the upstream asks harden it. byoi's current
+  mitigation is unnecessary rather than merely "a mitigation not a fix."
