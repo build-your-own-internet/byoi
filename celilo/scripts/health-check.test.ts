@@ -141,10 +141,14 @@ describe('byoiHealthCheck', () => {
     expect(result.status).toBe('unhealthy');
   });
 
-  test('degraded when internal ok but isitup returns non-JSON', async () => {
+  // A prober we cannot reach says nothing about our site: no check item, no alert.
+  test.each([
+    ['non-JSON body', { match: 'isitup.org', status: 200, body: '<html>not json' }],
+    ['prober 5xx', { match: 'isitup.org', status: 522 }],
+  ])('healthy with no external_reachability item when isitup gives %s', async (_name, mock) => {
     const { fetch } = createMockFetcher([
       { match: `https://${DOMAIN}/`, status: 200 },
-      { match: 'isitup.org', status: 200, body: '<html>not json' },
+      mock as Parameters<typeof createMockFetcher>[0][number],
     ]);
 
     const result = await byoiHealthCheck({
@@ -155,9 +159,48 @@ describe('byoiHealthCheck', () => {
       internalRetryTimeoutMs: 50,
     });
 
-    expect(result.status).toBe('degraded');
-    const ext = result.checks.find((c) => c.name === 'external_reachability');
-    expect(ext?.status).toBe('warn');
-    expect(ext?.message).toContain('non-JSON');
+    expect(result.checks.find((c) => c.name === 'external_reachability')).toBeUndefined();
+    expect(result.status).toBe('healthy');
+  });
+
+  test('throws on unset domain rather than probing a default host', async () => {
+    const { fetch } = createMockFetcher([{ match: 'https://', status: 200 }]);
+    expect(
+      byoiHealthCheck({
+        fetchImpl: fetch,
+        config: {} as unknown as ByoiConfig,
+        logger: createSilentLogger(),
+        sleep: async () => {},
+        internalRetryTimeoutMs: 50,
+      }),
+    ).rejects.toThrow('config.domain is not set');
+  });
+
+  test('still fails when a reachable isitup reports us down', async () => {
+    const { fetch } = createMockFetcher([
+      { match: `https://${DOMAIN}/`, status: 200 },
+      {
+        match: 'isitup.org',
+        status: 200,
+        body: JSON.stringify({
+          domain: DOMAIN,
+          port: 443,
+          status_code: 2,
+          response_ip: '',
+          response_code: 0,
+          response_time: 0,
+        }),
+      },
+    ]);
+
+    const result = await byoiHealthCheck({
+      fetchImpl: fetch,
+      config: { domain: DOMAIN } as unknown as ByoiConfig,
+      logger: createSilentLogger(),
+      sleep: async () => {},
+      internalRetryTimeoutMs: 50,
+    });
+
+    expect(result.status).toBe('unhealthy');
   });
 });

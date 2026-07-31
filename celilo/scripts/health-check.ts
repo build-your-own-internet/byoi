@@ -87,7 +87,11 @@ export interface ByoiHealthDeps {
 export async function byoiHealthCheck(deps: ByoiHealthDeps): Promise<HealthCheckOutput> {
   const { fetchImpl, config, logger, sleep, now } = deps;
   const checks: HealthCheckItem[] = [];
-  const domain = config.domain || 'www.buildyourowninternet.dev';
+  // No fallback: the old default (www.*) is not where this module is served, so
+  // an unset domain probed a host with no route and blamed the site for it.
+  // manifest.yml marks domain required, so this only fires on a genuine misconfig.
+  const domain = config.domain;
+  if (!domain) throw new Error('byoi health check: config.domain is not set');
   const url = `https://${domain}/`;
 
   logger.info(`Checking ${url}`);
@@ -105,36 +109,37 @@ export async function byoiHealthCheck(deps: ByoiHealthDeps): Promise<HealthCheck
     message: internalResult.message,
   });
 
+  // A broken prober tells us nothing about our own site, so it emits no check
+  // item at all — any item, even `warn`, pages the operator (the route severity
+  // floor is `warning`). Only a *reachable* prober reporting us down alerts.
+  //
+  // ponytail: this silently drops the "we have STOPPED checking" case. internal_http
+  // resolves through the internal DNS view straight to Caddy, so this prober is the
+  // only thing exercising the public path (DNAT, public DNS, return trip) — if fleet
+  // egress breaks, external reachability goes unverified indefinitely and nothing
+  // says so. Upgrade path: persist last-successful-verification and alert on staleness.
+  // Blocked on having a prober that is actually alive; isitup.org looks permanently
+  // dead (522), and staleness against a corpse just re-creates the noise. (by-w1A)
   const proberUrl = `https://isitup.org/api.json?url=${encodeURIComponent(domain)}`;
   logger.info(`Checking external reachability via ${proberUrl}`);
   try {
     const response = await fetchImpl(proberUrl, { signal: AbortSignal.timeout(10_000) });
     if (!response.ok) {
-      checks.push({
-        name: 'external_reachability',
-        status: 'warn',
-        message: `isitup.org returned ${response.status}`,
-      });
+      logger.info(`skipping external_reachability: isitup.org returned ${response.status}`);
     } else {
       const raw = await response.text();
       try {
         const body = JSON.parse(raw) as IsitupResponse;
         checks.push(evaluateIsitup(body, domain));
       } catch {
-        checks.push({
-          name: 'external_reachability',
-          status: 'warn',
-          message: `isitup.org returned non-JSON (${response.status}, ct=${response.headers.get('content-type')}): ${raw.slice(0, 120)}`,
-        });
+        logger.info(
+          `skipping external_reachability: isitup.org returned non-JSON (${response.status}, ct=${response.headers.get('content-type')}): ${raw.slice(0, 120)}`,
+        );
       }
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    checks.push({
-      name: 'external_reachability',
-      status: 'warn',
-      message: `isitup.org prober unreachable: ${message}`,
-    });
+    logger.info(`skipping external_reachability: isitup.org prober unreachable: ${message}`);
   }
 
   for (const c of checks) {
