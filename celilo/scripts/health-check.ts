@@ -105,36 +105,29 @@ export async function byoiHealthCheck(deps: ByoiHealthDeps): Promise<HealthCheck
     message: internalResult.message,
   });
 
+  // A broken prober tells us nothing about our own site, so it emits no check
+  // item at all — any item, even `warn`, pages the operator (the route severity
+  // floor is `warning`). Only a *reachable* prober reporting us down alerts.
   const proberUrl = `https://isitup.org/api.json?url=${encodeURIComponent(domain)}`;
   logger.info(`Checking external reachability via ${proberUrl}`);
   try {
     const response = await fetchImpl(proberUrl, { signal: AbortSignal.timeout(10_000) });
     if (!response.ok) {
-      checks.push({
-        name: 'external_reachability',
-        status: 'warn',
-        message: `isitup.org returned ${response.status}`,
-      });
+      logger.info(`skipping external_reachability: isitup.org returned ${response.status}`);
     } else {
       const raw = await response.text();
       try {
         const body = JSON.parse(raw) as IsitupResponse;
         checks.push(evaluateIsitup(body, domain));
       } catch {
-        checks.push({
-          name: 'external_reachability',
-          status: 'warn',
-          message: `isitup.org returned non-JSON (${response.status}, ct=${response.headers.get('content-type')}): ${raw.slice(0, 120)}`,
-        });
+        logger.info(
+          `skipping external_reachability: isitup.org returned non-JSON (${response.status}, ct=${response.headers.get('content-type')}): ${raw.slice(0, 120)}`,
+        );
       }
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    checks.push({
-      name: 'external_reachability',
-      status: 'warn',
-      message: `isitup.org prober unreachable: ${message}`,
-    });
+    logger.info(`skipping external_reachability: isitup.org prober unreachable: ${message}`);
   }
 
   for (const c of checks) {
