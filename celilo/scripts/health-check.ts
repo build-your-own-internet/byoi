@@ -112,6 +112,14 @@ export async function byoiHealthCheck(deps: ByoiHealthDeps): Promise<HealthCheck
   // A broken prober tells us nothing about our own site, so it emits no check
   // item at all — any item, even `warn`, pages the operator (the route severity
   // floor is `warning`). Only a *reachable* prober reporting us down alerts.
+  //
+  // ponytail: this silently drops the "we have STOPPED checking" case. internal_http
+  // resolves through the internal DNS view straight to Caddy, so this prober is the
+  // only thing exercising the public path (DNAT, public DNS, return trip) — if fleet
+  // egress breaks, external reachability goes unverified indefinitely and nothing
+  // says so. Upgrade path: persist last-successful-verification and alert on staleness.
+  // Blocked on having a prober that is actually alive; isitup.org looks permanently
+  // dead (522), and staleness against a corpse just re-creates the noise. (by-w1A)
   const proberUrl = `https://isitup.org/api.json?url=${encodeURIComponent(domain)}`;
   logger.info(`Checking external reachability via ${proberUrl}`);
   try {
