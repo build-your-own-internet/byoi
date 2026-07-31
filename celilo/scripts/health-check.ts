@@ -87,7 +87,11 @@ export interface ByoiHealthDeps {
 export async function byoiHealthCheck(deps: ByoiHealthDeps): Promise<HealthCheckOutput> {
   const { fetchImpl, config, logger, sleep, now } = deps;
   const checks: HealthCheckItem[] = [];
-  const domain = config.domain || 'www.buildyourowninternet.dev';
+  // No fallback: the old default (www.*) is not where this module is served, so
+  // an unset domain probed a host with no route and blamed the site for it.
+  // manifest.yml marks domain required, so this only fires on a genuine misconfig.
+  const domain = config.domain;
+  if (!domain) throw new Error('byoi health check: config.domain is not set');
   const url = `https://${domain}/`;
 
   logger.info(`Checking ${url}`);

@@ -163,6 +163,19 @@ describe('byoiHealthCheck', () => {
     expect(result.status).toBe('healthy');
   });
 
+  test('throws on unset domain rather than probing a default host', async () => {
+    const { fetch } = createMockFetcher([{ match: 'https://', status: 200 }]);
+    expect(
+      byoiHealthCheck({
+        fetchImpl: fetch,
+        config: {} as unknown as ByoiConfig,
+        logger: createSilentLogger(),
+        sleep: async () => {},
+        internalRetryTimeoutMs: 50,
+      }),
+    ).rejects.toThrow('config.domain is not set');
+  });
+
   test('still fails when a reachable isitup reports us down', async () => {
     const { fetch } = createMockFetcher([
       { match: `https://${DOMAIN}/`, status: 200 },
