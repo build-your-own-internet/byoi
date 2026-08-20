@@ -1,0 +1,5 @@
+schema: spec-driven
+created: 2026-07-29
+goal: "Server-enforced identity for byoi: a deployed /api that only trusts JWTs
+  it has cryptographically verified, with a persisted user record keyed on the
+  Authentik subject."
