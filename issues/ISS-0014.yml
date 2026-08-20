@@ -1,0 +1,60 @@
+title: "lunacycle never runs Drizzle migrations outside a restore (upstream defect, celilo#169 live in a VERIFIED module)"
+description: |
+  Found while designing byoi's app server
+  (openspec/changes/add-app-server-verified-auth, decision D8). The defect is in
+  ~/hobby/lunacycle, not in this repo. Filed here so it does not get lost, and
+  because byoi deliberately deviates from lunacycle's approach as a result.
+
+  What lunacycle does. It ships scripts/migrate.sh into dist/ (manifest.yml:221,
+  228). The script walks Drizzle's meta/_journal.json and applies pending .sql
+  files with sqlite3. It tracks what has been applied by row count in
+  __drizzle_migrations rather than by hash, because Drizzle stores a rolling
+  snapshot hash and not a per-file checksum, so hash matching fails on any
+  database the ORM itself migrated. That part is sound.
+
+  What is wrong. migrate.sh has exactly one caller in the tree:
+  celilo/scripts/restore.ts:41. lunacycle's hooks are on_install, on_uninstall,
+  health_check, on_backup, on_backup_analyze, and on_restore. None of them runs
+  migrate.sh except on_restore.
+
+  So deploying a new lunacycle version that carries a new migration does not
+  apply it. The app starts against an old schema. The failure is silent until
+  something reads or writes a column that does not exist.
+
+  This is celilo#169 ("apt upgrade does not run DB migrations") sitting live in
+  a module whose state is VERIFIED. modules/wireguard-manager/server/src/store.ts
+  cites celilo#169 as the reason it uses plain bun:sqlite with
+  CREATE TABLE IF NOT EXISTS and no migration runner at all, which is a
+  different and also valid answer to the same hazard.
+
+  Suggested fix, in lunacycle's own repo, either:
+  1. Call migrate.sh from on_install as well as on_restore. Smallest change, but
+     it still depends on someone remembering to add the call to any future hook
+     that can land a new version.
+  2. Move the migration run into the app at startup. An upgrade restarts the
+     unit, so an upgrade migrates. No hook to forget. This is what byoi's D8
+     chose, and the reasoning is written up there.
+
+  A second, smaller thing worth a look while in that code: tracking applied
+  migrations by position rather than by hash means deleting or reordering an
+  entry in _journal.json silently misaligns every migration after it. The
+  comment in migrate.sh explains why hashes were rejected, so this may be the
+  right trade, but it deserves a note in the script rather than being implicit.
+
+  Action needed here: none in byoi. byoi's D8 already deviates. This issue
+  exists so the finding reaches lunacycle, which tracks issues in .beads rather
+  than an issues/ directory.
+severity: medium
+type: bug
+status: closed
+solution: |
+  Misfiled here. This is a lunacycle defect, and lunacycle is tracked in
+  forgejo, not in this repo's issues/ directory.
+
+  Refiled as celilo/lunacycle#63:
+  https://git.celilo.computer/celilo/lunacycle/issues/63
+
+  Kept as a record rather than deleted, per the never-delete rule. Nothing to
+  do in byoi. Design decision D8 in
+  openspec/changes/add-app-server-verified-auth already deviates from
+  lunacycle's approach and runs migrations from the app at startup.
