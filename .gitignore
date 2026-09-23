@@ -81,5 +81,11 @@ bin/.venv
 # web/ build
 web/node_modules
 web/dist
+
+# the built site the manifest build command stages INTO the module
+# (<module>/site/dist, celilo's MODULE_WEB_ROOT). The old staged path was
+# celilo/web/dist, which the unanchored `web/dist` rule above happened to
+# cover; `site/dist` is not, so name it explicitly.
+celilo/site/
 web/.astro
 web/public/content-assets

@@ -90,7 +90,6 @@ describe('byoiPublish', () => {
     expect(public_web.calls).toHaveLength(1);
     expect(public_web.calls[0]).toEqual({
       path: '/',
-      sourceDir: '/tmp/fake-dist',
       hostname: DOMAIN,
     });
   });
@@ -169,8 +168,10 @@ describe('byoiPublish', () => {
     const public_web = makePublicWeb();
     const distDir = mkdtempSync(join(tmpdir(), 'byoi-dist-'));
     let configAtPublishTime = '';
-    public_web.publishStaticSite = async (req: PublishStaticSiteRequest) => {
-      configAtPublishTime = readFileSync(join(req.sourceDir, 'config.js'), 'utf-8');
+    public_web.publishStaticSite = async () => {
+      // celilo now derives the web root, so the hook must have written config.js
+      // into the module's OWN dist before publishing — read it from there.
+      configAtPublishTime = readFileSync(join(distDir, 'config.js'), 'utf-8');
       return { success: true, path: '/', filesUploaded: 1, contentHash: 'x' };
     };
 
@@ -182,7 +183,7 @@ describe('byoiPublish', () => {
       distDir,
     });
 
-    // config.js must already be in sourceDir at publish time so the upload ships it
+    // config.js must already be in the module's dist at publish time so the upload ships it
     expect(configAtPublishTime).toStartWith('window.__BYOI_CONFIG__ = ');
     const parsed = JSON.parse(configAtPublishTime.replace('window.__BYOI_CONFIG__ = ', '').replace(/;\s*$/, ''));
     expect(parsed).toEqual({

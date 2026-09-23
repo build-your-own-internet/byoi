@@ -5,9 +5,9 @@ import type { HookLogger, IdpCapability, PublicWebCapability } from '@celilo/cap
 import type { ByoiConfig } from '../celilo/types';
 
 // scripts/ is one level below the module root. The packaged netapp carries the
-// built site at <module>/web/dist (staged there by the manifest build command),
+// built site at <module>/site/dist (staged there by the manifest build command),
 // so resolve dist relative to the module root, not the repo root.
-const defaultDistDir = join(import.meta.dir, '..', 'web', 'dist');
+const defaultDistDir = join(import.meta.dir, '..', 'site', 'dist');
 
 export interface ByoiPublishDeps {
   config: ByoiConfig;
@@ -29,7 +29,7 @@ export async function byoiPublish(deps: ByoiPublishDeps): Promise<void> {
   // Phase 2 (byoi_deployment.md §2.2): OIDC provisioning, guarded so Phase 1
   // deploys still work without Authentik. Runs BEFORE publish so the client_id
   // can be baked into config.js in the upload (resolves risk #1: no post-publish
-  // write needed — publishStaticSite uploads everything in sourceDir).
+  // write needed — publishStaticSite uploads everything in the module's site/dist).
   if (capabilities.idp) {
     const password = deps.secrets?.admin_password;
     if (!password) {
@@ -74,7 +74,6 @@ export async function byoiPublish(deps: ByoiPublishDeps): Promise<void> {
 
   const result = await capabilities.public_web.publishStaticSite({
     path: '/',
-    sourceDir: distDir,
     hostname: config.domain,
   });
 
