@@ -2,13 +2,13 @@
 celilo_contract: "1.0"
 id: byoi
 name: Build Your Own Internet
-version: 0.1.1
+version: 0.1.2
 description: Static Astro documentation site for Build Your Own Internet, served via Caddy.
 
 requires:
   capabilities:
     - name: public_web
-      version: 3.1.0
+      version: 4.0.0
     - name: dns_registrar
       version: 4.0.0
 
@@ -42,10 +42,11 @@ build:
   # Packaging stages the module (celilo/) to a temp dir, so the repo-root
   # web/ sibling is only reachable via $CELILO_MODULE_SOURCE_DIR. Build it
   # in place, then copy dist into the staged module so it ships in the
-  # netapp (where scripts/publish.ts reads it as <module>/web/dist).
-  command: "(cd \"$CELILO_MODULE_SOURCE_DIR/../web\" && bun install && bun run build) && mkdir -p web && cp -R \"$CELILO_MODULE_SOURCE_DIR/../web/dist\" web/"
+  # netapp (where scripts/publish.ts reads it as <module>/site/dist, the
+  # MODULE_WEB_ROOT celilo derives for every static consumer).
+  command: "(cd \"$CELILO_MODULE_SOURCE_DIR/../web\" && bun install && bun run build) && mkdir -p site && cp -R \"$CELILO_MODULE_SOURCE_DIR/../web/dist\" site/"
   artifacts:
-    - web/dist/index.html
+    - site/dist/index.html
 
 hooks:
   on_install:
