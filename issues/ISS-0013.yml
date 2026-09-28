@@ -1,0 +1,56 @@
+title: "Spike: is an LXC container good enough for a learner practice box, or is a KVM VM required?"
+description: |
+  MVP 1 gives each logged-in learner their own practice machine on the
+  proxmox-home-lab service. The per-learner cost differs by roughly an order of
+  magnitude between an LXC container and a KVM VM, and the machine pool is thin
+  (celilo machine list shows two machines: briq, 8 cores / 6.8 GB, and
+  celilo-mgr, 4 cores / 3.7 GB), so this choice sets how many learners the lab
+  can hold.
+
+  The workload is a self-contained simulated internet running inside the
+  learner's box — docker-compose bringing up several containers with
+  cap_add: NET_ADMIN, doing live address and route surgery (see
+  chapters/1.1-first-network/{docker-compose.yml,start-up.sh}, and escalating
+  through 1.3-internet-chonk, 1.4-automatic-route-configuration, the 2.x DNS
+  chapters, 3.1-traceroute, and the parked BGP work in
+  future/border-gateway-protocol). The learner breaks networking only inside
+  that toy topology; it does not affect connectivity to the box itself. Same
+  shape as celilo's own e2e infrastructure.
+
+  The open question is whether nested Docker with NET_ADMIN inside an
+  unprivileged LXC survives the whole curriculum, or whether the nesting and
+  privilege concessions required add up to giving away the isolation that made
+  LXC attractive in the first place.
+
+  Spike, not a design decision — run the hardest chapter in each and compare:
+
+  1. Provision an LXC on proxmox-home-lab with nesting enabled, install docker
+     + compose, and run chapters/1.3-internet-chonk end to end. Then the BGP
+     topology in future/border-gateway-protocol if 1.3 passes.
+  2. Note every privilege escalation needed to make it work (nesting,
+     privileged, AppArmor profile changes, /dev/net/tun, keyctl, cgroup
+     delegation) and judge whether the residual isolation is still worth having
+     for a box where any account holder has root.
+  3. Do the same on a KVM VM as the control, and record boot time, clone time,
+     idle RAM, and disk footprint for both.
+  4. Record the per-learner capacity implication for each: how many fit.
+
+  RESOLVED SEPARATELY (2026-08-19): the "celilo cannot create or destroy a
+  container" gap is no longer byoi's to fill. Labs became instances of an
+  instantiable module `byoi-lab-node`, so celilo does the addressing,
+  placement, terraform and ansible, and byoi holds no hypervisor credential
+  anywhere. That needs multi-instance modules in celilo, proposed as
+  celilo/celilo#975, which is now the critical path for add-learner-labs.
+
+  Related: openspec/changes/add-learner-labs, task 1.2. This spike blocks
+  SHIPPING that change but no longer blocks writing any of it. The answer
+  reduced to a single manifest field on byoi-lab-node, where resources.type
+  takes lxc or vm. Everything else (auth, sessions, the desired-and-observed
+  schema, the reconcile guards, the UI) is independent.
+
+  What the answer still decides is per-learner cost, and therefore the fleet
+  cap. The node behind proxmox-home-lab is not in the machine pool and has
+  never been measured, so record capacity numbers while running this.
+severity: high
+type: feature
+status: open
