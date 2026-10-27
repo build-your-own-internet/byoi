@@ -29,16 +29,13 @@ services:
     sysctls:
       - net.ipv4.ip_forward=0
 
-  resolver-c:
-    container_name: "build-your-own-internet-resolver-c"
-    build:
-      context: .
-      dockerfile: Dockerfile_resolver
-    image: "build-your-own-internet-resolver"
-    hostname: resolver-c
+  server-c1:
+    container_name: "build-your-own-internet-server-c1"
+    image: "build-your-own-internet-host"
+    hostname: server-c1
     networks:
       one-two-net:
-        ipv4_address: 1.2.0.100
+        ipv4_address: 1.2.0.11
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
@@ -246,7 +243,7 @@ services:
     hostname: server-s1
     networks:
       nine-three-net:
-        ipv4_address: 9.3.0.10
+        ipv4_address: 9.3.0.11
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
@@ -264,28 +261,25 @@ services:
       - SYS_ADMIN
     sysctls:
       - net.ipv4.ip_forward=0
-  resolver-s:
-    container_name: "build-your-own-internet-resolver-s"
-    image: "build-your-own-internet-resolver"
-    hostname: resolver-s
+  server-s3:
+    container_name: "build-your-own-internet-server-s3"
+    image: "build-your-own-internet-host"
+    hostname: server-s3
     networks:
-      nine-two-net:
-        ipv4_address: 9.2.0.100
+      nine-one-net:
+        ipv4_address: 9.1.0.13
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
     sysctls:
       - net.ipv4.ip_forward=0
-  authoritative-s:
-    container_name: "build-your-own-internet-authoritative-s"
-    build:
-      context: .
-      dockerfile: Dockerfile_dns
-    image: "build-your-own-internet-dns"
-    hostname: authoritative-s
+  server-s2:
+    container_name: "build-your-own-internet-server-s2"
+    image: "build-your-own-internet-host"
+    hostname: server-s2
     networks:
-      nine-one-net:
-        ipv4_address: 9.1.0.100
+      nine-two-net:
+        ipv4_address: 9.2.0.12
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
@@ -342,13 +336,13 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-  rootdns-i:
-    container_name: "build-your-own-internet-rootdns-i"
-    image: "build-your-own-internet-dns"
-    hostname: rootdns-i
+  server-i1:
+    container_name: "build-your-own-internet-server-i1"
+    image: "build-your-own-internet-host"
+    hostname: server-i1
     networks:
       one-hundo-net:
-        ipv4_address: 100.0.1.100
+        ipv4_address: 100.0.1.11
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
@@ -371,13 +365,13 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-  tlddns-v:
-    container_name: "build-your-own-internet-tlddns-v"
-    image: "build-your-own-internet-dns"
-    hostname: tlddns-v
+  server-v1:
+    container_name: "build-your-own-internet-server-v1"
+    image: "build-your-own-internet-host"
+    hostname: server-v1
     networks:
       one-oh-two-hundo-net:
-        ipv4_address: 102.0.1.100
+        ipv4_address: 102.0.1.11
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
@@ -402,25 +396,25 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.rp_filter=0
-  tlddns-n:
-    container_name: "build-your-own-internet-tlddns-n"
-    image: "build-your-own-internet-dns"
-    hostname: tlddns-n
+  server-n1:
+    container_name: "build-your-own-internet-server-n1"
+    image: "build-your-own-internet-host"
+    hostname: server-n1
     networks:
       one-oh-one-hundo-net:
-        ipv4_address: 101.0.1.101
+        ipv4_address: 101.0.1.11
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
     sysctls:
       - net.ipv4.ip_forward=0
-  rootdns-n:
-    container_name: "build-your-own-internet-rootdns-n"
-    image: "build-your-own-internet-dns"
-    hostname: rootdns-n
+  server-n2:
+    container_name: "build-your-own-internet-server-n2"
+    image: "build-your-own-internet-host"
+    hostname: server-n2
     networks:
       one-oh-one-hundo-net:
-        ipv4_address: 101.0.1.100
+        ipv4_address: 101.0.1.12
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
@@ -509,25 +503,13 @@ services:
       - SYS_ADMIN
     sysctls:
       - net.ipv4.ip_forward=0
-  tlddns-g:
-    container_name: "build-your-own-internet-tlddns-g"
-    image: "build-your-own-internet-dns"
-    hostname: tlddns-g
-    networks:
-      eight-two-net:
-        ipv4_address: 8.2.0.100
-    cap_add:
-      - NET_ADMIN
-      - SYS_ADMIN
-    sysctls:
-      - net.ipv4.ip_forward=0
-  resolver-g:
-    container_name: "build-your-own-internet-resolver-g"
-    image: "build-your-own-internet-resolver"
-    hostname: resolver-g
+  server-g4:
+    container_name: "build-your-own-internet-server-g4"
+    image: "build-your-own-internet-host"
+    hostname: server-g4
     networks:
       eight-one-net:
-        ipv4_address: 8.1.0.100
+        ipv4_address: 8.1.0.14
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
@@ -618,80 +600,13 @@ services:
       - SYS_ADMIN
     sysctls:
       - net.ipv4.ip_forward=0
-  tlddns-a:
-    container_name: "build-your-own-internet-tlddns-a"
-    image: "build-your-own-internet-dns"
-    hostname: tlddns-a
+  server-a4:
+    container_name: "build-your-own-internet-server-a4"
+    image: "build-your-own-internet-host"
+    hostname: server-a4
     networks:
       four-three-net:
         ipv4_address: 4.3.0.14
-    cap_add:
-      - NET_ADMIN
-      - SYS_ADMIN
-    sysctls:
-      - net.ipv4.ip_forward=0
-  resolver-a:
-    container_name: "build-your-own-internet-resolver-a"
-    image: "build-your-own-internet-resolver"
-    hostname: resolver-a
-    networks:
-      four-one-net:
-        ipv4_address: 4.1.0.101
-    cap_add:
-      - NET_ADMIN
-      - SYS_ADMIN
-    sysctls:
-      - net.ipv4.ip_forward=0
-  authoritative-a:
-    container_name: "build-your-own-internet-authoritative-a"
-    image: "build-your-own-internet-dns"
-    hostname: authoritative-a
-    networks:
-      four-one-net:
-        ipv4_address: 4.1.0.100
-    cap_add:
-      - NET_ADMIN
-      - SYS_ADMIN
-    sysctls:
-      - net.ipv4.ip_forward=0
-
-  # RIPE
-  router-r4:
-    container_name: "build-your-own-internet-router-r4"
-    image: "build-your-own-internet-router"
-    hostname: router-r4
-    networks:
-      one-oh-three-hundo-net:
-        ipv4_address: 103.0.1.4
-      three-four-net:
-        ipv4_address: 3.4.0.4
-    cap_add:
-      - NET_ADMIN
-      - SYS_ADMIN
-    sysctls:
-      - net.ipv4.ip_forward=1
-      - net.ipv4.conf.all.rp_filter=0
-
-  resolver-r:
-    container_name: "build-your-own-internet-resolver-r"
-    image: "build-your-own-internet-resolver"
-    hostname: resolver-r
-    networks:
-      one-oh-three-hundo-net:
-        ipv4_address: 103.0.1.101
-    cap_add:
-      - NET_ADMIN
-      - SYS_ADMIN
-    sysctls:
-      - net.ipv4.ip_forward=0
-
-  rootdns-r:
-    container_name: "build-your-own-internet-rootdns-r"
-    image: "build-your-own-internet-dns"
-    hostname: rootdns-r
-    networks:
-      one-oh-three-hundo-net:
-        ipv4_address: 103.0.1.100
     cap_add:
       - NET_ADMIN
       - SYS_ADMIN
@@ -1035,13 +950,3 @@ networks:
       driver: default
       config:
         - subnet: 102.0.1.0/24
-  one-oh-three-hundo-net:
-    name: "build-your-own-internet-one-oh-three-hundo-net"
-    driver: bridge
-    driver_opts:
-      com.docker.network.bridge.enable_ip_masquerade: 'false'
-      com.docker.network.endpoint.sysctls: "net.ipv4.conf.IFNAME.rp_filter=0"
-    ipam:
-      driver: default
-      config:
-        - subnet: 103.0.1.0/24
