@@ -1,0 +1,16 @@
+$ORIGIN ripe.org.
+@       IN SOA (
+                host-dns.ripe.org.  ; MNAME
+                admin.ripe.org.     ; RNAME
+                2024041501          ; serial
+                3600                ; refresh (1 hour)
+                900                 ; retry (15 minutes)
+                604800              ; expire (1 week)
+                86400               ; minimum (1 day)
+                )
+
+r4-3-4      IN A    3.4.0.4
+r4-103      IN A    103.0.1.4
+
+resolver-r IN A    103.0.1.101
+rootdns-r   IN A    103.0.1.100

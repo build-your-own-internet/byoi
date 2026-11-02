@@ -25,7 +25,26 @@ We're going to start with the simplest possible configuration by taking the inte
 ## Let's build a BGP network!
 
 - explain a little about bird (point to)
+
+Just like with everything else we've done, it's software all the way down. Okay, we're gonna go down we've explored the software that we'll use for managing network connections in the previous chapter. Bird! Ready. Let's do a little review of Bird. Take a look at our [description of how BIRD works in the RIP chapter for a refresher](../../chapters/1.4-automatic-route-configuration/README.md#how-bird-works).
+
+- describe our network and what is our goal
+
+If you did our previous chapters, you saw that we hard-coded the IP address and routing information for each of our routers. We built out automatic route configuration using RIP in our previous chapter. Instead of converting from RIP to BGP, we're going to take a step back and start with those hard-coded IP routing configurations again.
+
 - question to keep in mind: "how to add a new network into BGP"
+
+
+
+Similar to our previous chapters, we're going to approach this one router at a time. Let's start by taking a look at our Comcast network. We have two routers in the Comcast network that we can convert to using BGP.
+
+- bird is already installed on all routers without configuration files
+- we created bird.conf files for c3 and z6 and we saw them exchange routes for the networks they're directly connected to
+- 
+
+<!-- WE LEFT OFF HERE!! -->
+
+
 - "how did we move from a state where there were a bunch of different routing protocols to BGP?"
 - proposed pedagogy: static routes -> lots of BPG -> carve OSPF out of an AS -> keep going, starting at spurs go to transit at the end
 - TODO: get rid of router z5 because it's dumb

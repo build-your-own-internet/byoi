@@ -1,0 +1,23 @@
+$ORIGIN meow.
+@       IN SOA (
+                tlddns-a.aws.meow.       ; MNAME
+                tlddns-a.aws.meow.       ; RNAME
+                2024041501               ; serial
+                3600                     ; refresh (1 hour)
+                900                      ; retry (15 minutes)
+                604800                   ; expire (1 week)
+                86400                    ; minimum (1 day)
+                )
+
+; Top-level domain delegations
+meow.   IN NS   tlddns-a.asw.meow.   
+
+; All the labels that the TLD knows about
+aws             IN NS  authoritative-a.aws.meow.
+pippin          IN NS  authoritative-a.aws.meow.
+
+; glue records for the authoritative DNS servers that the TLD knows about
+; i.e. if google is using the same authoritative server as aws, it's one glue record
+authoritative-a.aws.meow.          IN A   4.1.0.100
+
+

@@ -17,10 +17,8 @@ RUN apt-get update && apt-get install -y iproute2 \
     procps \
     bird3
 
-COPY ./{{ config_dir }}/router-start-up.sh /router-start-up.sh
-{% if config_dir == "final" %}
-COPY ./final/bird.conf /bird.conf
-{% endif %}
+COPY ./{{ config_dir }}/routers /init
+COPY ./{{ config_dir }}/routers/router-start-up.sh /router-start-up.sh
 
 RUN mkdir -p /etc/vim
 COPY .vimrc /etc/vim/vimrc.local
