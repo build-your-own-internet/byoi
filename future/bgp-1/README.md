@@ -41,9 +41,14 @@ Similar to our previous chapters, we're going to approach this one router at a t
 - bird is already installed on all routers without configuration files
 - we created bird.conf files for c3 and z6 and we saw them exchange routes for the networks they're directly connected to
 - 
-
+ 
 <!-- WE LEFT OFF HERE!! -->
 
+- do something to explain what an AS is (hand-wavy)
+- throw some bird configs out there
+- have students write out all the damn configs (or point them to final)
+- experiment with killing routers in different ways (iptables and docker kill) and see convergence
+- maybe some visualization?
 
 - "how did we move from a state where there were a bunch of different routing protocols to BGP?"
 - proposed pedagogy: static routes -> lots of BPG -> carve OSPF out of an AS -> keep going, starting at spurs go to transit at the end
